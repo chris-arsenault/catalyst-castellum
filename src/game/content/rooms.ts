@@ -19,7 +19,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     ambientTemperature: 22,
     socketCount: 2,
     features: [],
-    blurb: "A high outer chamber on the hostile path, with two generic equipment sockets.",
+    blurb: "A high outer chamber on the hostile path with two equipment sockets.",
   },
   furnace: {
     id: "furnace",
@@ -30,7 +30,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     socketCount: 2,
     features: [],
     blurb:
-      "A deep outer chamber on the hostile path. Any mixing, heat, or reaction role comes from installed equipment.",
+      "A deep outer chamber on the hostile path with sockets for thermal and mixing equipment.",
   },
   reservoir: {
     id: "reservoir",
@@ -40,7 +40,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     ambientTemperature: 22,
     socketCount: 2,
     features: [],
-    blurb: "A high middle chamber with two generic sockets and no intrinsic process role.",
+    blurb: "A broad middle chamber with two equipment sockets and space for gas–liquid processing.",
   },
   gallery: {
     id: "gallery",
@@ -61,7 +61,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     socketCount: 2,
     features: ["separated_cell_manifold"],
     blurb:
-      "A high inner chamber beside an explicit separated-outlet manifold used by compatible equipment.",
+      "A high inner chamber equipped with a separated-outlet manifold for membrane electrolysis.",
   },
   washlock: {
     id: "washlock",
@@ -71,7 +71,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     ambientTemperature: 22,
     socketCount: 2,
     features: [],
-    blurb: "A low inner chamber on the final corridor approach, with two generic sockets.",
+    blurb: "A low inner chamber on the final Core approach with two equipment sockets.",
   },
   core: {
     id: "core",

@@ -118,9 +118,9 @@ const flashPoint: LevelDefinition = {
   name: "Flash Point",
   kicker: "Lesson 01 · Build one dangerous room",
   briefing:
-    "The Core starter header visibly contains H₂ and O₂. One empty physical gas duct reaches R-02, a chamber crossed by the monster corridor; its single fan is off.",
+    "The Core starter header holds H₂ and O₂ near their combustion ratio. Its gas duct reaches R-02, a chamber on the hostile route; the fan begins offline.",
   lesson:
-    "Install agitation in the serviced corridor room, switch on one shared fan, and let transport delay charge a repeating combustion attack.",
+    "Install agitation in R-02, start its gas fan, and use transport delay to charge a repeating combustion attack.",
   focusRoomId: "furnace",
   startingMatter: 16,
   startingCoreIntegrity: 100,
@@ -133,7 +133,8 @@ const flashPoint: LevelDefinition = {
     {
       id: "first_spark",
       title: "First spark",
-      detail: "Eight crawlers will reach Core unless R-02 produces readable OX-1 attacks.",
+      detail:
+        "Eight crawlers are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
       objective: "Install a Gas Agitator in R-02 and switch on the Core–R-02 gas duct.",
       primeSeconds: 24,
       wave: enemySequence(8, "crawler", 0.5, 2.2),
@@ -144,7 +145,7 @@ const flashPoint: LevelDefinition = {
       title: "Stored momentum",
       detail:
         "A faster follow-up tests the chamber inventory and the timing of its discrete flash cycle.",
-      objective: "Use the same one-fan machine; inspect incidents before changing it.",
+      objective: "Run the established R-02 cycle and inspect each incident before adjusting it.",
       primeSeconds: 10,
       wave: [
         ...enemySequence(6, "skimmer", 0.5, 1.65),
@@ -182,9 +183,9 @@ const makeTheReagent: LevelDefinition = {
   name: "Make the Reagent",
   kicker: "Lesson 02 · One reaction, one junction",
   briefing:
-    "A single Core–R-05 liquid pipe carries mixed water and brine. The blank membrane-cell socket sits beside one unfiltered gas junction.",
+    "A Core–R-05 feed pipe carries mixed water and brine to a membrane-cell manifold. The cell’s separated outlets feed a shared gas junction and a liquid junction.",
   lesson:
-    "The cell makes Cl₂, H₂, and NaOH together. Shared pipes move mixtures, so relief and useful delivery compete instead of selecting elements.",
+    "The membrane cell produces Cl₂, H₂, and NaOH together. Outlet pressure and shared-junction flow determine how long the cell can sustain production.",
   focusRoomId: "lower_intake",
   startingMatter: 28,
   startingCoreIntegrity: 100,
@@ -198,7 +199,7 @@ const makeTheReagent: LevelDefinition = {
     {
       id: "co_products",
       title: "Co-products",
-      detail: "A crawler column tests whether the new mixed gas reaches R-03.",
+      detail: "A crawler column will cross R-03 as the R-05 gas stream arrives.",
       objective: "Install the Membrane Cell and observe all three conserved outputs.",
       primeSeconds: 25,
       wave: enemySequence(10, "crawler", 0.5, 2),
@@ -208,8 +209,8 @@ const makeTheReagent: LevelDefinition = {
       id: "shared_relief",
       title: "Shared relief",
       detail:
-        "The recovery duct is now available, but it removes the whole gas-junction mixture—not only unwanted H₂.",
-      objective: "Use the R-05 recovery fan only if shared outlet pressure stalls the cell.",
+        "The R-05 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
+      objective: "Use the R-05 recovery fan when shared outlet pressure stalls the cell.",
       primeSeconds: 14,
       wave: enemySequence(9, "skimmer", 0.5, 1.45),
       availability: reagentRoundTwo,
@@ -240,7 +241,7 @@ const acidLine: LevelDefinition = {
   name: "Acid Line",
   kicker: "Lesson 03 · Turn a mixed output into a second reaction",
   briefing:
-    "R-05 has separated product buffers, but its one outgoing duct admits their combined junction mixture. R-02 and its downstream return are blank.",
+    "R-05 stores Cl₂ and H₂ in separated buffers, then combines them at its gas junction for routing. R-02 and the R-04 return await commissioning.",
   lesson:
     "Heat and agitation turn the transported H₂/Cl₂ mixture into HCl. Route length and shared inventory determine when it reaches the wave.",
   focusRoomId: "furnace",
@@ -266,8 +267,8 @@ const acidLine: LevelDefinition = {
     {
       id: "hot_mix",
       title: "Hot mix",
-      detail: "Armored shells demand more than a raw trace of chlorine.",
-      objective: "Equip R-02, run the one mixed-gas duct, and build the downstream return.",
+      detail: "Armored shells demand a concentrated corrosive or thermal exposure.",
+      objective: "Equip R-02, start the mixed-gas feed, and build the downstream return.",
       primeSeconds: 30,
       wave: enemySequence(7, "shell", 0.5, 2.5),
       availability: acidAvailability,
@@ -275,8 +276,8 @@ const acidLine: LevelDefinition = {
     {
       id: "residence_time",
       title: "Residence time",
-      detail: "Skimmers test whether the same physical headers have enough retained inventory.",
-      objective: "Read conduit fill and room conditions; change only the limiting run.",
+      detail: "Skimmers race the inventory retained in the physical headers.",
+      objective: "Read conduit fill and room conditions; adjust the limiting run.",
       primeSeconds: 14,
       wave: [...enemySequence(8, "skimmer", 0.5, 1.2), ...enemySequence(3, "floater", 2, 2.1)].sort(
         (left, right) => left.at - right.at
@@ -319,9 +320,9 @@ const storedChlorine: LevelDefinition = {
   name: "Stored Chlorine",
   kicker: "Lesson 04 · Build a delayed second-order weapon",
   briefing:
-    "The acid line is commissioned. R-03 can store chlorine in liquid, and one physical transfer pipe can later move that entire mixture to R-06.",
+    "The acid line is commissioned. R-03 can bind chlorine as NaOCl, then transfer its stored liquid to R-06.",
   lesson:
-    "A wet contactor creates NaOCl. Moving the unfiltered stored liquid into acid releases Cl₂ elsewhere and leaves every byproduct in play.",
+    "A wet contactor forms NaOCl in R-03. Pumping that stored liquid into acidic R-06 releases Cl₂ and leaves its byproducts in the chamber.",
   focusRoomId: "reservoir",
   startingMatter: 42,
   startingCoreIntegrity: 100,
@@ -357,7 +358,7 @@ const storedChlorine: LevelDefinition = {
       id: "store",
       title: "Store the oxidizer",
       detail: "A slow armored wave crosses R-03 while its first NaOCl inventory forms.",
-      objective: "Install a Wet Contactor in R-03 and observe the whole liquid mixture.",
+      objective: "Install a Wet Contactor in R-03 and monitor the forming liquid inventory.",
       primeSeconds: 34,
       wave: [...enemySequence(5, "shell", 0.5, 2.8), ...enemySequence(3, "bellows", 2, 3.1)].sort(
         (left, right) => left.at - right.at
@@ -406,9 +407,9 @@ const commissioningExam: LevelDefinition = {
   id: "commissioning_exam",
   number: 5,
   name: "Commissioning Exam",
-  kicker: "Checkpoint 05 · Shared-conduit plant",
+  kicker: "Checkpoint 05 · Full process plant",
   briefing:
-    "Every current room, junction, and physical conduit is commissioned. There are no hidden per-material lines or simultaneous opposing transfers.",
+    "The full plant is commissioned: rooms, junctions, and conduits follow their physical routes and carry mixed inventories.",
   lesson:
     "Balance finite feedstocks, mixed junctions, conduit capacity, acid production, stored oxidizer, relief, and persistent waste over three assaults.",
   focusRoomId: "lower_intake",
@@ -427,7 +428,7 @@ const commissioningExam: LevelDefinition = {
     id: `commissioning_${index + 1}`,
     title: COMMISSIONING_WAVE_BRIEFS[index]?.title ?? `Assault ${index + 1}`,
     detail: COMMISSIONING_WAVE_BRIEFS[index]?.detail ?? "Full plant trial.",
-    objective: "Tune the conserved shared-conduit process, then lock it for assault.",
+    objective: "Tune the plant’s coupled flows, then lock it for assault.",
     primeSeconds: 72,
     wave,
     availability: allAvailability,

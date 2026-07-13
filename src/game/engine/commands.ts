@@ -65,7 +65,7 @@ const startPrime = (source: GameState): CommandResult => {
     state,
     "info",
     `Round ${state.campaign.roundIndex + 1} prime running`,
-    `The real process is live for at most ${roundDefinitionFor(state).primeSeconds} seconds. Materials and byproducts persist.`
+    `The plant is live for up to ${roundDefinitionFor(state).primeSeconds} seconds. Materials and byproducts persist.`
   );
   return accept(state);
 };
@@ -144,7 +144,7 @@ const installEquipment = (
     state,
     "info",
     `${definition.name} installed in ${roomDefinition.code}`,
-    `${definition.buildCost} matter committed. The equipment changes physical conditions and kinetics; it does not select a product.`,
+    `${definition.buildCost} matter committed. ${definition.name} now changes room conditions and reaction kinetics.`,
     command.roomId
   );
   return accept(state);
@@ -341,10 +341,11 @@ export const executeCommand = (source: GameState, command: GameCommand): Command
 export const roomRingDescription = (roomId: keyof GameState["rooms"]): string => {
   const definition = ROOM_DEFINITIONS[roomId];
   const ring = roomRing(roomId);
-  if (definition.structure === "entry") return "Structural entry space · no equipment sockets";
-  if (ring === "inner") return "Two generic sockets · all current equipment grades permitted";
+  if (definition.structure === "entry")
+    return "Structural entry space · path and atmosphere monitoring";
+  if (ring === "inner") return "Two equipment sockets · all equipment grades permitted";
   if (ring === "middle")
-    return "Two generic sockets · contact, heat, and mixing equipment permitted";
-  if (ring === "outer") return "Two generic sockets · heat and gas mixing equipment permitted";
+    return "Two equipment sockets · contact, heat, and mixing equipment permitted";
+  if (ring === "outer") return "Two equipment sockets · heat and gas mixing equipment permitted";
   return "Protected utility and stock manifold";
 };

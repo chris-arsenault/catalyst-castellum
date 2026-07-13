@@ -28,7 +28,7 @@ const BuildBanner = () => {
       <div className="phase-resource">
         <span>Available matter</span>
         <strong>{Math.floor(game.matter)}</strong>
-        <small>construction is frozen and reversible</small>
+        <small>configure freely before priming</small>
       </div>
       <button
         className="primary-action"
@@ -55,7 +55,7 @@ const PrimeBanner = () => {
       <div className="phase-copy">
         <span>Live prime · automatic lock in {formatTime(remaining)}</span>
         <strong>{round.objective}</strong>
-        <p>Controls remain live, but consumed feedstocks and every byproduct are permanent.</p>
+        <p>Controls remain live. Feedstocks, products, and byproducts persist.</p>
       </div>
       <div className="prime-checks">
         <span className={game.stats.reactions > 0.1 ? "ready" : ""}>
@@ -94,7 +94,7 @@ const AssaultBanner = () => {
         <strong>
           {game.enemies.length} inside · {queued} inbound
         </strong>
-        <p>The facility is executing the physical state and configuration established in prime.</p>
+        <p>The plant is running the configuration and inventories established during prime.</p>
       </div>
       <div className="assault-stats">
         <div>

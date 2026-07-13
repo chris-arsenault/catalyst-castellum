@@ -20,22 +20,24 @@ const ManualPhases = () => (
     <div>
       <em>01</em>
       <strong>Plan</strong>
-      <p>The simulation is frozen. Install, upgrade, dismantle, connect, and charge feedstocks.</p>
+      <p>Configure equipment, conduits, and feedstocks while simulation time is frozen.</p>
     </div>
     <div>
       <em>02</em>
       <strong>Prime</strong>
-      <p>Run the actual plant without enemies. Everything consumed or produced is permanent.</p>
+      <p>Prime the plant before the wave arrives. Feedstocks, products, and byproducts persist.</p>
     </div>
     <div>
       <em>03</em>
       <strong>Assault</strong>
-      <p>Your binary controls and routing policies lock. The process runs without intervention.</p>
+      <p>
+        Binary controls and routing policies lock. The plant runs autonomously through the wave.
+      </p>
     </div>
     <div>
       <em>04</em>
       <strong>Analyze</strong>
-      <p>The exact end state freezes. Harvested matter is banked before the next plan.</p>
+      <p>The end state freezes. Harvested matter is banked before the next plan.</p>
     </div>
   </div>
 );
@@ -45,15 +47,15 @@ const ManualTips = () => (
     <div>
       <Wind size={18} />
       <p>
-        <strong>The cell has three real outlets.</strong> Cl₂, H₂, and NaOH accumulate separately;
-        blocking one eventually limits the whole electrolyzer.
+        <strong>The membrane cell feeds three separated outlets.</strong> Cl₂, H₂, and NaOH
+        accumulate separately; blocking one eventually limits the whole electrolyzer.
       </p>
     </div>
     <div>
       <Flame size={18} />
       <p>
-        <strong>Rooms have no process type.</strong> R-02 makes acid only because its removable
-        thermal coil and gas agitator let routed H₂ and Cl₂ recombine.
+        <strong>Equipment defines room chemistry.</strong> A thermal coil and gas agitator let R-02
+        recombine routed H₂ and Cl₂ into HCl.
       </p>
     </div>
     <div>
@@ -66,8 +68,8 @@ const ManualTips = () => (
     <div>
       <Biohazard size={18} />
       <p>
-        <strong>Nothing vanishes at a vent or drain.</strong> Relief creates headroom while moving
-        the complete mixture into persistent core recovery inventories.
+        <strong>Core recovery retains relief streams.</strong> Vents and drains create headroom by
+        moving complete mixtures into persistent recovery inventories.
       </p>
     </div>
   </div>
@@ -108,9 +110,7 @@ export const HelpModal = () => {
           <div className="manual-guide-replay">
             <div>
               <strong>Need the pointer again?</strong>
-              <span>
-                Replay {guide.label} from the first action your current plant still needs.
-              </span>
+              <span>Replay {guide.label} from the next incomplete action.</span>
             </div>
             <button type="button" data-testid="replay-guided-lesson" onClick={restartTutorialGuide}>
               Replay guidance <RotateCcw size={15} />
@@ -265,7 +265,7 @@ export const OutcomeModal = () => {
         <h2 id="outcome-title">{victory ? "Castellum holds" : "Catalyst core lost"}</h2>
         <p>
           {victory
-            ? `Every tutorial checkpoint and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
+            ? `All five checkpoints and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
             : `${levelDefinitionFor(game).name}, round ${game.campaign.roundIndex + 1}, failed. The trace preserves the immediate cause.`}
         </p>
         <div className="outcome-stats">

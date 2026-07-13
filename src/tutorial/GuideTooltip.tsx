@@ -37,14 +37,14 @@ const CoachFooter = ({
         data-testid="complete-guided-lesson"
         onClick={dismiss}
       >
-        Finish guided setup <Check size={15} />
+        Finish field drill <Check size={15} />
       </button>
     );
   }
   if (satisfied) {
     return (
       <div className="tutorial-coach-reflection">
-        <small>BOARD OPEN · inspect what changed and continue when ready</small>
+        <small>RESULT RECORDED · inspect the board, then continue</small>
         <button type="button" data-testid="tutorial-continue" onClick={advance}>
           Continue <ArrowRight size={15} />
         </button>
@@ -54,8 +54,8 @@ const CoachFooter = ({
   return (
     <small className="tutorial-coach-state">
       {stepKind === "observe"
-        ? "LIVE · board open; watch the map and room readouts"
-        : "ACTION REQUIRED · board open; use the marked control"}
+        ? "OBSERVE · follow the map and chamber readouts"
+        : "OPERATE · use the highlighted control"}
     </small>
   );
 };

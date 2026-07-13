@@ -58,7 +58,7 @@ const liquidMixtureSummary = (liquid: LiquidAmounts): string => {
 
 const gasFlowSummary = (flow: GasAmounts): string => {
   const entries = GAS_TYPES.filter((species) => Math.abs(flow[species]) >= MIN_VISIBLE_AMOUNT);
-  if (entries.length === 0) return "no measured species transfer";
+  if (entries.length === 0) return "flow below measurement threshold";
   return entries
     .sort((left, right) => Math.abs(flow[right]) - Math.abs(flow[left]))
     .map(
@@ -69,7 +69,7 @@ const gasFlowSummary = (flow: GasAmounts): string => {
 
 const liquidFlowSummary = (flow: LiquidAmounts): string => {
   const entries = LIQUID_TYPES.filter((species) => Math.abs(flow[species]) >= MIN_VISIBLE_AMOUNT);
-  if (entries.length === 0) return "no measured species transfer";
+  if (entries.length === 0) return "flow below measurement threshold";
   return entries
     .sort((left, right) => Math.abs(flow[right]) - Math.abs(flow[left]))
     .map(
@@ -204,7 +204,7 @@ export const ConduitActuator = ({
       <div className="actuator-copy">
         <strong>{definition.name}</strong>
         <small>
-          {from} → {to} · one shared {readout.noun} · rated {definition.maxFlow.toFixed(2)}
+          {from} → {to} · physical {readout.noun} · rated {definition.maxFlow.toFixed(2)}
         </small>
         <span>
           {flowReading(conduit.lastFlow)} · {readout.amount.toFixed(1)} / {capacity.toFixed(1)}{" "}

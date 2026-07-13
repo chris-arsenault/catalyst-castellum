@@ -112,7 +112,7 @@ const GasSourceCard = ({ sourceId }: { sourceId: GasSourceId }) => {
             <small>mol-eq</small>
           </strong>
           <small data-testid="core-gas-junction-composition">
-            {gasComposition(game.gasJunctions.core.gas)} · feeds one shared duct
+            {gasComposition(game.gasJunctions.core.gas)} · feeds Core–R-02 gas duct
           </small>
         </div>
       )}

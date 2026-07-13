@@ -56,7 +56,7 @@ export const ProcessControls = () => {
       {socketIds.length > 0 ? (
         <>
           <div className="control-kind-heading">
-            <Beaker size={14} /> Generic equipment sockets
+            <Beaker size={14} /> Equipment sockets
           </div>
           <div className="equipment-socket-list">
             {socketIds.map((socketId) => (
@@ -84,7 +84,7 @@ export const ProcessControls = () => {
       {runs.length === 0 && socketIds.length === 0 && (
         <div className="passive-room-note">
           <ArrowDownToLine size={18} />
-          <p>No constructible service route terminates here.</p>
+          <p>Structural chamber · atmosphere and path monitoring</p>
         </div>
       )}
     </section>

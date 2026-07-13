@@ -103,7 +103,7 @@ const TransportPhasePanel = ({
           <PhaseIcon phase={phase} />
         </span>
         <strong>{model.label}</strong>
-        <em>{model.installed ? "ONE SHARED CONDUIT" : "NOT BUILT"}</em>
+        <em>{model.installed ? "PHYSICAL ROUTE" : "AVAILABLE TO BUILD"}</em>
         <PhaseAction
           cost={model.cost}
           installed={model.installed}
@@ -118,8 +118,8 @@ const TransportPhasePanel = ({
         </div>
       ) : (
         <p>
-          Fixed spatial route available. A new conduit begins empty and its entire mixed inventory
-          shares one capacity.
+          Build along the fixed spatial route. The conduit begins empty, then carries a mixed
+          inventory within its rated capacity.
         </p>
       )}
     </div>

@@ -50,7 +50,7 @@ const completeCampaign = (state: GameState): void => {
   addEvent(
     state,
     "good",
-    "Castellum curriculum complete",
+    "Castellum commissioned",
     `All ${state.campaign.completedLevelIds.length} checkpoints survived with ${Math.round(state.coreIntegrity)}% core integrity in the final exam.`
   );
 };

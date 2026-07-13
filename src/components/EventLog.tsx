@@ -12,7 +12,7 @@ export const EventLog = () => {
         <span>
           <ScrollText size={15} /> System trace
         </span>
-        <small>Newest first · failures remain explainable</small>
+        <small>Newest first · reactions, damage, and breaches</small>
       </div>
       <div className="event-row-list">
         {events.slice(0, 8).map((entry) => (

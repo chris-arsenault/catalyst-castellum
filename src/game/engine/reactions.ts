@@ -180,7 +180,7 @@ const simulateHydrogenChlorine = (
       state,
       "reaction",
       "R-02 HCl production established",
-      "Installed heat and gas agitation are recombining balanced H₂ and Cl₂. The complete atmosphere remains available to connected lines.",
+      "Heat and agitation are recombining balanced H₂ and Cl₂. Connected ducts draw from the resulting R-02 atmosphere.",
       "furnace"
     );
   }

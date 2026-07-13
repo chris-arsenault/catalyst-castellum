@@ -5,7 +5,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     id: "gas_agitator",
     name: "Gas agitator",
     description:
-      "Recirculates both gas layers. It speeds every eligible gas reaction, including unwanted combustible mixtures.",
+      "Recirculates the upper and lower gas layers, accelerating eligible gas reactions and combustible mixtures.",
     accent: "#65cfc4",
     buildCost: 12,
     upgradeCosts: [10, 17],
@@ -22,7 +22,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     id: "wet_contactor",
     name: "Wet contactor",
     description:
-      "Increases gas–liquid contact and liquid mixing for every eligible reaction. It does not select a product.",
+      "Drives gas–liquid contact and liquid mixing, accelerating every eligible contact reaction.",
     accent: "#5e92e3",
     buildCost: 14,
     upgradeCosts: [12, 20],
@@ -39,7 +39,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     id: "thermal_coil",
     name: "Thermal coil",
     description:
-      "Heats the room and both gas layers toward a fixed equipment rating. Chemistry still determines what reacts.",
+      "Heats the room and both gas layers toward a fixed equipment rating, accelerating temperature-dependent chemistry.",
     accent: "#f58844",
     buildCost: 10,
     upgradeCosts: [9, 16],

@@ -280,5 +280,5 @@ export const roomExpectedEffects = (room: RoomState): string[] => {
     effects.push(
       `Transient pressure impulse affects transport +${Math.round(room.pressurePulse)} kPa`
     );
-  return effects.length > 0 ? effects : ["No meaningful enemy effect"];
+  return effects.length > 0 ? effects : ["Enemy exposure below damage thresholds"];
 };

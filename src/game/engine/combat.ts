@@ -238,7 +238,7 @@ const recordBurstIncidents = (state: GameState, builders: IncidentBuilder[]): vo
     const hitSummary =
       builder.targets.length === 0
         ? "No hostiles occupied the chamber at the instant of ignition."
-        : `${builder.targets.length} hit; ${killed} neutralized; ${Math.round(damage)} actual pressure/heat damage.`;
+        : `${builder.targets.length} hit; ${killed} neutralized; ${Math.round(damage)} applied pressure/heat damage.`;
     addEvent(
       state,
       incidentTone(builder.targets.length, killed),

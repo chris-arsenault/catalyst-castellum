@@ -80,7 +80,7 @@ const EmptyEquipmentSocket = ({
     <article className="equipment-socket empty">
       <header>
         <span>{socketLabel(socketId)}</span>
-        <strong>Empty generic socket</strong>
+        <strong>Open equipment socket</strong>
       </header>
       <div className="equipment-picker">
         {availableEquipment(roomId, unlocked).map((equipmentId) => (

@@ -45,7 +45,7 @@ const BriefingObjective = ({
     <div className="briefing-objective">
       <div>
         <Gauge size={19} />
-        <span>{tutorialSkipped ? "Tutorial skipped" : "Round 1 objective"}</span>
+        <span>{tutorialSkipped ? "Starting at Lesson 02" : "Round 1 objective"}</span>
       </div>
       <p>{detail}</p>
     </div>
@@ -69,9 +69,9 @@ const TutorialStartChoice = ({
       onChange={(event) => onChange(event.currentTarget.checked)}
     />
     <label htmlFor="tutorial-enabled">
-      <strong>Enable guided tutorial</strong>
+      <strong>Play Flash Point field drill</strong>
       <small id="tutorial-choice-detail">
-        Off skips Flash Point and starts Lesson 02 · Make the Reagent.
+        Clear the checkbox to begin with Lesson 02 · Make the Reagent.
       </small>
     </label>
   </div>
@@ -79,15 +79,15 @@ const TutorialStartChoice = ({
 
 const actionLabel = (guided: boolean, tutorialEnabled: boolean): string => {
   if (!guided) return "Begin checkpoint";
-  return tutorialEnabled ? "Begin guided tutorial" : "Skip to lesson 2";
+  return tutorialEnabled ? "Begin field drill" : "Begin lesson 2";
 };
 
 const hint = (game: GameState, guided: boolean, tutorialEnabled: boolean): string => {
   const level = levelDefinitionFor(game);
   if (!guided) return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${level.lesson}`;
   if (!tutorialEnabled)
-    return "Flash Point will be recorded as complete; you can replay it after restarting the campaign.";
-  return `The coach will point to one live control at a time in ${ROOM_DEFINITIONS[level.focusRoomId].code}.`;
+    return "Lesson 02 opens in frozen planning at R-05. Restart the campaign to replay Flash Point.";
+  return `Follow the highlighted controls in ${ROOM_DEFINITIONS[level.focusRoomId].code} and inspect the board between actions.`;
 };
 
 const BriefingContent = ({ game }: { game: GameState }) => {

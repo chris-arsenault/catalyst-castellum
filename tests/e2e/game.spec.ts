@@ -71,7 +71,7 @@ test.beforeEach(async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test("the guided tutorial proves the complete causal chain through real domain rules", async ({
+test("the Flash Point field drill proves the complete causal chain through domain rules", async ({
   page,
 }) => {
   await startGuidedTutorial(page);
@@ -81,7 +81,7 @@ test("the guided tutorial proves the complete causal chain through real domain r
 
   await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
   await expect(page.getByText(/Gas agitator · Grade 1/)).toBeVisible();
-  await expect(coach).toContainText("The mixer is installed");
+  await expect(coach).toContainText("The Gas Agitator now recirculates");
   await expect(page.locator(".react-joyride__overlay")).toHaveCount(0);
 
   await page.getByTestId("select-room-lower_intake").click();
@@ -93,7 +93,7 @@ test("the guided tutorial proves the complete causal chain through real domain r
   const conduit = page.getByTestId("conduit-control-core_furnace-gas");
   await expect(conduit).toHaveAttribute("aria-pressed", "false");
   await conduit.click();
-  await expect(coach).toContainText("The one gas conduit is armed");
+  await expect(coach).toContainText("The fan is armed");
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
   await continueTutorial(page, "begin-prime");
 
@@ -107,21 +107,21 @@ test("the guided tutorial proves the complete causal chain through real domain r
   await page.getByTestId("simulation-speed").click();
   await expect(coach).toContainText("The clock is at 2×");
   await continueTutorial(page, "observe-prime-flash");
-  await expect(coach).toContainText("zero targets");
+  await expect(coach).toContainText("first OX-1 incident");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("0 hit · 0 killed");
   await continueTutorial(page, "start-assault");
 
   await page.getByTestId("start-assault").click();
   await expect(page.getByTestId("phase-banner")).toContainText("Autonomous assault");
-  await expect(coach).toContainText("Hostiles are moving through the same spatial corridor");
+  await expect(coach).toContainText("Crawlers are advancing along the mapped route");
   await continueTutorial(page, "observe-combat-flash");
 
   await expect(page.locator(".paused-overlay")).toContainText("Simulation paused");
-  await expect(coach).toContainText("Combat is paused for inspection");
+  await expect(coach).toContainText("Combat is paused on a confirmed hit");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("1 hit · 1 killed");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("pressure");
   await continueTutorial(page, "combat-confirmed");
-  await expect(coach).toContainText("Core stock → one mixed conduit");
+  await expect(coach).toContainText("Core stock → mixed-gas duct");
 
   await page.getByTestId("complete-guided-lesson").click();
   await expect(coach).toBeHidden();
@@ -201,7 +201,7 @@ test("disabling the tutorial starts directly in lesson two", async ({ page }) =>
   const checkbox = page.getByTestId("tutorial-enabled");
   await expect(checkbox).toBeChecked();
   await checkbox.uncheck();
-  await expect(page.getByTestId("enter-control-room")).toContainText("Skip to lesson 2");
+  await expect(page.getByTestId("enter-control-room")).toContainText("Begin lesson 2");
 
   await page.getByTestId("enter-control-room").click();
 
@@ -212,16 +212,12 @@ test("disabling the tutorial starts directly in lesson two", async ({ page }) =>
   await expect(page.getByTestId("install-lower_intake-socket_a-membrane_cell")).toBeVisible();
 });
 
-test("the first lesson exposes one shared gas actuator and only its unlocked equipment", async ({
-  page,
-}) => {
+test("the first lesson exposes its physical gas route and unlocked equipment", async ({ page }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
   const inspector = page.getByTestId("room-inspector");
   await expect(inspector.getByText("Core–R-02 gas duct", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toContainText(
-    "ONE SHARED CONDUIT"
-  );
+  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toContainText("PHYSICAL ROUTE");
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(1);
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
   await expect(page.getByText("Membrane cell", { exact: true })).toHaveCount(0);
@@ -230,7 +226,7 @@ test("the first lesson exposes one shared gas actuator and only its unlocked equ
   await page.getByTestId("select-room-lower_intake").click();
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
   await expect(page.getByText(/INNER RING/)).toBeVisible();
-  await expect(page.getByText("Empty generic socket").first()).toBeVisible();
+  await expect(page.getByText("Open equipment socket").first()).toBeVisible();
   await expect(page.getByTestId("install-lower_intake-socket_a-gas_agitator")).toBeVisible();
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(0);
 });
@@ -258,7 +254,7 @@ test("Core visibly owns the mixed starter header, junction, vent, and drain", as
   await expect(page.getByTestId("starter-gas-composition")).toHaveText("H₂ 76.0 · O₂ 38.0");
   await expect(page.getByTestId("core-gas-junction")).toContainText("0.0 / 24");
   await expect(page.getByTestId("core-gas-junction-composition")).toContainText(
-    "feeds one shared duct"
+    "feeds Core–R-02 gas duct"
   );
   await expect(page.getByTestId("source-water_tank")).toHaveCount(0);
   await expect(page.getByTestId("source-sodium_chloride_tank")).toHaveCount(0);

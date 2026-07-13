@@ -50,19 +50,19 @@ const assaultFlashKilled = (game: GameState): boolean =>
 
 const flashPointGuide: GuideDefinition = {
   id: "flash_point:first_spark:v2",
-  label: "Flash Point guided setup",
+  label: "Flash Point field drill",
   steps: [
     {
       id: "install-agitator",
       kind: "action",
       roomId: "furnace",
       target: '[data-testid^="install-furnace-"][data-testid$="-gas_agitator"]',
-      title: "Choose the serviced chamber",
+      title: "Prepare the flash chamber",
       explanation:
-        "R-02 is crossed by the monster corridor and is the visible endpoint of the installed Core gas duct. Other rooms remain selectable so you can compare their sockets and service access.",
-      instruction: "Select R-02 when ready, then install a Gas Agitator in either socket.",
+        "R-02 lies on the hostile route and receives gas from the Core header. Its equipment sockets can change mixing, temperature, and reaction rates.",
+      instruction: "Select R-02, then install a Gas Agitator in either socket.",
       result:
-        "The mixer is installed. Inspect another room or the physical route before continuing; the guide will not take control of selection.",
+        "The Gas Agitator now recirculates R-02’s upper and lower gas layers. Inspect the chamber or trace its duct, then continue.",
       completed: hasFurnaceAgitator,
     },
     {
@@ -70,12 +70,12 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: '[data-testid="conduit-control-core_furnace-gas"]',
-      title: "Start one physical duct",
+      title: "Open the Core gas feed",
       explanation:
-        "The Core header already contains a near-stoichiometric H₂/O₂ mixture. One fan moves that whole conserved mixture; there are no element-specific feed switches.",
+        "The Core header holds H₂ and O₂ near their combustion ratio. The fan carries their combined inventory through the Core–R-02 duct.",
       instruction: "Switch the Core–R-02 gas fan ON.",
       result:
-        "The one gas conduit is armed. Its retained inventory and both species remain visible before physics starts.",
+        "The fan is armed. The Core source readout shows the H₂/O₂ mixture queued for priming.",
       completed: conduitEnabled,
     },
     {
@@ -83,11 +83,12 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: '[data-testid="begin-prime"]',
-      title: "Start the physics",
+      title: "Prime the chamber",
       explanation:
-        "Planning changes configuration; priming moves the mixed inventory through the route and into the chamber over real distance.",
-      instruction: "Click Begin timed prime.",
-      result: "The plant clock is live. Watch the conduit fill and the room composition respond.",
+        "Priming starts material flow. The fan fills the routed duct first, then delivers its H₂/O₂ mixture into R-02.",
+      instruction: "Begin the timed prime.",
+      result:
+        "The plant clock is live. Watch the duct inventory advance and R-02 composition respond.",
       completed: (game) => game.phase !== "build",
     },
     {
@@ -95,11 +96,12 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: '[data-testid="simulation-speed"]',
-      title: "Accelerate the clock",
+      title: "Advance the clock",
       explanation:
-        "Transport latency is physical. 2× advances the same flow, gravity, reaction, and combat rules without changing their rates.",
-      instruction: "Set simulation speed to 2× while the conduit primes.",
-      result: "The clock is at 2×. Keep the board open while the first empty-room flash forms.",
+        "Transport and reactions unfold over simulation time. At 2×, the duct charges and R-02 approaches ignition twice as quickly on screen.",
+      instruction: "Set simulation speed to 2×.",
+      result:
+        "The clock is at 2×. Watch R-02 pressure and composition as the first flash approaches.",
       completed: (game) => game.speed === 2,
     },
     {
@@ -107,12 +109,12 @@ const flashPointGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: '[data-testid="recent-incidents-furnace"]',
-      title: "Read the first incident",
+      title: "Read the priming flash",
       explanation:
-        "An OX-1 flash is now a durable incident, not a one-frame effect. During prime it proves the chamber cycles, but it cannot hit an enemy because none are present.",
-      instruction: "Wait for an OX-1 incident, then inspect its zero-target result.",
+        "When the H₂/O₂ mixture reaches its ignition threshold, R-02 produces an OX-1 pressure and heat pulse. The incident log records its impulse, reaction extent, and target count.",
+      instruction: "Wait for the first priming flash, then inspect its incident record.",
       result:
-        "Prime is paused on a readable pressure/heat incident with zero targets. The actual combat lesson is still ahead.",
+        "Prime is paused on the first OX-1 incident. Read its pressure impulse, reaction extent, and target count.",
       completed: (game) => Boolean(flashIncident(game, (incident) => incident.phase === "prime")),
     },
     {
@@ -120,11 +122,11 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: '[data-testid="start-assault"]',
-      title: "Introduce a target",
+      title: "Bring in the first wave",
       explanation:
-        "The setup is not learned until a creature occupies R-02 at the instant a new flash fires.",
+        "During assault, crawlers follow the mapped route through R-02. A flash that fires while a crawler occupies the chamber applies pressure and heat damage.",
       instruction: "Start the assault and keep watching R-02.",
-      result: "Hostiles are moving through the same spatial corridor shown on the map.",
+      result: "Crawlers are advancing along the mapped route toward R-02.",
       completed: (game) => game.phase === "assault" || game.phase === "round_result",
     },
     {
@@ -132,12 +134,12 @@ const flashPointGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: '[data-testid="recent-incidents-furnace"]',
-      title: "See what killed it",
+      title: "Confirm the combat hit",
       explanation:
-        "The guide pauses once after the first assault flash hits. The incident records actual targets, capped pressure/heat damage, and kills; residual pulse does not deal repeated attack damage.",
+        "After the first hit, the incident log identifies each target, applied pressure and heat damage, and the resulting kills.",
       instruction: "Wait for an assault OX-1 flash that neutralizes at least one enemy.",
       result:
-        "Combat is paused for inspection. The recent incident and system trace now name OX-1, its damage channels, hit count, and kill count.",
+        "Combat is paused on a confirmed hit. The incident log and system trace show OX-1’s damage channels, hit count, and kill count.",
       completed: assaultFlashKilled,
     },
     {
@@ -145,11 +147,11 @@ const flashPointGuide: GuideDefinition = {
       kind: "complete",
       roomId: "furnace",
       target: '[data-testid="recent-incidents-furnace"]',
-      title: "Causal chain confirmed",
+      title: "Trace the complete causal chain",
       explanation:
-        "Core stock → one mixed conduit → R-02 accumulation → discrete OX-1 attack → attributed enemy damage. Finishing resumes the assault without changing the machine.",
-      instruction: "Finish guided setup when you have inspected the board.",
-      result: "The guided setup is complete.",
+        "Core stock → mixed-gas duct → R-02 accumulation → OX-1 flash → attributed enemy damage. Finishing returns the plant to live assault with its current configuration.",
+      instruction: "Finish the field drill after inspecting the chain.",
+      result: "Flash Point field drill complete.",
       completed: () => false,
     },
   ],

@@ -24,7 +24,7 @@ const rateLabel = (rate: number): string =>
   rate >= FLOW_EPSILON ? `${rate.toFixed(2)} mol-eq/s` : "0.00 mol-eq/s";
 
 const flowSpeciesSummary = (channel: TransportChannelTelemetry | null): string => {
-  if (!channel || channel.speciesRates.length === 0) return "No measured material transfer";
+  if (!channel || channel.speciesRates.length === 0) return "Flow below measurement threshold";
   return channel.speciesRates
     .map(({ species, rate }) => `${SPECIES_DEFINITIONS[species].formula} ${rate.toFixed(2)}`)
     .join(" · ");
@@ -97,7 +97,7 @@ const PhaseSection = ({
     <section className={`transport-phase transport-phase-${phase}`}>
       <header>
         <span>{phaseName(phase)}</span>
-        <small>ONE SHARED CONDUIT · {conduitStateLabel(conduit)}</small>
+        <small>PHYSICAL CONDUIT · {conduitStateLabel(conduit)}</small>
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>

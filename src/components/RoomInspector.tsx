@@ -213,7 +213,7 @@ const EffectsPanel = () => {
       </div>
       <ul>
         {analysis.effects.map((effect) => (
-          <li key={effect} className={effect.startsWith("No meaningful") ? "neutral" : ""}>
+          <li key={effect} className={effect.startsWith("Enemy exposure below") ? "neutral" : ""}>
             <span /> {effect}
           </li>
         ))}
@@ -239,7 +239,7 @@ const ReactionPanel = () => {
         <FlaskConical size={15} />
       </div>
       {active.length === 0 ? (
-        <p className="no-reaction">No reaction rate measured in the current sample.</p>
+        <p className="no-reaction">Reaction rate idle in this sample.</p>
       ) : (
         <div className="reaction-rate-list">
           {active.map((reactionId) => {
@@ -276,7 +276,7 @@ const RecentIncidents = () => {
         <Activity size={15} />
       </div>
       {incidents.length === 0 ? (
-        <p className="no-reaction">No discrete combat or reaction incident recorded here.</p>
+        <p className="no-reaction">Incident log clear for this chamber.</p>
       ) : (
         <div className="recent-incident-list">
           {incidents.map((incident) => {
@@ -292,7 +292,7 @@ const RecentIncidents = () => {
                   {Math.round(incident.damageByChannel.heat)} heat damage
                 </span>
                 <small>
-                  {incident.phase.toUpperCase()} · retained record at {incident.elapsed.toFixed(1)}s
+                  {incident.phase.toUpperCase()} · recorded at {incident.elapsed.toFixed(1)}s
                 </small>
               </article>
             );
