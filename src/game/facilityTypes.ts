@@ -27,9 +27,29 @@ export interface RoomDefinition {
 
 export interface EquipmentGradeDefinition {
   level: EquipmentLevel;
-  effect: string;
   occupiedVolume: number;
+  behavior: EquipmentGradeBehavior;
 }
+
+export type EquipmentGradeBehavior =
+  | {
+      kind: "gas_agitator";
+      layerExchangeRate: number;
+      reactionMultiplier: number;
+    }
+  | {
+      kind: "wet_contactor";
+      reactionMultiplier: number;
+    }
+  | {
+      kind: "thermal_coil";
+      targetTemperature: number;
+    }
+  | {
+      kind: "membrane_cell";
+      processRate: number;
+      powerDraw: number;
+    };
 
 export interface EquipmentDefinition {
   id: EquipmentId;

@@ -1,8 +1,8 @@
 export { enemyRoomId, enemyWorldPosition } from "./engine/combat";
-export { executeCommand, roomRingDescription } from "./engine/commands";
+export { evaluateCommand } from "./engine/commandPolicy";
+export { executeCommand } from "./engine/commands";
 export {
   equipmentDismantleRefund,
-  equipmentFunctionalSummary,
   findEquipmentInstallation,
   installedEquipment,
   roomEquipmentVolume,
@@ -57,6 +57,7 @@ export {
   roomStaticPressure,
 } from "./engine/roomState";
 export { createInitialGame, createScenarioGame } from "./engine/scenarioState";
+export { createGameRuntime, DEFAULT_GAME_RUNTIME, type GameRuntime } from "./runtime";
 export {
   equipmentAvailable,
   gasSourceAvailable,

@@ -36,7 +36,13 @@ const skipGuidance = async (page: Page): Promise<void> => {
   }
 };
 
+const startNewGame = async (page: Page, slot = 1): Promise<void> => {
+  await page.getByTestId(`new-game-slot-${slot}`).click();
+  await expect(page.getByTestId("enter-control-room")).toBeVisible();
+};
+
 const startGuidedTutorial = async (page: Page): Promise<void> => {
+  await startNewGame(page);
   await expect(page.getByTestId("tutorial-enabled")).toBeChecked();
   await page.getByTestId("enter-control-room").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
@@ -60,20 +66,90 @@ test.beforeEach(async ({ page }) => {
       resolve(error);
     });
   });
-  await page.goto("/?e2eTest=1");
-  const modal = page.getByTestId("enter-control-room");
+  await page.goto("/");
+  const saveSelection = page.getByTestId("save-selection");
   const startupError = await Promise.race([
-    modal.waitFor({ state: "visible" }).then(() => null),
+    saveSelection.waitFor({ state: "visible" }).then(() => null),
     firstPageError,
   ]);
   expect(startupError).toBeNull();
-  await expect(page.locator(".app-shell")).toHaveAttribute("data-simulation-clock", "frozen-test");
+  await expect(page.locator('[data-testid^="save-slot-"]')).toHaveCount(3);
+  await expect(page.getByTestId("new-game-slot-1")).toBeVisible();
+  await expect(page.getByTestId("new-game-slot-2")).toBeVisible();
+  await expect(page.getByTestId("new-game-slot-3")).toBeVisible();
   expect(errors).toEqual([]);
+});
+
+test("resetting the active save restarts the tutorial at its first step", async ({ page }) => {
+  await startGuidedTutorial(page);
+  const coach = page.getByTestId("tutorial-coach");
+  await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
+  await continueTutorial(page, "start-shared-duct");
+
+  await page.getByRole("button", { name: "Restart current save" }).click();
+  await expect(page.getByTestId("restart-save-confirmation")).toBeVisible();
+  await page.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.getByTestId("restart-save-confirmation")).toBeHidden();
+  await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
+  await page.getByRole("button", { name: "Restart current save" }).click();
+  await page.getByTestId("confirm-restart-save").click();
+  await expect(page.getByTestId("enter-control-room")).toBeVisible();
+  await page.getByTestId("enter-control-room").click();
+
+  await expect(coach).toHaveAttribute("data-guide-step", "install-agitator");
+  await expect(page.getByTestId("install-furnace-socket_a-gas_agitator")).toBeVisible();
+  await expect(page.getByText(/Gas agitator · Grade 1/)).toHaveCount(0);
+});
+
+test("new game overwrites an occupied slot with a complete tutorial reset", async ({ page }) => {
+  await startGuidedTutorial(page);
+  await skipGuidance(page);
+  await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
+  await page.getByRole("button", { name: "Return to save slots" }).click();
+
+  await expect(page.getByTestId("load-save-slot-1")).toBeVisible();
+  await page.getByRole("button", { name: "Delete save slot 1" }).click();
+  await expect(page.getByTestId("confirmation-delete-slot-1")).toBeVisible();
+  await page.getByTestId("cancel-delete-slot-1").click();
+  await expect(page.getByTestId("load-save-slot-1")).toBeVisible();
+  await page.getByTestId("overwrite-slot-1").click();
+  await expect(page.getByTestId("confirmation-overwrite-slot-1")).toBeVisible();
+  await page.getByTestId("confirm-overwrite-slot-1").click();
+  await page.getByTestId("enter-control-room").click();
+
+  await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
+    "data-guide-step",
+    "install-agitator"
+  );
+  await expect(page.getByTestId("install-furnace-socket_a-gas_agitator")).toBeVisible();
+});
+
+test("save slots remain isolated when starting and loading different campaigns", async ({
+  page,
+}) => {
+  await startNewGame(page, 1);
+  await page.getByTestId("tutorial-enabled").uncheck();
+  await page.getByTestId("enter-control-room").click();
+  await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Return to save slots" }).click();
+
+  await startNewGame(page, 2);
+  await page.getByTestId("enter-control-room").click();
+  await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
+    "data-guide-step",
+    "install-agitator"
+  );
+  await page.getByRole("button", { name: "Return to save slots" }).click();
+
+  await page.getByTestId("load-save-slot-1").click();
+  await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
 });
 
 test("the Flash Point field drill proves the complete causal chain through domain rules", async ({
   page,
 }) => {
+  test.setTimeout(120_000);
   await startGuidedTutorial(page);
   const coach = page.getByTestId("tutorial-coach");
   await expect(page.getByTestId("room-name")).toHaveText("Lower Outer Bay");
@@ -100,14 +176,16 @@ test("the Flash Point field drill proves the complete causal chain through domai
   const headerBefore = await page.getByTestId("source-starter_gas_header").innerText();
   await page.getByTestId("begin-prime").click();
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
-  await expect(page.getByTestId("source-starter_gas_header")).toHaveText(headerBefore);
+  await expect(page.getByTestId("source-starter_gas_header")).not.toHaveText(headerBefore, {
+    timeout: 10_000,
+  });
   await expect(coach).toContainText("The plant clock is live");
   await continueTutorial(page, "accelerate-clock");
 
   await page.getByTestId("simulation-speed").click();
   await expect(coach).toContainText("The clock is at 2×");
   await continueTutorial(page, "observe-prime-flash");
-  await expect(coach).toContainText("first OX-1 incident");
+  await expect(coach).toContainText("first OX-1 incident", { timeout: 30_000 });
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("0 hit · 0 killed");
   await continueTutorial(page, "start-assault");
 
@@ -116,8 +194,10 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(coach).toContainText("Crawlers are advancing along the mapped route");
   await continueTutorial(page, "observe-combat-flash");
 
-  await expect(page.locator(".paused-overlay")).toContainText("Simulation paused");
-  await expect(coach).toContainText("Combat is paused on a confirmed hit");
+  await expect(page.locator(".paused-overlay")).toContainText("Simulation paused", {
+    timeout: 60_000,
+  });
+  await expect(coach).toContainText("Combat is paused on a confirmed hit", { timeout: 60_000 });
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("1 hit · 1 killed");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("pressure");
   await continueTutorial(page, "combat-confirmed");
@@ -198,6 +278,7 @@ test("map drag capture starts after a threshold and never selects the release ro
 });
 
 test("disabling the tutorial starts directly in lesson two", async ({ page }) => {
+  await startNewGame(page);
   const checkbox = page.getByTestId("tutorial-enabled");
   await expect(checkbox).toBeChecked();
   await checkbox.uncheck();
@@ -263,11 +344,13 @@ test("Core visibly owns the mixed starter header, junction, vent, and drain", as
 
   await page.getByTestId("conduit-control-core_furnace-gas").click();
   await page.getByTestId("begin-prime").click();
-  await expect(page.getByTestId("source-starter_gas_header")).toContainText("114.0 / 150");
+  await expect(page.getByTestId("source-starter_gas_header")).not.toContainText("114.0 / 150", {
+    timeout: 10_000,
+  });
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
 });
 
-test("a live tutorial process survives reload with its one conduit state", async ({ page }) => {
+test("refresh returns to save selection before loading the live process", async ({ page }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
   await page.getByTestId("conduit-control-core_furnace-gas").click();
@@ -275,13 +358,17 @@ test("a live tutorial process survives reload with its one conduit state", async
   await page.waitForTimeout(900);
 
   await page.reload();
+  await expect(page.getByTestId("save-selection")).toBeVisible();
+  await expect(page.getByTestId("load-save-slot-1")).toBeVisible();
+  await expect(page.getByTestId("game-map")).toHaveCount(0);
+  await page.getByTestId("load-save-slot-1").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
   await expect(page.getByTestId("conduit-control-core_furnace-gas")).toHaveAttribute(
     "aria-pressed",
     "true"
   );
-  await expect(page.getByTestId("source-starter_gas_header")).toContainText("114.0 / 150");
+  await expect(page.getByTestId("source-starter_gas_header")).toContainText("/ 150");
 });
 
 test("the facility cross-section remains usable at a compact desktop viewport", async ({

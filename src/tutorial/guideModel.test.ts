@@ -3,6 +3,7 @@ import { emptyHazardChannels } from "../game/engine/damage";
 import { createScenarioGame, executeCommand } from "../game/simulation";
 import type { CombatIncident, GameCommand, GameState } from "../game/types";
 import { assaultFlashIncident, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
+import { TUTORIAL_ANCHORS } from "./anchors";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -63,7 +64,9 @@ describe("Flash Point guide", () => {
       "observe-combat-flash",
       "combat-confirmed",
     ]);
-    expect(guide.steps.filter((step) => step.target.includes("conduit-control"))).toHaveLength(1);
+    expect(
+      guide.steps.filter((step) => step.target === TUTORIAL_ANCHORS.conduitCoreFurnaceGas)
+    ).toHaveLength(1);
     expect(guide.steps.some((step) => /oxygen|hydrogen/i.test(step.target))).toBe(false);
 
     game = command(game, {

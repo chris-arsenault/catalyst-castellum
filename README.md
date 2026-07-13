@@ -10,7 +10,7 @@ Play the deployed game at [catalyst.ahara.io](https://catalyst.ahara.io).
 - PixiJS 8 with Pixi React for the combined side-view facility cross-section
 - Pure TypeScript fixed-step simulation, independent from React and PixiJS
 - Zustand as the thin UI/simulation bridge
-- Zod-validated, versioned local saves
+- Three isolated local save slots backed by Zod-validated, versioned game snapshots
 - Vite, Vitest, and Playwright for build and automated verification
 
 The production application is static JavaScript. All authoritative flow, reaction, combat, and phase transitions run deterministically in the browser.
@@ -37,20 +37,22 @@ pnpm build
 The unit suite covers elemental conservation, finite-volume shared conduits, route-volume priming,
 cross-phase displacement, backpressure, H₂/O₂ flash attacks, movement drag, damage attribution,
 persistent incidents and byproducts, campaign checkpoints, unlock enforcement, and versioned saves.
-Playwright covers the first tutorial from briefing through an attributed combat kill, free Pixi room
-selection, drag-safe camera controls, save restoration, compact layout, shared-conduit hover detail,
-and single-material flow overlays.
+Playwright covers the first tutorial from briefing through an attributed combat kill, deterministic
+reset/new-game behavior, cross-slot isolation, refresh-to-menu save restoration, free Pixi room
+selection, drag-safe camera controls, compact layout, shared-conduit hover detail, and
+single-material flow overlays.
 
-The slower policy-injection playtester is deliberately separate from normal CI:
+The headless policy evaluator can also be run interactively:
 
 ```bash
-pnpm playtest -- --runs 200 --seed 13371
-pnpm playtest -- --level flash_point --runs 500
+pnpm playtest --runs 200 --seed 13371
+pnpm playtest --level flash_point --runs 500
+pnpm campaign:health
 ```
 
 It runs the pure engine without React or Pixi, compares do-nothing and intended reference policies,
-then groups seeded randomized policies by action count, pass rate, and remaining core. Neither
-`make ci` nor `pnpm check` invokes it.
+then groups seeded randomized policies by action count, pass rate, and remaining core. `make ci`
+includes a bounded deterministic health assertion; exploratory randomized runs remain opt-in.
 
 ## How to play
 
@@ -114,12 +116,18 @@ traces one species across the plant with pulsing arrows sized by actual throughp
 
 ## Simulation boundary
 
-`src/game/simulation.ts` exposes all authoritative state transitions implemented under
-`src/game/engine/`. Rendering and interface code may inspect state and dispatch typed commands, but
-they do not implement chemistry, unlock, timing, or damage rules. Level definitions own facility
-loadouts, round waves, prime limits, and availability under `src/game/content/campaign.ts`.
-`src/game/engine/scenarioState.ts` materializes those definitions into the same `GameState` consumed
-by the browser and the headless evaluator.
+`src/game/runtime.ts` exposes the narrow authoritative transition API implemented under
+`src/game/engine/`; `src/game/queries.ts` exposes the read-only application query API. Rendering and
+interface code inspect state and dispatch typed commands, but do not import internal mutators or
+implement chemistry, unlock, timing, or damage rules. An immutable `GameDefinition` composes the
+facility, materials, reactions, equipment, hazards, transport, enemies, and campaign. The default
+browser and headless adapters share one scoped runtime, while tests can run a second definition in
+the same process.
+
+Save V11 is structurally decoded, migrated from supported V7–V10 formats, then semantically
+validated before execution. Browser restoration is explicit application initialization rather than
+an import side effect. See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership, extension, performance,
+and CI contracts.
 
 Gas conduits, liquid conduits, and monster corridors are independent networks in the MVP. Feedstock
 tanks, the vent, and liquid recovery are distinct ports hosted by the Core utility manifold; their

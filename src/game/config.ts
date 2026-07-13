@@ -9,3 +9,4 @@ export * from "./content/rooms";
 export * from "./content/scenario";
 export * from "./content/substances";
 export * from "./content/transportRuns";
+export * from "./definition";

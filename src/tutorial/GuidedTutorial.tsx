@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Joyride, type Options, type Step, type Styles } from "react-joyride";
-import { useGameStore } from "../game/store";
+import { useGameStore } from "../application/store";
 import {
   guideCanRun,
   guideDefinitionFor,
@@ -9,6 +9,7 @@ import {
 } from "./guideModel";
 import { GuideTooltip } from "./GuideTooltip";
 import { GuideAdvanceContext } from "./guideUiContext";
+import { tutorialAnchorSelector } from "./anchors";
 
 const COACH_ANCHOR = '[data-tutorial="coach-anchor"]';
 
@@ -36,7 +37,8 @@ const stepsFor = (guide: GuideDefinition): Step[] =>
   guide.steps.map((definition) => ({
     id: definition.id,
     target: COACH_ANCHOR,
-    scrollTarget: () => document.querySelector<HTMLElement>(definition.target),
+    scrollTarget: () =>
+      document.querySelector<HTMLElement>(tutorialAnchorSelector(definition.target)),
     placement: "top-start",
     isFixed: true,
     title: definition.title,
@@ -91,7 +93,7 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
 
   useEffect(() => {
     if (!run || !activeStep || satisfied) return;
-    const element = document.querySelector<HTMLElement>(activeStep.target);
+    const element = document.querySelector<HTMLElement>(tutorialAnchorSelector(activeStep.target));
     if (!element) return;
     element.classList.add("tutorial-active-target");
     return () => element.classList.remove("tutorial-active-target");
@@ -115,7 +117,8 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
 
 export const GuidedTutorial = () => {
   const game = useGameStore((state) => state.game);
+  const tutorialSessionRevision = useGameStore((state) => state.tutorialSessionRevision);
   const guide = guideDefinitionFor(game);
   if (!guide) return null;
-  return <ActiveGuidedTutorial key={guide.id} guide={guide} />;
+  return <ActiveGuidedTutorial key={`${guide.id}:${tutorialSessionRevision}`} guide={guide} />;
 };

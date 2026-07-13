@@ -21,3 +21,7 @@ export const loadDismissedGuideIds = (): string[] => {
 export const saveDismissedGuideIds = (guideIds: string[]): void => {
   browserStorage()?.setItem(STORAGE_KEY, JSON.stringify([...new Set(guideIds)]));
 };
+
+export const clearDismissedGuideIds = (): void => {
+  browserStorage()?.removeItem(STORAGE_KEY);
+};

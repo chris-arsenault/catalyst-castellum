@@ -1,5 +1,5 @@
 import { ENEMY_DEFINITIONS } from "../../game/config";
-import { enemyWorldPosition } from "../../game/simulation";
+import { enemyWorldPosition } from "../../game/queries";
 import type { EnemyLocomotionMode, EnemyState, EnemyType, Point } from "../../game/types";
 import { colorNumber, worldToMapPoint } from "./mapGeometry";
 

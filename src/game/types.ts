@@ -1,97 +1,34 @@
 import type { HazardChannels } from "./gameStateTypes";
 import type { RoomEquipment } from "./facilityTypes";
+import {
+  DAMAGE_SOURCE_IDS,
+  ENEMY_LOCOMOTION_MODES,
+  ENEMY_ROUTE_IDS,
+  ENEMY_TYPES,
+  EQUIPMENT_IDS,
+  EQUIPMENT_LEVELS,
+  EQUIPMENT_SOCKET_IDS,
+  FLOW_CAUSES,
+  GAS_BUFFER_IDS,
+  GAS_SOURCE_IDS,
+  GAS_TYPES,
+  GAS_ZONES,
+  LEVEL_IDS,
+  LIQUID_BUFFER_IDS,
+  LIQUID_SOURCE_IDS,
+  LIQUID_TYPES,
+  LIMIT_CONDITION_CODES,
+  PROCESS_IDS,
+  REACTION_IDS,
+  ROOM_IDS,
+  ROOM_REACTION_IDS,
+  TRANSPORT_PHASES,
+  TRANSPORT_RUN_IDS,
+} from "./identifiers";
 
 export * from "./gameStateTypes";
 export * from "./facilityTypes";
-
-export const GAS_TYPES = [
-  "oxygen",
-  "nitrogen",
-  "carbon_dioxide",
-  "chlorine",
-  "hydrogen",
-  "hydrogen_chloride",
-  "steam",
-] as const;
-
-export const GAS_ZONES = ["lower", "upper"] as const;
-
-export const LIQUID_TYPES = [
-  "water",
-  "sodium_chloride",
-  "sodium_hydroxide",
-  "sodium_hypochlorite",
-  "hydrochloric_acid",
-] as const;
-
-export const ENEMY_TYPES = ["crawler", "skimmer", "floater", "shell", "bellows"] as const;
-export const ENEMY_ROUTE_IDS = ["entry_to_core"] as const;
-
-export const GAS_SOURCE_IDS = ["starter_gas_header"] as const;
-export const LIQUID_SOURCE_IDS = ["water_tank", "sodium_chloride_tank"] as const;
-export const GAS_BUFFER_IDS = ["anode_header", "cathode_header"] as const;
-export const LIQUID_BUFFER_IDS = ["cell_liquor"] as const;
-
-export const TRANSPORT_RUN_IDS = [
-  "core_furnace",
-  "cell_furnace",
-  "core_cell",
-  "cell_absorber",
-  "furnace_return",
-  "return_final",
-  "return_outer",
-  "core_final",
-  "absorber_final",
-  "core_absorber",
-] as const;
-
-export const EQUIPMENT_IDS = [
-  "gas_agitator",
-  "wet_contactor",
-  "thermal_coil",
-  "membrane_cell",
-] as const;
-
-export const EQUIPMENT_SOCKET_IDS = ["socket_a", "socket_b"] as const;
-
-export const PROCESS_IDS = ["chlor_alkali_cell"] as const;
-
-export const DAMAGE_SOURCE_IDS = [
-  "atmospheric_exposure",
-  "surface_corrosion",
-  "thermal_exposure",
-  "catastrophic_overpressure",
-  "radiation_field",
-  "hydrogen_oxygen_combustion",
-  "legacy_unattributed",
-] as const;
-
-export const REACTION_IDS = [
-  "chlor_alkali_electrolysis",
-  "hydrogen_oxygen_combustion",
-  "hydrogen_chlorine_recombination",
-  "hydrogen_chloride_absorption",
-  "acid_neutralization",
-  "hypochlorite_formation",
-  "acid_chlorine_release",
-] as const;
-
-export const LEVEL_IDS = [
-  "flash_point",
-  "make_the_reagent",
-  "acid_line",
-  "stored_chlorine",
-  "commissioning_exam",
-] as const;
-
-export const ROOM_REACTION_IDS = [
-  "hydrogen_oxygen_combustion",
-  "hydrogen_chlorine_recombination",
-  "hydrogen_chloride_absorption",
-  "acid_neutralization",
-  "hypochlorite_formation",
-  "acid_chlorine_release",
-] as const;
+export * from "./identifiers";
 
 export type GasType = (typeof GAS_TYPES)[number];
 export type GasZone = (typeof GAS_ZONES)[number];
@@ -106,13 +43,14 @@ export type LiquidBufferId = (typeof LIQUID_BUFFER_IDS)[number];
 export type TransportRunId = (typeof TRANSPORT_RUN_IDS)[number];
 export type EquipmentId = (typeof EQUIPMENT_IDS)[number];
 export type EquipmentSocketId = (typeof EQUIPMENT_SOCKET_IDS)[number];
-export type EquipmentLevel = 1 | 2 | 3;
-export type TransportPhase = "gas" | "liquid";
+export type EquipmentLevel = (typeof EQUIPMENT_LEVELS)[number];
+export type TransportPhase = (typeof TRANSPORT_PHASES)[number];
 export type ProcessId = (typeof PROCESS_IDS)[number];
 export type ReactionId = (typeof REACTION_IDS)[number];
 export type RoomReactionId = (typeof ROOM_REACTION_IDS)[number];
 export type LevelId = (typeof LEVEL_IDS)[number];
 export type DamageSourceId = (typeof DAMAGE_SOURCE_IDS)[number];
+export type LimitConditionCode = (typeof LIMIT_CONDITION_CODES)[number];
 
 export type GasAmounts = Record<GasType, number>;
 export type GasLayers = Record<GasZone, GasAmounts>;
@@ -120,15 +58,7 @@ export type GasTemperatures = Record<GasZone, number>;
 export type LiquidAmounts = Record<LiquidType, number>;
 export type ElementalComposition = Record<string, number>;
 
-export type RoomId =
-  | "west_intake"
-  | "lower_intake"
-  | "switchyard"
-  | "furnace"
-  | "reservoir"
-  | "gallery"
-  | "washlock"
-  | "core";
+export type RoomId = (typeof ROOM_IDS)[number];
 
 export interface Point {
   x: number;
@@ -201,7 +131,34 @@ export interface ProcessDefinition {
   description: string;
   reactionId: ReactionId;
   equipmentId: EquipmentId;
+  executor: "electrolysis";
+  outputs: readonly ProcessOutputDefinition[];
+  separatorBackflow: SeparatorBackflowDefinition | null;
   accent: string;
+}
+
+export type ProcessOutputDefinition =
+  | {
+      phase: "gas";
+      speciesId: GasType;
+      bufferId: GasBufferId;
+      limitCode: "anode_headroom" | "cathode_headroom";
+    }
+  | {
+      phase: "liquid";
+      speciesId: LiquidType;
+      bufferId: LiquidBufferId;
+      limitCode: "outlet_headroom";
+    };
+
+export interface SeparatorBackflowDefinition {
+  leftBufferId: GasBufferId;
+  rightBufferId: GasBufferId;
+  leftSpeciesId: GasType;
+  rightSpeciesId: GasType;
+  activationDifference: number;
+  flowOffset: number;
+  rate: number;
 }
 
 export interface SpeciesDefinition {
@@ -213,6 +170,16 @@ export interface SpeciesDefinition {
   molarMass: number;
   referenceDensity: number;
   color: string;
+  hazards: readonly SpeciesHazardRule[];
+}
+
+export interface SpeciesHazardRule {
+  basis: "gas_partial_ratio" | "liquid_strength";
+  direction: "above" | "below";
+  threshold: number;
+  rate: number;
+  channel: keyof HazardChannels;
+  exposure: "all" | "oxygen_breathers" | "floor_contact";
 }
 
 export interface ReactionParticipant {
@@ -228,12 +195,60 @@ export interface ReactionDefinition {
   equation: string;
   reactants: ReactionParticipant[];
   products: ReactionParticipant[];
+  behavior: ReactionBehaviorDefinition;
 }
+
+export type ReactionBehaviorDefinition =
+  | {
+      kind: "electrolysis";
+      maximumRate: number;
+      roomHeatPerExtent: number;
+    }
+  | {
+      kind: "flash";
+      ignitionExtent: number;
+      maximumExtent: number;
+      minimumHydrogenFraction: number;
+      minimumOxygenFraction: number;
+      cooldownSeconds: number;
+      pressurePulseBase: number;
+      pressurePulsePerExtent: number;
+      gasHeatPerExtent: number;
+      roomHeatPerExtent: number;
+      pressureDamageBase: number;
+      pressureDamagePerExtent: number;
+      heatDamagePerExtent: number;
+    }
+  | {
+      kind: "gas_recombination";
+      maximumRate: number;
+      activationTemperature: number;
+      activationRange: number;
+      gasHeatPerExtent: number;
+      roomHeatPerExtent: number;
+    }
+  | {
+      kind: "absorption";
+      maximumRate: number;
+      solventInventoryScale: number;
+      maximumProductFraction: number;
+    }
+  | {
+      kind: "mixed_contact";
+      maximumRate: number;
+      mixingInventoryScale: number;
+      roomHeatPerExtent: number;
+    };
 
 export interface ReactionTelemetry {
   lastRate: number;
-  limitingReactant: string;
+  limitingFactor: LimitingFactor;
 }
+
+export type LimitingFactor =
+  | { kind: "species"; speciesId: SpeciesId; zone: GasZone | null }
+  | { kind: "condition"; code: LimitConditionCode; zone: GasZone | null }
+  | { kind: "legacy"; label: string };
 
 export interface RoomState {
   id: RoomId;
@@ -298,22 +313,13 @@ export interface LiquidJunctionState {
   liquid: LiquidAmounts;
 }
 
-export type FlowCause =
-  | "idle"
-  | "priming"
-  | "pressure"
-  | "buoyancy"
-  | "fan"
-  | "gravity"
-  | "siphon"
-  | "pump"
-  | "backpressure";
+export type FlowCause = (typeof FLOW_CAUSES)[number];
 
 export interface ProcessState {
   setting: number;
   lastRate: number;
   totalProcessed: number;
-  limitingReactant: string;
+  limitingFactor: LimitingFactor;
   powerDraw: number;
   separatorLeakTotal: number;
 }
@@ -359,7 +365,7 @@ export interface EnemyState {
   lastDamage: DamageReceipt | null;
 }
 
-export type EnemyLocomotionMode = "walking" | "climbing" | "falling" | "door" | "flying";
+export type EnemyLocomotionMode = (typeof ENEMY_LOCOMOTION_MODES)[number];
 
 export interface EnemyPathStep {
   cell: GridCell;

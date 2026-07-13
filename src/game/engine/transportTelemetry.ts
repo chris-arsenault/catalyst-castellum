@@ -1,4 +1,4 @@
-import { TRANSPORT_RUNS } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -52,9 +52,10 @@ export interface TransportPhaseStatus {
 const phaseChannel = (
   state: GameState,
   runId: TransportRunId,
-  phase: TransportPhase
+  phase: TransportPhase,
+  gameDefinition: GameDefinition
 ): TransportChannelTelemetry | null => {
-  const definition = TRANSPORT_RUNS[runId][phase];
+  const definition = gameDefinition.transportRuns[runId][phase];
   if (!definition) return null;
   const conduit = phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
   const speciesRates: SpeciesRate[] =
@@ -87,20 +88,22 @@ const phaseChannel = (
 
 export const transportRunChannels = (
   state: GameState,
-  runId: TransportRunId
+  runId: TransportRunId,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): TransportChannelTelemetry[] =>
   (["gas", "liquid"] as const).flatMap((phase) => {
-    const channel = phaseChannel(state, runId, phase);
+    const channel = phaseChannel(state, runId, phase, definition);
     return channel ? [channel] : [];
   });
 
 export const transportRunMaterialFlow = (
   state: GameState,
   runId: TransportRunId,
-  species: SpeciesId
+  species: SpeciesId,
+  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): MaterialRunFlow => {
   const phase: TransportPhase = GAS_TYPES.includes(species as GasType) ? "gas" : "liquid";
-  const definition = TRANSPORT_RUNS[runId][phase];
+  const definition = gameDefinition.transportRuns[runId][phase];
   if (!definition) {
     return { forward: 0, reverse: 0, net: 0, blocked: false, priming: false };
   }
@@ -109,7 +112,8 @@ export const transportRunMaterialFlow = (
     phase === "gas"
       ? state.gasConduits[runId].lastSpeciesFlow[species as GasType]
       : state.liquidConduits[runId].lastSpeciesFlow[species as LiquidType];
-  const oriented = definition.direction[0] === TRANSPORT_RUNS[runId].rooms[0] ? rate : -rate;
+  const oriented =
+    definition.direction[0] === gameDefinition.transportRuns[runId].rooms[0] ? rate : -rate;
   return {
     forward: Math.max(0, oriented),
     reverse: Math.max(0, -oriented),
@@ -122,16 +126,27 @@ export const transportRunMaterialFlow = (
 export const transportRunPhaseStatus = (
   state: GameState,
   runId: TransportRunId,
-  phase: TransportPhase
+  phase: TransportPhase,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): TransportPhaseStatus => {
   const conduit = phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
-  const exists = TRANSPORT_RUNS[runId][phase] !== null;
+  const exists = definition.transportRuns[runId][phase] !== null;
+  if (!exists) {
+    return {
+      installed: false,
+      configured: false,
+      active: false,
+      blocked: false,
+      priming: false,
+      rate: 0,
+    };
+  }
   return {
-    installed: exists && conduit.installed,
-    configured: exists && conduit.installed && conduit.enabled,
-    active: exists && Math.abs(conduit.lastFlow) > FLOW_EPSILON,
-    blocked: exists && conduit.blocked,
-    priming: exists && conduit.flowCause === "priming" && conduit.lastFlow > FLOW_EPSILON,
-    rate: exists ? Math.abs(conduit.lastFlow) : 0,
+    installed: conduit.installed,
+    configured: conduit.installed && conduit.enabled,
+    active: Math.abs(conduit.lastFlow) > FLOW_EPSILON,
+    blocked: conduit.blocked,
+    priming: conduit.flowCause === "priming" && conduit.lastFlow > FLOW_EPSILON,
+    rate: Math.abs(conduit.lastFlow),
   };
 };

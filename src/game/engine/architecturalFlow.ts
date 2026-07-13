@@ -1,4 +1,4 @@
-import { FACILITY_MAP, roomPortHeight } from "../content/facilityGeometry";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -20,6 +20,7 @@ import {
   roomZoneDensity,
   STANDARD_PRESSURE,
 } from "./physics";
+import { proportionalMixture, subtractMixture } from "./mixture";
 
 const GAS_DIFFUSION_FRACTION = 0.012;
 const GAS_DRIVE_SCALE = 4;
@@ -29,28 +30,11 @@ const portalActive = (state: GameState, portal: FacilityPortalDefinition): boole
   return Boolean(portalState?.open && !portalState.sealed);
 };
 
-const packetFromGas = (gas: GasAmounts, amount: number): GasAmounts => {
-  const total = gasAmountTotal(gas);
-  return Object.fromEntries(
-    GAS_TYPES.map((species) => [species, total > 0 ? (gas[species] / total) * amount : 0])
-  ) as GasAmounts;
-};
+const packetFromGas = (gas: GasAmounts, amount: number): GasAmounts =>
+  proportionalMixture(gas, amount, GAS_TYPES);
 
-const packetFromLiquid = (liquid: LiquidAmounts, amount: number): LiquidAmounts => {
-  const total = liquidAmountTotal(liquid);
-  return Object.fromEntries(
-    LIQUID_TYPES.map((species) => [species, total > 0 ? (liquid[species] / total) * amount : 0])
-  ) as LiquidAmounts;
-};
-
-const subtractGas = (target: GasAmounts, packet: GasAmounts): void => {
-  for (const species of GAS_TYPES) target[species] = Math.max(0, target[species] - packet[species]);
-};
-
-const subtractLiquid = (target: LiquidAmounts, packet: LiquidAmounts): void => {
-  for (const species of LIQUID_TYPES)
-    target[species] = Math.max(0, target[species] - packet[species]);
-};
+const packetFromLiquid = (liquid: LiquidAmounts, amount: number): LiquidAmounts =>
+  proportionalMixture(liquid, amount, LIQUID_TYPES);
 
 interface GasFlowPlan {
   portalId: string;
@@ -65,38 +49,51 @@ interface GasFlowPlan {
   temperature: number;
 }
 
-const gasZoneForEndpoint = (portal: FacilityPortalDefinition, endpointIndex: 0 | 1): GasZone => {
+const gasZoneForEndpoint = (
+  portal: FacilityPortalDefinition,
+  endpointIndex: 0 | 1,
+  definition: GameDefinition
+): GasZone => {
   const roomId = portal.rooms[endpointIndex];
-  return gasZoneForPort(roomPortHeight(roomId, portal.endpoints[endpointIndex].elevation));
+  return gasZoneForPort(
+    definition.facility.roomPortHeight(roomId, portal.endpoints[endpointIndex].elevation)
+  );
 };
 
-const gasDrive = (state: GameState, portal: FacilityPortalDefinition): number => {
+const gasDrive = (
+  state: GameState,
+  portal: FacilityPortalDefinition,
+  definition: GameDefinition
+): number => {
   const [leftId, rightId] = portal.rooms;
-  const leftZone = gasZoneForEndpoint(portal, 0);
-  const rightZone = gasZoneForEndpoint(portal, 1);
+  const leftZone = gasZoneForEndpoint(portal, 0, definition);
+  const rightZone = gasZoneForEndpoint(portal, 1, definition);
   const pressureDrive =
-    (roomPressure(state.rooms[leftId]) - roomPressure(state.rooms[rightId])) / STANDARD_PRESSURE;
+    (roomPressure(state.rooms[leftId], definition) -
+      roomPressure(state.rooms[rightId], definition)) /
+    STANDARD_PRESSURE;
   if (portal.orientation !== "vertical") return pressureDrive;
   const leftIsLower = portal.endpoints[0].elevation < portal.endpoints[1].elevation;
   const densityDifference =
-    roomZoneDensity(state.rooms[rightId], rightZone) -
-    roomZoneDensity(state.rooms[leftId], leftZone);
+    roomZoneDensity(state.rooms[rightId], rightZone, definition) -
+    roomZoneDensity(state.rooms[leftId], leftZone, definition);
   return pressureDrive + densityDifference * (leftIsLower ? 0.22 : -0.22);
 };
 
 const directedGasPlan = (
   state: GameState,
   portal: FacilityPortalDefinition,
-  dt: number
+  dt: number,
+  definition: GameDefinition
 ): GasFlowPlan | null => {
-  const drive = gasDrive(state, portal);
+  const drive = gasDrive(state, portal, definition);
   if (Math.abs(drive) < 1e-7) return null;
   const sourceIndex: 0 | 1 = drive > 0 ? 0 : 1;
   const destinationIndex: 0 | 1 = sourceIndex === 0 ? 1 : 0;
   const sourceRoomId = portal.rooms[sourceIndex];
   const destinationRoomId = portal.rooms[destinationIndex];
-  const sourceZone = gasZoneForEndpoint(portal, sourceIndex);
-  const destinationZone = gasZoneForEndpoint(portal, destinationIndex);
+  const sourceZone = gasZoneForEndpoint(portal, sourceIndex, definition);
+  const destinationZone = gasZoneForEndpoint(portal, destinationIndex, definition);
   const requested =
     portal.gasConductance * portal.aperture * Math.abs(drive) * GAS_DRIVE_SCALE * dt;
   return {
@@ -116,11 +113,12 @@ const directedGasPlan = (
 const diffusionPlans = (
   state: GameState,
   portal: FacilityPortalDefinition,
-  dt: number
+  dt: number,
+  definition: GameDefinition
 ): GasFlowPlan[] => {
   const [leftId, rightId] = portal.rooms;
-  const leftZone = gasZoneForEndpoint(portal, 0);
-  const rightZone = gasZoneForEndpoint(portal, 1);
+  const leftZone = gasZoneForEndpoint(portal, 0, definition);
+  const rightZone = gasZoneForEndpoint(portal, 1, definition);
   const amount =
     Math.min(
       gasAmountTotal(state.rooms[leftId].gas[leftZone]),
@@ -159,7 +157,11 @@ const diffusionPlans = (
   ];
 };
 
-const allocateGasPlans = (state: GameState, plans: GasFlowPlan[]): void => {
+const allocateGasPlans = (
+  state: GameState,
+  plans: GasFlowPlan[],
+  definition: GameDefinition
+): void => {
   const sourceKeys = [...new Set(plans.map((plan) => `${plan.sourceRoomId}:${plan.sourceZone}`))];
   for (const key of sourceKeys) {
     const matching = plans.filter((plan) => `${plan.sourceRoomId}:${plan.sourceZone}` === key);
@@ -173,24 +175,29 @@ const allocateGasPlans = (state: GameState, plans: GasFlowPlan[]): void => {
   for (const roomId of [...new Set(plans.map((plan) => plan.destinationRoomId))]) {
     const matching = plans.filter((plan) => plan.destinationRoomId === roomId);
     const requested = matching.reduce((total, plan) => total + plan.amount, 0);
-    const scale = requested > 0 ? Math.min(1, roomGasHeadroom(state.rooms[roomId]) / requested) : 0;
+    const scale =
+      requested > 0 ? Math.min(1, roomGasHeadroom(state.rooms[roomId], definition) / requested) : 0;
     for (const plan of matching) plan.amount *= scale;
   }
 };
 
-export const simulateArchitecturalGas = (state: GameState, dt: number): void => {
+export const simulateArchitecturalGas = (
+  state: GameState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastGasFlow = 0;
-  const portals = FACILITY_MAP.portals.filter(
+  const portals = definition.facilityMap.portals.filter(
     (portal) => portal.gasConductance > 0 && portalActive(state, portal)
   );
   const plans = portals.flatMap((portal) => {
-    const directed = directedGasPlan(state, portal, dt);
-    return [...(directed ? [directed] : []), ...diffusionPlans(state, portal, dt)];
+    const directed = directedGasPlan(state, portal, dt, definition);
+    return [...(directed ? [directed] : []), ...diffusionPlans(state, portal, dt, definition)];
   });
-  allocateGasPlans(state, plans);
+  allocateGasPlans(state, plans, definition);
   for (const plan of plans) {
     plan.packet = packetFromGas(state.rooms[plan.sourceRoomId].gas[plan.sourceZone], plan.amount);
-    subtractGas(state.rooms[plan.sourceRoomId].gas[plan.sourceZone], plan.packet);
+    subtractMixture(state.rooms[plan.sourceRoomId].gas[plan.sourceZone], plan.packet, GAS_TYPES);
   }
   for (const plan of plans) {
     const targetRoom = state.rooms[plan.destinationRoomId];
@@ -226,7 +233,8 @@ export const verticalPortalOrder = (portal: FacilityPortalDefinition): readonly 
 const liquidPlan = (
   state: GameState,
   portal: FacilityPortalDefinition,
-  dt: number
+  dt: number,
+  definition: GameDefinition
 ): LiquidFlowPlan | null => {
   if (portal.liquidMode === "blocked") return null;
   let sourceIndex: 0 | 1;
@@ -238,11 +246,12 @@ const liquidPlan = (
     if (liquidAmountTotal(source.liquid) <= 1e-8) return null;
     head = Math.max(
       0.25,
-      liquidSurfaceElevation(source) - FACILITY_MAP.rooms[source.id].bounds.elevation
+      liquidSurfaceElevation(source, definition) -
+        definition.facilityMap.rooms[source.id].bounds.elevation
     );
   } else {
-    const leftSurface = liquidSurfaceElevation(state.rooms[portal.rooms[0]]);
-    const rightSurface = liquidSurfaceElevation(state.rooms[portal.rooms[1]]);
+    const leftSurface = liquidSurfaceElevation(state.rooms[portal.rooms[0]], definition);
+    const rightSurface = liquidSurfaceElevation(state.rooms[portal.rooms[1]], definition);
     if (Math.max(leftSurface, rightSurface) <= portal.sillElevation) return null;
     sourceIndex = leftSurface >= rightSurface ? 0 : 1;
     destinationIndex = sourceIndex === 0 ? 1 : 0;
@@ -266,7 +275,11 @@ const liquidPlan = (
   };
 };
 
-const allocateLiquidPlans = (state: GameState, plans: LiquidFlowPlan[]): void => {
+const allocateLiquidPlans = (
+  state: GameState,
+  plans: LiquidFlowPlan[],
+  definition: GameDefinition
+): void => {
   for (const roomId of [...new Set(plans.map((plan) => plan.sourceRoomId))]) {
     const matching = plans.filter((plan) => plan.sourceRoomId === roomId);
     const available = liquidAmountTotal(state.rooms[roomId].liquid);
@@ -278,22 +291,28 @@ const allocateLiquidPlans = (state: GameState, plans: LiquidFlowPlan[]): void =>
     const matching = plans.filter((plan) => plan.destinationRoomId === roomId);
     const requested = matching.reduce((total, plan) => total + plan.amount, 0);
     const scale =
-      requested > 0 ? Math.min(1, roomLiquidHeadroom(state.rooms[roomId]) / requested) : 0;
+      requested > 0
+        ? Math.min(1, roomLiquidHeadroom(state.rooms[roomId], definition) / requested)
+        : 0;
     for (const plan of matching) plan.amount *= scale;
   }
 };
 
-export const simulateArchitecturalLiquid = (state: GameState, dt: number): void => {
+export const simulateArchitecturalLiquid = (
+  state: GameState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastLiquidFlow = 0;
-  const plans = FACILITY_MAP.portals.flatMap((portal) => {
+  const plans = definition.facilityMap.portals.flatMap((portal) => {
     if (portal.liquidConductance <= 0 || !portalActive(state, portal)) return [];
-    const plan = liquidPlan(state, portal, dt);
+    const plan = liquidPlan(state, portal, dt, definition);
     return plan ? [plan] : [];
   });
-  allocateLiquidPlans(state, plans);
+  allocateLiquidPlans(state, plans, definition);
   for (const plan of plans) {
     plan.packet = packetFromLiquid(state.rooms[plan.sourceRoomId].liquid, plan.amount);
-    subtractLiquid(state.rooms[plan.sourceRoomId].liquid, plan.packet);
+    subtractMixture(state.rooms[plan.sourceRoomId].liquid, plan.packet, LIQUID_TYPES);
   }
   for (const plan of plans) {
     addLiquid(state.rooms[plan.destinationRoomId].liquid, plan.packet);
@@ -301,7 +320,11 @@ export const simulateArchitecturalLiquid = (state: GameState, dt: number): void 
   }
 };
 
-export const simulateArchitecturalFlow = (state: GameState, dt: number): void => {
-  simulateArchitecturalGas(state, dt);
-  simulateArchitecturalLiquid(state, dt);
+export const simulateArchitecturalFlow = (
+  state: GameState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
+  simulateArchitecturalGas(state, dt, definition);
+  simulateArchitecturalLiquid(state, dt, definition);
 };

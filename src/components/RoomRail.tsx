@@ -1,6 +1,6 @@
 import { ROOM_DEFINITIONS, ROOM_ORDER, roomRing } from "../game/config";
-import { analyzeRoom } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { roomAnalysis } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
 
 export const RoomRail = () => {
   const game = useGameStore((state) => state.game);
@@ -12,7 +12,7 @@ export const RoomRail = () => {
       {ROOM_ORDER.map((roomId) => {
         const definition = ROOM_DEFINITIONS[roomId];
         const ring = roomRing(roomId);
-        const analysis = analyzeRoom(game.rooms[roomId]);
+        const analysis = roomAnalysis(game.rooms[roomId]);
         return (
           <button
             key={roomId}

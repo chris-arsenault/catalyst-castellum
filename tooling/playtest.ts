@@ -9,6 +9,7 @@ interface CliOptions {
   runs: number;
   seed: number;
   json: boolean;
+  assertIntended: boolean;
 }
 
 const valueAfter = (args: string[], flag: string): string | null => {
@@ -32,6 +33,7 @@ const parseOptions = (args: string[]): CliOptions => {
     runs: parsePositiveInteger(valueAfter(args, "--runs"), 200),
     seed: parsePositiveInteger(valueAfter(args, "--seed"), 13_371),
     json: args.includes("--json"),
+    assertIntended: args.includes("--assert-intended"),
   };
 };
 
@@ -62,6 +64,16 @@ const main = (): void => {
   else {
     console.log(`Catalyst Castellum headless playtest · ${options.runs} random policies per level`);
     for (const evaluation of evaluations) printEvaluation(evaluation);
+  }
+  if (options.assertIntended) {
+    const failures = evaluations.flatMap((evaluation) => {
+      const reasons: string[] = [];
+      if (!evaluation.intended.success) reasons.push("intended policy failed");
+      if (!evaluation.intended.stable) reasons.push("intended policy was unstable");
+      if (evaluation.doNothing.success) reasons.push("do-nothing policy unexpectedly passed");
+      return reasons.length > 0 ? [`${evaluation.levelId}: ${reasons.join(", ")}`] : [];
+    });
+    if (failures.length > 0) throw new Error(`Campaign health failed: ${failures.join("; ")}`);
   }
 };
 

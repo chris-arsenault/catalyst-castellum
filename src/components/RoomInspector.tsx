@@ -10,13 +10,12 @@ import {
   ROOM_GEOMETRY,
   roomRing,
 } from "../game/config";
-import {
-  analyzeRoom,
-  equipmentFunctionalSummary,
-  gasPercent,
-  liquidPercent,
-} from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { gasPercent, liquidPercent } from "../game/queries";
+import { equipmentFunctionalSummary } from "../presentation/roomCopy";
+import { limitingFactorCopy } from "../presentation/limitingFactorCopy";
+import { roomAnalysis } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
+import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { GAS_TYPES, LIQUID_TYPES, ROOM_REACTION_IDS } from "../game/types";
 import type { GasZone } from "../game/types";
 import { ArchitecturalConnections } from "./ArchitecturalConnections";
@@ -32,7 +31,7 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = analyzeRoom(room);
+  const analysis = roomAnalysis(room);
   const isLower = zone === "lower";
   const total = isLower ? analysis.lowerGasTotal : analysis.upperGasTotal;
   const density = isLower ? analysis.lowerGasDensity : analysis.upperGasDensity;
@@ -83,7 +82,7 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
 const GasComposition = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = analyzeRoom(game.rooms[roomId]);
+  const analysis = roomAnalysis(game.rooms[roomId]);
   return (
     <div className="composition-group gas-layers">
       <div className="atmosphere-summary">
@@ -105,7 +104,7 @@ const LiquidComposition = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = analyzeRoom(room);
+  const analysis = roomAnalysis(room);
   const presentLiquids = LIQUID_TYPES.filter((liquid) => room.liquid[liquid] > 0.05);
   return (
     <div className="composition-group liquid-group">
@@ -160,7 +159,7 @@ const RoomMetrics = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = analyzeRoom(room);
+  const analysis = roomAnalysis(room);
 
   return (
     <section className="metric-grid" aria-label="Room metrics">
@@ -203,7 +202,7 @@ const RoomMetrics = () => {
 const EffectsPanel = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = analyzeRoom(game.rooms[roomId]);
+  const analysis = roomAnalysis(game.rooms[roomId]);
 
   return (
     <section className="effects-panel">
@@ -250,7 +249,7 @@ const ReactionPanel = () => {
                 <span>{reaction.code}</span>
                 <strong>{reaction.name}</strong>
                 <em>{reading.lastRate.toFixed(2)} mol-eq/s</em>
-                <small>limiting: {reading.limitingReactant}</small>
+                <small>limiting: {limitingFactorCopy(reading.limitingFactor)}</small>
               </div>
             );
           })}
@@ -270,7 +269,11 @@ const RecentIncidents = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const incidents = game.incidents.filter((incident) => incident.roomId === roomId).slice(0, 3);
   return (
-    <section className="effects-panel recent-incidents" data-testid={`recent-incidents-${roomId}`}>
+    <section
+      className="effects-panel recent-incidents"
+      data-testid={`recent-incidents-${roomId}`}
+      data-tutorial-anchor={roomId === "furnace" ? TUTORIAL_ANCHORS.furnaceIncidents : undefined}
+    >
       <div className="section-title-row">
         <h3>Recent incidents</h3>
         <Activity size={15} />
@@ -309,7 +312,7 @@ export const RoomInspector = () => {
   const definition = ROOM_DEFINITIONS[roomId];
   const geometry = ROOM_GEOMETRY[roomId];
   const ring = roomRing(roomId);
-  const analysis = analyzeRoom(game.rooms[roomId]);
+  const analysis = roomAnalysis(game.rooms[roomId]);
 
   return (
     <aside className="room-inspector" data-testid="room-inspector">

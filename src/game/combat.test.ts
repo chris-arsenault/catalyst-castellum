@@ -5,7 +5,6 @@ import {
   type GameState,
   type GasAmounts,
   type HazardChannels,
-  type RoomReactionId,
   type RoomState,
 } from "./types";
 import { enemyRoomId, moveEnemies, resolveEnemyCombat } from "./engine/combat";
@@ -61,9 +60,12 @@ const room = (pressureScale = 1, id: RoomState["id"] = "furnace"): RoomState => 
   reactions: Object.fromEntries(
     ROOM_REACTION_IDS.map((reactionId) => [
       reactionId,
-      { lastRate: 0, limitingReactant: "conditions" },
+      {
+        lastRate: 0,
+        limitingFactor: { kind: "condition", code: "conditions", zone: null },
+      },
     ])
-  ) as Record<RoomReactionId, { lastRate: number; limitingReactant: string }>,
+  ) as RoomState["reactions"],
   equipment: { socket_a: null, socket_b: null },
 });
 
@@ -94,7 +96,7 @@ const enemy = (health = 200): EnemyState => {
 
 const stateFor = (furnace: RoomState, enemies: EnemyState[] = []): GameState =>
   ({
-    version: 9,
+    version: 11,
     phase: "assault",
     campaign: {
       levelId: "flash_point",
@@ -353,8 +355,6 @@ describe("OX-1 burst incidents", () => {
     expect(state.stats.killsBySource.hydrogen_oxygen_combustion).toBe(1);
     expect(state.incidents[0]?.damageByChannel.pressure).toBeCloseTo(74, 8);
     expect(state.incidents[0]?.targets[0]?.killed).toBe(true);
-    expect(state.events.some((event) => event.title.includes("neutralized — OX-1 flash"))).toBe(
-      true
-    );
+    expect(state.events.some((event) => event.code === "enemy_neutralized")).toBe(true);
   });
 });

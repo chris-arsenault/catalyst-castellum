@@ -5,15 +5,17 @@ import {
   Droplets,
   Flame,
   Gauge,
+  LogOut,
   RotateCcw,
   Wind,
   X,
 } from "lucide-react";
 import { useCallback } from "react";
 import { LEVEL_DEFINITIONS, nextLevelId } from "../game/config";
-import { levelDefinitionFor } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { levelDefinitionFor } from "../game/queries";
+import { useGameStore } from "../application/store";
 import { guideDefinitionFor } from "../tutorial/guideModel";
+import { roundReportCopy } from "../presentation/roundReportCopy";
 
 const ManualPhases = () => (
   <div className="manual-phases">
@@ -80,6 +82,7 @@ export const HelpModal = () => {
   const show = useGameStore((state) => state.showHelp);
   const setShow = useGameStore((state) => state.setShowHelp);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
+  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   if (!show) return null;
   const guide = guideDefinitionFor(game);
 
@@ -118,9 +121,14 @@ export const HelpModal = () => {
           </div>
         )}
 
-        <button className="secondary-action wide" type="button" onClick={() => setShow(false)}>
-          Return to controls
-        </button>
+        <div className="modal-footer-actions">
+          <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
+            <LogOut size={15} /> Save slots
+          </button>
+          <button className="secondary-action wide" type="button" onClick={() => setShow(false)}>
+            Return to controls
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -139,6 +147,7 @@ interface ProgressFrameProps {
 
 const ProgressFrame = (props: ProgressFrameProps) => {
   const game = useGameStore((state) => state.game);
+  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   return (
     <div
       className="modal-backdrop outcome-backdrop"
@@ -180,14 +189,19 @@ const ProgressFrame = (props: ProgressFrameProps) => {
           </div>
           <p>{props.nextDetail}</p>
         </div>
-        <button
-          className="enter-button"
-          type="button"
-          data-testid={props.testId}
-          onClick={props.onAdvance}
-        >
-          {props.actionLabel} <ArrowRight size={17} />
-        </button>
+        <div className="modal-footer-actions">
+          <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
+            <LogOut size={15} /> Save slots
+          </button>
+          <button
+            className="enter-button"
+            type="button"
+            data-testid={props.testId}
+            onClick={props.onAdvance}
+          >
+            {props.actionLabel} <ArrowRight size={17} />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -197,18 +211,19 @@ const RoundProgressModal = () => {
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const level = levelDefinitionFor(game);
+  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
   const nextRound = level.rounds[game.campaign.roundIndex + 1];
   const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
   return (
     <ProgressFrame
       actionLabel="Return to planning"
-      detail={game.lastReport?.detail ?? "The exact process state remains frozen."}
+      detail={report?.detail ?? "The exact process state remains frozen."}
       eyebrow="Round analysis"
       nextDetail={nextRound?.objective ?? "Continue the checkpoint."}
       nextLabel="Next round"
       onAdvance={advance}
       testId="continue-round"
-      title={game.lastReport?.headline ?? "Round complete"}
+      title={report?.headline ?? "Round complete"}
     />
   );
 };
@@ -217,13 +232,14 @@ const LevelProgressModal = () => {
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const level = levelDefinitionFor(game);
+  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
   const nextId = nextLevelId(level.id);
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
   const advance = useCallback(() => dispatch({ type: "start_next_level" }), [dispatch]);
   return (
     <ProgressFrame
       actionLabel={`Continue to ${nextLevel?.name ?? "campaign"}`}
-      detail={game.lastReport?.detail ?? "Checkpoint process record secured."}
+      detail={report?.detail ?? "Checkpoint process record secured."}
       eyebrow="Checkpoint secured"
       nextDetail={nextLevel?.briefing ?? "The curriculum is complete."}
       nextLabel="Next checkpoint"
@@ -245,6 +261,7 @@ export const OutcomeModal = () => {
   const game = useGameStore((state) => state.game);
   const reset = useGameStore((state) => state.reset);
   const dispatch = useGameStore((state) => state.dispatch);
+  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   if (game.phase !== "victory" && game.phase !== "defeat") return null;
   const victory = game.phase === "victory";
 
@@ -286,14 +303,19 @@ export const OutcomeModal = () => {
             <strong>{Math.round(game.stats.peakHazard)}</strong>
           </div>
         </div>
-        <button
-          className="enter-button"
-          type="button"
-          data-testid={victory ? "new-campaign" : "retry-level"}
-          onClick={() => (victory ? reset() : dispatch({ type: "retry_level" }))}
-        >
-          <RotateCcw size={17} /> {victory ? "Begin new campaign" : "Retry checkpoint"}
-        </button>
+        <div className="modal-footer-actions">
+          <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
+            <LogOut size={15} /> Save slots
+          </button>
+          <button
+            className="enter-button"
+            type="button"
+            data-testid={victory ? "new-campaign" : "retry-level"}
+            onClick={() => (victory ? reset() : dispatch({ type: "retry_level" }))}
+          >
+            <RotateCcw size={17} /> {victory ? "Begin new campaign" : "Retry checkpoint"}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-import { ArrowRight, Biohazard, Droplets, Gauge } from "lucide-react";
+import { ArrowLeft, ArrowRight, Biohazard, Droplets, Gauge } from "lucide-react";
 import { useState } from "react";
 import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../game/config";
-import { levelDefinitionFor, roundDefinitionFor } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
+import { useGameStore } from "../application/store";
 import type { GameState } from "../game/types";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 
@@ -93,6 +93,7 @@ const hint = (game: GameState, guided: boolean, tutorialEnabled: boolean): strin
 const BriefingContent = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
+  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const level = levelDefinitionFor(game);
   const guided = Boolean(guideDefinitionFor(game));
@@ -129,14 +130,24 @@ const BriefingContent = ({ game }: { game: GameState }) => {
           {guided && (
             <TutorialStartChoice enabled={tutorialEnabled} onChange={setTutorialEnabled} />
           )}
-          <button
-            className="enter-button"
-            type="button"
-            data-testid="enter-control-room"
-            onClick={begin}
-          >
-            {actionLabel(guided, tutorialEnabled)} <ArrowRight size={18} />
-          </button>
+          <div className="briefing-actions">
+            <button
+              className="menu-return-button"
+              type="button"
+              data-testid="briefing-main-menu"
+              onClick={returnToMainMenu}
+            >
+              <ArrowLeft size={16} /> Save slots
+            </button>
+            <button
+              className="enter-button"
+              type="button"
+              data-testid="enter-control-room"
+              onClick={begin}
+            >
+              {actionLabel(guided, tutorialEnabled)} <ArrowRight size={18} />
+            </button>
+          </div>
           <small className="briefing-hint">{hint(game, guided, tutorialEnabled)}</small>
         </div>
       </div>

@@ -1,6 +1,9 @@
 import { ArrowRight, CheckCircle2, FlaskConical, LockKeyhole, Radio, Timer } from "lucide-react";
-import { levelDefinitionFor, roundDefinitionFor } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
+import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
+import { roundReportCopy } from "../presentation/roundReportCopy";
+import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -13,6 +16,8 @@ const BuildBanner = () => {
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const round = roundDefinitionFor(game);
+  const command = { type: "start_prime" } as const;
+  const decision = evaluateCommand(game, command);
   return (
     <section className="phase-banner build-banner" data-testid="phase-banner">
       <div className="phase-icon">
@@ -34,7 +39,10 @@ const BuildBanner = () => {
         className="primary-action"
         type="button"
         data-testid="begin-prime"
-        onClick={() => dispatch({ type: "start_prime" })}
+        data-tutorial-anchor={TUTORIAL_ANCHORS.beginPrime}
+        disabled={!decision.allowed}
+        title={decision.reason ?? undefined}
+        onClick={() => dispatch(command)}
       >
         Begin timed prime <ArrowRight size={17} />
       </button>
@@ -47,6 +55,8 @@ const PrimeBanner = () => {
   const dispatch = useGameStore((state) => state.dispatch);
   const round = roundDefinitionFor(game);
   const remaining = round.primeSeconds - game.phaseTime;
+  const command = { type: "start_assault" } as const;
+  const decision = evaluateCommand(game, command);
   return (
     <section className="phase-banner prime-banner" data-testid="phase-banner">
       <div className="phase-icon pulse">
@@ -72,7 +82,10 @@ const PrimeBanner = () => {
         className="primary-action danger-action"
         type="button"
         data-testid="start-assault"
-        onClick={() => dispatch({ type: "start_assault" })}
+        data-tutorial-anchor={TUTORIAL_ANCHORS.startAssault}
+        disabled={!decision.allowed}
+        title={decision.reason ?? undefined}
+        onClick={() => dispatch(command)}
       >
         Lock early <LockKeyhole size={16} />
       </button>
@@ -117,6 +130,7 @@ const AssaultBanner = () => {
 const FrozenBanner = () => {
   const game = useGameStore((state) => state.game);
   const level = levelDefinitionFor(game);
+  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
   const defeat = game.phase === "defeat";
   const complete = game.phase === "victory" || game.phase === "level_complete";
   return (
@@ -126,8 +140,8 @@ const FrozenBanner = () => {
       </div>
       <div className="phase-copy">
         <span>{defeat ? "Core integrity zero" : "Simulation frozen"}</span>
-        <strong>{game.lastReport?.headline ?? level.name}</strong>
-        <p>{game.lastReport?.detail ?? level.lesson}</p>
+        <strong>{report?.headline ?? level.name}</strong>
+        <p>{report?.detail ?? level.lesson}</p>
       </div>
     </section>
   );

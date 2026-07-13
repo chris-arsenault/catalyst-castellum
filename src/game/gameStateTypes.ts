@@ -31,16 +31,9 @@ import type {
   WorldPoint,
   FacilityPortalState,
 } from "./types";
+import { EVENT_TONES, GAME_EVENT_CODES, GAME_PHASES } from "./identifiers";
 
-export type GamePhase =
-  | "level_briefing"
-  | "build"
-  | "prime"
-  | "assault"
-  | "round_result"
-  | "level_complete"
-  | "victory"
-  | "defeat";
+export type GamePhase = (typeof GAME_PHASES)[number];
 
 export interface RoundStats {
   spawned: number;
@@ -57,16 +50,10 @@ export interface RoundStats {
   killsBySource: Record<DamageSourceId, number>;
 }
 
-export type CycleStats = RoundStats;
-
 export interface RoundReport extends RoundStats {
   levelId: LevelId;
   round: number;
-  headline: string;
-  detail: string;
 }
-
-export type CycleReport = RoundReport;
 
 export interface CampaignProgress {
   levelId: LevelId;
@@ -84,7 +71,9 @@ export interface ScenarioAvailability {
   liquidSources: LiquidSourceId[];
 }
 
-export type EventTone = "info" | "good" | "warning" | "danger" | "reaction";
+export type EventTone = (typeof EVENT_TONES)[number];
+export type GameEventCode = (typeof GAME_EVENT_CODES)[number];
+export type GameEventParameter = boolean | number | string;
 
 export interface GameEvent {
   id: number;
@@ -92,8 +81,8 @@ export interface GameEvent {
   round: number;
   phase: GamePhase;
   tone: EventTone;
-  title: string;
-  detail: string;
+  code: GameEventCode;
+  parameters: Record<string, GameEventParameter>;
   roomId: RoomId | null;
   elapsed: number;
   incidentId: number | null;
@@ -126,7 +115,7 @@ export interface CombatIncident {
 }
 
 export interface GameState {
-  version: 9;
+  version: 11;
   phase: GamePhase;
   campaign: CampaignProgress;
   availability: ScenarioAvailability;
@@ -191,11 +180,9 @@ export interface RoomAnalysis {
   dominantLiquid: LiquidType | null;
   dominantLiquidPercent: number;
   hazard: number;
-  hazardLabel: "CLEAR" | "LOW" | "HOSTILE" | "LETHAL";
   hazards: HazardChannels;
   groundMovementMultiplier: number;
   flyingMovementMultiplier: number;
-  effects: string[];
 }
 
 export type GameCommand =
@@ -228,4 +215,27 @@ export interface CommandResult {
   state: GameState;
   accepted: boolean;
   reason: string | null;
+}
+
+export type CommandRejectionCode =
+  | "already_complete"
+  | "already_installed"
+  | "capacity"
+  | "empty_socket"
+  | "insufficient_matter"
+  | "invalid_phase"
+  | "not_installed"
+  | "occupied_socket"
+  | "placement"
+  | "route_unavailable"
+  | "unavailable"
+  | "unique_equipment";
+
+export interface CommandDecision {
+  allowed: boolean;
+  code: CommandRejectionCode | null;
+  reason: string | null;
+  cost: number;
+  refund: number;
+  amount: number;
 }

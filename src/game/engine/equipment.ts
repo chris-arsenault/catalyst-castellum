@@ -1,6 +1,7 @@
-import { EQUIPMENT_DEFINITIONS, ROOM_DEFINITIONS, equipmentGrade } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   EQUIPMENT_SOCKET_IDS,
+  type EquipmentGradeDefinition,
   type EquipmentId,
   type EquipmentInstance,
   type EquipmentLevel,
@@ -12,22 +13,14 @@ import {
 } from "../types";
 import { clamp } from "./math";
 
-const NATURAL_REACTION_MULTIPLIER = 0.55;
-const GAS_MIXING_RATES: Record<EquipmentLevel, number> = { 1: 1.5, 2: 1.85, 3: 2.2 };
-const GAS_REACTION_MULTIPLIERS: Record<EquipmentLevel, number> = { 1: 1.5, 2: 2.15, 3: 3 };
-const CONTACT_REACTION_MULTIPLIERS: Record<EquipmentLevel, number> = {
-  1: 1,
-  2: 1.45,
-  3: 2,
-};
-const HEATER_TARGETS: Record<EquipmentLevel, number> = { 1: 68, 2: 92, 3: 120 };
-const MEMBRANE_RATES: Record<EquipmentLevel, number> = { 1: 0.56, 2: 0.82, 3: 1.12 };
-const MEMBRANE_POWER: Record<EquipmentLevel, number> = { 1: 67, 2: 98, 3: 134 };
+export const NATURAL_REACTION_MULTIPLIER = 0.55;
 
 export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket_b: null });
 
-export const roomSocketIds = (roomId: RoomId): EquipmentSocketId[] =>
-  EQUIPMENT_SOCKET_IDS.slice(0, ROOM_DEFINITIONS[roomId].socketCount);
+export const roomSocketIds = (
+  roomId: RoomId,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): EquipmentSocketId[] => EQUIPMENT_SOCKET_IDS.slice(0, definition.rooms[roomId].socketCount);
 
 export const installedEquipment = (room: Pick<RoomState, "equipment">): EquipmentInstance[] =>
   EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
@@ -43,10 +36,11 @@ export const findRoomEquipment = (
 
 export const findEquipmentInstallation = (
   state: GameState,
-  equipmentId: EquipmentId
+  equipmentId: EquipmentId,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): { roomId: RoomId; socketId: EquipmentSocketId; instance: EquipmentInstance } | null => {
   for (const [roomId, room] of Object.entries(state.rooms) as [RoomId, RoomState][]) {
-    for (const socketId of roomSocketIds(roomId)) {
+    for (const socketId of roomSocketIds(roomId, definition)) {
       const instance = room.equipment[socketId];
       if (instance?.equipmentId === equipmentId) return { roomId, socketId, instance };
     }
@@ -59,54 +53,95 @@ const activeLevel = (room: RoomState, equipmentId: EquipmentId): EquipmentLevel 
   return instance?.enabled ? instance.level : null;
 };
 
-export const roomGasMixingRate = (room: RoomState): number => {
-  const level = activeLevel(room, "gas_agitator");
-  return level ? GAS_MIXING_RATES[level] : 0;
+const gradeFor = (
+  equipmentId: EquipmentId,
+  level: EquipmentLevel,
+  definition: GameDefinition
+): EquipmentGradeDefinition => {
+  const grade = definition.equipment[equipmentId].grades.find(
+    (candidate) => candidate.level === level
+  );
+  if (!grade) throw new Error(`Missing grade ${level} for ${equipmentId}`);
+  return grade;
 };
 
-export const roomGasReactionMultiplier = (room: RoomState): number => {
-  const level = activeLevel(room, "gas_agitator");
-  return level ? GAS_REACTION_MULTIPLIERS[level] : NATURAL_REACTION_MULTIPLIER;
+const activeGrade = (
+  room: RoomState,
+  equipmentId: EquipmentId,
+  definition: GameDefinition
+): EquipmentGradeDefinition | null => {
+  const level = activeLevel(room, equipmentId);
+  return level ? gradeFor(equipmentId, level, definition) : null;
 };
 
-export const roomContactReactionMultiplier = (room: RoomState): number => {
-  const level = activeLevel(room, "wet_contactor");
-  return level ? CONTACT_REACTION_MULTIPLIERS[level] : NATURAL_REACTION_MULTIPLIER;
+export const roomGasMixingRate = (
+  room: RoomState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => {
+  const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
+  return behavior?.kind === "gas_agitator" ? behavior.layerExchangeRate : 0;
 };
 
-export const roomEquipmentVolume = (room: Pick<RoomState, "equipment">): number =>
+export const roomGasReactionMultiplier = (
+  room: RoomState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => {
+  const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
+  return behavior?.kind === "gas_agitator"
+    ? behavior.reactionMultiplier
+    : NATURAL_REACTION_MULTIPLIER;
+};
+
+export const roomContactReactionMultiplier = (
+  room: RoomState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => {
+  const behavior = activeGrade(room, "wet_contactor", definition)?.behavior;
+  return behavior?.kind === "wet_contactor"
+    ? behavior.reactionMultiplier
+    : NATURAL_REACTION_MULTIPLIER;
+};
+
+export const roomEquipmentVolume = (
+  room: Pick<RoomState, "equipment">,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number =>
   installedEquipment(room).reduce(
     (total, instance) =>
-      total + equipmentGrade(instance.equipmentId, instance.level).occupiedVolume,
+      total + gradeFor(instance.equipmentId, instance.level, definition).occupiedVolume,
     0
   );
 
-export const equipmentInvestedMatter = (instance: EquipmentInstance): number => {
-  const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  let total = definition.buildCost;
-  if (instance.level >= 2) total += definition.upgradeCosts[0];
-  if (instance.level >= 3) total += definition.upgradeCosts[1];
+export const equipmentInvestedMatter = (
+  instance: EquipmentInstance,
+  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => {
+  const equipment = gameDefinition.equipment[instance.equipmentId];
+  let total = equipment.buildCost;
+  if (instance.level >= 2) total += equipment.upgradeCosts[0];
+  if (instance.level >= 3) total += equipment.upgradeCosts[1];
   return total;
 };
 
-export const equipmentDismantleRefund = (instance: EquipmentInstance): number =>
-  Math.floor(equipmentInvestedMatter(instance) * 0.75);
+export const equipmentDismantleRefund = (
+  instance: EquipmentInstance,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => Math.floor(equipmentInvestedMatter(instance, definition) * 0.75);
 
-export const equipmentFunctionalSummary = (room: RoomState): string => {
-  const equipment = installedEquipment(room);
-  if (equipment.length === 0) return "Blank room · natural chemistry only";
-  return equipment
-    .map(
-      (instance) =>
-        `${EQUIPMENT_DEFINITIONS[instance.equipmentId].name} ${instance.level}${
-          instance.enabled ? "" : " · off"
-        }`
-    )
-    .join(" · ");
+const membraneCellBehavior = (level: EquipmentLevel, definition: GameDefinition) => {
+  const behavior = gradeFor("membrane_cell", level, definition).behavior;
+  if (behavior.kind !== "membrane_cell") throw new Error("Invalid membrane cell grade behavior");
+  return behavior;
 };
 
-export const membraneCellRate = (level: EquipmentLevel): number => MEMBRANE_RATES[level];
-export const membraneCellPower = (level: EquipmentLevel): number => MEMBRANE_POWER[level];
+export const membraneCellRate = (
+  level: EquipmentLevel,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => membraneCellBehavior(level, definition).processRate;
+export const membraneCellPower = (
+  level: EquipmentLevel,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): number => membraneCellBehavior(level, definition).powerDraw;
 
 const heatRoom = (room: RoomState, target: number, dt: number): void => {
   const wallStep = clamp(target - room.temperature, 0, 18 * dt);
@@ -117,9 +152,13 @@ const heatRoom = (room: RoomState, target: number, dt: number): void => {
   }
 };
 
-export const simulateInstalledEquipment = (state: GameState, dt: number): void => {
+export const simulateInstalledEquipment = (
+  state: GameState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   for (const room of Object.values(state.rooms)) {
-    const level = activeLevel(room, "thermal_coil");
-    if (level) heatRoom(room, HEATER_TARGETS[level], dt);
+    const behavior = activeGrade(room, "thermal_coil", definition)?.behavior;
+    if (behavior?.kind === "thermal_coil") heatRoom(room, behavior.targetTemperature, dt);
   }
 };

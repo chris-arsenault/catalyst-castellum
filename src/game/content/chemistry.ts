@@ -6,17 +6,6 @@ import {
 } from "../types";
 import { SPECIES_DEFINITIONS } from "./substances";
 
-export const HYDROGEN_FLASH_RULES = {
-  ignitionExtent: 3,
-  maximumExtent: 6,
-  minimumHydrogenFraction: 0.05,
-  minimumOxygenFraction: 0.08,
-  cooldownSeconds: 1.2,
-  pressurePulseBase: 72,
-  pressurePulsePerExtent: 20,
-  heatPerExtent: 11,
-} as const;
-
 export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   chlor_alkali_electrolysis: {
     id: "chlor_alkali_electrolysis",
@@ -33,6 +22,7 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "hydrogen", coefficient: 1 },
       { species: "sodium_hydroxide", coefficient: 2 },
     ],
+    behavior: { kind: "electrolysis", maximumRate: 1, roomHeatPerExtent: 0.62 },
   },
   hydrogen_oxygen_combustion: {
     id: "hydrogen_oxygen_combustion",
@@ -45,6 +35,21 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "oxygen", coefficient: 1 },
     ],
     products: [{ species: "steam", coefficient: 2 }],
+    behavior: {
+      kind: "flash",
+      ignitionExtent: 3,
+      maximumExtent: 6,
+      minimumHydrogenFraction: 0.05,
+      minimumOxygenFraction: 0.08,
+      cooldownSeconds: 1.2,
+      pressurePulseBase: 72,
+      pressurePulsePerExtent: 20,
+      gasHeatPerExtent: 11,
+      roomHeatPerExtent: 1.8,
+      pressureDamageBase: 60,
+      pressureDamagePerExtent: 8,
+      heatDamagePerExtent: 2,
+    },
   },
   hydrogen_chlorine_recombination: {
     id: "hydrogen_chlorine_recombination",
@@ -57,6 +62,14 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "chlorine", coefficient: 1 },
     ],
     products: [{ species: "hydrogen_chloride", coefficient: 2 }],
+    behavior: {
+      kind: "gas_recombination",
+      maximumRate: 0.95,
+      activationTemperature: 38,
+      activationRange: 28,
+      gasHeatPerExtent: 4.8,
+      roomHeatPerExtent: 0.8,
+    },
   },
   hydrogen_chloride_absorption: {
     id: "hydrogen_chloride_absorption",
@@ -66,6 +79,12 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
     equation: "HCl(g) → HCl(aq)",
     reactants: [{ species: "hydrogen_chloride", coefficient: 1 }],
     products: [{ species: "hydrochloric_acid", coefficient: 1 }],
+    behavior: {
+      kind: "absorption",
+      maximumRate: 1.75,
+      solventInventoryScale: 8,
+      maximumProductFraction: 0.58,
+    },
   },
   acid_neutralization: {
     id: "acid_neutralization",
@@ -81,6 +100,12 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "sodium_chloride", coefficient: 1 },
       { species: "water", coefficient: 1 },
     ],
+    behavior: {
+      kind: "mixed_contact",
+      maximumRate: 2.8,
+      mixingInventoryScale: 6,
+      roomHeatPerExtent: 0.42,
+    },
   },
   hypochlorite_formation: {
     id: "hypochlorite_formation",
@@ -97,6 +122,12 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "sodium_chloride", coefficient: 1 },
       { species: "water", coefficient: 1 },
     ],
+    behavior: {
+      kind: "mixed_contact",
+      maximumRate: 0.82,
+      mixingInventoryScale: 6,
+      roomHeatPerExtent: 0.28,
+    },
   },
   acid_chlorine_release: {
     id: "acid_chlorine_release",
@@ -113,8 +144,18 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "chlorine", coefficient: 1 },
       { species: "water", coefficient: 1 },
     ],
+    behavior: {
+      kind: "mixed_contact",
+      maximumRate: 0.72,
+      mixingInventoryScale: 6,
+      roomHeatPerExtent: 0.34,
+    },
   },
 };
+
+const flashBehavior = REACTION_DEFINITIONS.hydrogen_oxygen_combustion.behavior;
+if (flashBehavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
+export const HYDROGEN_FLASH_RULES = flashBehavior;
 
 const sideElements = (participants: ReactionDefinition["reactants"]): ElementalComposition => {
   const totals: ElementalComposition = {};

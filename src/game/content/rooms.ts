@@ -1,4 +1,4 @@
-import type { RoomDefinition, RoomId } from "../types";
+import { ROOM_IDS, type RoomDefinition, type RoomId } from "../types";
 
 export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
   west_intake: {
@@ -86,4 +86,4 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
   },
 };
 
-export const ROOM_ORDER = Object.keys(ROOM_DEFINITIONS) as RoomId[];
+export const ROOM_ORDER: readonly RoomId[] = ROOM_IDS;

@@ -8,8 +8,9 @@ import {
   LIQUID_SOURCES,
   SPECIES_DEFINITIONS,
 } from "../game/config";
-import { gasAmountTotal, liquidAmountTotal } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { gasAmountTotal, liquidAmountTotal } from "../game/queries";
+import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
 import {
   GAS_SOURCE_IDS,
   GAS_TYPES,
@@ -34,7 +35,6 @@ const gasComposition = (gas: GasAmounts): string => {
 interface InventoryCardProps {
   accent: string;
   amount: number;
-  canCharge: boolean;
   capacity: number;
   chargeAmount: number;
   chargeCost: number;
@@ -47,7 +47,13 @@ interface InventoryCardProps {
 }
 
 const InventoryCard = (props: InventoryCardProps) => {
+  const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
+  const command =
+    props.sourceKind === "gas"
+      ? ({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId } as const)
+      : ({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId } as const);
+  const decision = evaluateCommand(game, command);
   const handleCharge = useCallback(() => {
     if (props.sourceKind === "gas") {
       dispatch({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId });
@@ -55,6 +61,8 @@ const InventoryCard = (props: InventoryCardProps) => {
     }
     dispatch({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId });
   }, [dispatch, props.sourceId, props.sourceKind]);
+  const displayedAmount = decision.amount > 0 ? decision.amount : props.chargeAmount;
+  const displayedCost = decision.cost > 0 ? decision.cost : props.chargeCost;
   return (
     <div className="feedstock-card" style={{ "--feedstock": props.accent }}>
       <span>
@@ -66,10 +74,11 @@ const InventoryCard = (props: InventoryCardProps) => {
       <small data-testid={props.detailTestId}>{props.detail}</small>
       <button
         type="button"
-        disabled={!props.canCharge || props.amount >= props.capacity}
+        disabled={!decision.allowed}
+        title={decision.reason ?? undefined}
         onClick={handleCharge}
       >
-        <Plus size={12} /> {props.chargeAmount.toFixed(0)} · {props.chargeCost}m
+        <Plus size={12} /> {displayedAmount.toFixed(0)} · {displayedCost}m
       </button>
     </div>
   );
@@ -93,7 +102,6 @@ const GasSourceCard = ({ sourceId }: { sourceId: GasSourceId }) => {
       <InventoryCard
         accent={source.accent}
         amount={amount}
-        canCharge={game.phase === "build" && game.matter >= source.chargeCost}
         capacity={source.capacity}
         chargeAmount={chargeAmount}
         chargeCost={source.chargeCost}
@@ -128,7 +136,6 @@ const LiquidSourceCard = ({ sourceId }: { sourceId: LiquidSourceId }) => {
     <InventoryCard
       accent={source.accent}
       amount={amount}
-      canCharge={game.phase === "build" && game.matter >= source.chargeCost}
       capacity={source.capacity}
       chargeAmount={source.chargeAmount}
       chargeCost={source.chargeCost}

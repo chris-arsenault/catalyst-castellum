@@ -1,4 +1,5 @@
 import type { CombatIncident, GameState, RoomId } from "../game/types";
+import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "./anchors";
 
 export type GuideStepKind = "action" | "observe" | "complete";
 
@@ -6,7 +7,7 @@ export interface GuideStepDefinition {
   id: string;
   kind: GuideStepKind;
   roomId: RoomId;
-  target: string;
+  target: TutorialAnchorId;
   title: string;
   explanation: string;
   instruction: string;
@@ -56,7 +57,7 @@ const flashPointGuide: GuideDefinition = {
       id: "install-agitator",
       kind: "action",
       roomId: "furnace",
-      target: '[data-testid^="install-furnace-"][data-testid$="-gas_agitator"]',
+      target: TUTORIAL_ANCHORS.furnaceAgitator,
       title: "Prepare the flash chamber",
       explanation:
         "R-02 lies on the hostile route and receives gas from the Core header. Its equipment sockets can change mixing, temperature, and reaction rates.",
@@ -69,7 +70,7 @@ const flashPointGuide: GuideDefinition = {
       id: "start-shared-duct",
       kind: "action",
       roomId: "furnace",
-      target: '[data-testid="conduit-control-core_furnace-gas"]',
+      target: TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
       title: "Open the Core gas feed",
       explanation:
         "The Core header holds H₂ and O₂ near their combustion ratio. The fan carries their combined inventory through the Core–R-02 duct.",
@@ -82,7 +83,7 @@ const flashPointGuide: GuideDefinition = {
       id: "begin-prime",
       kind: "action",
       roomId: "furnace",
-      target: '[data-testid="begin-prime"]',
+      target: TUTORIAL_ANCHORS.beginPrime,
       title: "Prime the chamber",
       explanation:
         "Priming starts material flow. The fan fills the routed duct first, then delivers its H₂/O₂ mixture into R-02.",
@@ -95,7 +96,7 @@ const flashPointGuide: GuideDefinition = {
       id: "accelerate-clock",
       kind: "action",
       roomId: "furnace",
-      target: '[data-testid="simulation-speed"]',
+      target: TUTORIAL_ANCHORS.simulationSpeed,
       title: "Advance the clock",
       explanation:
         "Transport and reactions unfold over simulation time. At 2×, the duct charges and R-02 approaches ignition twice as quickly on screen.",
@@ -108,7 +109,7 @@ const flashPointGuide: GuideDefinition = {
       id: "observe-prime-flash",
       kind: "observe",
       roomId: "furnace",
-      target: '[data-testid="recent-incidents-furnace"]',
+      target: TUTORIAL_ANCHORS.furnaceIncidents,
       title: "Read the priming flash",
       explanation:
         "When the H₂/O₂ mixture reaches its ignition threshold, R-02 produces an OX-1 pressure and heat pulse. The incident log records its impulse, reaction extent, and target count.",
@@ -121,7 +122,7 @@ const flashPointGuide: GuideDefinition = {
       id: "start-assault",
       kind: "action",
       roomId: "furnace",
-      target: '[data-testid="start-assault"]',
+      target: TUTORIAL_ANCHORS.startAssault,
       title: "Bring in the first wave",
       explanation:
         "During assault, crawlers follow the mapped route through R-02. A flash that fires while a crawler occupies the chamber applies pressure and heat damage.",
@@ -133,7 +134,7 @@ const flashPointGuide: GuideDefinition = {
       id: "observe-combat-flash",
       kind: "observe",
       roomId: "furnace",
-      target: '[data-testid="recent-incidents-furnace"]',
+      target: TUTORIAL_ANCHORS.furnaceIncidents,
       title: "Confirm the combat hit",
       explanation:
         "After the first hit, the incident log identifies each target, applied pressure and heat damage, and the resulting kills.",
@@ -146,7 +147,7 @@ const flashPointGuide: GuideDefinition = {
       id: "combat-confirmed",
       kind: "complete",
       roomId: "furnace",
-      target: '[data-testid="recent-incidents-furnace"]',
+      target: TUTORIAL_ANCHORS.furnaceIncidents,
       title: "Trace the complete causal chain",
       explanation:
         "Core stock → mixed-gas duct → R-02 accumulation → OX-1 flash → attributed enemy damage. Finishing returns the plant to live assault with its current configuration.",

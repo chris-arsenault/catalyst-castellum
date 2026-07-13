@@ -1,6 +1,11 @@
 import type { Graphics } from "pixi.js";
 import { SPECIES_DEFINITIONS, TRANSPORT_RUNS, gridCellsToWorldPath } from "../../game/config";
-import { transportRunMaterialFlow, transportRunPhaseStatus } from "../../game/simulation";
+import {
+  transportRunMaterialFlow,
+  transportRunPhaseStatus,
+  type MaterialRunFlow,
+  type TransportPhaseStatus,
+} from "../../game/queries";
 import type {
   GameState,
   GridCell,
@@ -9,7 +14,6 @@ import type {
   TransportPhase,
   TransportRunId,
 } from "../../game/types";
-import type { MaterialRunFlow, TransportPhaseStatus } from "../../game/engine/transportTelemetry";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
 
 const GAS_RUN_COLOR = 0x58aab3;

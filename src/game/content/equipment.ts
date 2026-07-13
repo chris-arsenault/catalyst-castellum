@@ -13,9 +13,21 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     requiredFeature: null,
     unique: false,
     grades: [
-      { level: 1, effect: "1.50 layer exchange · 1.5× gas kinetics", occupiedVolume: 3 },
-      { level: 2, effect: "1.85 layer exchange · 2.15× gas kinetics", occupiedVolume: 4 },
-      { level: 3, effect: "2.20 layer exchange · 3.0× gas kinetics", occupiedVolume: 5 },
+      {
+        level: 1,
+        occupiedVolume: 3,
+        behavior: { kind: "gas_agitator", layerExchangeRate: 1.5, reactionMultiplier: 1.5 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 4,
+        behavior: { kind: "gas_agitator", layerExchangeRate: 1.85, reactionMultiplier: 2.15 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 5,
+        behavior: { kind: "gas_agitator", layerExchangeRate: 2.2, reactionMultiplier: 3 },
+      },
     ],
   },
   wet_contactor: {
@@ -30,9 +42,21 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     requiredFeature: null,
     unique: false,
     grades: [
-      { level: 1, effect: "1.0× contact kinetics", occupiedVolume: 4 },
-      { level: 2, effect: "1.45× contact kinetics", occupiedVolume: 5 },
-      { level: 3, effect: "2.0× contact kinetics", occupiedVolume: 7 },
+      {
+        level: 1,
+        occupiedVolume: 4,
+        behavior: { kind: "wet_contactor", reactionMultiplier: 1 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 5,
+        behavior: { kind: "wet_contactor", reactionMultiplier: 1.45 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 7,
+        behavior: { kind: "wet_contactor", reactionMultiplier: 2 },
+      },
     ],
   },
   thermal_coil: {
@@ -47,9 +71,21 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     requiredFeature: null,
     unique: false,
     grades: [
-      { level: 1, effect: "68°C rated temperature", occupiedVolume: 3 },
-      { level: 2, effect: "92°C rated temperature", occupiedVolume: 4 },
-      { level: 3, effect: "120°C rated temperature", occupiedVolume: 5 },
+      {
+        level: 1,
+        occupiedVolume: 3,
+        behavior: { kind: "thermal_coil", targetTemperature: 68 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 4,
+        behavior: { kind: "thermal_coil", targetTemperature: 92 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 5,
+        behavior: { kind: "thermal_coil", targetTemperature: 120 },
+      },
     ],
   },
   membrane_cell: {
@@ -64,9 +100,21 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     requiredFeature: "separated_cell_manifold",
     unique: true,
     grades: [
-      { level: 1, effect: "0.56 mol-eq/s · 67 kW-eq", occupiedVolume: 5 },
-      { level: 2, effect: "0.82 mol-eq/s · 98 kW-eq", occupiedVolume: 6 },
-      { level: 3, effect: "1.12 mol-eq/s · 134 kW-eq", occupiedVolume: 8 },
+      {
+        level: 1,
+        occupiedVolume: 5,
+        behavior: { kind: "membrane_cell", processRate: 0.56, powerDraw: 67 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 6,
+        behavior: { kind: "membrane_cell", processRate: 0.82, powerDraw: 98 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 8,
+        behavior: { kind: "membrane_cell", processRate: 1.12, powerDraw: 134 },
+      },
     ],
   },
 };

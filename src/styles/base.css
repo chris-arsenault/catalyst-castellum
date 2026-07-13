@@ -1,0 +1,79 @@
+:root {
+  color-scheme: dark;
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --bg: #07100e;
+  --panel: #0c1714;
+  --panel-raised: #101d19;
+  --panel-soft: #112a22;
+  --line: #265245;
+  --line-bright: #3d7866;
+  --text: #d9eadb;
+  --text-strong: #f2f8e5;
+  --muted: #7b9f90;
+  --muted-2: #507a6b;
+  --lime: #e7f76f;
+  --lime-dim: #aac445;
+  --mint: #71cbb0;
+  --amber: #f5b246;
+  --red: #f55244;
+  --blue: #61bae3;
+  --purple: #b470e6;
+  --mono: "IBM Plex Mono", "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% -10%, rgba(77, 128, 112, 0.11), transparent 35%), #07100e;
+  color: var(--text);
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+button {
+  color: inherit;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--lime);
+  outline-offset: 2px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+}
+
+.app-shell {
+  display: grid;
+  grid-template-rows: 76px minmax(0, 1fr);
+  width: 100%;
+  height: 100%;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+  background-size: 100% 4px;
+}

@@ -1,13 +1,5 @@
-import {
-  GAS_BUFFERS,
-  GAS_JUNCTIONS,
-  GAS_SOURCES,
-  LIQUID_JUNCTIONS,
-  LIQUID_SOURCES,
-  TRANSPORT_RUNS,
-  emptyGas,
-  emptyLiquid,
-} from "../config";
+import { emptyGas, emptyLiquid } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -30,22 +22,30 @@ interface GasPool {
   temperature: number;
 }
 
-const gasJunctionDemanded = (state: GameState, roomId: RoomId): boolean =>
+const gasJunctionDemanded = (
+  state: GameState,
+  roomId: RoomId,
+  gameDefinition: GameDefinition
+): boolean =>
   TRANSPORT_RUN_IDS.some((runId) => {
-    const definition = TRANSPORT_RUNS[runId].gas;
+    const definition = gameDefinition.transportRuns[runId].gas;
     const conduit = state.gasConduits[runId];
     return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
   });
 
-const liquidJunctionDemanded = (state: GameState, roomId: RoomId): boolean =>
+const liquidJunctionDemanded = (
+  state: GameState,
+  roomId: RoomId,
+  gameDefinition: GameDefinition
+): boolean =>
   TRANSPORT_RUN_IDS.some((runId) => {
-    const definition = TRANSPORT_RUNS[runId].liquid;
+    const definition = gameDefinition.transportRuns[runId].liquid;
     const conduit = state.liquidConduits[runId];
     return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
   });
 
-const gasPools = (state: GameState, roomId: RoomId): GasPool[] => {
-  const definition = GAS_JUNCTIONS[roomId];
+const gasPools = (state: GameState, roomId: RoomId, gameDefinition: GameDefinition): GasPool[] => {
+  const definition = gameDefinition.gasJunctions[roomId];
   const pools: GasPool[] = [];
   for (const sourceId of definition.sourceIds) {
     if (!state.availability.gasSources.includes(sourceId)) continue;
@@ -57,7 +57,7 @@ const gasPools = (state: GameState, roomId: RoomId): GasPool[] => {
   for (const bufferId of definition.bufferIds) {
     pools.push({
       contents: state.gasBuffers[bufferId].gas,
-      temperature: state.rooms[GAS_BUFFERS[bufferId].hostRoomId].temperature,
+      temperature: state.rooms[gameDefinition.gasBuffers[bufferId].hostRoomId].temperature,
     });
   }
   if (definition.includeRoomInventory) {
@@ -70,8 +70,12 @@ const gasPools = (state: GameState, roomId: RoomId): GasPool[] => {
   return pools;
 };
 
-const liquidPools = (state: GameState, roomId: RoomId): LiquidAmounts[] => {
-  const definition = LIQUID_JUNCTIONS[roomId];
+const liquidPools = (
+  state: GameState,
+  roomId: RoomId,
+  gameDefinition: GameDefinition
+): LiquidAmounts[] => {
+  const definition = gameDefinition.liquidJunctions[roomId];
   const pools: LiquidAmounts[] = [];
   for (const sourceId of definition.sourceIds) {
     if (state.availability.liquidSources.includes(sourceId)) {
@@ -81,7 +85,7 @@ const liquidPools = (state: GameState, roomId: RoomId): LiquidAmounts[] => {
   for (const bufferId of definition.bufferIds) pools.push(state.liquidBuffers[bufferId].liquid);
   if (
     definition.includeRoomInventory &&
-    liquidFillRatio(state.rooms[roomId]) >= definition.roomPortHeight
+    liquidFillRatio(state.rooms[roomId], gameDefinition) >= definition.roomPortHeight
   ) {
     pools.push(state.rooms[roomId].liquid);
   }
@@ -144,15 +148,19 @@ const takeLiquidFromPools = (pools: readonly LiquidAmounts[], requested: number)
   return packet;
 };
 
-export const refillLocalJunctions = (state: GameState, dt: number): void => {
-  for (const roomId of Object.keys(state.rooms) as RoomId[]) {
-    if (gasJunctionDemanded(state, roomId)) {
+export const refillLocalJunctions = (
+  state: GameState,
+  dt: number,
+  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
+  for (const roomId of gameDefinition.roomOrder) {
+    if (gasJunctionDemanded(state, roomId, gameDefinition)) {
       const junction = state.gasJunctions[roomId];
-      const definition = GAS_JUNCTIONS[roomId];
+      const definition = gameDefinition.gasJunctions[roomId];
       const headroom = Math.max(0, definition.capacity - gasAmountTotal(junction.gas));
       const existing = gasAmountTotal(junction.gas);
       const moved = takeGasFromPools(
-        gasPools(state, roomId),
+        gasPools(state, roomId, gameDefinition),
         Math.min(headroom, GAS_LOCAL_PORT_RATE * dt)
       );
       addGas(junction.gas, moved.packet);
@@ -163,14 +171,14 @@ export const refillLocalJunctions = (state: GameState, dt: number): void => {
         gasAmountTotal(moved.packet)
       );
     }
-    if (liquidJunctionDemanded(state, roomId)) {
+    if (liquidJunctionDemanded(state, roomId, gameDefinition)) {
       const junction = state.liquidJunctions[roomId];
-      const definition = LIQUID_JUNCTIONS[roomId];
+      const definition = gameDefinition.liquidJunctions[roomId];
       const headroom = Math.max(0, definition.capacity - liquidAmountTotal(junction.liquid));
       addLiquid(
         junction.liquid,
         takeLiquidFromPools(
-          liquidPools(state, roomId),
+          liquidPools(state, roomId, gameDefinition),
           Math.min(headroom, LIQUID_LOCAL_PORT_RATE * dt)
         )
       );
@@ -204,5 +212,7 @@ export const junctionLiquidAvailable = (state: GameState, roomId: RoomId): numbe
 export const junctionGasTemperature = (state: GameState, roomId: RoomId): number =>
   state.gasJunctions[roomId].temperature;
 
-export const sourceDefinitionFor = (phase: TransportPhase) =>
-  phase === "gas" ? GAS_SOURCES : LIQUID_SOURCES;
+export const sourceDefinitionFor = (
+  phase: TransportPhase,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+) => (phase === "gas" ? definition.gasSources : definition.liquidSources);

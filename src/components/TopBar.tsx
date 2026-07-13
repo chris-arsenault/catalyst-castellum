@@ -1,7 +1,19 @@
-import { CircleHelp, Coins, FastForward, Pause, Play, RotateCcw, Shield } from "lucide-react";
-import { levelDefinitionFor } from "../game/simulation";
-import { useGameStore } from "../game/store";
+import {
+  CircleHelp,
+  Coins,
+  FastForward,
+  LogOut,
+  Pause,
+  Play,
+  RotateCcw,
+  Shield,
+} from "lucide-react";
+import { useCallback, useState } from "react";
+import { levelDefinitionFor } from "../game/queries";
+import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
 import type { GamePhase, GameState } from "../game/types";
+import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 
 const phases: Array<{ id: GamePhase; label: string }> = [
   { id: "build", label: "Plan" },
@@ -87,15 +99,55 @@ const StatusMeters = ({ game }: { game: GameState }) => (
   </div>
 );
 
+const RestartSaveConfirmation = ({
+  onCancel,
+  onConfirm,
+}: {
+  onCancel: () => void;
+  onConfirm: () => void;
+}) => (
+  <div
+    className="topbar-inline-confirmation"
+    role="group"
+    aria-label="Confirm restart current save"
+    data-testid="restart-save-confirmation"
+  >
+    <div>
+      <strong>Restart this save?</strong>
+      <span>Plant, campaign, and tutorial progress will return to the beginning.</span>
+    </div>
+    <div className="topbar-confirmation-actions">
+      <button type="button" onClick={onCancel}>
+        Cancel
+      </button>
+      <button
+        className="destructive"
+        type="button"
+        data-testid="confirm-restart-save"
+        onClick={onConfirm}
+      >
+        Restart save
+      </button>
+    </div>
+  </div>
+);
+
 const GlobalControls = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
   const setShowHelp = useGameStore((state) => state.setShowHelp);
   const reset = useGameStore((state) => state.reset);
-  const simulationActive = game.phase === "prime" || game.phase === "assault";
+  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
+  const [confirmingRestart, setConfirmingRestart] = useState(false);
+  const pauseCommand = { type: "toggle_pause" } as const;
+  const speedCommand = { type: "set_speed", speed: game.speed === 1 ? 2 : 1 } as const;
+  const pauseDecision = evaluateCommand(game, pauseCommand);
+  const speedDecision = evaluateCommand(game, speedCommand);
   const pauseLabel = game.paused ? "Resume simulation" : "Pause simulation";
-  const restart = () => {
-    if (window.confirm("Restart the plant and discard all persistent process state?")) reset();
-  };
+  const restart = useCallback(() => {
+    setConfirmingRestart(false);
+    reset();
+  }, [reset]);
+  const cancelRestart = useCallback(() => setConfirmingRestart(false), []);
   return (
     <div className="global-controls">
       <button
@@ -103,8 +155,8 @@ const GlobalControls = ({ game }: { game: GameState }) => {
         type="button"
         aria-label={pauseLabel}
         title={pauseLabel}
-        disabled={!simulationActive}
-        onClick={() => dispatch({ type: "toggle_pause" })}
+        disabled={!pauseDecision.allowed}
+        onClick={() => dispatch(pauseCommand)}
       >
         {game.paused ? <Play size={17} /> : <Pause size={17} />}
       </button>
@@ -112,14 +164,24 @@ const GlobalControls = ({ game }: { game: GameState }) => {
         className={`speed-button ${game.speed === 2 ? "active" : ""}`}
         type="button"
         data-testid="simulation-speed"
+        data-tutorial-anchor={TUTORIAL_ANCHORS.simulationSpeed}
         aria-label={`Simulation speed ${game.speed}x`}
         title="Toggle simulation speed"
-        disabled={!simulationActive}
-        onClick={() => dispatch({ type: "set_speed", speed: game.speed === 1 ? 2 : 1 })}
+        disabled={!speedDecision.allowed}
+        onClick={() => dispatch(speedCommand)}
       >
         <FastForward size={15} /> {game.speed}×
       </button>
       <span className="control-divider" />
+      <button
+        className="icon-button"
+        type="button"
+        aria-label="Return to save slots"
+        title="Save slots"
+        onClick={returnToMainMenu}
+      >
+        <LogOut size={17} />
+      </button>
       <button
         className="icon-button"
         type="button"
@@ -129,9 +191,19 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       >
         <CircleHelp size={18} />
       </button>
-      <button className="icon-button" type="button" aria-label="Restart plant" onClick={restart}>
+      <button
+        className="icon-button"
+        type="button"
+        aria-label="Restart current save"
+        title="Restart current save"
+        aria-expanded={confirmingRestart}
+        onClick={() => setConfirmingRestart((current) => !current)}
+      >
         <RotateCcw size={17} />
       </button>
+      {confirmingRestart && (
+        <RestartSaveConfirmation onCancel={cancelRestart} onConfirm={restart} />
+      )}
     </div>
   );
 };

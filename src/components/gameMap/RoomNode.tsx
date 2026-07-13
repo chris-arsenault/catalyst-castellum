@@ -7,8 +7,9 @@ import {
   EQUIPMENT_DEFINITIONS,
   ROOM_DEFINITIONS,
 } from "../../game/config";
-import { enemyRoomId } from "../../game/simulation";
-import type { GameState, RoomAnalysis, RoomDefinition, RoomId } from "../../game/types";
+import { enemyRoomId } from "../../game/queries";
+import type { GameState, RoomDefinition, RoomId } from "../../game/types";
+import type { RoomViewModel } from "../../presentation/selectors";
 import { roomMapRect } from "./mapGeometry";
 import { drawRoom } from "./roomGraphics";
 import { roomRenderModel } from "./roomRenderModel";
@@ -21,7 +22,7 @@ interface RoomNodeProps {
 }
 
 interface LabelProps {
-  analysis: RoomAnalysis;
+  analysis: RoomViewModel;
   definition: RoomDefinition;
   game: GameState;
   height: number;

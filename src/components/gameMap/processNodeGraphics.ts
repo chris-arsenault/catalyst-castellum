@@ -14,7 +14,7 @@ import {
   type GameState,
   type WorldPoint,
 } from "../../game/types";
-import { gasAmountTotal, liquidAmountTotal } from "../../game/simulation";
+import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { colorNumber, worldToMapPoint } from "./mapGeometry";
 
 const drawTank = (

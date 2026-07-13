@@ -1,28 +1,51 @@
 import { Crosshair, Layers3, LockKeyhole, Pause, RadioTower } from "lucide-react";
+import { lazy, Suspense } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
-import { GameMap } from "./components/GameMap";
 import { BriefingModal } from "./components/BriefingModal";
 import { CampaignProgressModal, HelpModal, NoticeToast, OutcomeModal } from "./components/Modals";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { RoomInspector } from "./components/RoomInspector";
 import { RoomRail } from "./components/RoomRail";
 import { TopBar } from "./components/TopBar";
-import { useSimulationClock } from "./game/hooks";
-import { useGameStore } from "./game/store";
-import { e2eModeEnabled } from "./testing/e2eMode";
-import { GuidedTutorial } from "./tutorial/GuidedTutorial";
+import { SaveSlotScreen } from "./components/SaveSlotScreen";
+import { useApplicationInitialization, useSimulationClock } from "./application/hooks";
+import { useGameStore } from "./application/store";
 
-const SIMULATION_CLOCK_MODE = e2eModeEnabled() ? "frozen-test" : "live";
+const GameMap = lazy(async () => ({ default: (await import("./components/GameMap")).GameMap }));
+const GuidedTutorial = lazy(async () => ({
+  default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
+}));
 
-export default function App() {
-  useSimulationClock();
+const MapStage = () => {
   const game = useGameStore((state) => state.game);
   const selectedRoomId = useGameStore((state) => state.selectedRoomId);
   const selectRoom = useGameStore((state) => state.selectRoom);
-
   return (
-    <div className="app-shell" data-simulation-clock={SIMULATION_CLOCK_MODE}>
+    <div className="map-stage-wrap">
+      <Suspense fallback={<div className="game-map-canvas" data-testid="game-map-loading" />}>
+        <GameMap game={game} selectedRoomId={selectedRoomId} onSelectRoom={selectRoom} />
+      </Suspense>
+      {game.paused && (
+        <div className="paused-overlay">
+          <Pause size={20} />
+          <strong>Simulation paused</strong>
+          <span>Continuous process state is frozen</span>
+        </div>
+      )}
+      <div className="map-corner-readout left-readout">
+        <Crosshair size={12} /> WORLD DISTANCE IS AUTHORITATIVE
+      </div>
+      <div className="map-corner-readout right-readout">
+        <Layers3 size={12} /> HOVER RUNS FOR MEASURED TRANSFER
+      </div>
+    </div>
+  );
+};
+
+const ActiveGame = () => {
+  return (
+    <div className="app-shell" data-simulation-clock="live">
       <TopBar />
       <main className="workspace">
         <section className="defense-board">
@@ -55,22 +78,7 @@ export default function App() {
             <RoomRail />
             <FeedstockStrip />
 
-            <div className="map-stage-wrap">
-              <GameMap game={game} selectedRoomId={selectedRoomId} onSelectRoom={selectRoom} />
-              {game.paused && (
-                <div className="paused-overlay">
-                  <Pause size={20} />
-                  <strong>Simulation paused</strong>
-                  <span>Continuous process state is frozen</span>
-                </div>
-              )}
-              <div className="map-corner-readout left-readout">
-                <Crosshair size={12} /> WORLD DISTANCE IS AUTHORITATIVE
-              </div>
-              <div className="map-corner-readout right-readout">
-                <Layers3 size={12} /> HOVER RUNS FOR MEASURED TRANSFER
-              </div>
-            </div>
+            <MapStage />
           </section>
 
           <EventLog />
@@ -85,7 +93,22 @@ export default function App() {
       <OutcomeModal />
       <NoticeToast />
       <div className="tutorial-coach-anchor" data-tutorial="coach-anchor" aria-hidden="true" />
-      <GuidedTutorial />
+      <Suspense fallback={null}>
+        <GuidedTutorial />
+      </Suspense>
     </div>
   );
+};
+
+export default function App() {
+  useApplicationInitialization();
+  useSimulationClock();
+  const initialized = useGameStore((state) => state.initialized);
+  const activeSlotId = useGameStore((state) => state.activeSlotId);
+
+  if (!initialized) {
+    return <div className="save-selection-loading">Reading local operations archive…</div>;
+  }
+  if (!activeSlotId) return <SaveSlotScreen />;
+  return <ActiveGame />;
 }

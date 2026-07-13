@@ -1,5 +1,5 @@
 import { FACILITY_MAP, ROOM_DEFINITIONS } from "../game/config";
-import { useGameStore } from "../game/store";
+import { useGameStore } from "../application/store";
 import type { FacilityPortalDefinition, GameState, RoomId } from "../game/types";
 
 const portalKindLabel = (kind: FacilityPortalDefinition["kind"]): string =>

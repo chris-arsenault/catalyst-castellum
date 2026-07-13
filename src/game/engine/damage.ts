@@ -1,4 +1,4 @@
-import { ENEMY_DEFINITIONS } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   DAMAGE_SOURCE_IDS,
   type DamageLedger,
@@ -81,8 +81,12 @@ const scaledChannels = (channels: HazardChannels, scale: number): HazardChannels
   radiation: channels.radiation * scale,
 });
 
-const resistedChannels = (enemy: EnemyState, channels: HazardChannels): HazardChannels => {
-  const multipliers = ENEMY_DEFINITIONS[enemy.type].hazardMultipliers;
+const resistedChannels = (
+  enemy: EnemyState,
+  channels: HazardChannels,
+  definition: GameDefinition
+): HazardChannels => {
+  const multipliers = definition.enemies[enemy.type].hazardMultipliers;
   return {
     atmosphere: channels.atmosphere * multipliers.atmosphere,
     corrosion: channels.corrosion * multipliers.corrosion,
@@ -135,12 +139,13 @@ export const dominantLedgerSource = (ledger: DamageLedger): DamageSourceId | nul
 export const applyDamagePackets = (
   state: GameState,
   enemy: EnemyState,
-  packets: DamagePacket[]
+  packets: DamagePacket[],
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): DamageApplication => {
   const healthBefore = enemy.health;
   const resisted = packets.map((packet) => ({
     ...packet,
-    channels: resistedChannels(enemy, packet.channels),
+    channels: resistedChannels(enemy, packet.channels, definition),
   }));
   const requested = resisted.reduce((total, packet) => total + channelTotal(packet.channels), 0);
   if (requested <= 0 || healthBefore <= 0) {

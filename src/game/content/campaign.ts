@@ -339,7 +339,7 @@ const storedChlorine: LevelDefinition = {
     },
     gasConduits: {
       cell_furnace: gasRun(true),
-      cell_absorber: gasRun(true),
+      cell_absorber: gasRun(false),
       furnace_return: gasRun(true),
       return_final: gasRun(true),
       core_final: gasRun(true),
@@ -379,6 +379,7 @@ const storedChlorine: LevelDefinition = {
     },
   ],
   playtestActions: [
+    { type: "set_conduit", runId: "cell_absorber", phase: "gas", enabled: true },
     { type: "set_conduit", runId: "core_cell", phase: "liquid", enabled: true },
     {
       type: "install_equipment",

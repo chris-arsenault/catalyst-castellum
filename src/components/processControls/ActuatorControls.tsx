@@ -16,8 +16,10 @@ import {
   gasConduitPressure,
   liquidAmountTotal,
   liquidConduitFillRatio,
-} from "../../game/simulation";
-import { useGameStore } from "../../game/store";
+} from "../../game/queries";
+import { commandDecision as evaluateCommand } from "../../presentation/selectors";
+import { limitingFactorCopy } from "../../presentation/limitingFactorCopy";
+import { useGameStore } from "../../application/store";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -29,6 +31,7 @@ import {
   type TransportPhase,
   type TransportRunId,
 } from "../../game/types";
+import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -148,6 +151,7 @@ interface BinaryControlProps {
   inactiveLabel: string;
   onClick: () => void;
   testId: string;
+  tutorialAnchor: TutorialAnchorId | null;
 }
 
 export const BinaryControl = ({
@@ -157,12 +161,14 @@ export const BinaryControl = ({
   inactiveLabel,
   onClick,
   testId,
+  tutorialAnchor,
 }: BinaryControlProps) => (
   <button
     className={`binary-control ${active ? "active" : "inactive"}`}
     type="button"
     disabled={disabled}
     data-testid={testId}
+    data-tutorial-anchor={tutorialAnchor ?? undefined}
     aria-pressed={active}
     onClick={onClick}
   >
@@ -171,11 +177,9 @@ export const BinaryControl = ({
 );
 
 export const ConduitActuator = ({
-  locked,
   phase,
   runId,
 }: {
-  locked: boolean;
   phase: TransportPhase;
   runId: TransportRunId;
 }) => {
@@ -184,6 +188,8 @@ export const ConduitActuator = ({
   const definition = TRANSPORT_RUNS[runId][phase];
   const conduit = phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId];
   const active = conduit.enabled;
+  const command = { type: "set_conduit", runId, phase, enabled: !active } as const;
+  const decision = evaluateCommand(game, command);
   const toggle = useCallback(
     () => dispatch({ type: "set_conduit", runId, phase, enabled: !active }),
     [active, dispatch, phase, runId]
@@ -217,9 +223,14 @@ export const ConduitActuator = ({
       <BinaryControl
         active={active}
         activeLabel={activeLabel}
-        disabled={locked}
+        disabled={!decision.allowed}
         inactiveLabel={inactiveLabel}
         testId={`conduit-control-${runId}-${phase}`}
+        tutorialAnchor={
+          runId === "core_furnace" && phase === "gas"
+            ? TUTORIAL_ANCHORS.conduitCoreFurnaceGas
+            : null
+        }
         onClick={toggle}
       />
     </div>
@@ -278,7 +289,8 @@ export const OutletBuffers = () => {
         <span>{REACTION_DEFINITIONS.chlor_alkali_electrolysis.equation}</span>
         <strong>{process.lastRate.toFixed(2)} mol-eq/s</strong>
         <small>
-          {process.powerDraw.toFixed(0)} kW-eq · limiting: {process.limitingReactant}
+          {process.powerDraw.toFixed(0)} kW-eq · limiting:{" "}
+          {limitingFactorCopy(process.limitingFactor)}
         </small>
       </div>
     </div>

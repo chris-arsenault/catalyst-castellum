@@ -1,4 +1,4 @@
-import { ROOM_ORDER } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import type { GameState, GasZone, RoomState } from "../types";
 import { clamp } from "./math";
 import { gasAmountTotal, gasZoneTotal, kelvin, mixedTemperature, roomZoneDensity } from "./physics";
@@ -67,15 +67,16 @@ const swapPackets = (room: RoomState, amount: number): void => {
   );
 };
 
-const diffuseZones = (room: RoomState, dt: number): void => {
+const diffuseZones = (room: RoomState, dt: number, definition: GameDefinition): void => {
   const amount =
     Math.min(gasZoneTotal(room, "lower"), gasZoneTotal(room, "upper")) *
-    clamp((MOLECULAR_DIFFUSION_RATE + roomGasMixingRate(room)) * dt, 0, 0.2);
+    clamp((MOLECULAR_DIFFUSION_RATE + roomGasMixingRate(room, definition)) * dt, 0, 0.2);
   swapPackets(room, amount);
 };
 
-const overturnUnstableGas = (room: RoomState, dt: number): void => {
-  const instability = roomZoneDensity(room, "upper") - roomZoneDensity(room, "lower");
+const overturnUnstableGas = (room: RoomState, dt: number, definition: GameDefinition): void => {
+  const instability =
+    roomZoneDensity(room, "upper", definition) - roomZoneDensity(room, "lower", definition);
   if (instability <= 0.0002) return;
   // Plumes carry a little momentum through neutral density, leaving the
   // displaced heavy mixture below instead of stopping just short of parity.
@@ -92,13 +93,22 @@ const exchangeWallHeat = (room: RoomState, dt: number): void => {
   }
 };
 
-export const simulateRoomStratification = (room: RoomState, dt: number): void => {
+export const simulateRoomStratification = (
+  room: RoomState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   equalizeZonePressure(room, dt);
-  overturnUnstableGas(room, dt);
-  diffuseZones(room, dt);
+  overturnUnstableGas(room, dt, definition);
+  diffuseZones(room, dt, definition);
   exchangeWallHeat(room, dt);
 };
 
-export const simulateStratification = (state: GameState, dt: number): void => {
-  for (const roomId of ROOM_ORDER) simulateRoomStratification(state.rooms[roomId], dt);
+export const simulateStratification = (
+  state: GameState,
+  dt: number,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
+  for (const roomId of definition.roomOrder)
+    simulateRoomStratification(state.rooms[roomId], dt, definition);
 };

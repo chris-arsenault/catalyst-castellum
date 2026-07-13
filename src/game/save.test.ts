@@ -31,12 +31,14 @@ const persistedEnemy = (game: GameState): EnemyState => {
   };
 };
 
-describe("v9 persistence", () => {
+describe("v11 persistence", () => {
   it("round-trips conduit routes, damage ledgers, and structured incidents", () => {
     const game = createScenarioGame("flash_point");
+    game.phase = "assault";
     game.gasConduits.core_furnace.enabled = true;
     game.gasConduits.core_furnace.gas.hydrogen = 4;
     game.enemies.push(persistedEnemy(game));
+    game.nextEnemyId = 10;
     game.enemies[0]!.damageBySource.hydrogen_oxygen_combustion.pressure = 53;
     game.incidents.push({
       id: 3,
@@ -67,8 +69,8 @@ describe("v9 persistence", () => {
 
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
-    if (!decoded) throw new Error("Expected the v9 save to decode.");
-    expect(decoded.version).toBe(9);
+    if (!decoded) throw new Error("Expected the v11 save to decode.");
+    expect(decoded.version).toBe(11);
     expect(decoded.gasConduits.core_furnace.route).toEqual(game.gasConduits.core_furnace.route);
     expect(decoded.enemies[0]?.damageBySource.hydrogen_oxygen_combustion.pressure).toBe(53);
     expect(decoded.enemies[0]?.path).toEqual(game.enemies[0]?.path);
@@ -81,6 +83,38 @@ describe("v9 persistence", () => {
     expect(decoded.incidents[0]?.targets[0]?.healthAfter).toBe(21);
     expect(decoded.portalStates).toEqual(game.portalStates);
   });
+});
+
+describe("v11 compatibility decoding", () => {
+  it("migrates a structurally current v10 snapshot to v11", () => {
+    const game = createScenarioGame("make_the_reagent");
+    const envelope = JSON.parse(encodeGame(game)) as {
+      game: Omit<GameState, "version"> & { version: number };
+    };
+    envelope.game.version = 10;
+    const legacyShape = envelope.game as unknown as {
+      rooms: Record<string, { reactions: Record<string, Record<string, unknown>> }>;
+      processes: Record<string, Record<string, unknown>>;
+    };
+    const legacyReaction = legacyShape.rooms.furnace!.reactions.hydrogen_oxygen_combustion!;
+    delete legacyReaction.limitingFactor;
+    legacyReaction.limitingReactant = "legacy reaction feed";
+    const legacyProcess = legacyShape.processes.chlor_alkali_cell!;
+    delete legacyProcess.limitingFactor;
+    legacyProcess.limitingReactant = "legacy process feed";
+    const decoded = decodeGame(JSON.stringify(envelope));
+
+    expect(decoded?.version).toBe(11);
+    expect(decoded?.campaign.levelId).toBe("make_the_reagent");
+    expect(decoded?.rooms.furnace.reactions.hydrogen_oxygen_combustion.limitingFactor).toEqual({
+      kind: "legacy",
+      label: "legacy reaction feed",
+    });
+    expect(decoded?.processes.chlor_alkali_cell.limitingFactor).toEqual({
+      kind: "legacy",
+      label: "legacy process feed",
+    });
+  });
 
   it("rejects malformed state", () => {
     expect(decodeGame("not-json")).toBeNull();
@@ -88,7 +122,7 @@ describe("v9 persistence", () => {
   });
 });
 
-describe("v9 canonical portal persistence", () => {
+describe("v11 canonical portal persistence", () => {
   it("rejects state missing any canonical portal state", () => {
     const game = createScenarioGame("flash_point");
     const malformed = { ...game, portalStates: {} };
@@ -104,7 +138,7 @@ describe("v9 canonical portal persistence", () => {
   });
 });
 
-describe("v9 enemy navigation persistence", () => {
+describe("v11 enemy navigation persistence", () => {
   it("rejects an out-of-range path cursor", () => {
     const game = createScenarioGame("flash_point");
     game.enemies.push(persistedEnemy(game));
@@ -179,6 +213,12 @@ describe("v8 spatial migration", () => {
     const legacy = {
       ...legacyBase,
       version: 8,
+      phase: "assault",
+      events: current.events.map(({ code: _code, parameters: _parameters, ...event }) => ({
+        ...event,
+        title: "Legacy scenario",
+        detail: "Legacy event detail",
+      })),
       enemies: [
         {
           id: 7,
@@ -214,7 +254,7 @@ describe("v8 spatial migration", () => {
 
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the v8 save to migrate.");
-    expect(decoded.version).toBe(9);
+    expect(decoded.version).toBe(11);
     expect(decoded.enemies[0]?.routeId).toBe("entry_to_core");
     expect(decoded.enemies[0]?.path.length).toBeGreaterThan(1);
     expect(decoded.portalStates.switchyard_to_furnace_shaft?.open).toBe(true);
@@ -314,6 +354,6 @@ describe("conserving v7 migration", () => {
     expect(migrated.gasSources.starter_gas_header.gas.hydrogen).toBe(13);
     expect(migrated.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
     expect(migrated.campaign.roundIndex).toBe(1);
-    expect(migrated.events[0]?.title).toMatch(/Physical conduit migration/);
+    expect(migrated.events[0]?.code).toBe("physical_conduit_migrated");
   });
 });

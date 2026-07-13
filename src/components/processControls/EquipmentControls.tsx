@@ -1,53 +1,61 @@
 import { Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
-import {
-  EQUIPMENT_DEFINITIONS,
-  ROOM_DEFINITIONS,
-  equipmentGrade,
-  roomRing,
-} from "../../game/config";
-import { equipmentDismantleRefund } from "../../game/simulation";
-import { useGameStore } from "../../game/store";
+import { EQUIPMENT_DEFINITIONS, equipmentGrade } from "../../game/config";
+import { commandDecision as evaluateCommand } from "../../presentation/selectors";
+import { useGameStore } from "../../application/store";
+import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import {
   EQUIPMENT_IDS,
-  type EquipmentId,
   type EquipmentInstance,
+  type EquipmentId,
   type EquipmentSocketId,
+  type GameCommand,
+  type GameState,
   type RoomId,
 } from "../../game/types";
 import { BinaryControl } from "./ActuatorControls";
+import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
 
 const socketLabel = (socketId: EquipmentSocketId): string =>
   socketId === "socket_a" ? "SOCKET A" : "SOCKET B";
 
-const availableEquipment = (roomId: RoomId, unlocked: EquipmentId[]): EquipmentId[] => {
-  const room = ROOM_DEFINITIONS[roomId];
-  return EQUIPMENT_IDS.filter((equipmentId) => {
-    const definition = EQUIPMENT_DEFINITIONS[equipmentId];
-    const featureAvailable =
-      !definition.requiredFeature || room.features.includes(definition.requiredFeature);
-    return (
-      unlocked.includes(equipmentId) &&
-      definition.allowedRings.includes(roomRing(roomId)) &&
-      featureAvailable
-    );
-  });
+const installCommand = (
+  roomId: RoomId,
+  socketId: EquipmentSocketId,
+  equipmentId: EquipmentId
+): Extract<GameCommand, { type: "install_equipment" }> => ({
+  type: "install_equipment",
+  roomId,
+  socketId,
+  equipmentId,
+});
+
+const equipmentVisibleForSocket = (
+  game: GameState,
+  roomId: RoomId,
+  socketId: EquipmentSocketId,
+  equipmentId: EquipmentId
+): boolean => {
+  const decision = evaluateCommand(game, installCommand(roomId, socketId, equipmentId));
+  return (
+    decision.allowed || decision.code === "insufficient_matter" || decision.code === "capacity"
+  );
 };
 
 const EquipmentChoice = ({
   equipmentId,
-  planning,
   roomId,
   socketId,
 }: {
   equipmentId: EquipmentId;
-  planning: boolean;
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
-  const matter = useGameStore((state) => state.game.matter);
+  const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const definition = EQUIPMENT_DEFINITIONS[equipmentId];
+  const command = installCommand(roomId, socketId, equipmentId);
+  const decision = evaluateCommand(game, command);
   const install = useCallback(
     () => dispatch({ type: "install_equipment", roomId, socketId, equipmentId }),
     [dispatch, equipmentId, roomId, socketId]
@@ -55,8 +63,14 @@ const EquipmentChoice = ({
   return (
     <button
       type="button"
-      disabled={!planning || matter < definition.buildCost}
+      disabled={!decision.allowed}
+      title={decision.reason ?? undefined}
       data-testid={`install-${roomId}-${socketId}-${equipmentId}`}
+      data-tutorial-anchor={
+        roomId === "furnace" && equipmentId === "gas_agitator"
+          ? TUTORIAL_ANCHORS.furnaceAgitator
+          : undefined
+      }
       onClick={install}
     >
       <Plus size={13} />
@@ -67,15 +81,16 @@ const EquipmentChoice = ({
 };
 
 const EmptyEquipmentSocket = ({
-  planning,
   roomId,
   socketId,
 }: {
-  planning: boolean;
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
-  const unlocked = useGameStore((state) => state.game.availability.equipment);
+  const game = useGameStore((state) => state.game);
+  const available = EQUIPMENT_IDS.filter((equipmentId) =>
+    equipmentVisibleForSocket(game, roomId, socketId, equipmentId)
+  );
   return (
     <article className="equipment-socket empty">
       <header>
@@ -83,11 +98,10 @@ const EmptyEquipmentSocket = ({
         <strong>Open equipment socket</strong>
       </header>
       <div className="equipment-picker">
-        {availableEquipment(roomId, unlocked).map((equipmentId) => (
+        {available.map((equipmentId) => (
           <EquipmentChoice
             key={equipmentId}
             equipmentId={equipmentId}
-            planning={planning}
             roomId={roomId}
             socketId={socketId}
           />
@@ -99,21 +113,27 @@ const EmptyEquipmentSocket = ({
 
 const EquipmentActions = ({
   instance,
-  operatingUnlocked,
-  planning,
   roomId,
   socketId,
 }: {
   instance: EquipmentInstance;
-  operatingUnlocked: boolean;
-  planning: boolean;
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  const upgradeCost = instance.level < 3 ? definition.upgradeCosts[instance.level - 1] : null;
+  const toggleCommand = {
+    type: "toggle_equipment",
+    roomId,
+    socketId,
+    enabled: !instance.enabled,
+  } as const;
+  const upgradeCommand = { type: "upgrade_equipment", roomId, socketId } as const;
+  const dismantleCommand = { type: "dismantle_equipment", roomId, socketId } as const;
+  const toggleDecision = evaluateCommand(game, toggleCommand);
+  const upgradeDecision = evaluateCommand(game, upgradeCommand);
+  const dismantleDecision = evaluateCommand(game, dismantleCommand);
   const toggle = useCallback(
     () =>
       dispatch({
@@ -132,20 +152,22 @@ const EquipmentActions = ({
     () => dispatch({ type: "dismantle_equipment", roomId, socketId }),
     [dispatch, roomId, socketId]
   );
-  const upgradeLabel = upgradeCost === null ? "MAX" : `UPGRADE · ${upgradeCost} M`;
+  const upgradeLabel = instance.level >= 3 ? "MAX" : `UPGRADE · ${upgradeDecision.cost} M`;
   return (
     <div className="equipment-actions">
       <BinaryControl
         active={instance.enabled}
         activeLabel="ON"
-        disabled={!operatingUnlocked}
+        disabled={!toggleDecision.allowed}
         inactiveLabel="OFF"
         testId={`equipment-toggle-${roomId}-${socketId}`}
+        tutorialAnchor={null}
         onClick={toggle}
       />
       <button
         type="button"
-        disabled={!planning || upgradeCost === null || game.matter < (upgradeCost ?? 0)}
+        disabled={!upgradeDecision.allowed}
+        title={upgradeDecision.reason ?? undefined}
         data-testid={`equipment-upgrade-${roomId}-${socketId}`}
         onClick={upgrade}
       >
@@ -153,11 +175,12 @@ const EquipmentActions = ({
       </button>
       <button
         type="button"
-        disabled={!planning}
+        disabled={!dismantleDecision.allowed}
+        title={dismantleDecision.reason ?? undefined}
         aria-label={`Dismantle ${definition.name}`}
         onClick={dismantle}
       >
-        <Trash2 size={13} /> +{equipmentDismantleRefund(instance)} M
+        <Trash2 size={13} /> +{dismantleDecision.refund} M
       </button>
     </div>
   );
@@ -165,14 +188,10 @@ const EquipmentActions = ({
 
 const InstalledEquipmentSocket = ({
   instance,
-  operatingUnlocked,
-  planning,
   roomId,
   socketId,
 }: {
   instance: EquipmentInstance;
-  operatingUnlocked: boolean;
-  planning: boolean;
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
@@ -192,16 +211,10 @@ const InstalledEquipmentSocket = ({
       </header>
       <p>{definition.description}</p>
       <div className="equipment-rating">
-        <span>{grade.effect}</span>
+        <span>{equipmentGradeEffect(grade)}</span>
         <small>{grade.occupiedVolume} room volume</small>
       </div>
-      <EquipmentActions
-        instance={instance}
-        operatingUnlocked={operatingUnlocked}
-        planning={planning}
-        roomId={roomId}
-        socketId={socketId}
-      />
+      <EquipmentActions instance={instance} roomId={roomId} socketId={socketId} />
     </article>
   );
 };
@@ -215,17 +228,6 @@ export const EquipmentSocket = ({
 }) => {
   const game = useGameStore((state) => state.game);
   const instance = game.rooms[roomId].equipment[socketId];
-  const planning = game.phase === "build";
-  const operatingUnlocked = planning || game.phase === "prime";
-  if (!instance)
-    return <EmptyEquipmentSocket planning={planning} roomId={roomId} socketId={socketId} />;
-  return (
-    <InstalledEquipmentSocket
-      instance={instance}
-      operatingUnlocked={operatingUnlocked}
-      planning={planning}
-      roomId={roomId}
-      socketId={socketId}
-    />
-  );
+  if (!instance) return <EmptyEquipmentSocket roomId={roomId} socketId={socketId} />;
+  return <InstalledEquipmentSocket instance={instance} roomId={roomId} socketId={socketId} />;
 };

@@ -1,5 +1,4 @@
-import { LEVEL_DEFINITIONS } from "../config";
-import { createScenarioGame, executeCommand, roundDefinitionFor, stepGame } from "../simulation";
+import { DEFAULT_GAME_RUNTIME, type GameRuntime } from "../runtime";
 import {
   DAMAGE_SOURCE_IDS,
   type DamageSourceId,
@@ -38,13 +37,14 @@ const recurring = (command: GameCommand): boolean =>
 const attemptCommand = (
   source: GameState,
   planned: PlannedCommand,
-  counters: TrialCounters
+  counters: TrialCounters,
+  runtime: GameRuntime
 ): { state: GameState; progressed: boolean } => {
   if (planned.complete) return { state: source, progressed: false };
   if (recurring(planned.command) && planned.lastRoundAttempt === source.campaign.roundIndex) {
     return { state: source, progressed: false };
   }
-  const result = executeCommand(source, planned.command);
+  const result = runtime.execute(source, planned.command);
   planned.lastRoundAttempt = source.campaign.roundIndex;
   if (!result.accepted) {
     counters.rejected += 1;
@@ -58,12 +58,13 @@ const attemptCommand = (
 const applyPass = (
   source: GameState,
   commands: PlannedCommand[],
-  counters: TrialCounters
+  counters: TrialCounters,
+  runtime: GameRuntime
 ): { state: GameState; progressed: boolean } => {
   let state = source;
   let progressed = false;
   for (const planned of commands) {
-    const attempt = attemptCommand(state, planned, counters);
+    const attempt = attemptCommand(state, planned, counters, runtime);
     state = attempt.state;
     progressed ||= attempt.progressed;
   }
@@ -73,11 +74,12 @@ const applyPass = (
 const applyPlan = (
   source: GameState,
   commands: PlannedCommand[],
-  counters: TrialCounters
+  counters: TrialCounters,
+  runtime: GameRuntime
 ): GameState => {
   let state = source;
   for (let pass = 0; pass < 4; pass += 1) {
-    const result = applyPass(state, commands, counters);
+    const result = applyPass(state, commands, counters, runtime);
     state = result.state;
     if (!result.progressed) break;
   }
@@ -97,7 +99,8 @@ const finishResult = (
   plan: PlaytestPlan,
   counters: TrialCounters,
   simulatedSeconds: number,
-  stable: boolean
+  stable: boolean,
+  runtime: GameRuntime
 ): PlaytestResult => {
   recordReport(state.lastReport, counters);
   const success = state.phase === "level_complete" || state.phase === "victory";
@@ -115,7 +118,7 @@ const finishResult = (
     terminalPhase: state.phase,
     coreIntegrity: state.coreIntegrity,
     roundsCleared: success
-      ? LEVEL_DEFINITIONS[state.campaign.levelId].rounds.length
+      ? runtime.definition.levels[state.campaign.levelId].rounds.length
       : counters.reports.length,
     killed: counters.reports.reduce((total, report) => total + report.killed, 0),
     breached: counters.reports.reduce((total, report) => total + report.breached, 0),
@@ -130,14 +133,18 @@ const finishResult = (
   };
 };
 
-const enterLevel = (levelId: LevelId): GameState => {
-  const result = executeCommand(createScenarioGame(levelId), { type: "begin_level" });
+const enterLevel = (levelId: LevelId, runtime: GameRuntime): GameState => {
+  const result = runtime.execute(runtime.createScenario(levelId), { type: "begin_level" });
   if (!result.accepted) throw new Error(result.reason ?? `Could not enter ${levelId}`);
   return result.state;
 };
 
-export const runPlan = (levelId: LevelId, plan: PlaytestPlan): PlaytestResult => {
-  let state = enterLevel(levelId);
+export const runPlan = (
+  levelId: LevelId,
+  plan: PlaytestPlan,
+  runtime: GameRuntime = DEFAULT_GAME_RUNTIME
+): PlaytestResult => {
+  let state = enterLevel(levelId, runtime);
   let simulatedSeconds = 0;
   const commands = plan.commands.map((command) => ({
     command,
@@ -147,29 +154,29 @@ export const runPlan = (levelId: LevelId, plan: PlaytestPlan): PlaytestResult =>
   const counters: TrialCounters = { accepted: 0, rejected: 0, reports: [] };
   while (simulatedSeconds < MAX_SIMULATED_SECONDS) {
     if (state.phase === "build") {
-      state = applyPlan(state, commands, counters);
-      state = executeCommand(state, { type: "start_prime" }).state;
+      state = applyPlan(state, commands, counters, runtime);
+      state = runtime.execute(state, { type: "start_prime" }).state;
       continue;
     }
     if (state.phase === "round_result") {
       recordReport(state.lastReport, counters);
-      state = executeCommand(state, { type: "continue_round" }).state;
+      state = runtime.execute(state, { type: "continue_round" }).state;
       continue;
     }
     if (["level_complete", "victory", "defeat"].includes(state.phase)) {
-      return finishResult(state, plan, counters, simulatedSeconds, true);
+      return finishResult(state, plan, counters, simulatedSeconds, true, runtime);
     }
     if (state.phase === "prime") {
-      const earlyLockAt = roundDefinitionFor(state).primeSeconds * plan.primeFraction;
+      const earlyLockAt = runtime.round(state).primeSeconds * plan.primeFraction;
       if (state.phaseTime >= earlyLockAt) {
-        state = executeCommand(state, { type: "start_assault" }).state;
+        state = runtime.execute(state, { type: "start_assault" }).state;
         continue;
       }
     }
-    state = stepGame(state, STEP_SECONDS);
+    state = runtime.step(state, STEP_SECONDS);
     simulatedSeconds += STEP_SECONDS;
   }
-  return finishResult(state, plan, counters, simulatedSeconds, false);
+  return finishResult(state, plan, counters, simulatedSeconds, false, runtime);
 };
 
 const actionBands = (trials: PlaytestResult[]): ActionBand[] => {
@@ -190,16 +197,19 @@ const actionBands = (trials: PlaytestResult[]): ActionBand[] => {
   });
 };
 
-export const evaluateLevel = (options: EvaluationOptions): LevelEvaluation => {
+export const evaluateLevel = (
+  options: EvaluationOptions,
+  runtime: GameRuntime = DEFAULT_GAME_RUNTIME
+): LevelEvaluation => {
   const random = seededRandom(options.seed);
   const randomTrials = Array.from({ length: options.runs }, () => {
     const quality = random.next();
-    return runPlan(options.levelId, randomPlan(options.levelId, quality, random));
+    return runPlan(options.levelId, randomPlan(options.levelId, quality, random), runtime);
   });
   return {
     levelId: options.levelId,
-    doNothing: runPlan(options.levelId, doNothingPlan()),
-    intended: runPlan(options.levelId, intendedPlan(options.levelId)),
+    doNothing: runPlan(options.levelId, doNothingPlan(), runtime),
+    intended: runPlan(options.levelId, intendedPlan(options.levelId), runtime),
     randomTrials,
     actionBands: actionBands(randomTrials),
   };

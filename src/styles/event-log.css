@@ -1,0 +1,108 @@
+/* Event log */
+
+.event-log {
+  display: grid;
+  grid-template-rows: 31px minmax(0, 1fr);
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+.event-log-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 11px;
+  border-bottom: 1px solid #21473c;
+}
+.event-log-header span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #95b1a5;
+  font: 700 10px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.event-log-header small {
+  color: #507567;
+  font: 600 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+.event-row-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 50%;
+  min-height: 0;
+  overflow-y: auto;
+}
+.event-row {
+  display: grid;
+  grid-template-columns: 5px 24px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 7px 9px;
+  border: 0;
+  border-right: 1px solid #1b3b31;
+  border-bottom: 1px solid #1b3b31;
+  background: transparent;
+  text-align: left;
+}
+.event-row:not(:disabled) {
+  cursor: pointer;
+}
+.event-row:not(:disabled):hover {
+  background: #102922;
+}
+.event-signal {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #659183;
+}
+.tone-good .event-signal {
+  background: var(--lime);
+  box-shadow: 0 0 5px rgba(231, 247, 111, 0.5);
+}
+.tone-warning .event-signal {
+  background: var(--amber);
+}
+.tone-danger .event-signal {
+  background: var(--red);
+  box-shadow: 0 0 5px rgba(245, 82, 68, 0.5);
+}
+.tone-reaction .event-signal {
+  background: #f68a4d;
+  box-shadow: 0 0 5px rgba(250, 133, 60, 0.5);
+}
+.event-cycle {
+  color: #527a6b;
+  font: 700 10px/1 var(--mono);
+}
+.event-copy {
+  min-width: 0;
+}
+.event-copy strong,
+.event-copy small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.event-copy strong {
+  margin-bottom: 3px;
+  color: #b2c9ba;
+  font-size: 11px;
+}
+.event-copy small {
+  color: #658d7e;
+  font-size: 10px;
+}
+.event-room {
+  display: flex;
+  align-items: center;
+  color: #729b8c;
+  font: 700 9px/1 var(--mono);
+}

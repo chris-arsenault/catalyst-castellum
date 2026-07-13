@@ -1,12 +1,8 @@
 import { Activity, ArrowDownToLine, Beaker, Gauge, LockKeyhole } from "lucide-react";
 import { ROOM_DEFINITIONS, TRANSPORT_RUNS, roomRing, roomVolume } from "../game/config";
-import {
-  roomEquipmentVolume,
-  roomRingDescription,
-  roomSocketIds,
-  transportPhaseAvailable,
-} from "../game/simulation";
-import { useGameStore } from "../game/store";
+import { roomEquipmentVolume, roomSocketIds, transportPhaseAvailable } from "../game/queries";
+import { roomRingDescription } from "../presentation/roomCopy";
+import { useGameStore } from "../application/store";
 import { TRANSPORT_RUN_IDS } from "../game/types";
 import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";

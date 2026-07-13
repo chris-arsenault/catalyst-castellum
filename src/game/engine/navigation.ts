@@ -1,11 +1,5 @@
-import {
-  FACILITY_MAP,
-  cell,
-  cellKey,
-  facilityCellDefinition,
-  facilityCellHasSupport,
-  facilityCellIsTraversable,
-} from "../content/facilityGeometry";
+import { cell, cellKey } from "../content/facilityGeometry";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import type { EnemyLocomotionMode, EnemyPathStep, FacilityPortalState, GridCell } from "../types";
 
 interface NavigationNeighbor {
@@ -22,13 +16,18 @@ const sameCell = (left: GridCell, right: GridCell): boolean =>
 const canEnterCell = (
   target: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  allowCoreBreach: boolean
+  allowCoreBreach: boolean,
+  definition: GameDefinition
 ): boolean =>
-  facilityCellIsTraversable(target, portalStates) ||
-  (allowCoreBreach && sameCell(target, FACILITY_MAP.coreBreachCell));
+  definition.facility.cellIsTraversable(target, portalStates) ||
+  (allowCoreBreach && sameCell(target, definition.facilityMap.coreBreachCell));
 
-const connectorMode = (target: GridCell, fallback: EnemyLocomotionMode): EnemyLocomotionMode => {
-  const terrain = facilityCellDefinition(target).terrain;
+const connectorMode = (
+  target: GridCell,
+  fallback: EnemyLocomotionMode,
+  definition: GameDefinition
+): EnemyLocomotionMode => {
+  const terrain = definition.facility.cellDefinition(target).terrain;
   if (terrain === "door") return "door";
   return fallback;
 };
@@ -36,31 +35,33 @@ const connectorMode = (target: GridCell, fallback: EnemyLocomotionMode): EnemyLo
 const flyingNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  allowCoreBreach: boolean
+  allowCoreBreach: boolean,
+  definition: GameDefinition
 ): NavigationNeighbor[] =>
   CARDINAL_DIRECTIONS.flatMap((direction) => {
     const target = cell(current.column + direction.column, current.elevation + direction.elevation);
-    if (!canEnterCell(target, portalStates, allowCoreBreach)) return [];
+    if (!canEnterCell(target, portalStates, allowCoreBreach, definition)) return [];
     return [
       {
         cell: target,
-        mode: connectorMode(target, "flying"),
-        portalId: facilityCellDefinition(target).portalId,
+        mode: connectorMode(target, "flying", definition),
+        portalId: definition.facility.cellDefinition(target).portalId,
       },
     ];
   });
 
 const fallingNeighbor = (
   current: GridCell,
-  portalStates: Readonly<Record<string, FacilityPortalState>>
+  portalStates: Readonly<Record<string, FacilityPortalState>>,
+  definition: GameDefinition
 ): NavigationNeighbor[] => {
   const below = cell(current.column, current.elevation - 1);
-  if (!facilityCellIsTraversable(below, portalStates)) return [];
+  if (!definition.facility.cellIsTraversable(below, portalStates)) return [];
   return [
     {
       cell: below,
       mode: "falling",
-      portalId: facilityCellDefinition(below).portalId,
+      portalId: definition.facility.cellDefinition(below).portalId,
     },
   ];
 };
@@ -68,36 +69,38 @@ const fallingNeighbor = (
 const horizontalNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  allowCoreBreach: boolean
+  allowCoreBreach: boolean,
+  definition: GameDefinition
 ): NavigationNeighbor[] =>
   [-1, 1].flatMap((direction) => {
     const target = cell(current.column + direction, current.elevation);
-    if (!canEnterCell(target, portalStates, allowCoreBreach)) return [];
-    const targetTerrain = facilityCellDefinition(target).terrain;
+    if (!canEnterCell(target, portalStates, allowCoreBreach, definition)) return [];
+    const targetTerrain = definition.facility.cellDefinition(target).terrain;
     const targetSupported =
-      targetTerrain === "ladder" || facilityCellHasSupport(target, portalStates);
+      targetTerrain === "ladder" || definition.facility.cellHasSupport(target, portalStates);
     return [
       {
         cell: target,
-        mode: targetSupported ? connectorMode(target, "walking") : "falling",
-        portalId: facilityCellDefinition(target).portalId,
+        mode: targetSupported ? connectorMode(target, "walking", definition) : "falling",
+        portalId: definition.facility.cellDefinition(target).portalId,
       },
     ];
   });
 
 const ladderNeighbors = (
   current: GridCell,
-  portalStates: Readonly<Record<string, FacilityPortalState>>
+  portalStates: Readonly<Record<string, FacilityPortalState>>,
+  definition: GameDefinition
 ): NavigationNeighbor[] =>
   [-1, 1].flatMap((direction) => {
     const target = cell(current.column, current.elevation + direction);
-    if (!facilityCellIsTraversable(target, portalStates)) return [];
-    if (facilityCellDefinition(target).terrain !== "ladder") return [];
+    if (!definition.facility.cellIsTraversable(target, portalStates)) return [];
+    if (definition.facility.cellDefinition(target).terrain !== "ladder") return [];
     return [
       {
         cell: target,
         mode: "climbing",
-        portalId: facilityCellDefinition(target).portalId,
+        portalId: definition.facility.cellDefinition(target).portalId,
       },
     ];
   });
@@ -105,15 +108,16 @@ const ladderNeighbors = (
 const groundNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  allowCoreBreach: boolean
+  allowCoreBreach: boolean,
+  definition: GameDefinition
 ): NavigationNeighbor[] => {
-  const definition = facilityCellDefinition(current);
-  const onLadder = definition.terrain === "ladder";
-  const supported = onLadder || facilityCellHasSupport(current, portalStates);
-  if (!supported) return fallingNeighbor(current, portalStates);
+  const cellDefinition = definition.facility.cellDefinition(current);
+  const onLadder = cellDefinition.terrain === "ladder";
+  const supported = onLadder || definition.facility.cellHasSupport(current, portalStates);
+  if (!supported) return fallingNeighbor(current, portalStates, definition);
   return [
-    ...horizontalNeighbors(current, portalStates, allowCoreBreach),
-    ...(onLadder ? ladderNeighbors(current, portalStates) : []),
+    ...horizontalNeighbors(current, portalStates, allowCoreBreach, definition),
+    ...(onLadder ? ladderNeighbors(current, portalStates, definition) : []),
   ];
 };
 
@@ -152,25 +156,26 @@ export interface EnemyPathTransitionOptions {
   step: EnemyPathStep;
 }
 
-const openTopologyPortalStates = (): Record<string, FacilityPortalState> =>
+const openTopologyPortalStates = (
+  definition: GameDefinition
+): Record<string, FacilityPortalState> =>
   Object.fromEntries(
-    FACILITY_MAP.portals.map((portal) => [
+    definition.facilityMap.portals.map((portal) => [
       portal.id,
       { open: true, sealed: false, lastGasFlow: 0, lastLiquidFlow: 0 },
     ])
   );
 
 /** Validate persisted locomotion with the same neighbor policy used by live pathfinding. */
-export const enemyPathTransitionIsLegal = ({
-  flying,
-  previous,
-  step,
-}: EnemyPathTransitionOptions): boolean => {
-  const portalStates = openTopologyPortalStates();
-  const allowCoreBreach = sameCell(step.cell, FACILITY_MAP.coreBreachCell);
+export const enemyPathTransitionIsLegal = (
+  { flying, previous, step }: EnemyPathTransitionOptions,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): boolean => {
+  const portalStates = openTopologyPortalStates(definition);
+  const allowCoreBreach = sameCell(step.cell, definition.facilityMap.coreBreachCell);
   const neighbors = flying
-    ? flyingNeighbors(previous.cell, portalStates, allowCoreBreach)
-    : groundNeighbors(previous.cell, portalStates, allowCoreBreach);
+    ? flyingNeighbors(previous.cell, portalStates, allowCoreBreach, definition)
+    : groundNeighbors(previous.cell, portalStates, allowCoreBreach, definition);
   return neighbors.some(
     (neighbor) =>
       sameCell(neighbor.cell, step.cell) &&
@@ -184,15 +189,13 @@ interface EnemyPathSearchOptions extends EnemyPathOptions {
   goal: GridCell;
 }
 
-const searchEnemyPath = ({
-  flying,
-  portalStates,
-  start,
-  goal,
-}: EnemyPathSearchOptions): EnemyPathStep[] => {
-  const allowCoreBreach = sameCell(goal, FACILITY_MAP.coreBreachCell);
-  if (!facilityCellIsTraversable(start, portalStates)) return [];
-  if (!canEnterCell(goal, portalStates, allowCoreBreach)) return [];
+const searchEnemyPath = (
+  { flying, portalStates, start, goal }: EnemyPathSearchOptions,
+  definition: GameDefinition
+): EnemyPathStep[] => {
+  const allowCoreBreach = sameCell(goal, definition.facilityMap.coreBreachCell);
+  if (!definition.facility.cellIsTraversable(start, portalStates)) return [];
+  if (!canEnterCell(goal, portalStates, allowCoreBreach, definition)) return [];
   const queue: GridCell[] = [{ ...start }];
   const visited = new Set([cellKey(start)]);
   const previous = new Map<string, { from: string; node: SearchNode }>();
@@ -201,8 +204,8 @@ const searchEnemyPath = ({
     const current = queue[cursor] as GridCell;
     if (sameCell(current, goal)) return reconstructPath(start, goal, previous);
     const neighbors = flying
-      ? flyingNeighbors(current, portalStates, allowCoreBreach)
-      : groundNeighbors(current, portalStates, allowCoreBreach);
+      ? flyingNeighbors(current, portalStates, allowCoreBreach, definition)
+      : groundNeighbors(current, portalStates, allowCoreBreach, definition);
     for (const neighbor of neighbors) {
       const key = cellKey(neighbor.cell);
       if (visited.has(key)) continue;
@@ -218,15 +221,23 @@ const searchEnemyPath = ({
 };
 
 /** Deterministic breadth-first navigation over real facility cells and movement rules. */
-export const findEnemyPath = (options: EnemyPathOptions): EnemyPathStep[] =>
-  searchEnemyPath({
-    ...options,
-    start: FACILITY_MAP.entryCell,
-    goal: FACILITY_MAP.coreBreachCell,
-  });
+export const findEnemyPath = (
+  options: EnemyPathOptions,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): EnemyPathStep[] =>
+  searchEnemyPath(
+    {
+      ...options,
+      start: definition.facilityMap.entryCell,
+      goal: definition.facilityMap.coreBreachCell,
+    },
+    definition
+  );
 
-export const findEnemyPathBetween = (options: EnemyPathSearchOptions): EnemyPathStep[] =>
-  searchEnemyPath(options);
+export const findEnemyPathBetween = (
+  options: EnemyPathSearchOptions,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): EnemyPathStep[] => searchEnemyPath(options, definition);
 
 export const pathMovementModes = (path: readonly EnemyPathStep[]): EnemyLocomotionMode[] =>
   path.reduce<EnemyLocomotionMode[]>((modes, step) => {

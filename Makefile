@@ -1,6 +1,12 @@
-.PHONY: ci lint lint-fix format format-check typecheck test terraform-fmt-check deploy
+.PHONY: ci architecture-check performance-check lint lint-fix format format-check typecheck test build campaign-health terraform-fmt-check deploy
 
-ci: lint format-check typecheck test terraform-fmt-check
+ci: architecture-check performance-check lint format-check typecheck test build campaign-health terraform-fmt-check
+
+architecture-check:
+	pnpm run architecture:check
+
+performance-check:
+	pnpm run performance:check
 
 lint:
 	pnpm exec eslint .
@@ -19,6 +25,12 @@ typecheck:
 
 test:
 	pnpm exec vitest run --coverage
+
+build:
+	pnpm run build
+
+campaign-health:
+	pnpm run campaign:health
 
 terraform-fmt-check:
 	terraform fmt -check -recursive infrastructure/terraform/

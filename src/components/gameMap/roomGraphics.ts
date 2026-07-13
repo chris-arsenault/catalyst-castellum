@@ -1,8 +1,9 @@
 import type { Graphics } from "pixi.js";
-import type { FacilityRing, GridCell, RoomAnalysis, RoomDefinition } from "../../game/types";
+import type { FacilityRing, GridCell, RoomDefinition } from "../../game/types";
+import type { RoomViewModel } from "../../presentation/selectors";
 
 export interface RoomDrawModel {
-  analysis: RoomAnalysis;
+  analysis: RoomViewModel;
   coreIntegrity: number;
   height: number;
   cells: readonly RoomDrawCell[];

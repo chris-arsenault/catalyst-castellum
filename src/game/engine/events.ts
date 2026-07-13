@@ -1,19 +1,21 @@
 import {
   DAMAGE_SOURCE_IDS,
   type CombatIncident,
-  type CycleStats,
   type EventTone,
+  type GameEventCode,
+  type GameEventParameter,
   type GameState,
+  type RoundStats,
   type RoomId,
 } from "../types";
 import { emptyHazardChannels } from "./damage";
 
-const emptySourceTotals = (): CycleStats["damageBySource"] =>
+const emptySourceTotals = (): RoundStats["damageBySource"] =>
   Object.fromEntries(
     DAMAGE_SOURCE_IDS.map((sourceId) => [sourceId, 0])
-  ) as CycleStats["damageBySource"];
+  ) as RoundStats["damageBySource"];
 
-export const makeStats = (): CycleStats => ({
+export const makeStats = (): RoundStats => ({
   spawned: 0,
   killed: 0,
   breached: 0,
@@ -31,8 +33,8 @@ export const makeStats = (): CycleStats => ({
 export const addEvent = (
   state: GameState,
   tone: EventTone,
-  title: string,
-  detail: string,
+  code: GameEventCode,
+  parameters: Record<string, GameEventParameter> = {},
   roomId: RoomId | null = null,
   incidentId: number | null = null
 ): void => {
@@ -42,8 +44,8 @@ export const addEvent = (
     round: state.campaign.roundIndex + 1,
     phase: state.phase,
     tone,
-    title,
-    detail,
+    code,
+    parameters,
     roomId,
     elapsed: state.elapsed,
     incidentId,

@@ -74,6 +74,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 31.998,
     referenceDensity: 1.105,
     color: GAS_COLORS.oxygen,
+    hazards: [
+      {
+        basis: "gas_partial_ratio",
+        direction: "below",
+        threshold: 0.13,
+        rate: 58,
+        channel: "atmosphere",
+        exposure: "oxygen_breathers",
+      },
+    ],
   },
   nitrogen: {
     id: "nitrogen",
@@ -84,6 +94,7 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 28.014,
     referenceDensity: 0.967,
     color: GAS_COLORS.nitrogen,
+    hazards: [],
   },
   carbon_dioxide: {
     id: "carbon_dioxide",
@@ -94,6 +105,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 44.01,
     referenceDensity: 1.519,
     color: GAS_COLORS.carbon_dioxide,
+    hazards: [
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.14,
+        rate: 24,
+        channel: "atmosphere",
+        exposure: "oxygen_breathers",
+      },
+    ],
   },
   chlorine: {
     id: "chlorine",
@@ -104,6 +125,24 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 70.9,
     referenceDensity: 2.447,
     color: GAS_COLORS.chlorine,
+    hazards: [
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.004,
+        rate: 1260,
+        channel: "atmosphere",
+        exposure: "all",
+      },
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.004,
+        rate: 960,
+        channel: "corrosion",
+        exposure: "all",
+      },
+    ],
   },
   hydrogen: {
     id: "hydrogen",
@@ -114,6 +153,7 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 2.016,
     referenceDensity: 0.07,
     color: GAS_COLORS.hydrogen,
+    hazards: [],
   },
   hydrogen_chloride: {
     id: "hydrogen_chloride",
@@ -124,6 +164,24 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 36.46,
     referenceDensity: 1.259,
     color: GAS_COLORS.hydrogen_chloride,
+    hazards: [
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.006,
+        rate: 84,
+        channel: "atmosphere",
+        exposure: "all",
+      },
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.006,
+        rate: 144,
+        channel: "corrosion",
+        exposure: "all",
+      },
+    ],
   },
   steam: {
     id: "steam",
@@ -134,6 +192,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 18.015,
     referenceDensity: 0.622,
     color: GAS_COLORS.steam,
+    hazards: [
+      {
+        basis: "gas_partial_ratio",
+        direction: "above",
+        threshold: 0.13,
+        rate: 26,
+        channel: "heat",
+        exposure: "all",
+      },
+    ],
   },
   water: {
     id: "water",
@@ -144,6 +212,7 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 18.015,
     referenceDensity: 1,
     color: LIQUID_COLORS.water,
+    hazards: [],
   },
   sodium_chloride: {
     id: "sodium_chloride",
@@ -154,6 +223,7 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 58.44,
     referenceDensity: 1.15,
     color: LIQUID_COLORS.sodium_chloride,
+    hazards: [],
   },
   sodium_hydroxide: {
     id: "sodium_hydroxide",
@@ -164,6 +234,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 40,
     referenceDensity: 1.2,
     color: LIQUID_COLORS.sodium_hydroxide,
+    hazards: [
+      {
+        basis: "liquid_strength",
+        direction: "above",
+        threshold: 2,
+        rate: 2.16,
+        channel: "corrosion",
+        exposure: "floor_contact",
+      },
+    ],
   },
   sodium_hypochlorite: {
     id: "sodium_hypochlorite",
@@ -174,6 +254,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 74.44,
     referenceDensity: 1.1,
     color: LIQUID_COLORS.sodium_hypochlorite,
+    hazards: [
+      {
+        basis: "liquid_strength",
+        direction: "above",
+        threshold: 5,
+        rate: 0.72,
+        channel: "corrosion",
+        exposure: "floor_contact",
+      },
+    ],
   },
   hydrochloric_acid: {
     id: "hydrochloric_acid",
@@ -184,6 +274,16 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
     molarMass: 36.46,
     referenceDensity: 1.12,
     color: LIQUID_COLORS.hydrochloric_acid,
+    hazards: [
+      {
+        basis: "liquid_strength",
+        direction: "above",
+        threshold: 2,
+        rate: 1.74,
+        channel: "corrosion",
+        exposure: "floor_contact",
+      },
+    ],
   },
 };
 

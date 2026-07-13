@@ -7,7 +7,7 @@ import {
   type SpeciesId,
   type TransportRunId,
 } from "../../game/types";
-import { transportPhaseAvailable } from "../../game/simulation";
+import { transportPhaseAvailable } from "../../game/queries";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { WORLD_GROUND_Y, WORLD_PIXELS_PER_UNIT, worldToMapPoint } from "./mapGeometry";
 import { drawProcessNodes } from "./processNodeGraphics";

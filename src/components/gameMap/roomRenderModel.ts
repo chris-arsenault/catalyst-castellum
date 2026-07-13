@@ -7,7 +7,7 @@ import {
   roomAtmosphericCells,
   roomCenterWorld,
 } from "../../game/config";
-import { analyzeRoom } from "../../game/simulation";
+import { roomAnalysis } from "../../presentation/selectors";
 import type { GameState, RoomId } from "../../game/types";
 import {
   WORLD_PIXELS_PER_UNIT,
@@ -27,7 +27,7 @@ export const roomRenderModel = (
 ): RoomDrawModel => {
   const definition = ROOM_DEFINITIONS[roomId];
   const room = game.rooms[roomId];
-  const analysis = analyzeRoom(room);
+  const analysis = roomAnalysis(room);
   const dimensions = roomMapRect(roomId);
   const lowerGasColor = colorNumber(GAS_COLORS[analysis.lowerDominantGas]);
   const upperGasColor = colorNumber(GAS_COLORS[analysis.upperDominantGas]);

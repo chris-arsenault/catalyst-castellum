@@ -1,4 +1,5 @@
-import { GAS_NAMES, ROOM_ORDER, emptyGas, emptyLiquid } from "../config";
+import { emptyGas, emptyLiquid } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import {
   GAS_BUFFER_IDS,
   DAMAGE_SOURCE_IDS,
@@ -14,18 +15,16 @@ import {
   type GasAmounts,
   type HazardChannels,
   type LiquidAmounts,
+  type LimitingFactor,
   type RoomAnalysis,
   type RoomState,
 } from "../types";
 import {
-  gasAmountTotal,
   combinedRoomGas,
   gasTotal,
   gasZoneTotal,
-  liquidAmountTotal,
   liquidSurfaceElevation,
   liquidTotal,
-  roomExpectedEffects,
   roomHazardScore,
   roomHazards,
   roomMovementMultiplier,
@@ -33,19 +32,21 @@ import {
   roomStaticPressure,
   roomZoneDensity,
 } from "./physics";
+import { addMixture, takeMixture } from "./mixture";
 
 export * from "./physics";
 
 const cloneHazards = (channels: HazardChannels): HazardChannels => ({ ...channels });
+const cloneLimitingFactor = (factor: LimitingFactor): LimitingFactor => ({ ...factor });
 
 const cloneDamageLedger = (ledger: GameState["enemies"][number]["damageBySource"]) =>
   Object.fromEntries(
     DAMAGE_SOURCE_IDS.map((sourceId) => [sourceId, cloneHazards(ledger[sourceId])])
   ) as GameState["enemies"][number]["damageBySource"];
 
-const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
+const cloneRooms = (rooms: GameState["rooms"], definition: GameDefinition): GameState["rooms"] =>
   Object.fromEntries(
-    ROOM_ORDER.map((id) => [
+    definition.roomOrder.map((id) => [
       id,
       {
         ...rooms[id],
@@ -59,7 +60,10 @@ const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
         reactions: Object.fromEntries(
           ROOM_REACTION_IDS.map((reactionId) => [
             reactionId,
-            { ...rooms[id].reactions[reactionId] },
+            {
+              ...rooms[id].reactions[reactionId],
+              limitingFactor: cloneLimitingFactor(rooms[id].reactions[reactionId].limitingFactor),
+            },
           ])
         ) as RoomState["reactions"],
         equipment: Object.fromEntries(
@@ -95,16 +99,17 @@ const cloneMaterialState = (
 });
 
 const cloneNetworkState = (
-  state: GameState
+  state: GameState,
+  definition: GameDefinition
 ): Pick<GameState, "gasJunctions" | "liquidJunctions" | "gasConduits" | "liquidConduits"> => ({
   gasJunctions: Object.fromEntries(
-    ROOM_ORDER.map((id) => [
+    definition.roomOrder.map((id) => [
       id,
       { ...state.gasJunctions[id], gas: { ...state.gasJunctions[id].gas } },
     ])
   ) as GameState["gasJunctions"],
   liquidJunctions: Object.fromEntries(
-    ROOM_ORDER.map((id) => [id, { liquid: { ...state.liquidJunctions[id].liquid } }])
+    definition.roomOrder.map((id) => [id, { liquid: { ...state.liquidJunctions[id].liquid } }])
   ) as GameState["liquidJunctions"],
   gasConduits: Object.fromEntries(
     TRANSPORT_RUN_IDS.map((id) => [
@@ -155,7 +160,7 @@ const cloneCombatState = (
         killsBySource: { ...state.lastReport.killsBySource },
       }
     : null,
-  events: state.events.map((event) => ({ ...event })),
+  events: state.events.map((event) => ({ ...event, parameters: { ...event.parameters } })),
   incidents: state.incidents.map((incident) => ({
     ...incident,
     damageByChannel: cloneHazards(incident.damageByChannel),
@@ -167,7 +172,10 @@ const cloneCombatState = (
   })),
 });
 
-export const cloneGame = (state: GameState): GameState => ({
+export const cloneGame = (
+  state: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): GameState => ({
   ...state,
   campaign: {
     ...state.campaign,
@@ -180,9 +188,9 @@ export const cloneGame = (state: GameState): GameState => ({
     gasSources: [...state.availability.gasSources],
     liquidSources: [...state.availability.liquidSources],
   },
-  rooms: cloneRooms(state.rooms),
+  rooms: cloneRooms(state.rooms, definition),
   ...cloneMaterialState(state),
-  ...cloneNetworkState(state),
+  ...cloneNetworkState(state, definition),
   portalStates: Object.fromEntries(
     Object.entries(state.portalStates).map(([portalId, portalState]) => [
       portalId,
@@ -190,7 +198,13 @@ export const cloneGame = (state: GameState): GameState => ({
     ])
   ),
   processes: Object.fromEntries(
-    PROCESS_IDS.map((id) => [id, { ...state.processes[id] }])
+    PROCESS_IDS.map((id) => [
+      id,
+      {
+        ...state.processes[id],
+        limitingFactor: cloneLimitingFactor(state.processes[id].limitingFactor),
+      },
+    ])
   ) as GameState["processes"],
   ...cloneCombatState(state),
 });
@@ -198,14 +212,10 @@ export const cloneGame = (state: GameState): GameState => ({
 const dominantKey = <T extends string>(values: Record<T, number>, keys: readonly T[]): T =>
   keys.reduce((best, key) => (values[key] > values[best] ? key : best), keys[0] as T);
 
-const hazardLabel = (hazard: number): RoomAnalysis["hazardLabel"] => {
-  if (hazard >= 65) return "LETHAL";
-  if (hazard >= 32) return "HOSTILE";
-  if (hazard >= 10) return "LOW";
-  return "CLEAR";
-};
-
-export const analyzeRoom = (room: RoomState): RoomAnalysis => {
+export const analyzeRoom = (
+  room: RoomState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): RoomAnalysis => {
   const combinedGas = combinedRoomGas(room);
   const gasAmount = gasTotal(room);
   const lowerGasAmount = gasZoneTotal(room, "lower");
@@ -215,10 +225,10 @@ export const analyzeRoom = (room: RoomState): RoomAnalysis => {
   const lowerDominantGas = dominantKey(room.gas.lower, GAS_TYPES);
   const upperDominantGas = dominantKey(room.gas.upper, GAS_TYPES);
   const dominantLiquid = liquidAmount > 0.5 ? dominantKey(room.liquid, LIQUID_TYPES) : null;
-  const hazard = roomHazardScore(room);
-  const staticPressure = roomStaticPressure(room);
-  const lowerHazards = roomHazards(room, true, true, "lower");
-  const upperHazards = roomHazards(room, false, true, "upper");
+  const hazard = roomHazardScore(room, definition);
+  const staticPressure = roomStaticPressure(room, definition);
+  const lowerHazards = roomHazards(room, true, true, "lower", definition);
+  const upperHazards = roomHazards(room, false, true, "upper", definition);
   const hazards: HazardChannels = {
     atmosphere: Math.max(lowerHazards.atmosphere, upperHazards.atmosphere),
     corrosion: Math.max(lowerHazards.corrosion, upperHazards.corrosion),
@@ -231,69 +241,44 @@ export const analyzeRoom = (room: RoomState): RoomAnalysis => {
     lowerGasTotal: lowerGasAmount,
     upperGasTotal: upperGasAmount,
     liquidTotal: liquidAmount,
-    liquidSurfaceElevation: liquidSurfaceElevation(room),
+    liquidSurfaceElevation: liquidSurfaceElevation(room, definition),
     staticPressure,
-    pressure: roomPressure(room),
+    pressure: roomPressure(room, definition),
     pressurePulse: room.pressurePulse,
     dominantGas,
     dominantGasPercent: gasAmount > 0 ? combinedGas[dominantGas] / gasAmount : 0,
     lowerDominantGas,
     lowerDominantGasPercent:
       lowerGasAmount > 0 ? room.gas.lower[lowerDominantGas] / lowerGasAmount : 0,
-    lowerGasDensity: roomZoneDensity(room, "lower"),
+    lowerGasDensity: roomZoneDensity(room, "lower", definition),
     lowerGasTemperature: room.gasTemperature.lower,
     upperDominantGas,
     upperDominantGasPercent:
       upperGasAmount > 0 ? room.gas.upper[upperDominantGas] / upperGasAmount : 0,
-    upperGasDensity: roomZoneDensity(room, "upper"),
+    upperGasDensity: roomZoneDensity(room, "upper", definition),
     upperGasTemperature: room.gasTemperature.upper,
     dominantLiquid,
     dominantLiquidPercent:
       dominantLiquid && liquidAmount > 0 ? room.liquid[dominantLiquid] / liquidAmount : 0,
     hazard,
-    hazardLabel: hazardLabel(hazard),
     hazards,
-    groundMovementMultiplier: roomMovementMultiplier(room, false),
-    flyingMovementMultiplier: roomMovementMultiplier(room, true),
-    effects: roomExpectedEffects(room),
+    groundMovementMultiplier: roomMovementMultiplier(room, false, definition),
+    flyingMovementMultiplier: roomMovementMultiplier(room, true, definition),
   };
 };
 
 export const takeGas = (gas: GasAmounts, amount: number): GasAmounts => {
-  const packet = emptyGas();
-  const total = gasAmountTotal(gas);
-  const actual = Math.min(total, Math.max(0, amount));
-  if (total <= 0 || actual <= 0) return packet;
-  for (const type of GAS_TYPES) {
-    packet[type] = actual * (gas[type] / total);
-    gas[type] -= packet[type];
-  }
-  return packet;
+  return { ...emptyGas(), ...takeMixture(gas, amount, GAS_TYPES) };
 };
 
 export const takeLiquid = (liquid: LiquidAmounts, amount: number): LiquidAmounts => {
-  const packet = emptyLiquid();
-  const total = liquidAmountTotal(liquid);
-  const actual = Math.min(total, Math.max(0, amount));
-  if (total <= 0 || actual <= 0) return packet;
-  for (const type of LIQUID_TYPES) {
-    packet[type] = actual * (liquid[type] / total);
-    liquid[type] -= packet[type];
-  }
-  return packet;
+  return { ...emptyLiquid(), ...takeMixture(liquid, amount, LIQUID_TYPES) };
 };
 
 export const addGas = (target: GasAmounts, packet: GasAmounts): void => {
-  for (const type of GAS_TYPES) target[type] += packet[type];
+  addMixture(target, packet, GAS_TYPES);
 };
 
 export const addLiquid = (target: LiquidAmounts, packet: LiquidAmounts): void => {
-  for (const type of LIQUID_TYPES) target[type] += packet[type];
-};
-
-export const describeGasMixture = (gas: GasAmounts): string => {
-  const total = gasAmountTotal(gas);
-  if (total < 0.01) return "empty";
-  const dominant = dominantKey(gas, GAS_TYPES);
-  return `${GAS_NAMES[dominant]} ${Math.round((gas[dominant] / total) * 100)}%`;
+  addMixture(target, packet, LIQUID_TYPES);
 };

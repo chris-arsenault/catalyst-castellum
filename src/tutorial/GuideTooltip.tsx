@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { ArrowRight, Check, Eye, MousePointerClick, X } from "lucide-react";
 import type { TooltipRenderProps } from "react-joyride";
-import { useGameStore } from "../game/store";
+import { useGameStore } from "../application/store";
 import type { GuideStepDefinition } from "./guideModel";
 import { useGuideAdvance } from "./guideUiContext";
 

@@ -1,27 +1,18 @@
-import { nextLevelId } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import type { GameState, RoundReport } from "../types";
-import { copyAvailability, levelDefinitionFor, roundDefinitionFor } from "./campaign";
+import {
+  copyAvailability,
+  levelDefinitionFor,
+  nextLevelIdFor,
+  roundDefinitionFor,
+} from "./campaign";
 import { addEvent, makeStats } from "./events";
-
-const reportHeadline = (breaches: number): string => {
-  if (breaches === 0) return "Containment held";
-  const suffix = breaches === 1 ? "" : "es";
-  return `${breaches} breach${suffix} recorded`;
-};
-
-const reportDetail = (state: GameState): string => {
-  if (state.stats.breached === 0) {
-    return `${state.stats.killed} hostiles yielded ${state.pendingMatter} matter. Every process inventory remains in place.`;
-  }
-  return `The core lost ${state.stats.coreDamage}% integrity. The exact process state is preserved for diagnosis.`;
-};
+import { transitionPhase } from "./phaseModel";
 
 const makeReport = (state: GameState): RoundReport => ({
   ...state.stats,
   levelId: state.campaign.levelId,
   round: state.campaign.roundIndex + 1,
-  headline: reportHeadline(state.stats.breached),
-  detail: reportDetail(state),
 });
 
 const bankRound = (state: GameState): RoundReport => {
@@ -32,89 +23,71 @@ const bankRound = (state: GameState): RoundReport => {
   state.phaseTime = 0;
   state.paused = false;
   state.enemies = [];
-  addEvent(
-    state,
-    report.breached > 0 ? "warning" : "good",
-    report.headline,
-    `${report.detail} The simulation is frozen at its exact ending state.`
-  );
+  addEvent(state, report.breached > 0 ? "warning" : "good", "round_completed", {
+    breached: report.breached,
+    killed: report.killed,
+    coreDamage: report.coreDamage,
+    matterHarvested: report.matterHarvested,
+  });
   return report;
 };
 
-const completeCampaign = (state: GameState): void => {
-  const level = levelDefinitionFor(state);
+const completeCampaign = (state: GameState, definition: GameDefinition): void => {
+  const level = levelDefinitionFor(state, definition);
   if (!state.campaign.completedLevelIds.includes(level.id)) {
     state.campaign.completedLevelIds.push(level.id);
   }
-  state.phase = "victory";
-  addEvent(
-    state,
-    "good",
-    "Castellum commissioned",
-    `All ${state.campaign.completedLevelIds.length} checkpoints survived with ${Math.round(state.coreIntegrity)}% core integrity in the final exam.`
-  );
+  transitionPhase(state, "victory");
+  addEvent(state, "good", "campaign_completed", {
+    completedLevels: state.campaign.completedLevelIds.length,
+    coreIntegrity: Math.round(state.coreIntegrity),
+  });
 };
 
-export const completeAssault = (state: GameState): void => {
+export const completeAssault = (
+  state: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   bankRound(state);
-  const level = levelDefinitionFor(state);
+  const level = levelDefinitionFor(state, definition);
   const finalRound = state.campaign.roundIndex >= level.rounds.length - 1;
   if (!finalRound) {
-    state.phase = "round_result";
+    transitionPhase(state, "round_result");
     return;
   }
-  if (nextLevelId(level.id)) {
+  if (nextLevelIdFor(level.id, definition)) {
     if (!state.campaign.completedLevelIds.includes(level.id)) {
       state.campaign.completedLevelIds.push(level.id);
     }
-    state.phase = "level_complete";
+    transitionPhase(state, "level_complete");
     return;
   }
-  completeCampaign(state);
+  completeCampaign(state, definition);
 };
 
 export const beginAssault = (state: GameState, automatic: boolean): void => {
-  state.phase = "assault";
-  state.phaseTime = 0;
+  transitionPhase(state, "assault");
   state.spawnCursor = 0;
   state.enemies = [];
-  state.paused = false;
-  addEvent(
-    state,
-    "warning",
-    `${automatic ? "Prime window elapsed" : "Early lock confirmed"} — round ${state.campaign.roundIndex + 1}`,
-    "Configuration is locked until every hostile is neutralized or breaches the core."
-  );
+  addEvent(state, "warning", "assault_started", { automatic });
 };
 
-export const advanceRound = (state: GameState): void => {
+export const advanceRound = (
+  state: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): void => {
   state.campaign.roundIndex += 1;
-  const round = roundDefinitionFor(state);
+  const round = roundDefinitionFor(state, definition);
   state.availability = copyAvailability(round.availability);
-  state.phase = "build";
-  state.phaseTime = 0;
-  state.paused = false;
+  transitionPhase(state, "build");
   state.stats = makeStats();
   state.spawnCursor = 0;
   state.enemies = [];
-  addEvent(
-    state,
-    "info",
-    `Round ${state.campaign.roundIndex + 1}: ${round.title}`,
-    `${round.detail} New availability is now visible in the control room.`
-  );
+  addEvent(state, "info", "round_advanced");
 };
 
 export const declareDefeat = (state: GameState): void => {
   state.lastReport = makeReport(state);
-  state.phase = "defeat";
-  state.phaseTime = 0;
-  state.paused = false;
-  addEvent(
-    state,
-    "danger",
-    "Catalyst core lost",
-    `${levelDefinitionFor(state).name}, round ${state.campaign.roundIndex + 1}, failed. The checkpoint can be retried from its original facility state.`,
-    "core"
-  );
+  transitionPhase(state, "defeat");
+  addEvent(state, "danger", "scenario_defeated", {}, "core");
 };

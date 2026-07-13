@@ -1,63 +1,57 @@
-import { nextLevelId } from "../config";
+import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import type { CommandResult, GameState } from "../types";
-import { levelDefinitionFor, roundDefinitionFor } from "./campaign";
+import { acceptCommand } from "./commandResult";
 import { addEvent } from "./events";
 import { advanceRound } from "./phases";
 import { cloneGame } from "./roomState";
 import { createScenarioGame } from "./scenarioState";
-
-const reject = (state: GameState, reason: string): CommandResult => ({
-  state,
-  accepted: false,
-  reason,
-});
-
-const accept = (state: GameState): CommandResult => ({ state, accepted: true, reason: null });
+import { nextLevelIdFor } from "./campaign";
+import { transitionPhase } from "./phaseModel";
 
 export const beginLevelCommand = (source: GameState): CommandResult => {
-  if (source.phase !== "level_briefing")
-    return reject(source, "This checkpoint briefing has already been acknowledged.");
   const state = cloneGame(source);
-  state.phase = "build";
-  state.phaseTime = 0;
-  addEvent(
-    state,
-    "info",
-    `${levelDefinitionFor(state).name} planning unlocked`,
-    roundDefinitionFor(state).objective
-  );
-  return accept(state);
+  transitionPhase(state, "build");
+  addEvent(state, "info", "level_planning_started");
+  return acceptCommand(state);
 };
 
-export const skipTutorialCommand = (source: GameState): CommandResult => {
-  if (source.phase !== "level_briefing" || source.campaign.levelId !== "flash_point") {
-    return reject(source, "The opening tutorial can only be skipped from its first briefing.");
-  }
+export const skipTutorialCommand = (
+  source: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): CommandResult => {
   const completedLevelIds = [
     ...new Set([...source.campaign.completedLevelIds, "flash_point"]),
   ] as GameState["campaign"]["completedLevelIds"];
-  return beginLevelCommand(createScenarioGame("make_the_reagent", completedLevelIds));
+  return beginLevelCommand(createScenarioGame("make_the_reagent", completedLevelIds, definition));
 };
 
-export const continueRoundCommand = (source: GameState): CommandResult => {
-  if (source.phase !== "round_result")
-    return reject(source, "There is no completed round to continue from.");
+export const continueRoundCommand = (
+  source: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): CommandResult => {
   const state = cloneGame(source);
-  advanceRound(state);
-  return accept(state);
+  advanceRound(state, definition);
+  return acceptCommand(state);
 };
 
-export const startNextLevelCommand = (source: GameState): CommandResult => {
-  if (source.phase !== "level_complete")
-    return reject(source, "Complete the current checkpoint before advancing.");
-  const next = nextLevelId(source.campaign.levelId);
-  if (!next) return reject(source, "The campaign is already complete.");
-  return accept(createScenarioGame(next, source.campaign.completedLevelIds));
+export const startNextLevelCommand = (
+  source: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): CommandResult => {
+  const next = nextLevelIdFor(source.campaign.levelId, definition);
+  if (!next) throw new Error("Next-level command was applied after campaign completion.");
+  return acceptCommand(createScenarioGame(next, source.campaign.completedLevelIds, definition));
 };
 
-export const retryLevelCommand = (source: GameState): CommandResult => {
-  if (source.phase !== "defeat") return reject(source, "Retry is available only after defeat.");
-  return accept(
-    createScenarioGame(source.campaign.checkpointLevelId, source.campaign.completedLevelIds)
+export const retryLevelCommand = (
+  source: GameState,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): CommandResult => {
+  return acceptCommand(
+    createScenarioGame(
+      source.campaign.checkpointLevelId,
+      source.campaign.completedLevelIds,
+      definition
+    )
   );
 };

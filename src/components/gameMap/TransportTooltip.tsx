@@ -5,7 +5,8 @@ import {
   liquidAmountTotal,
   transportPhaseAvailable,
   transportRunChannels,
-} from "../../game/simulation";
+  type TransportChannelTelemetry,
+} from "../../game/queries";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -16,7 +17,6 @@ import {
   type TransportPhase,
   type TransportRunId,
 } from "../../game/types";
-import type { TransportChannelTelemetry } from "../../game/engine/transportTelemetry";
 
 const FLOW_EPSILON = 0.005;
 
