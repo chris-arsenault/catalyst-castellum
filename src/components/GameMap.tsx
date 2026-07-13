@@ -5,6 +5,7 @@ import { FACILITY_MAP, ROOM_ORDER } from "../game/config";
 import type { GameState, RoomId, SpeciesId, TransportRunId } from "../game/types";
 import { EnemyNode } from "./gameMap/EnemyNode";
 import { DamageNumberLayer } from "./gameMap/DamageNumberLayer";
+import { EquipmentLayer, type EquipmentHover } from "./gameMap/EquipmentLayer";
 import {
   MapBackdrop,
   FacilityCorridors,
@@ -30,6 +31,7 @@ interface GameMapProps {
 interface MapSceneProps extends GameMapProps {
   camera: CameraTransform;
   hoveredRunId: TransportRunId | null;
+  onHoverEquipment: (equipment: EquipmentHover | null) => void;
   onHoverRoom: (roomId: RoomId | null) => void;
   onHoverRun: (runId: TransportRunId | null) => void;
   selectedSpecies: SpeciesId | null;
@@ -39,6 +41,7 @@ const MapScene = ({
   camera,
   game,
   hoveredRunId,
+  onHoverEquipment,
   onHoverRoom,
   onHoverRun,
   onSelectRoom,
@@ -75,6 +78,7 @@ const MapScene = ({
         selectedSpecies={selectedSpecies}
       />
       <ProcessNodes game={game} />
+      <EquipmentLayer game={game} onHover={onHoverEquipment} onSelectRoom={onSelectRoom} />
       <MapLabelLayer selectedRoomId={selectedRoomId} />
       <IncidentLayer game={game} />
       {game.enemies.map((enemy) => (
@@ -89,6 +93,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [hoveredRunId, setHoveredRunId] = useState<TransportRunId | null>(null);
   const [hoveredRoomId, setHoveredRoomId] = useState<RoomId | null>(null);
+  const [hoveredEquipment, setHoveredEquipment] = useState<EquipmentHover | null>(null);
   const {
     camera,
     handlePointerDown,
@@ -107,6 +112,10 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
     "data-camera-x": camera.x,
     "data-camera-y": camera.y,
     "data-camera-zoom": camera.zoom,
+    "data-installed-equipment-count": Object.values(game.rooms).reduce(
+      (total, room) => total + Object.values(room.equipment).filter(Boolean).length,
+      0
+    ),
   };
   const mapInteractions = {
     onWheel: handleWheel,
@@ -123,6 +132,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
         camera={camera}
         game={game}
         hoveredRunId={hoveredRunId}
+        onHoverEquipment={setHoveredEquipment}
         onHoverRoom={setHoveredRoomId}
         onHoverRun={setHoveredRunId}
         onSelectRoom={onSelectRoom}
@@ -131,6 +141,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
       />
       <MapChrome
         game={game}
+        hoveredEquipment={hoveredEquipment}
         hoveredRunId={hoveredRunId}
         hoveredRoomId={hoveredRoomId}
         onResetCamera={resetCamera}

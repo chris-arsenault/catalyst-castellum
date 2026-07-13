@@ -89,6 +89,23 @@ const utilityNodeObstacles = (): TaggedObstacle[] =>
     };
   });
 
+const equipmentSocketObstacles = (): TaggedObstacle[] =>
+  Object.values(FACILITY_MAP.rooms).flatMap(({ socketCells }) =>
+    Object.values(socketCells).flatMap((cell) => {
+      if (!cell) return [];
+      const rect = gridCellMapRect(cell);
+      return [
+        {
+          left: rect.left - 15,
+          top: rect.top - 39,
+          width: rect.width + 30,
+          height: rect.height + 34,
+          labelMayOverlapForRoomId: null,
+        },
+      ];
+    })
+  );
+
 const placementIsFree = (
   rect: MapRect,
   roomId: RoomId,
@@ -110,7 +127,12 @@ const labelPriority = (roomId: RoomId, selectedRoomId: RoomId): number => {
 };
 
 export const layoutMapLabels = (selectedRoomId: RoomId): MapLabelPlacement[] => {
-  const obstacles = [...roomObstacles(), ...structureObstacles(), ...utilityNodeObstacles()];
+  const obstacles = [
+    ...roomObstacles(),
+    ...structureObstacles(),
+    ...utilityNodeObstacles(),
+    ...equipmentSocketObstacles(),
+  ];
   const placed: MapLabelPlacement[] = [];
   const ordered = [...ROOM_ORDER].sort(
     (left, right) => labelPriority(right, selectedRoomId) - labelPriority(left, selectedRoomId)

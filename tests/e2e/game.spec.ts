@@ -162,6 +162,7 @@ test("the Flash Point field drill proves the complete causal chain through domai
 
   await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
   await expect(page.getByText(/Gas agitator · Grade 1/)).toBeVisible();
+  await expect(page.getByTestId("game-map")).toHaveAttribute("data-installed-equipment-count", "1");
   await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
   await expect(page.locator(".react-joyride__overlay")).toHaveCount(0);
 

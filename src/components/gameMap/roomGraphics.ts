@@ -95,10 +95,6 @@ const drawGasInflow = (graphics: Graphics, model: RoomDrawModel): void => {
       .circle(x, y, 2.2 + (index % 3))
       .fill({ color: upper ? model.upperGasColor : model.lowerGasColor, alpha: intensity });
   }
-  const pulse = 10 + ((model.elapsed * 28) % 24);
-  graphics
-    .circle(-model.width / 2 + 4, 0, pulse)
-    .stroke({ color: model.lowerGasColor, width: 3, alpha: 0.8 * (1 - (pulse - 10) / 24) });
 };
 
 const drawRoomAtmosphere = (graphics: Graphics, model: RoomDrawModel): void => {

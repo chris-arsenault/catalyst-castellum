@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Catalyst Castellum">
+  <rect width="64" height="64" rx="14" fill="#07100d"/>
+  <path d="M10 48V17l7-5 7 5 8-7 8 7 7-5 7 5v31H10Z" fill="#10231c" stroke="#3f7564" stroke-width="2"/>
+  <circle cx="32" cy="31" r="18" fill="#0a1713" stroke="#70aa96" stroke-width="2.5"/>
+  <circle cx="32" cy="31" r="10" fill="none" stroke="#b7d85f" stroke-width="2"/>
+  <path d="M32 13V7M16.5 40 11 43M47.5 40l5.5 3" stroke="#70aa96" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="32" cy="6" r="3" fill="#80af9e"/>
+  <circle cx="9.5" cy="44" r="3" fill="#80af9e"/>
+  <circle cx="54.5" cy="44" r="3" fill="#80af9e"/>
+  <circle cx="32" cy="31" r="4.5" fill="#e7f76f"/>
+  <path d="M12 49h40v6H12z" fill="#1b352b"/>
+  <path d="M12 49h8v-4h7v4h10v-4h7v4h8" fill="none" stroke="#9bb9aa" stroke-width="2"/>
+</svg>

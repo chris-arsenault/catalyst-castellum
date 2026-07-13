@@ -15,8 +15,9 @@ Catalyst Castellum is a browser-based chemical-flow tower defense game. Players 
 persistent room graph by controlling gases, liquids, heat, pressure, and deterministic
 reactions rather than projectile towers.
 
-The production build is a static Vite site deployed to `https://catalyst.ahara.io` through
-Ahara's S3 and CloudFront website module.
+The production build is a Vite SPA deployed to `https://catalyst.ahara.io` through Ahara's
+CloudFront website module. Static assets live in S3, and the platform OG Lambda supplies the
+initial HTML response with crawler-readable metadata.
 
 ## Code layout
 
@@ -26,7 +27,7 @@ Ahara's S3 and CloudFront website module.
 | `src/components/`           | React controls, telemetry, Pixi map, and modal UI               |
 | `tests/e2e/`                | Playwright browser flows                                        |
 | `tooling/`                  | Shared local dev-server configuration                           |
-| `infrastructure/terraform/` | Ahara static-website deployment                                 |
+| `infrastructure/terraform/` | Ahara website and OpenGraph deployment                          |
 | `scripts/deploy.sh`         | Parameterless local build and Terraform apply                   |
 
 ## Architecture patterns
@@ -68,7 +69,8 @@ Ahara's S3 and CloudFront website module.
 - Saves are versioned and validated with Zod before restoration. V8 owns conduit routes, junctions,
   damage ledgers, and incidents; the V7 migration merges every legacy sub-line without deleting its
   inventory and leaves ambiguous migrated actuators off.
-- Production has no runtime service. Terraform uploads `dist/` to the Ahara website module.
+- Production HTML routes use Ahara's shared OG Lambda in DB-free static mode. Terraform uploads
+  hashed SPA assets, icons, and social artwork from `dist/` to the website module's S3 origin.
 
 ## Development commands
 

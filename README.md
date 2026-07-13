@@ -159,7 +159,7 @@ conversion of harvested Matter into finite `O₂`, `H₂O`, or `NaCl(aq)` reserv
 
 ## Deployment
 
-The production build is static HTML, CSS, JavaScript, and browser assets. Ahara's website Terraform pattern publishes `dist/` to a private S3 bucket behind CloudFront, with Route 53 DNS, an ACM certificate, WAF protection, KMS encryption, and single-page-app fallback routing. There is no production application server, database, or runtime secret.
+The production build is a Vite SPA with static CSS, JavaScript, audio, icons, and social artwork. Ahara's website Terraform pattern publishes those assets to a private S3 bucket behind CloudFront. The shared platform OG Lambda serves HTML routes with crawler-readable OpenGraph and Twitter metadata, then boots the same SPA assets. The game uses the Lambda's DB-free static mode and carries no application database, authentication service, or runtime secret.
 
 The project is registered in `ahara-infra` as `catalyst-castellum`, using resource prefix `catalyst` and Terraform state key `projects/catalyst-castellum.tfstate`. To deploy from an authorized Sulion terminal:
 

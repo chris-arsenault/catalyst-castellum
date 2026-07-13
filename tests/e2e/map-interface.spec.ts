@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { CONDUIT_BLUEPRINTS, gridCellToWorldPoint } from "../../src/game/config";
+import { CONDUIT_BLUEPRINTS, FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
 import type { WorldPoint } from "../../src/game/types";
 import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
 
@@ -115,6 +115,26 @@ test("hovering a shared conduit exposes all measured species on that physical ro
   await expect(tooltip).toContainText("CORE ⇄ R-02");
   await expect(tooltip).toContainText("Gas duct");
   await expect(tooltip).toContainText("Core–R-02 gas duct");
+});
+
+test("installed equipment appears on its authored room socket", async ({ page }) => {
+  await startGuidedTutorial(page);
+  await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
+  await expect(page.getByTestId("game-map")).toHaveAttribute("data-installed-equipment-count", "1");
+
+  const socket = FACILITY_MAP.rooms.furnace.socketCells.socket_a;
+  if (!socket) throw new Error("R-02 socket A is absent from the facility map.");
+  const socketPoint = gridCellToWorldPoint(socket);
+  const marker = await worldClientPoint(page, {
+    x: socketPoint.x,
+    elevation: socketPoint.elevation + 1.5,
+  });
+  await page.mouse.move(marker.x, marker.y);
+
+  const tooltip = page.getByTestId("equipment-map-tooltip");
+  await expect(tooltip).toContainText("Gas agitator");
+  await expect(tooltip).toContainText("ACTIVE");
+  await expect(tooltip).toContainText("1.5 layer exchange");
 });
 
 test("skipped guidance can be replayed from the field manual", async ({ page }) => {

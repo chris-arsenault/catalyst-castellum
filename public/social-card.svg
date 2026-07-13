@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-label="Catalyst Castellum — chemistry becomes the defense">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#050b09"/>
+      <stop offset="0.58" stop-color="#0b1813"/>
+      <stop offset="1" stop-color="#10271e"/>
+    </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#f4ff9c"/>
+      <stop offset="0.32" stop-color="#d9ef64"/>
+      <stop offset="1" stop-color="#78963e"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0v32" fill="none" stroke="#315044" stroke-width="1" opacity=".2"/>
+    </pattern>
+    <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#grid)"/>
+  <path d="M0 92C208 58 379 131 576 93s384-37 624 7M0 526c205-36 401 24 594-11s389-28 606 8" fill="none" stroke="#416757" stroke-width="8" opacity=".16"/>
+
+  <g transform="translate(112 94)">
+    <path d="M8 403V103l63-46 61 46 72-64 72 64 62-46 63 46v300H8Z" fill="#0d1e18" stroke="#426f60" stroke-width="8"/>
+    <path d="M8 403h393v42H8z" fill="#19352b"/>
+    <path d="M8 403h70v-34h61v34h130v-34h61v34h71" fill="none" stroke="#9bb9aa" stroke-width="8"/>
+
+    <circle cx="204" cy="246" r="132" fill="#08130f" stroke="#71a997" stroke-width="10"/>
+    <circle cx="204" cy="246" r="75" fill="none" stroke="#b6d65d" stroke-width="7"/>
+    <path d="M204 114V66M89 312l-44 25M319 312l44 25" stroke="#75a998" stroke-width="12" stroke-linecap="round"/>
+    <circle cx="204" cy="54" r="16" fill="#80af9e"/>
+    <circle cx="32" cy="345" r="16" fill="#80af9e"/>
+    <circle cx="376" cy="345" r="16" fill="#80af9e"/>
+    <circle cx="204" cy="246" r="31" fill="url(#core)" filter="url(#glow)"/>
+
+    <path d="M57 167h81M270 167h81M61 357h66M281 357h66" stroke="#345d4e" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="57" cy="167" r="8" fill="#6ac0c9"/>
+    <circle cx="351" cy="167" r="8" fill="#6ac0c9"/>
+    <circle cx="61" cy="357" r="8" fill="#5e92e3"/>
+    <circle cx="347" cy="357" r="8" fill="#5e92e3"/>
+  </g>
+
+  <g transform="translate(580 148)">
+    <text x="0" y="0" fill="#88a99a" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="23" font-weight="700" letter-spacing="8">CHEMICAL DEFENSE</text>
+    <text x="0" y="88" fill="#dce9df" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="72" font-weight="760" letter-spacing="2">CATALYST</text>
+    <text x="0" y="164" fill="#e7f76f" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="72" font-weight="820" letter-spacing="2">CASTELLUM</text>
+    <rect x="0" y="205" width="486" height="3" fill="#456e5e"/>
+    <text x="0" y="260" fill="#afc8ba" font-family="Inter, ui-sans-serif, system-ui, sans-serif" font-size="29" font-weight="600">Chemistry becomes the defense.</text>
+    <text x="0" y="307" fill="#729787" font-family="IBM Plex Mono, ui-monospace, monospace" font-size="14" font-weight="600" letter-spacing="1">ROUTE MATTER  ·  ENGINEER REACTIONS  ·  HOLD THE CORE</text>
+  </g>
+
+  <rect x="26" y="26" width="1148" height="578" rx="12" fill="none" stroke="#355e50" stroke-width="2"/>
+  <path d="M26 74V26h48M1126 26h48v48M26 556v48h48M1126 604h48v-48" fill="none" stroke="#7fae9c" stroke-width="5"/>
+</svg>

@@ -11,6 +11,8 @@ import { SPECIES_DEFINITIONS } from "../../game/config";
 import { FIT_ZOOM } from "./mapGeometry";
 import { TransportTooltip } from "./TransportTooltip";
 import { RoomTooltip } from "./RoomTooltip";
+import { EquipmentTooltip } from "./EquipmentTooltip";
+import type { EquipmentHover } from "./EquipmentLayer";
 
 // HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
@@ -75,6 +77,7 @@ const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => (
 
 interface MapChromeProps {
   game: GameState;
+  hoveredEquipment: EquipmentHover | null;
   hoveredRunId: TransportRunId | null;
   hoveredRoomId: RoomId | null;
   onResetCamera: () => void;
@@ -86,6 +89,7 @@ interface MapChromeProps {
 
 export const MapChrome = ({
   game,
+  hoveredEquipment,
   hoveredRunId,
   hoveredRoomId,
   onResetCamera,
@@ -101,8 +105,13 @@ export const MapChrome = ({
   >
     <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
     <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
-    <TransportTooltip game={game} runId={hoveredRunId} selectedSpecies={selectedSpecies} />
-    <RoomTooltip game={game} roomId={hoveredRoomId} />
+    <EquipmentTooltip game={game} equipment={hoveredEquipment} />
+    <TransportTooltip
+      game={game}
+      runId={hoveredEquipment ? null : hoveredRunId}
+      selectedSpecies={selectedSpecies}
+    />
+    <RoomTooltip game={game} roomId={hoveredEquipment ? null : hoveredRoomId} />
     <div className="map-material-legend" aria-label="Map materials and damage legend">
       <span>
         <i className="upper-gas" /> upper gas

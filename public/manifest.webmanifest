@@ -1,0 +1,21 @@
+{
+  "name": "Catalyst Castellum",
+  "short_name": "Castellum",
+  "description": "A chemical-flow tower defense game about routing matter, engineering reactions, and defending the Catalyst Core.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#07100d",
+  "theme_color": "#08110f",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
