@@ -31,13 +31,13 @@ export const GAS_NAMES: Record<GasType, string> = {
 };
 
 export const GAS_COLORS: Record<GasType, string> = {
-  oxygen: "#82b9c5",
-  nitrogen: "#526d68",
-  carbon_dioxide: "#85918e",
-  chlorine: "#b4dc45",
-  hydrogen: "#efa24f",
-  hydrogen_chloride: "#e5c56d",
-  steam: "#d7edf0",
+  oxygen: "#73c3d4",
+  nitrogen: "#507c74",
+  carbon_dioxide: "#8b9f9a",
+  chlorine: "#c5f540",
+  hydrogen: "#f5a249",
+  hydrogen_chloride: "#f6cd5c",
+  steam: "#d1f1f6",
 };
 
 export const LIQUID_LABELS: Record<LiquidType, string> = {
@@ -57,11 +57,11 @@ export const LIQUID_NAMES: Record<LiquidType, string> = {
 };
 
 export const LIQUID_COLORS: Record<LiquidType, string> = {
-  water: "#4ca9d6",
-  sodium_chloride: "#74bfd0",
-  sodium_hydroxide: "#b06ddd",
-  sodium_hypochlorite: "#a7cc69",
-  hydrochloric_acid: "#df8b60",
+  water: "#41baf5",
+  sodium_chloride: "#60cce4",
+  sodium_hydroxide: "#b555f5",
+  sodium_hypochlorite: "#ade253",
+  hydrochloric_acid: "#f5844a",
 };
 
 export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {

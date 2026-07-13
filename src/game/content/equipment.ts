@@ -6,7 +6,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     name: "Gas agitator",
     description:
       "Recirculates both gas layers. It speeds every eligible gas reaction, including unwanted combustible mixtures.",
-    accent: "#68b8b0",
+    accent: "#65cfc4",
     buildCost: 12,
     upgradeCosts: [10, 17],
     allowedRings: ["outer", "middle", "inner"],
@@ -23,7 +23,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     name: "Wet contactor",
     description:
       "Increases gas–liquid contact and liquid mixing for every eligible reaction. It does not select a product.",
-    accent: "#638bc9",
+    accent: "#5e92e3",
     buildCost: 14,
     upgradeCosts: [12, 20],
     allowedRings: ["middle", "inner"],
@@ -40,7 +40,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     name: "Thermal coil",
     description:
       "Heats the room and both gas layers toward a fixed equipment rating. Chemistry still determines what reacts.",
-    accent: "#e08d59",
+    accent: "#f58844",
     buildCost: 10,
     upgradeCosts: [9, 16],
     allowedRings: ["outer", "middle", "inner"],
@@ -57,7 +57,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     name: "Membrane cell",
     description:
       "Electrolyzes NaCl and water into separated Cl₂, H₂, and NaOH outlets at its installed grade.",
-    accent: "#b4dc45",
+    accent: "#c5f540",
     buildCost: 20,
     upgradeCosts: [17, 28],
     allowedRings: ["inner"],

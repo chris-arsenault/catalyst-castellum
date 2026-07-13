@@ -12,8 +12,8 @@ import type {
 import type { MaterialRunFlow, TransportPhaseStatus } from "../../game/engine/transportTelemetry";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
 
-const GAS_RUN_COLOR = 0x5d969c;
-const LIQUID_RUN_COLOR = 0x4d709c;
+const GAS_RUN_COLOR = 0x58aab3;
+const LIQUID_RUN_COLOR = 0x3f76ba;
 const FLOW_EPSILON = 0.002;
 
 const tracePath = (graphics: Graphics, points: readonly Point[]): void => {
@@ -121,7 +121,7 @@ const drawStopMarker = (graphics: Graphics, points: readonly Point[]): void => {
     .lineTo(point.x + 4, point.y + 4)
     .moveTo(point.x + 4, point.y - 4)
     .lineTo(point.x - 4, point.y + 4)
-    .stroke({ color: 0xdf7463, width: 2.5, alpha: 0.95 });
+    .stroke({ color: 0xf6644c, width: 2.5, alpha: 0.95 });
 };
 
 interface LaneModel {
@@ -155,7 +155,7 @@ const laneCoreWidth = (model: LaneModel): number => {
 };
 
 const laneColor = (model: LaneModel): number => {
-  if (model.status.blocked && model.hovered) return 0xa9564d;
+  if (model.status.blocked && model.hovered) return 0xc74e41;
   return model.color;
 };
 

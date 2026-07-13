@@ -26,7 +26,7 @@ const drawGeologicalStrata = (graphics: Graphics): void => {
         WORLD_MAP_WIDTH - WORLD_MARGIN_X,
         y - 7
       )
-      .stroke({ color: 0x2e3c34, width: 8, alpha: 0.38 });
+      .stroke({ color: 0x2f483a, width: 8, alpha: 0.38 });
     graphics
       .moveTo(WORLD_MARGIN_X, y + 5)
       .bezierCurveTo(
@@ -51,7 +51,7 @@ const drawRockTexture = (graphics: Graphics): void => {
         .moveTo(x - 6, y + 3)
         .lineTo(x, y - 2)
         .lineTo(x + 8, y + 1)
-        .stroke({ color: 0x405048, width: 2, alpha: 0.2 });
+        .stroke({ color: 0x425f51, width: 2, alpha: 0.2 });
     }
   }
 };
@@ -66,7 +66,7 @@ export const drawBackdrop = (graphics: Graphics): void => {
       FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
       FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
     )
-    .fill({ color: 0x17221d });
+    .fill({ color: 0x172921 });
   drawGeologicalStrata(graphics);
   drawRockTexture(graphics);
   graphics
@@ -76,14 +76,14 @@ export const drawBackdrop = (graphics: Graphics): void => {
       FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
       FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
     )
-    .stroke({ color: 0x4b6358, width: 4, alpha: 0.82 });
+    .stroke({ color: 0x49715f, width: 4, alpha: 0.82 });
   graphics
     .moveTo(WORLD_MARGIN_X, WORLD_GROUND_Y)
     .lineTo(WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_GROUND_Y)
-    .stroke({ color: 0x789182, width: 4, alpha: 0.62 });
+    .stroke({ color: 0x7ba08a, width: 4, alpha: 0.62 });
   graphics
     .rect(14, 14, WORLD_MAP_WIDTH - 28, WORLD_MAP_HEIGHT - 28)
-    .stroke({ color: 0x2e473e, width: 2, alpha: 0.8 });
+    .stroke({ color: 0x2d5647, width: 2, alpha: 0.8 });
 };
 
 const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
@@ -95,35 +95,35 @@ const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
     .lineTo(leftRail, rect.top + rect.height + 1)
     .moveTo(rightRail, rect.top - 1)
     .lineTo(rightRail, rect.top + rect.height + 1)
-    .stroke({ color: 0xb69a6d, width: 2.4, alpha: 0.9 });
+    .stroke({ color: 0xcca76b, width: 2.4, alpha: 0.9 });
   graphics
     .moveTo(leftRail, rect.top + rect.height / 2)
     .lineTo(rightRail, rect.top + rect.height / 2)
-    .stroke({ color: 0xb69a6d, width: 2, alpha: 0.86 });
+    .stroke({ color: 0xcca76b, width: 2, alpha: 0.86 });
 };
 
 const drawPlatformCell = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
     .rect(rect.left, rect.top, rect.width, rect.height)
-    .fill({ color: 0x26332d })
-    .stroke({ color: 0x718077, width: 1.5, alpha: 0.7 });
+    .fill({ color: 0x273d33 })
+    .stroke({ color: 0x738e7e, width: 1.5, alpha: 0.7 });
   graphics
     .moveTo(rect.left, rect.top + 2)
     .lineTo(rect.left + rect.width, rect.top + 2)
-    .stroke({ color: 0xb1b99c, width: 2, alpha: 0.65 });
+    .stroke({ color: 0xb4c095, width: 2, alpha: 0.65 });
 };
 
 const drawCoreShellCell = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
     .rect(rect.left, rect.top, rect.width, rect.height)
-    .fill({ color: 0x303329, alpha: 0.98 })
-    .stroke({ color: 0xb6a66c, width: 1.6, alpha: 0.72 });
+    .fill({ color: 0x373c2b, alpha: 0.98 })
+    .stroke({ color: 0xccb76a, width: 1.6, alpha: 0.72 });
   graphics
     .moveTo(rect.left + 3, rect.top + rect.height - 3)
     .lineTo(rect.left + rect.width - 3, rect.top + 3)
-    .stroke({ color: 0x645e43, width: 1.2, alpha: 0.7 });
+    .stroke({ color: 0x746a3f, width: 1.2, alpha: 0.7 });
 };
 
 const drawPortalFlowArrow = (
@@ -177,8 +177,8 @@ const drawPortalFlows = (
   portalState: FacilityPortalState | undefined
 ): void => {
   if (!portalState || portalState.sealed || !portalState.open) return;
-  drawPortalFlowArrow(graphics, portal, portalState.lastGasFlow, 0x7bc8ae, -3);
-  drawPortalFlowArrow(graphics, portal, portalState.lastLiquidFlow, 0x54a9dc, 3);
+  drawPortalFlowArrow(graphics, portal, portalState.lastGasFlow, 0x6ad9b4, -3);
+  drawPortalFlowArrow(graphics, portal, portalState.lastLiquidFlow, 0x50b7f6, 3);
 };
 
 const portalOpen = (portal: FacilityPortal, state: FacilityPortalState | undefined): boolean =>
@@ -202,7 +202,7 @@ const drawDoorPortal = (
     graphics
       .roundRect(x, rect.top + 1, width, rect.height - 2, 2)
       .fill({ color: 0x101814, alpha: 0.95 })
-      .stroke({ color: 0xc88a68, width: 2.5, alpha: 0.95 });
+      .stroke({ color: 0xe19165, width: 2.5, alpha: 0.95 });
   }
 };
 
@@ -214,13 +214,13 @@ const drawTrapdoorCell = (graphics: Graphics, trapdoor: GridCell, open: boolean)
       .lineTo(rect.left + 4, rect.top + rect.height)
       .moveTo(rect.left + rect.width, rect.top)
       .lineTo(rect.left + rect.width - 4, rect.top + rect.height)
-      .stroke({ color: 0xc88a68, width: 2.5, alpha: 0.9 });
+      .stroke({ color: 0xe19165, width: 2.5, alpha: 0.9 });
     return;
   }
   graphics
     .rect(rect.left, rect.top + 5, rect.width, rect.height - 10)
-    .fill({ color: 0x29332e })
-    .stroke({ color: 0xc88a68, width: 2, alpha: 0.9 });
+    .fill({ color: 0x2b3c34 })
+    .stroke({ color: 0xe19165, width: 2, alpha: 0.9 });
 };
 
 const drawTrapdoorPortal = (
@@ -253,7 +253,7 @@ const drawPortalCut = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
     .rect(rect.left - 0.6, rect.top - 0.6, rect.width + 1.2, rect.height + 1.2)
-    .stroke({ color: 0x506259, width: 1, alpha: 0.38 });
+    .stroke({ color: 0x506f5f, width: 1, alpha: 0.38 });
 };
 
 const drawPortalCuts = (graphics: Graphics): void => {
@@ -281,7 +281,7 @@ const drawPassageFrames = (graphics: Graphics): void => {
       const rect = gridCellMapRect(connector);
       graphics
         .rect(rect.left, rect.top, rect.width, rect.height)
-        .stroke({ color: 0x506259, width: 1.5, alpha: 0.45 });
+        .stroke({ color: 0x506f5f, width: 1.5, alpha: 0.45 });
     }
   }
 };

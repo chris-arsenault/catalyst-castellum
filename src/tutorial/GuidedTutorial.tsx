@@ -17,7 +17,7 @@ const JOYRIDE_STYLES: Partial<Styles> = {
 };
 
 const JOYRIDE_OPTIONS: Partial<Options> = {
-  backgroundColor: "#1a2b25",
+  backgroundColor: "#19352b",
   buttons: [],
   disableFocusTrap: true,
   dismissKeyAction: false,
@@ -27,7 +27,7 @@ const JOYRIDE_OPTIONS: Partial<Options> = {
   scrollOffset: 36,
   skipBeacon: true,
   targetWaitTimeout: 2500,
-  textColor: "#dce8df",
+  textColor: "#d9ebde",
   width: 365,
   zIndex: 80,
 };

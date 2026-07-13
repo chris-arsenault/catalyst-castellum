@@ -92,14 +92,14 @@ export const drawProcessNodes = (graphics: Graphics, state: GameState): void => 
   drawTerminal(
     graphics,
     utilityNodeWorldPoint("gas_vent"),
-    0x79b8bd,
+    0x69c5cd,
     Math.min(1, gasAmountTotal(state.gasVent) / 80),
     true
   );
   drawTerminal(
     graphics,
     utilityNodeWorldPoint("liquid_drain"),
-    0x5a83c0,
+    0x548ada,
     Math.min(1, liquidAmountTotal(state.liquidDrain) / 80),
     false
   );

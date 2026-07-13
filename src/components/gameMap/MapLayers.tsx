@@ -103,7 +103,7 @@ const labelStyle = {
   fontFamily: "IBM Plex Mono, ui-monospace, monospace",
   fontSize: 13,
   fontWeight: "700",
-  fill: "#d8e5db",
+  fill: "#d5e8d9",
   letterSpacing: 0.7,
 } as const;
 
@@ -124,7 +124,7 @@ export const ProcessNodeLabels = () => {
           x={25}
           y={WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT}
           anchor={{ x: 0, y: 0.5 }}
-          style={{ ...labelStyle, fontSize: 12, fill: "#789086" }}
+          style={{ ...labelStyle, fontSize: 12, fill: "#7b9f90" }}
           eventMode="none"
         />
       ))}
@@ -133,7 +133,7 @@ export const ProcessNodeLabels = () => {
         x={core.x}
         y={core.y + 89}
         anchor={{ x: 0.5, y: 0.5 }}
-        style={{ ...labelStyle, fontSize: 11, fill: "#81978e" }}
+        style={{ ...labelStyle, fontSize: 11, fill: "#86a699" }}
         eventMode="none"
       />
       <pixiText
@@ -141,7 +141,7 @@ export const ProcessNodeLabels = () => {
         x={cell.x}
         y={cell.y + 73}
         anchor={{ x: 0.5, y: 0.5 }}
-        style={{ ...labelStyle, fontSize: 11, fill: "#81978e" }}
+        style={{ ...labelStyle, fontSize: 11, fill: "#86a699" }}
         eventMode="none"
       />
       <pixiText
@@ -149,7 +149,7 @@ export const ProcessNodeLabels = () => {
         x={vent.x}
         y={vent.y - 16}
         anchor={{ x: 0.5, y: 0.5 }}
-        style={{ ...labelStyle, fontSize: 10, fill: "#79b8bd" }}
+        style={{ ...labelStyle, fontSize: 10, fill: "#69c5cd" }}
         eventMode="none"
       />
       <pixiText
@@ -157,7 +157,7 @@ export const ProcessNodeLabels = () => {
         x={drain.x}
         y={drain.y + 17}
         anchor={{ x: 0.5, y: 0.5 }}
-        style={{ ...labelStyle, fontSize: 10, fill: "#668dd0" }}
+        style={{ ...labelStyle, fontSize: 10, fill: "#4f87e7" }}
         eventMode="none"
       />
     </>

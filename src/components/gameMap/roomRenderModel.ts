@@ -33,7 +33,7 @@ export const roomRenderModel = (
   const upperGasColor = colorNumber(GAS_COLORS[analysis.upperDominantGas]);
   const liquidColor = analysis.dominantLiquid
     ? colorNumber(LIQUID_COLORS[analysis.dominantLiquid])
-    : 0x4ca9d6;
+    : 0x41baf5;
   const center = worldToMapPoint(roomCenterWorld(roomId));
   const zoneSplit =
     FACILITY_MAP.rooms[roomId].bounds.elevation + FACILITY_MAP.rooms[roomId].bounds.height / 2;

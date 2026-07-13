@@ -22,7 +22,7 @@ export const GAS_SOURCES: Record<GasSourceId, GasSourceDefinition> = {
     chargeGas: { hydrogen: 20, oxygen: 10 },
     chargeCost: 8,
     hostRoomId: "core",
-    accent: "#d49a61",
+    accent: "#ed9a48",
   },
 };
 
@@ -37,7 +37,7 @@ export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
     chargeAmount: 28,
     chargeCost: 7,
     hostRoomId: "core",
-    accent: "#4ca9d6",
+    accent: "#41baf5",
   },
   sodium_chloride_tank: {
     id: "sodium_chloride_tank",
@@ -49,7 +49,7 @@ export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
     chargeAmount: 28,
     chargeCost: 10,
     hostRoomId: "core",
-    accent: "#74bfd0",
+    accent: "#60cce4",
   },
 };
 
@@ -59,14 +59,14 @@ export const GAS_BUFFERS: Record<GasBufferId, GasBufferDefinition> = {
     name: "Cl₂ anode header",
     capacity: 18,
     hostRoomId: "lower_intake",
-    accent: "#b4dc45",
+    accent: "#c5f540",
   },
   cathode_header: {
     id: "cathode_header",
     name: "H₂ cathode header",
     capacity: 18,
     hostRoomId: "lower_intake",
-    accent: "#efa24f",
+    accent: "#f5a249",
   },
 };
 
@@ -76,7 +76,7 @@ export const LIQUID_BUFFERS: Record<LiquidBufferId, LiquidBufferDefinition> = {
     name: "NaOH cell-liquor outlet",
     capacity: 30,
     hostRoomId: "lower_intake",
-    accent: "#b06ddd",
+    accent: "#b555f5",
   },
 };
 

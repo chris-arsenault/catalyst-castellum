@@ -105,7 +105,7 @@ const GasSourceCard = ({ sourceId }: { sourceId: GasSourceId }) => {
         sourceKind="gas"
       />
       {sourceId === "starter_gas_header" && (
-        <div className="feedstock-card" style={{ "--feedstock": "#b87f60" }}>
+        <div className="feedstock-card" style={{ "--feedstock": "#d0855b" }}>
           <span>CORE · Mixed gas service junction</span>
           <strong data-testid="core-gas-junction">
             {gasAmountTotal(game.gasJunctions.core.gas).toFixed(1)} / {GAS_JUNCTIONS.core.capacity}{" "}
@@ -170,7 +170,7 @@ export const FeedstockStrip = () => {
       ).map((sourceId) => (
         <LiquidSourceCard key={sourceId} sourceId={sourceId} />
       ))}
-      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#79b8bd" }}>
+      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#69c5cd" }}>
         <span>
           <Wind size={12} /> Gas vent inventory
         </span>
@@ -179,7 +179,7 @@ export const FeedstockStrip = () => {
           {ventTotal > 0.01 ? `${GAS_LABELS[ventDominant]} dominant` : "isolated · empty"}
         </small>
       </div>
-      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#5a83c0" }}>
+      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#548ada" }}>
         <span>
           <Recycle size={12} /> Liquid recovery
         </span>

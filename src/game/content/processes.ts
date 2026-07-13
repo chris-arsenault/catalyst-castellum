@@ -8,6 +8,6 @@ export const PROCESS_DEFINITIONS: Record<ProcessId, ProcessDefinition> = {
       "Cell current consumes equal NaCl and water feed. Cl₂, H₂, and NaOH leave through isolated headers; a blocked outlet limits the entire cell.",
     reactionId: "chlor_alkali_electrolysis",
     equipmentId: "membrane_cell",
-    accent: "#b4dc45",
+    accent: "#c5f540",
   },
 };

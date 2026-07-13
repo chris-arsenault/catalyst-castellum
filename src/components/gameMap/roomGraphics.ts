@@ -28,16 +28,16 @@ export interface RoomDrawCell {
 }
 
 const roomBorderColor = (model: RoomDrawModel): number => {
-  if (model.selected) return 0xe5efb0;
-  if (model.structure === "core") return 0xcdbf74;
-  if (model.ring === "inner") return 0x69b7a0;
-  if (model.ring === "middle") return 0x62858e;
-  return 0x4b7468;
+  if (model.selected) return 0xedfaa5;
+  if (model.structure === "core") return 0xe1cc60;
+  if (model.ring === "inner") return 0x66ceaf;
+  if (model.ring === "middle") return 0x5d95a3;
+  return 0x458774;
 };
 
 const drawHazardGlow = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.analysis.hazard < 32) return;
-  const color = model.analysis.hazard >= 65 ? 0xd4ed55 : 0xd3a955;
+  const color = model.analysis.hazard >= 65 ? 0xdaf64c : 0xf0ba4d;
   graphics
     .rect(-model.width / 2 - 8, -model.height / 2 - 8, model.width + 16, model.height + 16)
     .stroke({ color, width: model.analysis.hazard >= 65 ? 5 : 3, alpha: 0.32 });
@@ -49,8 +49,8 @@ const drawRoomShell = (graphics: Graphics, model: RoomDrawModel): void => {
   // The shell is a physical excavation lip, not a floating process-card border.
   graphics
     .rect(left - 5, top - 5, model.width + 10, model.height + 10)
-    .fill({ color: 0x19251f })
-    .stroke({ color: 0x31443b, width: 3, alpha: 0.9 });
+    .fill({ color: 0x192d23 })
+    .stroke({ color: 0x315242, width: 3, alpha: 0.9 });
   graphics
     .rect(left, top, model.width, model.height)
     .fill({ color: 0x0a1210 })
@@ -58,12 +58,12 @@ const drawRoomShell = (graphics: Graphics, model: RoomDrawModel): void => {
   graphics
     .moveTo(left + 3, -top - 3)
     .lineTo(-left - 3, -top - 3)
-    .stroke({ color: 0x819188, width: 6, alpha: 0.7 });
+    .stroke({ color: 0x869f91, width: 6, alpha: 0.7 });
   for (const x of [left + 8, -left - 8]) {
     graphics
       .moveTo(x, top + 8)
       .lineTo(x, -top - 8)
-      .stroke({ color: 0x43574d, width: 3, alpha: 0.72 });
+      .stroke({ color: 0x426352, width: 3, alpha: 0.72 });
   }
 };
 
@@ -108,32 +108,32 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
 };
 
 const integrityColor = (integrity: number): number => {
-  if (integrity > 0.5) return 0xdce88b;
-  if (integrity > 0.25) return 0xe0a253;
-  return 0xdf655d;
+  if (integrity > 0.5) return 0xe8f87b;
+  if (integrity > 0.25) return 0xf5a53e;
+  return 0xf55147;
 };
 
 const drawCore = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.structure !== "core") return;
   const radius = Math.min(model.width, model.height) * 0.24;
   const integrity = model.coreIntegrity / 100;
-  graphics.circle(0, 10, radius).stroke({ color: 0x314f47, width: 12, alpha: 0.96 });
+  graphics.circle(0, 10, radius).stroke({ color: 0x2f6153, width: 12, alpha: 0.96 });
   graphics
     .arc(0, 10, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * integrity)
     .stroke({ color: integrityColor(integrity), width: 12 });
-  graphics.circle(0, 10, radius * 0.25).fill({ color: 0xf0f4c0, alpha: 0.92 });
+  graphics.circle(0, 10, radius * 0.25).fill({ color: 0xf6fbb9, alpha: 0.92 });
 };
 
 const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
   const left = -model.width / 2;
   const top = -model.height / 2;
   if (model.structure === "entry") {
-    graphics.poly([left + 20, -16, left - 12, 0, left + 20, 16]).fill({ color: 0xc97762 });
+    graphics.poly([left + 20, -16, left - 12, 0, left + 20, 16]).fill({ color: 0xe3785d });
   }
   if (model.reactionIntensity > 0.08) {
     graphics
       .rect(left + 10, top + 10, model.width - 20, model.height - 20)
-      .stroke({ color: 0xb8df61, width: 3, alpha: 0.8 });
+      .stroke({ color: 0xc1f64a, width: 3, alpha: 0.8 });
   }
   if (model.pressurePulse > 1) {
     const pulse = Math.min(1, model.pressurePulse / 160);
@@ -144,10 +144,10 @@ const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
         model.width + 10 + pulse * 16,
         model.height + 10 + pulse * 16
       )
-      .stroke({ color: 0xf4a35d, width: 3 + pulse * 3, alpha: 0.4 + pulse * 0.4 });
+      .stroke({ color: 0xf6a35b, width: 3 + pulse * 3, alpha: 0.4 + pulse * 0.4 });
   }
   if (model.occupied > 0) {
-    graphics.circle(-left - 12, top + 12, 17).fill({ color: 0xd16c62 });
+    graphics.circle(-left - 12, top + 12, 17).fill({ color: 0xe9584a });
   }
 };
 

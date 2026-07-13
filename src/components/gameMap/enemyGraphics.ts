@@ -34,22 +34,22 @@ const drawEnemyShape = (graphics: Graphics, type: EnemyType, color: number): voi
       return;
     case "bellows":
       graphics.ellipse(0, 0, 18, 13).fill({ color });
-      graphics.circle(-13, -5, 7).stroke({ color: 0xf2b2a5, width: 3, alpha: 0.9 });
-      graphics.circle(13, -5, 7).stroke({ color: 0xf2b2a5, width: 3, alpha: 0.9 });
+      graphics.circle(-13, -5, 7).stroke({ color: 0xfaad9d, width: 3, alpha: 0.9 });
+      graphics.circle(13, -5, 7).stroke({ color: 0xfaad9d, width: 3, alpha: 0.9 });
       return;
     case "skimmer":
       graphics.poly([-18, 8, -11, -8, 14, -5, 19, 3, 7, 11]).fill({ color });
       return;
     case "crawler":
       graphics.ellipse(0, 0, 16, 11).fill({ color });
-      graphics.circle(12, -3, 7).fill({ color: 0xe2c995 });
+      graphics.circle(12, -3, 7).fill({ color: 0xf3cf84 });
   }
 };
 
 const healthColor = (health: number): number => {
-  if (health > 0.5) return 0xcbdc6d;
-  if (health > 0.25) return 0xe5a35a;
-  return 0xdf5f58;
+  if (health > 0.5) return 0xdcf455;
+  if (health > 0.25) return 0xf5a44a;
+  return 0xf54b42;
 };
 
 export const drawEnemy = (
@@ -81,7 +81,7 @@ export const drawEnemy = (
       .moveTo(-6, 7)
       .lineTo(-13, 14)
       .stroke({ color, width: 3, alpha: 0.95 });
-    graphics.moveTo(23, -9).lineTo(23, 12).stroke({ color: 0xe9b172, width: 2, alpha: 0.75 });
+    graphics.moveTo(23, -9).lineTo(23, 12).stroke({ color: 0xf7b264, width: 2, alpha: 0.75 });
   } else if (pose.stance === "climb") {
     graphics
       .moveTo(-9, -5)
@@ -105,9 +105,9 @@ export const drawEnemy = (
       .lineTo(-22, -14)
       .moveTo(22, 1)
       .lineTo(22, -10)
-      .stroke({ color: 0xd7e4d7, width: 2, alpha: 0.38 });
+      .stroke({ color: 0xd4e7d4, width: 2, alpha: 0.38 });
   }
-  graphics.circle(9, -5, 2).fill({ color: 0x251713 });
-  graphics.roundRect(-18, -24, 36, 4, 2).fill({ color: 0x14201c, alpha: 0.95 });
+  graphics.circle(9, -5, 2).fill({ color: 0x2e1711 });
+  graphics.roundRect(-18, -24, 36, 4, 2).fill({ color: 0x132720, alpha: 0.95 });
   graphics.roundRect(-18, -24, 36 * health, 4, 2).fill({ color: healthColor(health) });
 };

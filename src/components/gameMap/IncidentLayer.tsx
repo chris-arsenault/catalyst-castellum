@@ -17,14 +17,14 @@ const drawIncident = (graphics: Graphics, incident: IncidentAggregate): void => 
     (baseRadius + progress * Math.max(incident.width, incident.height) * 0.62) * impulseScale;
   graphics
     .circle(0, 0, radius)
-    .stroke({ color: 0xffad62, width: 7 - progress * 3, alpha: fade * 0.88 });
+    .stroke({ color: 0xf7ad6a, width: 7 - progress * 3, alpha: fade * 0.88 });
   graphics
     .circle(0, 0, Math.max(5, radius - 13))
-    .stroke({ color: 0xffe0a3, width: 2.5, alpha: fade * 0.58 });
+    .stroke({ color: 0xfadea8, width: 2.5, alpha: fade * 0.58 });
   graphics
     .roundRect(-145, -incident.height / 2 - 70, 290, 51, 6)
     .fill({ color: 0x130b07, alpha: 0.84 * fade })
-    .stroke({ color: incident.kills > 0 ? 0xd7ec67 : 0xf0a35e, width: 2.5, alpha: fade });
+    .stroke({ color: incident.kills > 0 ? 0xdef65d : 0xf6a358, width: 2.5, alpha: fade });
 };
 
 const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
@@ -42,7 +42,7 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 18,
           fontWeight: "800",
-          fill: "#ffc77c",
+          fill: "#f8c683",
           letterSpacing: 1.2,
         }}
       />
@@ -55,7 +55,7 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 17,
           fontWeight: "700",
-          fill: incident.kills > 0 ? "#e3f285" : "#f3d1a0",
+          fill: incident.kills > 0 ? "#e8f87f" : "#fad299",
           letterSpacing: 0.4,
         }}
       />

@@ -81,7 +81,7 @@ const StandardRoomLabels = ({
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 16,
           fontWeight: "700",
-          fill: analysis.hazard >= 65 ? "#dff36c" : "#e2b65f",
+          fill: analysis.hazard >= 65 ? "#e2f768" : "#f6bc4b",
           letterSpacing: 1.4,
         }}
       />
@@ -94,7 +94,7 @@ const StandardRoomLabels = ({
         fontFamily: "Inter, system-ui, sans-serif",
         fontSize: definition.structure === "entry" ? 20 : 22,
         fontWeight: "700",
-        fill: "#dbe6d7",
+        fill: "#d9ead3",
         letterSpacing: 0.6,
       }}
     />
@@ -107,7 +107,7 @@ const StandardRoomLabels = ({
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 13,
           fontWeight: "700",
-          fill: "#a9c47c",
+          fill: "#add46c",
           letterSpacing: 0.4,
         }}
       />
@@ -125,7 +125,7 @@ const CoreLabels = ({ definition, game }: Pick<LabelProps, "definition" | "game"
         fontFamily: "Inter, system-ui, sans-serif",
         fontSize: 22,
         fontWeight: "700",
-        fill: "#dbe6d7",
+        fill: "#d9ead3",
         letterSpacing: 0.6,
       }}
     />
@@ -137,7 +137,7 @@ const CoreLabels = ({ definition, game }: Pick<LabelProps, "definition" | "game"
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
         fontSize: 21,
         fontWeight: "700",
-        fill: "#edf3c2",
+        fill: "#f3fbba",
       }}
     />
   </>
@@ -153,7 +153,7 @@ const RoomLabels = (props: LabelProps) => (
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
         fontSize: 17,
         fontWeight: "600",
-        fill: props.selected ? "#e8f0b7" : "#7ca295",
+        fill: props.selected ? "#f0fbac" : "#7fb3a1",
         letterSpacing: 1.4,
       }}
     />
@@ -166,7 +166,7 @@ const RoomLabels = (props: LabelProps) => (
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
         fontSize: 15,
         fontWeight: "600",
-        fill: "#607e74",
+        fill: "#5e907f",
       }}
     />
     {props.definition.structure === "core" ? (
@@ -184,7 +184,7 @@ const RoomLabels = (props: LabelProps) => (
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 16,
           fontWeight: "700",
-          fill: "#fff4e4",
+          fill: "#fef4e5",
         }}
       />
     )}
