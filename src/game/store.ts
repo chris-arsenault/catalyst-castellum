@@ -1,43 +1,55 @@
 import { create } from "zustand";
-import type { DeviceKey, GameCommand, GameState, RoomId } from "./types";
-import { createInitialGame, executeCommand, stepGame } from "./simulation";
+import type { GameCommand, GameState, RoomId } from "./types";
+import { createInitialGame, executeCommand, levelDefinitionFor, stepGame } from "./simulation";
 import { clearSavedGame, loadSavedGame, scheduleGameSave } from "./save";
+import { guideDefinitionFor } from "../tutorial/guideModel";
+import { loadDismissedGuideIds, saveDismissedGuideIds } from "../tutorial/guideProgress";
+import { applyE2ETutorialEvidence } from "../testing/e2eMode";
 
 const restoredGame = loadSavedGame();
+const initialGame = restoredGame ?? createInitialGame();
 
 interface GameStore {
   game: GameState;
   selectedRoomId: RoomId;
-  previewDevice: DeviceKey | null;
-  showBriefing: boolean;
   showHelp: boolean;
   notice: string | null;
+  dismissedGuideIds: string[];
   dispatch: (command: GameCommand) => boolean;
   tick: (dt: number) => void;
   selectRoom: (roomId: RoomId) => void;
-  setPreviewDevice: (device: DeviceKey | null) => void;
-  dismissBriefing: () => void;
   setShowHelp: (show: boolean) => void;
+  dismissTutorialGuide: () => void;
+  restartTutorialGuide: () => void;
   clearNotice: () => void;
   reset: () => void;
 }
 
 export const useGameStore = create<GameStore>((set, get) => ({
-  game: restoredGame ?? createInitialGame(),
-  selectedRoomId: "switchyard",
-  previewDevice: "gas_toxic",
-  showBriefing: restoredGame === null,
+  game: initialGame,
+  selectedRoomId: levelDefinitionFor(initialGame).focusRoomId,
   showHelp: false,
   notice: null,
+  dismissedGuideIds: loadDismissedGuideIds(),
 
   dispatch: (command) => {
-    const result = executeCommand(get().game, command);
+    const current = get().game;
+    const result = executeCommand(current, command);
     if (!result.accepted) {
       set({ notice: result.reason ?? "Command rejected." });
       return false;
     }
-    scheduleGameSave(result.state);
-    set({ game: result.state, notice: null });
+    const game = applyE2ETutorialEvidence(result.state, command);
+    scheduleGameSave(game);
+    const levelChanged = current.campaign.levelId !== game.campaign.levelId;
+    const checkpointRestarted = command.type === "retry_level";
+    set({
+      game,
+      notice: null,
+      ...(levelChanged || checkpointRestarted
+        ? { selectedRoomId: levelDefinitionFor(game).focusRoomId }
+        : {}),
+    });
     return true;
   },
 
@@ -50,14 +62,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  selectRoom: (roomId) => {
-    const firstDevice = get().game.rooms[roomId].devices[0] ?? null;
-    set({ selectedRoomId: roomId, previewDevice: firstDevice, notice: null });
-  },
-
-  setPreviewDevice: (previewDevice) => set({ previewDevice }),
-  dismissBriefing: () => set({ showBriefing: false }),
+  selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
   setShowHelp: (showHelp) => set({ showHelp }),
+  dismissTutorialGuide: () => {
+    const guide = guideDefinitionFor(get().game);
+    if (!guide) return;
+    const dismissedGuideIds = [...new Set([...get().dismissedGuideIds, guide.id])];
+    saveDismissedGuideIds(dismissedGuideIds);
+    set({ dismissedGuideIds });
+  },
+  restartTutorialGuide: () => {
+    const state = get();
+    const guide = guideDefinitionFor(state.game);
+    if (!guide) return;
+    const dismissedGuideIds = state.dismissedGuideIds.filter((id) => id !== guide.id);
+    saveDismissedGuideIds(dismissedGuideIds);
+    set({
+      dismissedGuideIds,
+      selectedRoomId: levelDefinitionFor(state.game).focusRoomId,
+      showHelp: false,
+      notice: null,
+    });
+  },
   clearNotice: () => set({ notice: null }),
 
   reset: () => {
@@ -66,9 +92,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     scheduleGameSave(game);
     set({
       game,
-      selectedRoomId: "switchyard",
-      previewDevice: "gas_toxic",
-      showBriefing: false,
+      selectedRoomId: levelDefinitionFor(game).focusRoomId,
       showHelp: false,
       notice: null,
     });

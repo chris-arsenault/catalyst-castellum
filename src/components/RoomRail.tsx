@@ -1,4 +1,4 @@
-import { ROOM_DEFINITIONS, ROOM_ORDER } from "../game/config";
+import { ROOM_DEFINITIONS, ROOM_ORDER, roomRing } from "../game/config";
 import { analyzeRoom } from "../game/simulation";
 import { useGameStore } from "../game/store";
 
@@ -11,12 +11,13 @@ export const RoomRail = () => {
     <nav className="room-rail" aria-label="Select a room">
       {ROOM_ORDER.map((roomId) => {
         const definition = ROOM_DEFINITIONS[roomId];
+        const ring = roomRing(roomId);
         const analysis = analyzeRoom(game.rooms[roomId]);
         return (
           <button
             key={roomId}
             type="button"
-            className={`${selectedRoomId === roomId ? "selected" : ""} ${definition.kind}`}
+            className={`${selectedRoomId === roomId ? "selected" : ""} ${definition.structure} ring-${ring}`}
             data-testid={`select-room-${roomId}`}
             onClick={() => selectRoom(roomId)}
           >

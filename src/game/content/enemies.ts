@@ -1,165 +1,147 @@
-import type { EnemyDefinition, EnemyType, RoomId, WaveEntry } from "../types";
+import type { EnemyDefinition, EnemyType, WaveEntry } from "../types";
 
 export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
   crawler: {
     type: "crawler",
     name: "Crawler",
-    description: "Baseline organic. Vulnerable to toxic gas and suffocation.",
-    health: 82,
-    speed: 0.115,
-    coreDamage: 9,
+    description: "Baseline oxygen-breathing organic with little environmental protection.",
+    health: 74,
+    speed: 0.105,
+    coreDamage: 10,
     needsOxygen: true,
     flying: false,
-    toxicMultiplier: 1.25,
-    acidMultiplier: 1,
-    causticMultiplier: 1.15,
-    heatMultiplier: 1,
+    hazardMultipliers: {
+      atmosphere: 1.25,
+      corrosion: 1,
+      heat: 1,
+      pressure: 1,
+      radiation: 1,
+    },
     color: "#d4be86",
     residueOnDeath: 3,
+    matterYield: 5,
   },
   skimmer: {
     type: "skimmer",
     name: "Skimmer",
-    description: "Fast organic. Punishes hazards that need time to become lethal.",
-    health: 60,
-    speed: 0.225,
-    coreDamage: 7,
+    description:
+      "Fast organic that can outrun a chlorine front still propagating through long lines.",
+    health: 58,
+    speed: 0.19,
+    coreDamage: 8,
     needsOxygen: true,
     flying: false,
-    toxicMultiplier: 1,
-    acidMultiplier: 0.9,
-    causticMultiplier: 1,
-    heatMultiplier: 1.1,
+    hazardMultipliers: {
+      atmosphere: 1,
+      corrosion: 1,
+      heat: 1.1,
+      pressure: 0.9,
+      radiation: 1,
+    },
     color: "#ec936c",
     residueOnDeath: 2,
+    matterYield: 5,
   },
   floater: {
     type: "floater",
     name: "Floater",
-    description: "Airborne enemy that ignores floor liquids and sludge.",
-    health: 74,
-    speed: 0.16,
-    coreDamage: 8,
+    description:
+      "Airborne organism that avoids liquid contact but remains vulnerable to room gases.",
+    health: 72,
+    speed: 0.145,
+    coreDamage: 9,
     needsOxygen: true,
     flying: true,
-    toxicMultiplier: 1.2,
-    acidMultiplier: 0,
-    causticMultiplier: 0,
-    heatMultiplier: 1.25,
+    hazardMultipliers: {
+      atmosphere: 1.15,
+      corrosion: 1.05,
+      heat: 1.2,
+      pressure: 1.5,
+      radiation: 1,
+    },
     color: "#a58bd4",
     residueOnDeath: 2,
+    matterYield: 6,
   },
   shell: {
     type: "shell",
     name: "Shell",
-    description: "Armored mineral mass. Resists toxins; weak to acid and heat.",
-    health: 170,
-    speed: 0.085,
+    description: "Mineral armor resists atmospheric exposure but fails under corrosive liquids.",
+    health: 132,
+    speed: 0.078,
     coreDamage: 16,
     needsOxygen: true,
     flying: false,
-    toxicMultiplier: 0.2,
-    acidMultiplier: 1.8,
-    causticMultiplier: 0.45,
-    heatMultiplier: 1.45,
+    hazardMultipliers: {
+      atmosphere: 0.42,
+      corrosion: 1.55,
+      heat: 1.45,
+      pressure: 0.85,
+      radiation: 1,
+    },
     color: "#88a0a2",
     residueOnDeath: 5,
+    matterYield: 9,
   },
   bellows: {
     type: "bellows",
     name: "Bellows",
-    description: "Consumes toxic gas and exhales CO₂, sabotaging prepared chambers.",
-    health: 128,
-    speed: 0.095,
+    description:
+      "Large respiratory volume resists atmosphere hazards but is vulnerable to corrosion and shock.",
+    health: 112,
+    speed: 0.09,
     coreDamage: 14,
     needsOxygen: true,
     flying: false,
-    toxicMultiplier: 0.6,
-    acidMultiplier: 1,
-    causticMultiplier: 1.2,
-    heatMultiplier: 1.1,
+    hazardMultipliers: {
+      atmosphere: 0.65,
+      corrosion: 1.2,
+      heat: 1.1,
+      pressure: 1.25,
+      radiation: 1,
+    },
     color: "#d16c78",
-    residueOnDeath: 8,
+    residueOnDeath: 7,
+    matterYield: 10,
   },
 };
 
-const upperRoute: RoomId[] = [
-  "west_intake",
-  "switchyard",
-  "furnace",
-  "gallery",
-  "washlock",
-  "core",
-];
-
-const crossRoute: RoomId[] = [
-  "west_intake",
-  "switchyard",
-  "reservoir",
-  "gallery",
-  "washlock",
-  "core",
-];
-
-const lowerRoute: RoomId[] = ["lower_intake", "reservoir", "gallery", "washlock", "core"];
-
-const sequence = (
+export const enemySequence = (
   count: number,
   type: EnemyType,
   start: number,
-  interval: number,
-  route: RoomId[]
+  interval: number
 ): WaveEntry[] =>
   Array.from({ length: count }, (_, index) => ({
     at: start + index * interval,
     type,
-    route,
+    routeId: "entry_to_core",
   }));
 
-export const WAVES: Record<number, WaveEntry[]> = {
-  1: [...sequence(9, "crawler", 0.5, 1.55, upperRoute)],
-  2: [
-    ...sequence(10, "skimmer", 0.5, 1.05, upperRoute),
-    ...sequence(5, "crawler", 3, 2, lowerRoute),
-  ].sort((a, b) => a.at - b.at),
-  3: [
-    ...sequence(8, "floater", 0.5, 1.35, upperRoute),
-    ...sequence(8, "crawler", 2, 1.5, lowerRoute),
-  ].sort((a, b) => a.at - b.at),
-  4: [
-    ...sequence(6, "shell", 0.5, 2.25, crossRoute),
-    ...sequence(9, "skimmer", 2, 1.1, lowerRoute),
-  ].sort((a, b) => a.at - b.at),
-  5: [
-    ...sequence(5, "bellows", 0.5, 2.2, upperRoute),
-    ...sequence(6, "shell", 2, 2.1, lowerRoute),
-    ...sequence(8, "skimmer", 5, 1, upperRoute),
-  ].sort((a, b) => a.at - b.at),
-};
+export const COMMISSIONING_WAVES: WaveEntry[][] = [
+  enemySequence(8, "crawler", 0.5, 1.7),
+  [...enemySequence(8, "skimmer", 0.5, 1.15), ...enemySequence(4, "floater", 3, 2)].sort(
+    (left, right) => left.at - right.at
+  ),
+  [...enemySequence(4, "bellows", 0.5, 2.5), ...enemySequence(5, "shell", 2, 2.3)].sort(
+    (left, right) => left.at - right.at
+  ),
+];
 
-export const WAVE_BRIEFS: Record<number, { title: string; detail: string }> = {
-  1: {
-    title: "Breath test",
+export const COMMISSIONING_WAVE_BRIEFS = [
+  {
+    title: "Chlorine contact trial",
     detail:
-      "Nine crawlers enter through the west intake. Toxic gas and oxygen displacement are both effective.",
+      "Eight crawlers test whether acid and hypochlorite reach R-06 early enough to establish chlorine evolution.",
   },
-  2: {
-    title: "Split pressure",
+  {
+    title: "Residence-time trial",
     detail:
-      "Fast skimmers arrive west while crawlers open the lower route. Prepare more than one room.",
+      "Skimmers and floaters punish long, under-filled headers and a contact room that acidifies too late.",
   },
-  3: {
-    title: "Above the floodline",
-    detail: "Floaters ignore floor liquids. Gas, steam, and heat must cover the upper route.",
-  },
-  4: {
-    title: "Mineral shell",
+  {
+    title: "Corrosion balance trial",
     detail:
-      "Armored shells cross toward the reservoir while skimmers pressure the lower intake. Acid and heat matter.",
+      "Gas-resistant bellows and armored shells require useful HCl, NaOH, and NaOCl exposure as well as Cl₂.",
   },
-  5: {
-    title: "System breakers",
-    detail:
-      "Bellows consume toxic gas and replace it with CO₂ ahead of shells and skimmers. Chain unlike hazards.",
-  },
-};
+];

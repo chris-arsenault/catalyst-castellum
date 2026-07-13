@@ -32,10 +32,32 @@ Ahara's S3 and CloudFront website module.
 ## Architecture patterns
 
 - `simulation.ts` owns authoritative state transitions; UI code dispatches typed commands.
-- Consequence previews apply the real command to a cloned state.
 - The simulation uses fixed timesteps and serializable state for deterministic testing.
+- Monster corridors, gas ducts, and liquid pipes are separate fixed graphs in the MVP.
+- Every numbered room is on the radial monster route; ring membership follows distance to the core.
+- Feedstock, vent, and drain nodes are isolated ports hosted by the core utility manifold.
+- Each room pair owns at most one gas conduit and one liquid conduit. A conduit has one persistent
+  whole-mixture inventory, one binary actuator, and no hidden purpose- or species-specific sub-lines.
+- Room-local junctions connect tanks, buffers, rooms, vents, and drains to those conduits. Branches
+  allocate shared inventory proportionally rather than receiving an invisible ID-order priority.
+- Hover detail uses measured per-species throughput from the shared conduit. The flow overlay is
+  single-select and shows one species system-wide without inventing another transport channel.
+- Authored side-view geometry owns room bounds, corridor/shaft paths, utility locations, and process
+  routes. Rendering and simulation consume the same coordinates.
+- Screen height is physical elevation. Route distance drives enemy travel, conduit capacity,
+  swept-volume latency, and rated response; liquid crest height is derived from the route. Pumps,
+  fans, pressure, density, and gravity use that geometry.
+- Rooms conserve separate upper/lower gas layers; composition and temperature determine mixture
+  density, buoyant overturn, passive line direction, and ground-versus-flying exposure.
+- Reactions run continuously from room inventories and preserve all tracked byproducts.
+- OX-1 combustion creates a discrete pressure/heat damage burst. A central packet resolver records
+  channel and source attribution on enemies, round stats, durable incidents, and death events.
+- Planning freezes the process, priming consumes real inventory, and assault locks all setpoints.
+- The UI exposes current first-order state but does not calculate cascade forecasts.
 - Zustand is only the React/Pixi bridge; it is not the domain model.
-- Saves are versioned and validated with Zod before restoration.
+- Saves are versioned and validated with Zod before restoration. V8 owns conduit routes, junctions,
+  damage ledgers, and incidents; the V7 migration merges every legacy sub-line without deleting its
+  inventory and leaves ambiguous migrated actuators off.
 - Production has no runtime service. Terraform uploads `dist/` to the Ahara website module.
 
 ## Development commands

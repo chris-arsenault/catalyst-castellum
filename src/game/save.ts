@@ -1,21 +1,39 @@
+/* eslint-disable max-lines -- Runtime schema and the conserving v7 migration share this boundary. */
 import { z } from "zod";
-import type { GameState } from "./types";
-
-const gasSchema = z.object({
-  oxygen: z.number().nonnegative(),
-  co2: z.number().nonnegative(),
-  toxic_gas: z.number().nonnegative(),
-  fuel_gas: z.number().nonnegative(),
-  steam: z.number().nonnegative(),
-});
-
-const liquidSchema = z.object({
-  water: z.number().nonnegative(),
-  acid: z.number().nonnegative(),
-  caustic: z.number().nonnegative(),
-  sludge: z.number().nonnegative(),
-  neutral_liquid: z.number().nonnegative(),
-});
+import {
+  DAMAGE_SOURCE_IDS,
+  ENEMY_ROUTE_IDS,
+  ENEMY_TYPES,
+  EQUIPMENT_IDS,
+  EQUIPMENT_SOCKET_IDS,
+  GAS_BUFFER_IDS,
+  GAS_SOURCE_IDS,
+  LEVEL_IDS,
+  LIQUID_BUFFER_IDS,
+  LIQUID_SOURCE_IDS,
+  PROCESS_IDS,
+  ROOM_REACTION_IDS,
+  TRANSPORT_RUN_IDS,
+  type GameState,
+  type GasAmounts,
+  type LiquidAmounts,
+  type TransportRunId,
+} from "./types";
+import {
+  currentRound,
+  emptyGas,
+  emptyLiquid,
+  ENEMY_DEFINITIONS,
+  FACILITY_MAP,
+  facilityCellDefinition,
+  inFacilityBounds,
+  initialPortalStates,
+  LEVEL_DEFINITIONS,
+  TRANSPORT_RUNS,
+} from "./config";
+import { addEvent } from "./engine/events";
+import { createScenarioGame } from "./engine/scenarioState";
+import { enemyPathTransitionIsLegal, findEnemyPath } from "./engine/navigation";
 
 const roomIdSchema = z.enum([
   "west_intake",
@@ -27,50 +45,134 @@ const roomIdSchema = z.enum([
   "washlock",
   "core",
 ]);
-
-const phaseSchema = z.enum(["build", "prime", "assault", "settle", "victory", "defeat"]);
-
-const deviceSchema = z.enum([
-  "gas_toxic",
-  "gas_co2",
-  "gas_fuel",
-  "liquid_acid",
-  "liquid_caustic",
-  "liquid_water",
-  "liquid_sludge",
-  "vent",
-  "drain",
-  "igniter",
-  "door",
-  "boiler",
-  "fan",
+const phaseSchema = z.enum([
+  "level_briefing",
+  "build",
+  "prime",
+  "assault",
+  "round_result",
+  "level_complete",
+  "victory",
+  "defeat",
 ]);
+const levelIdSchema = z.enum(LEVEL_IDS);
+const gasSourceIdSchema = z.enum(GAS_SOURCE_IDS);
+const liquidSourceIdSchema = z.enum(LIQUID_SOURCE_IDS);
+const gasBufferIdSchema = z.enum(GAS_BUFFER_IDS);
+const liquidBufferIdSchema = z.enum(LIQUID_BUFFER_IDS);
+const processIdSchema = z.enum(PROCESS_IDS);
+const reactionIdSchema = z.enum(ROOM_REACTION_IDS);
+const equipmentIdSchema = z.enum(EQUIPMENT_IDS);
+const socketIdSchema = z.enum(EQUIPMENT_SOCKET_IDS);
+const runIdSchema = z.enum(TRANSPORT_RUN_IDS);
+const damageSourceSchema = z.enum(DAMAGE_SOURCE_IDS);
 
-const statsSchema = z.object({
-  spawned: z.number().nonnegative(),
-  killed: z.number().nonnegative(),
-  breached: z.number().nonnegative(),
-  coreDamage: z.number().nonnegative(),
-  damageDealt: z.number().nonnegative(),
-  reactions: z.number().nonnegative(),
-  peakHazard: z.number().min(0).max(100),
+const gasSchema = z.object({
+  oxygen: z.number().nonnegative(),
+  nitrogen: z.number().nonnegative(),
+  carbon_dioxide: z.number().nonnegative(),
+  chlorine: z.number().nonnegative(),
+  hydrogen: z.number().nonnegative(),
+  hydrogen_chloride: z.number().nonnegative(),
+  steam: z.number().nonnegative(),
 });
 
+const liquidSchema = z.object({
+  water: z.number().nonnegative(),
+  sodium_chloride: z.number().nonnegative(),
+  sodium_hydroxide: z.number().nonnegative(),
+  sodium_hypochlorite: z.number().nonnegative(),
+  hydrochloric_acid: z.number().nonnegative(),
+});
+
+const hazardSchema = z.object({
+  atmosphere: z.number().nonnegative(),
+  corrosion: z.number().nonnegative(),
+  heat: z.number().nonnegative(),
+  pressure: z.number().nonnegative(),
+  radiation: z.number().nonnegative(),
+});
+
+const damageLedgerSchema = z.record(damageSourceSchema, hazardSchema);
+const sourceTotalsSchema = z.record(damageSourceSchema, z.number().nonnegative());
+const gridCellSchema = z.object({ column: z.number().int(), elevation: z.number().int() });
+const worldPointSchema = z.object({ x: z.number(), elevation: z.number() });
+const flowCauseSchema = z.enum([
+  "idle",
+  "priming",
+  "pressure",
+  "buoyancy",
+  "fan",
+  "gravity",
+  "siphon",
+  "pump",
+  "backpressure",
+]);
+
+const equipmentSchema = z.object({
+  equipmentId: equipmentIdSchema,
+  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  enabled: z.boolean(),
+});
+const reactionTelemetrySchema = z.object({
+  lastRate: z.number().nonnegative(),
+  limitingReactant: z.string(),
+});
 const roomSchema = z.object({
   id: roomIdSchema,
-  gas: gasSchema,
+  gas: z.object({ lower: gasSchema, upper: gasSchema }),
+  gasTemperature: z.object({ lower: z.number(), upper: z.number() }),
   liquid: liquidSchema,
   temperature: z.number(),
   residue: z.number().min(0).max(100),
-  sealTimer: z.number().nonnegative(),
-  flashTimer: z.number().nonnegative(),
-  flashIntensity: z.number().nonnegative(),
-  devices: z.array(deviceSchema),
+  reactionIntensity: z.number().nonnegative(),
+  pressurePulse: z.number().nonnegative(),
+  flashCooldown: z.object({ lower: z.number().nonnegative(), upper: z.number().nonnegative() }),
+  combustionCount: z.number().int().nonnegative(),
+  reactions: z.record(reactionIdSchema, reactionTelemetrySchema),
+  equipment: z.record(socketIdSchema, equipmentSchema.nullable()),
 });
 
-const enemySchema = z.object({
+const gasConduitSchema = z.object({
+  installed: z.boolean(),
+  enabled: z.boolean(),
+  route: z.array(gridCellSchema),
+  gas: gasSchema,
+  lastFlow: z.number(),
+  lastSpeciesFlow: gasSchema,
+  blocked: z.boolean(),
+  flowCause: flowCauseSchema,
+  temperature: z.number(),
+});
+const liquidConduitSchema = z.object({
+  installed: z.boolean(),
+  enabled: z.boolean(),
+  route: z.array(gridCellSchema),
+  liquid: liquidSchema,
+  lastFlow: z.number(),
+  lastSpeciesFlow: liquidSchema,
+  blocked: z.boolean(),
+  flowCause: flowCauseSchema,
+});
+
+const processSchema = z.object({
+  setting: z.number().min(0).max(1),
+  lastRate: z.number().nonnegative(),
+  totalProcessed: z.number().nonnegative(),
+  limitingReactant: z.string(),
+  powerDraw: z.number().nonnegative(),
+  separatorLeakTotal: z.number().nonnegative(),
+});
+
+const damageReceiptSchema = z.object({
+  sourceId: damageSourceSchema,
+  channels: hazardSchema,
+  amount: z.number().nonnegative(),
+  elapsed: z.number().nonnegative(),
+});
+const legacyV8EnemySchema = z.object({
   id: z.number().int().positive(),
-  type: z.enum(["crawler", "skimmer", "floater", "shell", "bellows"]),
+  type: z.enum(ENEMY_TYPES),
   health: z.number().nonnegative(),
   maxHealth: z.number().positive(),
   route: z.array(roomIdSchema).min(2),
@@ -78,45 +180,225 @@ const enemySchema = z.object({
   progress: z.number().nonnegative(),
   spawnAge: z.number().nonnegative(),
   damageTaken: z.number().nonnegative(),
-  disrupted: z.boolean(),
+  damageBySource: damageLedgerSchema,
+  lastDamage: damageReceiptSchema.nullable(),
+});
+const enemyPathStepSchema = z.object({
+  cell: gridCellSchema,
+  mode: z.enum(["walking", "climbing", "falling", "door", "flying"]),
+  portalId: z.string().nullable(),
 });
 
+type SavedEnemyPathStep = z.infer<typeof enemyPathStepSchema>;
+
+const enemyStepLegal = (
+  enemyType: (typeof ENEMY_TYPES)[number],
+  previous: SavedEnemyPathStep,
+  step: SavedEnemyPathStep
+): boolean =>
+  enemyPathTransitionIsLegal({
+    flying: ENEMY_DEFINITIONS[enemyType].flying,
+    previous,
+    step,
+  });
+
+interface SavedEnemyNavigation {
+  path: SavedEnemyPathStep[];
+  pathIndex: number;
+  type: (typeof ENEMY_TYPES)[number];
+}
+
+const addNavigationIssue = (context: z.RefinementCtx, message: string): void => {
+  context.addIssue({ code: "custom", message });
+};
+
+const pathCellNavigable = (step: SavedEnemyPathStep): boolean => {
+  if (!inFacilityBounds(step.cell)) return false;
+  const terrain = facilityCellDefinition(step.cell).terrain;
+  return terrain !== "solid" && terrain !== "platform" && terrain !== "core_shell";
+};
+
+const pathStepsAdjacent = (previous: SavedEnemyPathStep, step: SavedEnemyPathStep): boolean =>
+  Math.abs(previous.cell.column - step.cell.column) +
+    Math.abs(previous.cell.elevation - step.cell.elevation) ===
+  1;
+
+const validateEnemyPathStep = (
+  enemyType: SavedEnemyNavigation["type"],
+  previous: SavedEnemyPathStep | undefined,
+  step: SavedEnemyPathStep,
+  context: z.RefinementCtx
+): void => {
+  if (!pathCellNavigable(step))
+    addNavigationIssue(context, "Enemy path occupies non-navigable terrain.");
+  if (previous && !pathStepsAdjacent(previous, step))
+    addNavigationIssue(context, "Enemy path contains a non-adjacent step.");
+  if (previous && !enemyStepLegal(enemyType, previous, step))
+    addNavigationIssue(context, "Enemy path violates locomotion rules.");
+  if (step.portalId !== facilityCellDefinition(step.cell).portalId)
+    addNavigationIssue(context, "Enemy path has inconsistent portal identity.");
+};
+
+const reachesCoreThreshold = (path: readonly SavedEnemyPathStep[]): boolean => {
+  const goal = path.at(-1)?.cell;
+  return (
+    goal?.column === FACILITY_MAP.coreBreachCell.column &&
+    goal.elevation === FACILITY_MAP.coreBreachCell.elevation
+  );
+};
+
+const validateEnemyNavigation = (enemy: SavedEnemyNavigation, context: z.RefinementCtx): void => {
+  if (enemy.pathIndex >= enemy.path.length)
+    addNavigationIssue(context, "Enemy path cursor is out of range.");
+  enemy.path.forEach((step, index) =>
+    validateEnemyPathStep(enemy.type, enemy.path[index - 1], step, context)
+  );
+  if (!reachesCoreThreshold(enemy.path))
+    addNavigationIssue(context, "Enemy path does not reach the Core threshold.");
+};
+
+const enemySchema = z
+  .object({
+    id: z.number().int().positive(),
+    type: z.enum(ENEMY_TYPES),
+    health: z.number().nonnegative(),
+    maxHealth: z.number().positive(),
+    routeId: z.enum(ENEMY_ROUTE_IDS),
+    path: z.array(enemyPathStepSchema).min(1),
+    pathIndex: z.number().int().nonnegative(),
+    progress: z.number().min(0).max(1),
+    mode: z.enum(["walking", "climbing", "falling", "door", "flying"]),
+    facing: z.union([z.literal(-1), z.literal(1)]),
+    spawnAge: z.number().nonnegative(),
+    damageTaken: z.number().nonnegative(),
+    damageBySource: damageLedgerSchema,
+    lastDamage: damageReceiptSchema.nullable(),
+  })
+  .superRefine(validateEnemyNavigation);
+
+const statsSchema = z.object({
+  spawned: z.number().int().nonnegative(),
+  killed: z.number().int().nonnegative(),
+  breached: z.number().int().nonnegative(),
+  coreDamage: z.number().nonnegative(),
+  damageDealt: z.number().nonnegative(),
+  reactions: z.number().nonnegative(),
+  combustionFlashes: z.number().int().nonnegative(),
+  peakHazard: z.number().min(0).max(100),
+  matterHarvested: z.number().nonnegative(),
+  damageByChannel: hazardSchema,
+  damageBySource: sourceTotalsSchema,
+  killsBySource: sourceTotalsSchema,
+});
 const reportSchema = statsSchema.extend({
-  cycle: z.number().int().min(1).max(5),
+  levelId: levelIdSchema,
+  round: z.number().int().positive(),
   headline: z.string(),
   detail: z.string(),
 });
-
 const eventSchema = z.object({
   id: z.number().int().positive(),
-  cycle: z.number().int().min(1).max(5),
+  levelId: levelIdSchema,
+  round: z.number().int().positive(),
   phase: phaseSchema,
   tone: z.enum(["info", "good", "warning", "danger", "reaction"]),
   title: z.string(),
   detail: z.string(),
-  roomId: roomIdSchema.optional(),
+  roomId: roomIdSchema.nullable(),
+  elapsed: z.number().nonnegative(),
+  incidentId: z.number().int().positive().nullable(),
+});
+const incidentTargetSchema = z.object({
+  enemyId: z.number().int().positive(),
+  enemyType: z.enum(ENEMY_TYPES),
+  worldPosition: worldPointSchema,
+  healthBefore: z.number().nonnegative(),
+  healthAfter: z.number().nonnegative(),
+  damageByChannel: hazardSchema,
+  killed: z.boolean(),
+});
+const incidentSchema = z.object({
+  id: z.number().int().positive(),
+  elapsed: z.number().nonnegative(),
+  levelId: levelIdSchema,
+  round: z.number().int().positive(),
+  phase: phaseSchema,
+  roomId: roomIdSchema,
+  zone: z.enum(["lower", "upper"]).nullable(),
+  sourceId: damageSourceSchema,
+  reactionExtent: z.number().nonnegative(),
+  pressureImpulse: z.number().nonnegative(),
+  heatDelta: z.number().nonnegative(),
+  damageByChannel: hazardSchema,
+  targets: z.array(incidentTargetSchema),
 });
 
-const gameSchema = z.object({
-  version: z.literal(1),
+const campaignSchema = z.object({
+  levelId: levelIdSchema,
+  levelIndex: z.number().int().nonnegative(),
+  roundIndex: z.number().int().nonnegative(),
+  checkpointLevelId: levelIdSchema,
+  completedLevelIds: z.array(levelIdSchema),
+});
+const availabilitySchema = z.object({
+  equipment: z.array(equipmentIdSchema),
+  gasRuns: z.array(runIdSchema),
+  liquidRuns: z.array(runIdSchema),
+  gasSources: z.array(gasSourceIdSchema),
+  liquidSources: z.array(liquidSourceIdSchema),
+});
+
+const legacyV8GameSchema = z.object({
+  version: z.literal(8),
   phase: phaseSchema,
-  cycle: z.number().int().min(1).max(5),
+  campaign: campaignSchema,
+  availability: availabilitySchema,
   phaseTime: z.number().nonnegative(),
   elapsed: z.number().nonnegative(),
   rooms: z.record(roomIdSchema, roomSchema),
-  enemies: z.array(enemySchema),
+  gasSources: z.record(gasSourceIdSchema, z.object({ gas: gasSchema })),
+  liquidSources: z.record(liquidSourceIdSchema, z.object({ liquid: liquidSchema })),
+  gasBuffers: z.record(gasBufferIdSchema, z.object({ gas: gasSchema })),
+  liquidBuffers: z.record(liquidBufferIdSchema, z.object({ liquid: liquidSchema })),
+  gasJunctions: z.record(roomIdSchema, z.object({ gas: gasSchema, temperature: z.number() })),
+  liquidJunctions: z.record(roomIdSchema, z.object({ liquid: liquidSchema })),
+  gasConduits: z.record(runIdSchema, gasConduitSchema),
+  liquidConduits: z.record(runIdSchema, liquidConduitSchema),
+  processes: z.record(processIdSchema, processSchema),
+  gasVent: gasSchema,
+  liquidDrain: liquidSchema,
+  enemies: z.array(legacyV8EnemySchema),
   spawnCursor: z.number().int().nonnegative(),
   nextEnemyId: z.number().int().positive(),
   nextEventId: z.number().int().positive(),
+  nextIncidentId: z.number().int().positive(),
   coreIntegrity: z.number().min(0).max(100),
-  energy: z.number().min(0).max(100),
-  buildPoints: z.number().int().nonnegative(),
-  cooldowns: z.record(z.string(), z.number().nonnegative()),
+  matter: z.number().nonnegative(),
+  pendingMatter: z.number().nonnegative(),
   paused: z.boolean(),
   speed: z.union([z.literal(1), z.literal(2)]),
   stats: statsSchema,
   lastReport: reportSchema.nullable(),
   events: z.array(eventSchema),
+  incidents: z.array(incidentSchema),
+});
+
+const portalStateSchema = z.object({
+  open: z.boolean(),
+  sealed: z.boolean(),
+  lastGasFlow: z.number(),
+  lastLiquidFlow: z.number(),
+});
+const portalStatesSchema = z.object(
+  Object.fromEntries(
+    FACILITY_MAP.portals.map((portal) => [portal.id, portalStateSchema])
+  ) as Record<string, typeof portalStateSchema>
+);
+
+const gameSchema = legacyV8GameSchema.omit({ version: true, enemies: true }).extend({
+  version: z.literal(9),
+  enemies: z.array(enemySchema),
+  portalStates: portalStatesSchema,
 });
 
 const saveEnvelopeSchema = z.object({
@@ -124,20 +406,264 @@ const saveEnvelopeSchema = z.object({
   savedAt: z.string(),
   game: gameSchema,
 });
+const legacyV8EnvelopeSchema = z.object({
+  format: z.literal("catalyst-castellum-save"),
+  savedAt: z.string(),
+  game: legacyV8GameSchema,
+});
 
-const SAVE_KEY = "catalyst-castellum:save:v1";
+const LEGACY_GAS_LINE_IDS = [
+  "gas_oxygen_to_furnace",
+  "gas_anode_to_furnace",
+  "gas_cathode_to_furnace",
+  "gas_cathode_relief",
+  "gas_anode_to_absorber",
+  "gas_acid_return",
+  "gas_final_header",
+  "gas_outer_bleed",
+  "gas_furnace_exhaust",
+  "gas_final_exhaust",
+] as const;
+const LEGACY_LIQUID_LINE_IDS = [
+  "liquid_water_to_cell",
+  "liquid_salt_to_cell",
+  "liquid_liquor_to_absorber",
+  "liquid_liquor_recovery",
+  "liquid_water_to_final",
+  "liquid_hypochlorite_to_final",
+  "liquid_absorber_recycle",
+  "liquid_cell_drain",
+  "liquid_absorber_drain",
+  "liquid_final_drain",
+] as const;
+const legacyGasIdSchema = z.enum(LEGACY_GAS_LINE_IDS);
+const legacyLiquidIdSchema = z.enum(LEGACY_LIQUID_LINE_IDS);
+const legacyGasLineSchema = z
+  .object({
+    setting: z.number(),
+    gas: gasSchema,
+    temperature: z.number().default(22),
+  })
+  .passthrough();
+const legacyLiquidLineSchema = z
+  .object({ setting: z.number(), liquid: liquidSchema })
+  .passthrough();
+const legacyRunSchema = z.object({ gasInstalled: z.boolean(), liquidInstalled: z.boolean() });
+const legacyV7GameSchema = z
+  .object({
+    version: z.literal(7),
+    campaign: campaignSchema,
+    rooms: z.record(roomIdSchema, roomSchema),
+    gasSources: z.record(z.string(), z.object({ gas: gasSchema })),
+    liquidSources: z.record(liquidSourceIdSchema, z.object({ liquid: liquidSchema })),
+    gasBuffers: z.record(gasBufferIdSchema, z.object({ gas: gasSchema })),
+    liquidBuffers: z.record(liquidBufferIdSchema, z.object({ liquid: liquidSchema })),
+    gasLines: z.record(legacyGasIdSchema, legacyGasLineSchema),
+    liquidLines: z.record(legacyLiquidIdSchema, legacyLiquidLineSchema),
+    transportRuns: z.record(runIdSchema, legacyRunSchema),
+    processes: z.record(processIdSchema, processSchema),
+    gasVent: gasSchema,
+    liquidDrain: liquidSchema,
+    coreIntegrity: z.number().min(0).max(100),
+    matter: z.number().nonnegative(),
+    pendingMatter: z.number().nonnegative(),
+  })
+  .passthrough();
+const legacyV7EnvelopeSchema = z.object({
+  format: z.literal("catalyst-castellum-save"),
+  savedAt: z.string(),
+  game: legacyV7GameSchema,
+});
+
+const GAS_LINE_MIGRATION: Record<TransportRunId, readonly (typeof LEGACY_GAS_LINE_IDS)[number][]> =
+  {
+    core_furnace: ["gas_oxygen_to_furnace", "gas_furnace_exhaust"],
+    cell_furnace: ["gas_anode_to_furnace", "gas_cathode_to_furnace"],
+    core_cell: ["gas_cathode_relief"],
+    cell_absorber: ["gas_anode_to_absorber"],
+    furnace_return: ["gas_acid_return"],
+    return_final: ["gas_final_header"],
+    return_outer: ["gas_outer_bleed"],
+    core_final: ["gas_final_exhaust"],
+    absorber_final: [],
+    core_absorber: [],
+  };
+const LIQUID_LINE_MIGRATION: Record<
+  TransportRunId,
+  readonly (typeof LEGACY_LIQUID_LINE_IDS)[number][]
+> = {
+  core_furnace: [],
+  cell_furnace: [],
+  core_cell: [
+    "liquid_water_to_cell",
+    "liquid_salt_to_cell",
+    "liquid_liquor_recovery",
+    "liquid_cell_drain",
+  ],
+  cell_absorber: ["liquid_liquor_to_absorber", "liquid_absorber_recycle"],
+  furnace_return: [],
+  return_final: [],
+  return_outer: [],
+  core_final: ["liquid_water_to_final", "liquid_final_drain"],
+  absorber_final: ["liquid_hypochlorite_to_final"],
+  core_absorber: ["liquid_absorber_drain"],
+};
+
+const addGas = (target: GasAmounts, addition: GasAmounts): void => {
+  for (const species of Object.keys(target) as (keyof GasAmounts)[])
+    target[species] += addition[species];
+};
+const addLiquid = (target: LiquidAmounts, addition: LiquidAmounts): void => {
+  for (const species of Object.keys(target) as (keyof LiquidAmounts)[])
+    target[species] += addition[species];
+};
+const gasTotal = (gas: GasAmounts): number =>
+  Object.values(gas).reduce((sum, value) => sum + value, 0);
+
+const gasLinesForMigration = (
+  levelId: z.infer<typeof levelIdSchema>,
+  runId: TransportRunId
+): readonly (typeof LEGACY_GAS_LINE_IDS)[number][] => {
+  if (levelId !== "flash_point") return GAS_LINE_MIGRATION[runId];
+  if (runId === "core_furnace") {
+    return [...GAS_LINE_MIGRATION.core_furnace, "gas_cathode_to_furnace"];
+  }
+  if (runId === "cell_furnace") return ["gas_anode_to_furnace"];
+  return GAS_LINE_MIGRATION[runId];
+};
+
+const migrateV7Game = (legacy: z.infer<typeof legacyV7GameSchema>): GameState => {
+  const levelId = legacy.campaign.levelId;
+  const state = createScenarioGame(levelId, legacy.campaign.completedLevelIds);
+  state.phase = "build";
+  state.campaign.roundIndex = Math.min(
+    legacy.campaign.roundIndex,
+    LEVEL_DEFINITIONS[levelId].rounds.length - 1
+  );
+  const round = currentRound(levelId, state.campaign.roundIndex);
+  state.availability = {
+    equipment: [...round.availability.equipment],
+    gasRuns: [...round.availability.gasRuns],
+    liquidRuns: [...round.availability.liquidRuns],
+    gasSources: [...round.availability.gasSources],
+    liquidSources: [...round.availability.liquidSources],
+  };
+  state.rooms = legacy.rooms;
+  state.gasBuffers = legacy.gasBuffers;
+  state.liquidBuffers = legacy.liquidBuffers;
+  state.liquidSources = legacy.liquidSources;
+  state.processes = legacy.processes;
+  state.gasVent = legacy.gasVent;
+  state.liquidDrain = legacy.liquidDrain;
+  state.coreIntegrity = legacy.coreIntegrity;
+  state.matter = legacy.matter;
+  state.pendingMatter = legacy.pendingMatter;
+
+  const legacyOxygen = legacy.gasSources.oxygen_tank?.gas ?? emptyGas();
+  state.gasSources.starter_gas_header.gas = { ...legacyOxygen };
+  if (levelId === "flash_point") {
+    addGas(state.gasSources.starter_gas_header.gas, state.gasBuffers.cathode_header.gas);
+    state.gasBuffers.cathode_header.gas = emptyGas();
+  }
+
+  for (const runId of TRANSPORT_RUN_IDS) {
+    const legacyRun = legacy.transportRuns[runId];
+    const gas = emptyGas();
+    let temperatureMass = 0;
+    let temperatureAmount = 0;
+    for (const lineId of gasLinesForMigration(levelId, runId)) {
+      const line = legacy.gasLines[lineId];
+      addGas(gas, line.gas);
+      const amount = gasTotal(line.gas);
+      temperatureMass += line.temperature * amount;
+      temperatureAmount += amount;
+    }
+    state.gasConduits[runId].gas = gas;
+    state.gasConduits[runId].temperature =
+      temperatureAmount > 0 ? temperatureMass / temperatureAmount : 22;
+    state.gasConduits[runId].installed = Boolean(
+      TRANSPORT_RUNS[runId].gas && legacyRun.gasInstalled
+    );
+    state.gasConduits[runId].enabled = false;
+
+    const liquid = emptyLiquid();
+    for (const lineId of LIQUID_LINE_MIGRATION[runId]) {
+      addLiquid(liquid, legacy.liquidLines[lineId].liquid);
+    }
+    state.liquidConduits[runId].liquid = liquid;
+    state.liquidConduits[runId].installed = Boolean(
+      TRANSPORT_RUNS[runId].liquid && legacyRun.liquidInstalled
+    );
+    state.liquidConduits[runId].enabled = false;
+  }
+  addEvent(
+    state,
+    "warning",
+    "Physical conduit migration completed",
+    "Legacy sub-lines were conservatively merged by room pair and phase. No material was discarded; all migrated conduits were left OFF because their former directions were ambiguous."
+  );
+  return state;
+};
+
+const migrateV8Enemy = (
+  legacy: z.infer<typeof legacyV8EnemySchema>,
+  portalStates: GameState["portalStates"]
+): GameState["enemies"][number] => {
+  const definition = ENEMY_DEFINITIONS[legacy.type];
+  const path = findEnemyPath({ flying: definition.flying, portalStates });
+  if (path.length === 0)
+    throw new Error(`Cannot migrate ${legacy.type}: Core route is unavailable.`);
+  const oldSegments = Math.max(1, legacy.route.length - 1);
+  const oldFraction = Math.min(1, (legacy.segment + legacy.progress) / oldSegments);
+  const exactIndex = oldFraction * Math.max(1, path.length - 1);
+  const pathIndex = Math.min(path.length - 1, Math.floor(exactIndex));
+  const progress = pathIndex >= path.length - 1 ? 0 : exactIndex - pathIndex;
+  const next = path[Math.min(pathIndex + 1, path.length - 1)] ?? path[pathIndex]!;
+  const current = path[pathIndex] ?? path[0]!;
+  const facing = next.cell.column < current.cell.column ? -1 : 1;
+  return {
+    id: legacy.id,
+    type: legacy.type,
+    health: legacy.health,
+    maxHealth: legacy.maxHealth,
+    routeId: "entry_to_core",
+    path,
+    pathIndex,
+    progress,
+    mode: next.mode,
+    facing,
+    spawnAge: legacy.spawnAge,
+    damageTaken: legacy.damageTaken,
+    damageBySource: legacy.damageBySource,
+    lastDamage: legacy.lastDamage,
+  };
+};
+
+const migrateV8Game = (legacy: z.infer<typeof legacyV8GameSchema>): GameState => {
+  const portalStates = initialPortalStates();
+  return {
+    ...legacy,
+    version: 9,
+    portalStates,
+    enemies: legacy.enemies.map((enemy) => migrateV8Enemy(enemy, portalStates)),
+  };
+};
+
+const SAVE_KEY = "catalyst-castellum:save:v9";
+const LEGACY_SAVE_KEYS = ["catalyst-castellum:save:v8", "catalyst-castellum:save:v7"];
 
 export const encodeGame = (game: GameState): string =>
-  JSON.stringify({
-    format: "catalyst-castellum-save",
-    savedAt: new Date().toISOString(),
-    game,
-  });
+  JSON.stringify({ format: "catalyst-castellum-save", savedAt: new Date().toISOString(), game });
 
 export const decodeGame = (raw: string): GameState | null => {
   try {
-    const result = saveEnvelopeSchema.safeParse(JSON.parse(raw));
-    return result.success ? (result.data.game as GameState) : null;
+    const parsed: unknown = JSON.parse(raw);
+    const current = saveEnvelopeSchema.safeParse(parsed);
+    if (current.success) return current.data.game as GameState;
+    const legacyV8 = legacyV8EnvelopeSchema.safeParse(parsed);
+    if (legacyV8.success) return migrateV8Game(legacyV8.data.game);
+    const legacy = legacyV7EnvelopeSchema.safeParse(parsed);
+    return legacy.success ? migrateV7Game(legacy.data.game) : null;
   } catch {
     return null;
   }
@@ -146,7 +672,14 @@ export const decodeGame = (raw: string): GameState | null => {
 export const loadSavedGame = (): GameState | null => {
   if (typeof window === "undefined") return null;
   const raw = window.localStorage.getItem(SAVE_KEY);
-  return raw ? decodeGame(raw) : null;
+  if (raw) return decodeGame(raw);
+  for (const key of LEGACY_SAVE_KEYS) {
+    const legacy = window.localStorage.getItem(key);
+    if (!legacy) continue;
+    const migrated = decodeGame(legacy);
+    if (migrated) return migrated;
+  }
+  return null;
 };
 
 export const saveGame = (game: GameState): void => {
@@ -161,6 +694,7 @@ export const saveGame = (game: GameState): void => {
 export const clearSavedGame = (): void => {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(SAVE_KEY);
+  for (const key of LEGACY_SAVE_KEYS) window.localStorage.removeItem(key);
 };
 
 let latestGame: GameState | null = null;

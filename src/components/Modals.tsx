@@ -1,9 +1,7 @@
 import {
-  Activity,
   ArrowRight,
   Biohazard,
   CheckCircle2,
-  DoorClosed,
   Droplets,
   Flame,
   Gauge,
@@ -11,77 +9,33 @@ import {
   Wind,
   X,
 } from "lucide-react";
+import { useCallback } from "react";
+import { LEVEL_DEFINITIONS, nextLevelId } from "../game/config";
+import { levelDefinitionFor } from "../game/simulation";
 import { useGameStore } from "../game/store";
-
-const BriefingGraphic = () => (
-  <div className="briefing-graphic" aria-hidden="true">
-    <div className="graphic-grid" />
-    <div className="graphic-pipe pipe-one" />
-    <div className="graphic-pipe pipe-two" />
-    <div className="graphic-chamber chamber-one">
-      <Biohazard />
-    </div>
-    <div className="graphic-chamber chamber-two">
-      <Droplets />
-    </div>
-    <div className="graphic-core">
-      <span />
-      <span />
-      <span />
-    </div>
-    <div className="graphic-enemy enemy-one" />
-    <div className="graphic-enemy enemy-two" />
-    <div className="graphic-label">FLOW DEFENSE ARRAY // CASTELLUM-01</div>
-  </div>
-);
-
-const BriefingVerbs = () => (
-  <div className="briefing-verbs">
-    <div>
-      <span>
-        <Wind size={18} />
-      </span>
-      <strong>Fill & hold</strong>
-      <p>Build a lethal atmosphere, then seal it in place.</p>
-    </div>
-    <div>
-      <span>
-        <Flame size={18} />
-      </span>
-      <strong>Convert</strong>
-      <p>Ignite, boil, neutralize, and exploit the output.</p>
-    </div>
-    <div>
-      <span>
-        <Activity size={18} />
-      </span>
-      <strong>Time</strong>
-      <p>Trigger the machine when occupancy reaches its peak.</p>
-    </div>
-  </div>
-);
+import { guideDefinitionFor } from "../tutorial/guideModel";
 
 const ManualPhases = () => (
   <div className="manual-phases">
     <div>
       <em>01</em>
-      <strong>Build</strong>
-      <p>Install or salvage room modules. Salvage returns full value.</p>
+      <strong>Plan</strong>
+      <p>The simulation is frozen. Install, upgrade, dismantle, connect, and charge feedstocks.</p>
     </div>
     <div>
       <em>02</em>
       <strong>Prime</strong>
-      <p>Run modules without enemies present. There is no prime time limit.</p>
+      <p>Run the actual plant without enemies. Everything consumed or produced is permanent.</p>
     </div>
     <div>
       <em>03</em>
       <strong>Assault</strong>
-      <p>Watch room occupancy and fire installed controls at the right moment.</p>
+      <p>Your binary controls and routing policies lock. The process runs without intervention.</p>
     </div>
     <div>
       <em>04</em>
-      <strong>Settle</strong>
-      <p>Gases equalize, drains work, reactions finish, and all resulting state persists.</p>
+      <strong>Analyze</strong>
+      <p>The exact end state freezes. Harvested matter is banked before the next plan.</p>
     </div>
   </div>
 );
@@ -89,95 +43,43 @@ const ManualPhases = () => (
 const ManualTips = () => (
   <div className="manual-tips">
     <div>
-      <DoorClosed size={18} />
+      <Wind size={18} />
       <p>
-        <strong>Seal before filling.</strong> A sealed room holds extra pressure and slows
-        occupants.
+        <strong>The cell has three real outlets.</strong> Cl₂, H₂, and NaOH accumulate separately;
+        blocking one eventually limits the whole electrolyzer.
       </p>
     </div>
     <div>
       <Flame size={18} />
       <p>
-        <strong>Check oxygen before ignition.</strong> CO₂ suppresses fuel combustion.
+        <strong>Rooms have no process type.</strong> R-02 makes acid only because its removable
+        thermal coil and gas agitator let routed H₂ and Cl₂ recombine.
       </p>
     </div>
     <div>
       <Droplets size={18} />
       <p>
-        <strong>Water is not harmless.</strong> It dilutes acid and sludge, but feeds the boiler.
+        <strong>NaOCl stores chlorine potential.</strong> R-03 needs Cl₂ and twice as much NaOH. In
+        R-06, leftover NaOH consumes HCl before acid can release Cl₂.
       </p>
     </div>
     <div>
       <Biohazard size={18} />
       <p>
-        <strong>Read the trace.</strong> Bellows, dilution, failed reactions, and breaches are all
-        recorded.
+        <strong>Nothing vanishes at a vent or drain.</strong> Relief creates headroom while moving
+        the complete mixture into persistent core recovery inventories.
       </p>
     </div>
   </div>
 );
 
-export const BriefingModal = () => {
-  const show = useGameStore((state) => state.showBriefing);
-  const dismiss = useGameStore((state) => state.dismissBriefing);
-  if (!show) return null;
-
-  return (
-    <div
-      className="modal-backdrop briefing-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="briefing-title"
-    >
-      <div className="briefing-modal">
-        <BriefingGraphic />
-
-        <div className="briefing-content">
-          <div className="eyebrow">
-            <span /> Defense system commissioning
-          </div>
-          <h1 id="briefing-title">
-            <span>Catalyst</span> Castellum
-          </h1>
-          <p className="briefing-lede">
-            Defend the core by deciding <strong>what each room is full of</strong> when enemies
-            enter it. Your towers are tanks, ducts, pumps, valves, and reactions.
-          </p>
-
-          <BriefingVerbs />
-
-          <div className="briefing-objective">
-            <div>
-              <Gauge size={19} />
-              <span>Commissioning objective</span>
-            </div>
-            <p>
-              Survive five persistent assault cycles. Chamber contents, heat, residue, and core
-              damage carry forward.
-            </p>
-          </div>
-
-          <button
-            className="enter-button"
-            type="button"
-            data-testid="enter-control-room"
-            onClick={dismiss}
-          >
-            Enter control room <ArrowRight size={18} />
-          </button>
-          <small className="briefing-hint">
-            Recommended: inspect the Switchyard, then begin the prime phase.
-          </small>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const HelpModal = () => {
+  const game = useGameStore((state) => state.game);
   const show = useGameStore((state) => state.showHelp);
   const setShow = useGameStore((state) => state.setShowHelp);
+  const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   if (!show) return null;
+  const guide = guideDefinitionFor(game);
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="manual-title">
@@ -194,10 +96,27 @@ export const HelpModal = () => {
           <span /> Operations field manual
         </div>
         <h2 id="manual-title">Run the defense machine</h2>
-        <p>Each cycle moves through four phases. The base never resets between them.</p>
+        <p>
+          Each round moves through four operating moments. Process state persists within a level;
+          each completed level becomes a clean retry checkpoint.
+        </p>
 
         <ManualPhases />
         <ManualTips />
+
+        {guide && (
+          <div className="manual-guide-replay">
+            <div>
+              <strong>Need the pointer again?</strong>
+              <span>
+                Replay {guide.label} from the first action your current plant still needs.
+              </span>
+            </div>
+            <button type="button" data-testid="replay-guided-lesson" onClick={restartTutorialGuide}>
+              Replay guidance <RotateCcw size={15} />
+            </button>
+          </div>
+        )}
 
         <button className="secondary-action wide" type="button" onClick={() => setShow(false)}>
           Return to controls
@@ -207,9 +126,125 @@ export const HelpModal = () => {
   );
 };
 
+interface ProgressFrameProps {
+  actionLabel: string;
+  detail: string;
+  eyebrow: string;
+  nextDetail: string;
+  nextLabel: string;
+  onAdvance: () => void;
+  testId: string;
+  title: string;
+}
+
+const ProgressFrame = (props: ProgressFrameProps) => {
+  const game = useGameStore((state) => state.game);
+  return (
+    <div
+      className="modal-backdrop outcome-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="progress-title"
+    >
+      <div className="outcome-modal outcome-victory">
+        <div className="outcome-seal">
+          <CheckCircle2 size={42} />
+        </div>
+        <div className="eyebrow">
+          <span /> {props.eyebrow}
+        </div>
+        <h2 id="progress-title">{props.title}</h2>
+        <p>{props.detail}</p>
+        <div className="outcome-stats">
+          <div>
+            <span>Neutralized</span>
+            <strong>{game.lastReport?.killed ?? 0}</strong>
+          </div>
+          <div>
+            <span>Breaches</span>
+            <strong>{game.lastReport?.breached ?? 0}</strong>
+          </div>
+          <div>
+            <span>Core</span>
+            <strong>{Math.round(game.coreIntegrity)}%</strong>
+          </div>
+          <div>
+            <span>Reactions</span>
+            <strong>{game.lastReport?.reactions.toFixed(1) ?? "0.0"}</strong>
+          </div>
+        </div>
+        <div className="briefing-objective">
+          <div>
+            <Gauge size={19} />
+            <span>{props.nextLabel}</span>
+          </div>
+          <p>{props.nextDetail}</p>
+        </div>
+        <button
+          className="enter-button"
+          type="button"
+          data-testid={props.testId}
+          onClick={props.onAdvance}
+        >
+          {props.actionLabel} <ArrowRight size={17} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const RoundProgressModal = () => {
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const level = levelDefinitionFor(game);
+  const nextRound = level.rounds[game.campaign.roundIndex + 1];
+  const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
+  return (
+    <ProgressFrame
+      actionLabel="Return to planning"
+      detail={game.lastReport?.detail ?? "The exact process state remains frozen."}
+      eyebrow="Round analysis"
+      nextDetail={nextRound?.objective ?? "Continue the checkpoint."}
+      nextLabel="Next round"
+      onAdvance={advance}
+      testId="continue-round"
+      title={game.lastReport?.headline ?? "Round complete"}
+    />
+  );
+};
+
+const LevelProgressModal = () => {
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const level = levelDefinitionFor(game);
+  const nextId = nextLevelId(level.id);
+  const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
+  const advance = useCallback(() => dispatch({ type: "start_next_level" }), [dispatch]);
+  return (
+    <ProgressFrame
+      actionLabel={`Continue to ${nextLevel?.name ?? "campaign"}`}
+      detail={game.lastReport?.detail ?? "Checkpoint process record secured."}
+      eyebrow="Checkpoint secured"
+      nextDetail={nextLevel?.briefing ?? "The curriculum is complete."}
+      nextLabel="Next checkpoint"
+      onAdvance={advance}
+      testId="next-level"
+      title={`${level.name} complete`}
+    />
+  );
+};
+
+export const CampaignProgressModal = () => {
+  const phase = useGameStore((state) => state.game.phase);
+  if (phase === "round_result") return <RoundProgressModal />;
+  if (phase === "level_complete") return <LevelProgressModal />;
+  return null;
+};
+
 export const OutcomeModal = () => {
   const game = useGameStore((state) => state.game);
   const reset = useGameStore((state) => state.reset);
+  const dispatch = useGameStore((state) => state.dispatch);
   if (game.phase !== "victory" && game.phase !== "defeat") return null;
   const victory = game.phase === "victory";
 
@@ -230,13 +265,13 @@ export const OutcomeModal = () => {
         <h2 id="outcome-title">{victory ? "Castellum holds" : "Catalyst core lost"}</h2>
         <p>
           {victory
-            ? `Five assault cycles survived with ${Math.round(game.coreIntegrity)}% core integrity remaining.`
-            : `The defense machine failed during cycle ${game.cycle}. The trace below preserves the cause.`}
+            ? `Every tutorial checkpoint and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
+            : `${levelDefinitionFor(game).name}, round ${game.campaign.roundIndex + 1}, failed. The trace preserves the immediate cause.`}
         </p>
         <div className="outcome-stats">
           <div>
-            <span>Cycles</span>
-            <strong>{game.cycle} / 5</strong>
+            <span>Levels cleared</span>
+            <strong>{game.campaign.completedLevelIds.length} / 5</strong>
           </div>
           <div>
             <span>Core</span>
@@ -251,8 +286,13 @@ export const OutcomeModal = () => {
             <strong>{Math.round(game.stats.peakHazard)}</strong>
           </div>
         </div>
-        <button className="enter-button" type="button" onClick={reset}>
-          <RotateCcw size={17} /> Commission new base
+        <button
+          className="enter-button"
+          type="button"
+          data-testid={victory ? "new-campaign" : "retry-level"}
+          onClick={() => (victory ? reset() : dispatch({ type: "retry_level" }))}
+        >
+          <RotateCcw size={17} /> {victory ? "Begin new campaign" : "Retry checkpoint"}
         </button>
       </div>
     </div>

@@ -1,9 +1,17 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
-import { GAS_COLORS, GAS_LABELS, LIQUID_COLORS, ROOM_DEFINITIONS } from "../../game/config";
-import { analyzeRoom, enemyRoomId } from "../../game/simulation";
+import {
+  FACILITY_MAP,
+  GAS_COLORS,
+  GAS_LABELS,
+  EQUIPMENT_DEFINITIONS,
+  ROOM_DEFINITIONS,
+} from "../../game/config";
+import { enemyRoomId } from "../../game/simulation";
 import type { GameState, RoomAnalysis, RoomDefinition, RoomId } from "../../game/types";
-import { colorNumber, drawRoom, roomDimensions, type RoomDrawModel } from "./mapGraphics";
+import { roomMapRect } from "./mapGeometry";
+import { drawRoom } from "./roomGraphics";
+import { roomRenderModel } from "./roomRenderModel";
 
 interface RoomNodeProps {
   game: GameState;
@@ -22,29 +30,56 @@ interface LabelProps {
   width: number;
 }
 
+const equipmentMapLabel = (game: GameState, roomId: RoomId): string =>
+  Object.values(game.rooms[roomId].equipment)
+    .flatMap((instance) =>
+      instance
+        ? [
+            `${EQUIPMENT_DEFINITIONS[instance.equipmentId].name.replace("Gas ", "").replace("Wet ", "").replace("Thermal ", "").replace("Membrane ", "").toUpperCase()} ${instance.level}${instance.enabled ? "" : " OFF"}`,
+          ]
+        : []
+    )
+    .join(" · ");
+
 const StandardRoomLabels = ({
   analysis,
   definition,
-}: Pick<LabelProps, "analysis" | "definition">) => (
+  game,
+  height,
+}: Pick<LabelProps, "analysis" | "definition" | "game" | "height">) => (
   <>
     <pixiText
-      text={`${GAS_LABELS[analysis.dominantGas]} ${Math.round(analysis.dominantGasPercent * 100)}%`}
+      text={`↑ ${GAS_LABELS[analysis.upperDominantGas]} ${Math.round(
+        analysis.upperDominantGasPercent * 100
+      )}%`}
       anchor={{ x: 0.5, y: 0.5 }}
-      y={18}
+      y={12}
       style={{
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-        fontSize: 11,
-        fill: GAS_COLORS[analysis.dominantGas],
+        fontSize: 18,
+        fill: GAS_COLORS[analysis.upperDominantGas],
+      }}
+    />
+    <pixiText
+      text={`↓ ${GAS_LABELS[analysis.lowerDominantGas]} ${Math.round(
+        analysis.lowerDominantGasPercent * 100
+      )}%`}
+      anchor={{ x: 0.5, y: 0.5 }}
+      y={31}
+      style={{
+        fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+        fontSize: 18,
+        fill: GAS_COLORS[analysis.lowerDominantGas],
       }}
     />
     {analysis.hazard >= 10 && (
       <pixiText
         text={analysis.hazardLabel}
         anchor={{ x: 0.5, y: 0.5 }}
-        y={37}
+        y={52}
         style={{
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-          fontSize: 9,
+          fontSize: 16,
           fontWeight: "700",
           fill: analysis.hazard >= 65 ? "#dff36c" : "#e2b65f",
           letterSpacing: 1.4,
@@ -54,15 +89,29 @@ const StandardRoomLabels = ({
     <pixiText
       text={definition.name.toUpperCase()}
       anchor={{ x: 0.5, y: 0.5 }}
-      y={-8}
+      y={-20}
       style={{
         fontFamily: "Inter, system-ui, sans-serif",
-        fontSize: definition.kind === "spawn" ? 12 : 13,
+        fontSize: definition.structure === "entry" ? 20 : 22,
         fontWeight: "700",
         fill: "#dbe6d7",
         letterSpacing: 0.6,
       }}
     />
+    {equipmentMapLabel(game, definition.id) && (
+      <pixiText
+        text={equipmentMapLabel(game, definition.id)}
+        anchor={{ x: 0.5, y: 0.5 }}
+        y={height / 2 - 13}
+        style={{
+          fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+          fontSize: 13,
+          fontWeight: "700",
+          fill: "#a9c47c",
+          letterSpacing: 0.4,
+        }}
+      />
+    )}
   </>
 );
 
@@ -71,10 +120,10 @@ const CoreLabels = ({ definition, game }: Pick<LabelProps, "definition" | "game"
     <pixiText
       text={definition.name.toUpperCase()}
       anchor={{ x: 0.5, y: 0.5 }}
-      y={-42}
+      y={-58}
       style={{
         fontFamily: "Inter, system-ui, sans-serif",
-        fontSize: 13,
+        fontSize: 22,
         fontWeight: "700",
         fill: "#dbe6d7",
         letterSpacing: 0.6,
@@ -83,10 +132,10 @@ const CoreLabels = ({ definition, game }: Pick<LabelProps, "definition" | "game"
     <pixiText
       text={`${Math.round(game.coreIntegrity)}%`}
       anchor={{ x: 0.5, y: 0.5 }}
-      y={8}
+      y={10}
       style={{
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-        fontSize: 12,
+        fontSize: 21,
         fontWeight: "700",
         fill: "#edf3c2",
       }}
@@ -98,17 +147,29 @@ const RoomLabels = (props: LabelProps) => (
   <>
     <pixiText
       text={props.definition.code}
-      x={-props.width / 2 + 12}
-      y={-props.height / 2 + 9}
+      x={-props.width / 2 + 14}
+      y={-props.height / 2 + 11}
       style={{
         fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-        fontSize: 10,
+        fontSize: 17,
         fontWeight: "600",
         fill: props.selected ? "#e8f0b7" : "#7ca295",
         letterSpacing: 1.4,
       }}
     />
-    {props.definition.kind === "core" ? (
+    <pixiText
+      text={`z${FACILITY_MAP.rooms[props.definition.id].bounds.elevation}`}
+      anchor={{ x: 1, y: 0 }}
+      x={props.width / 2 - 12}
+      y={-props.height / 2 + 9}
+      style={{
+        fontFamily: "IBM Plex Mono, ui-monospace, monospace",
+        fontSize: 15,
+        fontWeight: "600",
+        fill: "#607e74",
+      }}
+    />
+    {props.definition.structure === "core" ? (
       <CoreLabels {...props} />
     ) : (
       <StandardRoomLabels {...props} />
@@ -117,11 +178,11 @@ const RoomLabels = (props: LabelProps) => (
       <pixiText
         text={String(props.occupied)}
         anchor={{ x: 0.5, y: 0.5 }}
-        x={props.width / 2 - 7}
-        y={-props.height / 2 + 7}
+        x={props.width / 2 - 14}
+        y={-props.height / 2 + 14}
         style={{
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-          fontSize: 10,
+          fontSize: 16,
           fontWeight: "700",
           fill: "#fff4e4",
         }}
@@ -130,47 +191,20 @@ const RoomLabels = (props: LabelProps) => (
   </>
 );
 
-const roomModel = (
-  game: GameState,
-  roomId: RoomId,
-  selected: boolean,
-  occupied: number
-): RoomDrawModel => {
-  const definition = ROOM_DEFINITIONS[roomId];
-  const room = game.rooms[roomId];
-  const analysis = analyzeRoom(room);
-  const dimensions = roomDimensions(definition.kind);
-  const dominantColor = colorNumber(GAS_COLORS[analysis.dominantGas]);
-  const liquidColor = analysis.dominantLiquid
-    ? colorNumber(LIQUID_COLORS[analysis.dominantLiquid])
-    : 0x4ca9d6;
-  return {
-    ...dimensions,
-    kind: definition.kind,
-    selected,
-    analysis,
-    dominantColor,
-    liquidColor,
-    sealTimer: room.sealTimer,
-    occupied,
-    coreIntegrity: game.coreIntegrity,
-  };
-};
-
 export const RoomNode = ({ game, roomId, selected, onSelect }: RoomNodeProps) => {
   const definition = ROOM_DEFINITIONS[roomId];
+  const geometry = roomMapRect(roomId);
   const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy) === roomId).length;
-  const model = roomModel(game, roomId, selected, occupied);
+  const model = roomRenderModel(game, roomId, selected, occupied);
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);
   return (
-    <pixiContainer
-      x={definition.position.x}
-      y={definition.position.y}
-      eventMode="static"
-      cursor="pointer"
-      onPointerTap={() => onSelect(roomId)}
-    >
-      <pixiGraphics draw={draw} />
+    <pixiContainer x={geometry.center.x} y={geometry.center.y} eventMode="passive">
+      <pixiGraphics
+        draw={draw}
+        eventMode="static"
+        cursor="pointer"
+        onPointerTap={() => onSelect(roomId)}
+      />
       <RoomLabels
         analysis={model.analysis}
         definition={definition}

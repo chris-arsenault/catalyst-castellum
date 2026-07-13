@@ -1,13 +1,12 @@
-import { CircleHelp, FastForward, Gauge, Pause, Play, RotateCcw, Shield } from "lucide-react";
-import { MAX_ENERGY } from "../game/config";
+import { CircleHelp, Coins, FastForward, Pause, Play, RotateCcw, Shield } from "lucide-react";
+import { levelDefinitionFor } from "../game/simulation";
 import { useGameStore } from "../game/store";
 import type { GamePhase, GameState } from "../game/types";
 
 const phases: Array<{ id: GamePhase; label: string }> = [
-  { id: "build", label: "Build" },
+  { id: "build", label: "Plan" },
   { id: "prime", label: "Prime" },
-  { id: "assault", label: "Assault" },
-  { id: "settle", label: "Settle" },
+  { id: "assault", label: "Locked assault" },
 ];
 
 const phaseIndex = (phase: GamePhase): number => {
@@ -26,17 +25,23 @@ const BrandLockup = () => (
       <p>Catalyst</p>
       <strong>Castellum</strong>
     </div>
-    <span className="prototype-badge">PROTOTYPE 01</span>
+    <span className="prototype-badge">CHLOR-ALKALI MVP</span>
   </div>
 );
 
 const CycleStatus = ({ game }: { game: GameState }) => {
   const currentIndex = phaseIndex(game.phase);
+  const level = levelDefinitionFor(game);
   return (
     <div className="cycle-status">
       <div className="cycle-number">
-        <span>Assault cycle</span>
-        <strong>{String(game.cycle).padStart(2, "0")} / 05</strong>
+        <span>
+          Level {level.number} · {level.name}
+        </span>
+        <strong>
+          Round {String(game.campaign.roundIndex + 1).padStart(2, "0")} /{" "}
+          {String(level.rounds.length).padStart(2, "0")}
+        </strong>
       </div>
       <ol className="phase-stepper" aria-label="Round phases">
         {phases.map((phase, index) => (
@@ -70,16 +75,14 @@ const StatusMeters = ({ game }: { game: GameState }) => (
         />
       </div>
     </div>
-    <div className="compact-meter energy-meter" data-testid="actuator-pressure">
+    <div className="compact-meter matter-meter" data-testid="matter-balance">
       <div className="meter-heading">
         <span>
-          <Gauge size={13} /> Actuator
+          <Coins size={13} /> Matter
         </span>
-        <strong>{Math.round(game.energy)}</strong>
+        <strong>{Math.floor(game.matter)}</strong>
       </div>
-      <div className="meter-track">
-        <span style={{ "--meter-width": `${(game.energy / MAX_ENERGY) * 100}%` }} />
-      </div>
+      <small>+{game.pendingMatter} pending harvest</small>
     </div>
   </div>
 );
@@ -88,10 +91,10 @@ const GlobalControls = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
   const setShowHelp = useGameStore((state) => state.setShowHelp);
   const reset = useGameStore((state) => state.reset);
-  const simulationActive = ["prime", "assault", "settle"].includes(game.phase);
+  const simulationActive = game.phase === "prime" || game.phase === "assault";
   const pauseLabel = game.paused ? "Resume simulation" : "Pause simulation";
   const restart = () => {
-    if (window.confirm("Restart the base and discard all cycle progress?")) reset();
+    if (window.confirm("Restart the plant and discard all persistent process state?")) reset();
   };
   return (
     <div className="global-controls">
@@ -108,6 +111,7 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       <button
         className={`speed-button ${game.speed === 2 ? "active" : ""}`}
         type="button"
+        data-testid="simulation-speed"
         aria-label={`Simulation speed ${game.speed}x`}
         title="Toggle simulation speed"
         disabled={!simulationActive}
@@ -119,19 +123,13 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       <button
         className="icon-button"
         type="button"
-        aria-label="Open field manual"
-        title="Field manual"
+        aria-label="Open process manual"
+        title="Process manual"
         onClick={() => setShowHelp(true)}
       >
         <CircleHelp size={18} />
       </button>
-      <button
-        className="icon-button"
-        type="button"
-        aria-label="Restart base"
-        title="Restart base"
-        onClick={restart}
-      >
+      <button className="icon-button" type="button" aria-label="Restart plant" onClick={restart}>
         <RotateCcw size={17} />
       </button>
     </div>

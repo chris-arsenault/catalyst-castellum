@@ -1,0 +1,84 @@
+import { describe, expect, it } from "vitest";
+import { GAS_SOURCES, roomRing } from "./config";
+import { createScenarioGame, executeCommand } from "./simulation";
+
+describe("simple conduit controls", () => {
+  it("locks the one actuator during assault", () => {
+    let state = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
+    state = executeCommand(state, {
+      type: "set_conduit",
+      runId: "core_furnace",
+      phase: "gas",
+      enabled: true,
+    }).state;
+    state = executeCommand(state, { type: "start_prime" }).state;
+    state = executeCommand(state, { type: "start_assault" }).state;
+    const result = executeCommand(state, {
+      type: "set_conduit",
+      runId: "core_furnace",
+      phase: "gas",
+      enabled: false,
+    });
+    expect(result.accepted).toBe(false);
+    expect(result.state.gasConduits.core_furnace.enabled).toBe(true);
+  });
+
+  it("builds and dismantles only an empty physical conduit", () => {
+    const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
+    state.gasConduits.furnace_return.installed = false;
+    const built = executeCommand(state, {
+      type: "build_transport",
+      runId: "furnace_return",
+      phase: "gas",
+    });
+    expect(built.accepted).toBe(true);
+    expect(built.state.gasConduits.furnace_return.installed).toBe(true);
+    const dismantled = executeCommand(built.state, {
+      type: "dismantle_transport",
+      runId: "furnace_return",
+      phase: "gas",
+    });
+    expect(dismantled.accepted).toBe(true);
+  });
+
+  it("rejects dismantling conserved retained material", () => {
+    const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
+    state.gasConduits.cell_furnace.gas.hydrogen = 1;
+    const result = executeCommand(state, {
+      type: "dismantle_transport",
+      runId: "cell_furnace",
+      phase: "gas",
+    });
+    expect(result.accepted).toBe(false);
+    expect(result.reason).toMatch(/conserved conduit inventory/);
+  });
+});
+
+describe("derived rings and mixed exotic stock", () => {
+  it("derives placement rings from central Core distance", () => {
+    expect(roomRing("core")).toBe("core");
+    expect(roomRing("lower_intake")).toBe("inner");
+    expect(roomRing("gallery")).toBe("middle");
+    expect(roomRing("furnace")).toBe("outer");
+  });
+
+  it("charges the authoritative starter mixture in its fixed ratio", () => {
+    const state = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
+    state.gasSources.starter_gas_header.gas.hydrogen = 0;
+    state.gasSources.starter_gas_header.gas.oxygen = 0;
+    const result = executeCommand(state, {
+      type: "charge_gas_source",
+      sourceId: "starter_gas_header",
+    });
+    expect(result.accepted).toBe(true);
+    const gas = result.state.gasSources.starter_gas_header.gas;
+    expect(gas.hydrogen / gas.oxygen).toBeCloseTo(2, 5);
+    expect(gas.hydrogen + gas.oxygen).toBeCloseTo(
+      Object.values(GAS_SOURCES.starter_gas_header.chargeGas).reduce(
+        (total, value) => total + (value ?? 0),
+        0
+      ),
+      5
+    );
+  });
+});

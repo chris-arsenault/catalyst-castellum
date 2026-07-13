@@ -1,0 +1,151 @@
+import {
+  REACTION_IDS,
+  type ElementalComposition,
+  type ReactionDefinition,
+  type ReactionId,
+} from "../types";
+import { SPECIES_DEFINITIONS } from "./substances";
+
+export const HYDROGEN_FLASH_RULES = {
+  ignitionExtent: 3,
+  maximumExtent: 6,
+  minimumHydrogenFraction: 0.05,
+  minimumOxygenFraction: 0.08,
+  cooldownSeconds: 1.2,
+  pressurePulseBase: 72,
+  pressurePulsePerExtent: 20,
+  heatPerExtent: 11,
+} as const;
+
+export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
+  chlor_alkali_electrolysis: {
+    id: "chlor_alkali_electrolysis",
+    code: "CL-1",
+    name: "Chlor-alkali electrolysis",
+    kind: "chemical",
+    equation: "2 NaCl(aq) + 2 H₂O(l) → Cl₂(g) + H₂(g) + 2 NaOH(aq)",
+    reactants: [
+      { species: "sodium_chloride", coefficient: 2 },
+      { species: "water", coefficient: 2 },
+    ],
+    products: [
+      { species: "chlorine", coefficient: 1 },
+      { species: "hydrogen", coefficient: 1 },
+      { species: "sodium_hydroxide", coefficient: 2 },
+    ],
+  },
+  hydrogen_oxygen_combustion: {
+    id: "hydrogen_oxygen_combustion",
+    code: "OX-1",
+    name: "Hydrogen–oxygen flash",
+    kind: "chemical",
+    equation: "2 H₂(g) + O₂(g) → 2 H₂O(g) + heat + pressure",
+    reactants: [
+      { species: "hydrogen", coefficient: 2 },
+      { species: "oxygen", coefficient: 1 },
+    ],
+    products: [{ species: "steam", coefficient: 2 }],
+  },
+  hydrogen_chlorine_recombination: {
+    id: "hydrogen_chlorine_recombination",
+    code: "CL-2",
+    name: "Hydrogen–chlorine recombination",
+    kind: "chemical",
+    equation: "H₂(g) + Cl₂(g) → 2 HCl(g) + heat",
+    reactants: [
+      { species: "hydrogen", coefficient: 1 },
+      { species: "chlorine", coefficient: 1 },
+    ],
+    products: [{ species: "hydrogen_chloride", coefficient: 2 }],
+  },
+  hydrogen_chloride_absorption: {
+    id: "hydrogen_chloride_absorption",
+    code: "P-1",
+    name: "Hydrogen chloride absorption",
+    kind: "physical",
+    equation: "HCl(g) → HCl(aq)",
+    reactants: [{ species: "hydrogen_chloride", coefficient: 1 }],
+    products: [{ species: "hydrochloric_acid", coefficient: 1 }],
+  },
+  acid_neutralization: {
+    id: "acid_neutralization",
+    code: "CL-3",
+    name: "Acid neutralization",
+    kind: "chemical",
+    equation: "HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l) + heat",
+    reactants: [
+      { species: "hydrochloric_acid", coefficient: 1 },
+      { species: "sodium_hydroxide", coefficient: 1 },
+    ],
+    products: [
+      { species: "sodium_chloride", coefficient: 1 },
+      { species: "water", coefficient: 1 },
+    ],
+  },
+  hypochlorite_formation: {
+    id: "hypochlorite_formation",
+    code: "CL-4",
+    name: "Hypochlorite formation",
+    kind: "chemical",
+    equation: "Cl₂(g) + 2 NaOH(aq) → NaOCl(aq) + NaCl(aq) + H₂O(l)",
+    reactants: [
+      { species: "chlorine", coefficient: 1 },
+      { species: "sodium_hydroxide", coefficient: 2 },
+    ],
+    products: [
+      { species: "sodium_hypochlorite", coefficient: 1 },
+      { species: "sodium_chloride", coefficient: 1 },
+      { species: "water", coefficient: 1 },
+    ],
+  },
+  acid_chlorine_release: {
+    id: "acid_chlorine_release",
+    code: "CL-5",
+    name: "Acid-triggered chlorine release",
+    kind: "chemical",
+    equation: "NaOCl(aq) + 2 HCl(aq) → NaCl(aq) + Cl₂(g) + H₂O(l)",
+    reactants: [
+      { species: "sodium_hypochlorite", coefficient: 1 },
+      { species: "hydrochloric_acid", coefficient: 2 },
+    ],
+    products: [
+      { species: "sodium_chloride", coefficient: 1 },
+      { species: "chlorine", coefficient: 1 },
+      { species: "water", coefficient: 1 },
+    ],
+  },
+};
+
+const sideElements = (participants: ReactionDefinition["reactants"]): ElementalComposition => {
+  const totals: ElementalComposition = {};
+  for (const participant of participants) {
+    const species = SPECIES_DEFINITIONS[participant.species];
+    for (const [element, count] of Object.entries(species.elements)) {
+      totals[element] = (totals[element] ?? 0) + count * participant.coefficient;
+    }
+  }
+  return totals;
+};
+
+export const reactionElementBalance = (reaction: ReactionDefinition): ElementalComposition => {
+  const reactants = sideElements(reaction.reactants);
+  const products = sideElements(reaction.products);
+  const elements = new Set([...Object.keys(reactants), ...Object.keys(products)]);
+  return Object.fromEntries(
+    [...elements].map((element) => [element, (products[element] ?? 0) - (reactants[element] ?? 0)])
+  );
+};
+
+export const reactionIsBalanced = (reaction: ReactionDefinition): boolean =>
+  Object.values(reactionElementBalance(reaction)).every((difference) => difference === 0);
+
+export const validateReactionCatalog = (): string[] =>
+  REACTION_IDS.flatMap((id) => {
+    const reaction = REACTION_DEFINITIONS[id];
+    if (reactionIsBalanced(reaction)) return [];
+    const imbalance = Object.entries(reactionElementBalance(reaction))
+      .filter(([, difference]) => difference !== 0)
+      .map(([element, difference]) => `${element}:${difference > 0 ? "+" : ""}${difference}`)
+      .join(", ");
+    return [`${reaction.code} ${reaction.name} is unbalanced (${imbalance})`];
+  });

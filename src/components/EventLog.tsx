@@ -1,5 +1,5 @@
 import { ChevronRight, ScrollText } from "lucide-react";
-import { ROOM_DEFINITIONS } from "../game/config";
+import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../game/config";
 import { useGameStore } from "../game/store";
 
 export const EventLog = () => {
@@ -24,7 +24,9 @@ export const EventLog = () => {
             onClick={() => entry.roomId && selectRoom(entry.roomId)}
           >
             <span className="event-signal" />
-            <span className="event-cycle">C{String(entry.cycle).padStart(2, "0")}</span>
+            <span className="event-cycle">
+              L{LEVEL_DEFINITIONS[entry.levelId].number}·R{entry.round}
+            </span>
             <span className="event-copy">
               <strong>{entry.title}</strong>
               <small>{entry.detail}</small>

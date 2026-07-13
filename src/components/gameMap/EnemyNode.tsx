@@ -1,19 +1,18 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
-import { ENEMY_DEFINITIONS } from "../../game/config";
-import { enemyWorldPosition } from "../../game/simulation";
 import type { EnemyState } from "../../game/types";
-import { colorNumber, drawEnemy } from "./mapGraphics";
+import { drawEnemy } from "./enemyGraphics";
+import { enemyRenderModel } from "./enemyRenderModel";
 
 export const EnemyNode = ({ enemy }: { enemy: EnemyState }) => {
-  const position = enemyWorldPosition(enemy);
-  const definition = ENEMY_DEFINITIONS[enemy.type];
-  const health = enemy.health / enemy.maxHealth;
-  const offset = ((enemy.id % 3) - 1) * 10;
-  const color = colorNumber(definition.color);
+  const model = enemyRenderModel(enemy);
   const draw = useCallback(
-    (graphics: Graphics) => drawEnemy(graphics, enemy.type, color, health),
-    [color, enemy.type, health]
+    (graphics: Graphics) => drawEnemy(graphics, model.type, model.color, model.health, model.mode),
+    [model.color, model.health, model.mode, model.type]
   );
-  return <pixiGraphics x={position.x} y={position.y + offset} draw={draw} />;
+  return (
+    <pixiContainer x={model.position.x} y={model.position.y} scale={{ x: model.facing, y: 1 }}>
+      <pixiGraphics draw={draw} />
+    </pixiContainer>
+  );
 };

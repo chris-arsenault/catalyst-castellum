@@ -1,10 +1,12 @@
 import { useEffect } from "react";
+import { e2eModeEnabled } from "../testing/e2eMode";
 import { useGameStore } from "./store";
 
 export const useSimulationClock = (): void => {
   const tick = useGameStore((state) => state.tick);
 
   useEffect(() => {
+    if (e2eModeEnabled()) return;
     let previous = performance.now();
     let accumulator = 0;
 

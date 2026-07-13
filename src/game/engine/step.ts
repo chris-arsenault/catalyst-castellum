@@ -1,39 +1,43 @@
-import { MAX_ENERGY, SETTLE_DURATION, WAVES } from "../config";
 import type { GamePhase, GameState } from "../types";
-import { simulateEnemies, spawnEnemies } from "./combat";
-import { simulateFlow, simulateReactions } from "./environment";
-import { advanceAfterSettle, beginSettle, declareDefeat } from "./phases";
+import { moveEnemies, resolveEnemyCombat, spawnEnemies } from "./combat";
+import { simulateInstalledEquipment } from "./equipment";
+import { simulateNetworks } from "./flow";
+import { beginAssault, completeAssault, declareDefeat } from "./phases";
+import { simulateReactions } from "./reactions";
 import { cloneGame } from "./roomState";
+import { simulateStratification } from "./stratification";
+import { roundDefinitionFor } from "./campaign";
 
-const STATIC_PHASES = new Set<GamePhase>(["build", "victory", "defeat"]);
+const STATIC_PHASES = new Set<GamePhase>([
+  "level_briefing",
+  "build",
+  "round_result",
+  "level_complete",
+  "victory",
+  "defeat",
+]);
 
-const updateCooldowns = (state: GameState, dt: number): void => {
-  for (const key of Object.keys(state.cooldowns)) {
-    const remaining = Math.max(0, (state.cooldowns[key] ?? 0) - dt);
-    if (remaining <= 0) delete state.cooldowns[key];
-    else state.cooldowns[key] = remaining;
-  }
-};
-
-const stepAssault = (state: GameState, dt: number): void => {
-  spawnEnemies(state);
-  simulateEnemies(state, dt);
+const finishAssaultStep = (state: GameState, dt: number): void => {
+  moveEnemies(state, dt);
   if (state.coreIntegrity <= 0) return declareDefeat(state);
-  const waveComplete = state.spawnCursor >= (WAVES[state.cycle]?.length ?? 0);
-  if (waveComplete && state.enemies.length === 0) beginSettle(state);
+  const waveComplete = state.spawnCursor >= roundDefinitionFor(state).wave.length;
+  if (waveComplete && state.enemies.length === 0) completeAssault(state);
 };
 
 const stepMutable = (state: GameState, dt: number): void => {
   state.phaseTime += dt;
   state.elapsed += dt;
-  state.energy = Math.min(MAX_ENERGY, state.energy + 6.5 * dt);
-  updateCooldowns(state, dt);
-  simulateFlow(state, dt);
-  simulateReactions(state, dt);
-  if (state.phase === "assault") stepAssault(state, dt);
-  else if (state.phase === "settle" && state.phaseTime >= SETTLE_DURATION) {
-    advanceAfterSettle(state);
+  simulateNetworks(state, dt);
+  simulateInstalledEquipment(state, dt);
+  simulateStratification(state, dt);
+  if (state.phase === "assault") spawnEnemies(state);
+  const bursts = simulateReactions(state, dt);
+  resolveEnemyCombat(state, dt, bursts);
+  if (state.phase === "prime" && state.phaseTime >= roundDefinitionFor(state).primeSeconds) {
+    beginAssault(state, true);
+    return;
   }
+  if (state.phase === "assault") finishAssaultStep(state, dt);
 };
 
 const shouldStep = (state: GameState, dt: number): boolean =>

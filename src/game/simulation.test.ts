@@ -1,184 +1,161 @@
 import { describe, expect, it } from "vitest";
-import { WAVES } from "./config";
+import { ROOM_ORDER, SPECIES_DEFINITIONS, roomVolume } from "./config";
 import {
-  analyzeRoom,
-  createInitialGame,
+  createScenarioGame,
   executeCommand,
-  gasPercent,
-  previewDevice,
-  roomPressure,
+  liquidMovementMultiplier,
+  pressureMovementMultiplier,
+  roomStaticPressure,
+  simulateNetworks,
   stepGame,
 } from "./simulation";
-import type { DeviceKey, GameState, RoomId } from "./types";
+import {
+  GAS_BUFFER_IDS,
+  GAS_SOURCE_IDS,
+  GAS_TYPES,
+  LIQUID_BUFFER_IDS,
+  LIQUID_SOURCE_IDS,
+  LIQUID_TYPES,
+  TRANSPORT_RUN_IDS,
+  type ElementalComposition,
+  type GameCommand,
+  type GameState,
+  type SpeciesId,
+} from "./types";
 
-const prime = (state = createInitialGame()): GameState => {
-  const result = executeCommand(state, { type: "start_prime" });
-  expect(result.accepted).toBe(true);
+const command = (source: GameState, value: GameCommand): GameState => {
+  const result = executeCommand(source, value);
+  expect(result.accepted, result.reason ?? undefined).toBe(true);
   return result.state;
 };
 
-const activate = (state: GameState, roomId: RoomId, device: DeviceKey): GameState => {
-  const result = executeCommand(state, { type: "activate_device", roomId, device });
-  expect(result.accepted, result.reason).toBe(true);
-  return result.state;
+const addSpecies = (totals: ElementalComposition, species: SpeciesId, amount: number): void => {
+  for (const [element, count] of Object.entries(SPECIES_DEFINITIONS[species].elements)) {
+    totals[element] = (totals[element] ?? 0) + amount * count;
+  }
 };
 
-describe("room commands", () => {
-  it("injects toxic gas by displacing the unsealed atmosphere", () => {
-    const state = prime();
-    const before = state.rooms.switchyard;
-    const result = activate(state, "switchyard", "gas_toxic");
-    const after = result.rooms.switchyard;
+const elementalLedger = (state: GameState): ElementalComposition => {
+  const totals: ElementalComposition = {};
+  const addGas = (gas: Record<(typeof GAS_TYPES)[number], number>) => {
+    for (const species of GAS_TYPES) addSpecies(totals, species, gas[species]);
+  };
+  const addLiquid = (liquid: Record<(typeof LIQUID_TYPES)[number], number>) => {
+    for (const species of LIQUID_TYPES) addSpecies(totals, species, liquid[species]);
+  };
+  for (const roomId of ROOM_ORDER) {
+    addGas(state.rooms[roomId].gas.lower);
+    addGas(state.rooms[roomId].gas.upper);
+    addLiquid(state.rooms[roomId].liquid);
+    addGas(state.gasJunctions[roomId].gas);
+    addLiquid(state.liquidJunctions[roomId].liquid);
+  }
+  for (const id of GAS_SOURCE_IDS) addGas(state.gasSources[id].gas);
+  for (const id of LIQUID_SOURCE_IDS) addLiquid(state.liquidSources[id].liquid);
+  for (const id of GAS_BUFFER_IDS) addGas(state.gasBuffers[id].gas);
+  for (const id of LIQUID_BUFFER_IDS) addLiquid(state.liquidBuffers[id].liquid);
+  for (const id of TRANSPORT_RUN_IDS) {
+    addGas(state.gasConduits[id].gas);
+    addLiquid(state.liquidConduits[id].liquid);
+  }
+  addGas(state.gasVent);
+  addLiquid(state.liquidDrain);
+  return totals;
+};
 
-    expect(gasPercent(after, "toxic_gas")).toBeGreaterThan(0.35);
-    expect(gasPercent(after, "oxygen")).toBeLessThan(gasPercent(before, "oxygen"));
-    expect(roomPressure(after)).toBeCloseTo(101, 0);
+const advance = (source: GameState, seconds: number): GameState => {
+  let state = source;
+  for (let elapsed = 0; elapsed < seconds; elapsed += 0.1) state = stepGame(state, 0.1);
+  return state;
+};
+
+describe("finite-volume spatial rooms", () => {
+  it("initializes gas against each visible room volume", () => {
+    const state = createScenarioGame("flash_point");
+    for (const roomId of ROOM_ORDER) {
+      expect(roomVolume(roomId)).toBeGreaterThan(0);
+      expect(roomStaticPressure(state.rooms[roomId])).toBeCloseTo(101.3, 1);
+    }
   });
 
-  it("raises pressure when a chamber is sealed before injection", () => {
-    let state = prime();
-    state = activate(state, "switchyard", "door");
-    state = activate(state, "switchyard", "gas_toxic");
-
-    expect(state.rooms.switchyard.sealTimer).toBe(10);
-    expect(roomPressure(state.rooms.switchyard)).toBeGreaterThan(130);
-  });
-
-  it("uses the real command path for previews without mutating the source", () => {
-    const state = prime();
-    const before = JSON.stringify(state);
-    const preview = previewDevice(state, "switchyard", "gas_toxic");
-
-    expect(preview.accepted).toBe(true);
-    expect(preview.changes.some((change) => change.startsWith("Toxic"))).toBe(true);
-    expect(JSON.stringify(state)).toBe(before);
-  });
-
-  it("burns a viable fuel mixture into heat and CO2", () => {
-    let state = prime();
-    state = activate(state, "furnace", "gas_fuel");
-    const fuelBefore = state.rooms.furnace.gas.fuel_gas;
-    state = activate(state, "furnace", "igniter");
-
-    expect(state.rooms.furnace.gas.fuel_gas).toBeLessThan(fuelBefore);
-    expect(state.rooms.furnace.temperature).toBeGreaterThan(80);
-    expect(state.rooms.furnace.flashTimer).toBeGreaterThan(1);
-    expect(state.events[0]?.title).toBe("Combustion front");
-  });
-
-  it("reports CO2-suppressed ignition instead of inventing a flame", () => {
-    let state = prime();
+  it("keeps liquid and static pressure slowdown independent", () => {
+    const state = createScenarioGame("flash_point");
     const room = state.rooms.furnace;
-    room.gas = { oxygen: 20, co2: 70, toxic_gas: 0, fuel_gas: 10, steam: 0 };
-    const temperature = room.temperature;
-    state = activate(state, "furnace", "igniter");
+    room.liquid.water = roomVolume("furnace") * 0.45;
+    expect(liquidMovementMultiplier(room, false)).toBeLessThan(1);
+    expect(liquidMovementMultiplier(room, true)).toBe(1);
+    room.gas.lower.nitrogen += 45;
+    room.gas.upper.nitrogen += 45;
+    expect(pressureMovementMultiplier(room)).toBeLessThan(1);
+  });
 
-    expect(state.rooms.furnace.temperature).toBe(temperature);
-    expect(state.rooms.furnace.flashTimer).toBe(0);
-    expect(state.events[0]?.title).toBe("Ignition failed");
+  it("uses equipment-displaced usable volume for liquid pickup submergence", () => {
+    const state = createScenarioGame("stored_chlorine");
+    state.rooms.lower_intake.liquid.water = roomVolume("lower_intake") * 0.125;
+    simulateNetworks(state, 0.5);
+    expect(
+      state.liquidJunctions.lower_intake.liquid.water +
+        state.liquidConduits.cell_absorber.liquid.water
+    ).toBeGreaterThan(0);
   });
 });
 
-describe("passive chemistry and enemy disruption", () => {
-  it("neutralizes acid and caustic deterministically and produces heat", () => {
-    let state = prime();
-    state.rooms.reservoir.liquid.acid = 20;
-    state.rooms.reservoir.liquid.caustic = 20;
-    state = stepGame(state, 1);
+describe("complete-state conservation", () => {
+  it("conserves elements across junction fill, transport, combustion, and phase changes", () => {
+    let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
+    state = command(state, {
+      type: "install_equipment",
+      roomId: "furnace",
+      socketId: "socket_a",
+      equipmentId: "gas_agitator",
+    });
+    state = command(state, {
+      type: "set_conduit",
+      runId: "core_furnace",
+      phase: "gas",
+      enabled: true,
+    });
+    const before = elementalLedger(state);
+    state = command(state, { type: "start_prime" });
+    state = advance(state, 23);
+    const after = elementalLedger(state);
 
-    expect(state.rooms.reservoir.liquid.acid).toBeCloseTo(9, 4);
-    expect(state.rooms.reservoir.liquid.caustic).toBeCloseTo(9, 4);
-    expect(state.rooms.reservoir.liquid.neutral_liquid).toBeCloseTo(20.35, 4);
-    expect(state.rooms.reservoir.temperature).toBeGreaterThan(34);
+    for (const element of Object.keys(before)) {
+      expect(after[element], element).toBeCloseTo(before[element] ?? 0, 5);
+    }
+    expect(state.rooms.furnace.combustionCount).toBeGreaterThan(0);
   });
 
-  it("lets Bellows consume toxic gas and emit CO2 without damaging equipment", () => {
-    let state = prime();
-    state.phase = "assault";
-    state.cycle = 1;
-    state.phaseTime = 0;
-    state.rooms.switchyard.gas = {
-      oxygen: 45,
-      co2: 10,
-      toxic_gas: 45,
-      fuel_gas: 0,
-      steam: 0,
-    };
-    state.enemies = [
-      {
-        id: 999,
-        type: "bellows",
-        health: 128,
-        maxHealth: 128,
-        route: ["switchyard", "furnace", "gallery", "washlock", "core"],
-        segment: 0,
-        progress: 0,
-        spawnAge: 0,
-        damageTaken: 0,
-        disrupted: false,
-      },
-    ];
-    const installed = [...state.rooms.switchyard.devices];
-    state = stepGame(state, 0.5);
+  it("keeps every membrane-cell co-product in state", () => {
+    let state = command(createScenarioGame("make_the_reagent"), { type: "begin_level" });
+    state = command(state, {
+      type: "install_equipment",
+      roomId: "lower_intake",
+      socketId: "socket_a",
+      equipmentId: "membrane_cell",
+    });
+    state = command(state, {
+      type: "set_conduit",
+      runId: "core_cell",
+      phase: "liquid",
+      enabled: true,
+    });
+    state = command(state, { type: "start_prime" });
+    state = advance(state, 12);
 
-    expect(state.rooms.switchyard.gas.toxic_gas).toBeLessThan(45);
-    expect(state.rooms.switchyard.gas.co2).toBeGreaterThan(10);
-    expect(state.rooms.switchyard.devices).toEqual(installed);
-    expect(state.events.some((entry) => entry.title === "Bellows disrupting atmosphere")).toBe(
-      true
-    );
-  });
-});
-
-describe("persistent cycle lifecycle", () => {
-  it("carries room contents into the next build phase", () => {
-    let state = prime();
-    state.phase = "settle";
-    state.phaseTime = 5.9;
-    state.rooms.switchyard.gas = {
-      oxygen: 46,
-      co2: 12,
-      toxic_gas: 42,
-      fuel_gas: 0,
-      steam: 0,
-    };
-    const buildPoints = state.buildPoints;
-    state = stepGame(state, 0.2);
-
-    expect(state.phase).toBe("build");
-    expect(state.cycle).toBe(2);
-    expect(state.rooms.switchyard.gas.toxic_gas).toBeGreaterThan(35);
-    expect(state.buildPoints).toBe(buildPoints + 2);
-  });
-
-  it("enters settle as soon as the final wave has no survivors", () => {
-    let state = prime();
-    state.phase = "assault";
-    state.spawnCursor = WAVES[1]?.length ?? 0;
-    state.enemies = [];
-    state = stepGame(state, 0.1);
-
-    expect(state.phase).toBe("settle");
-    expect(state.lastReport?.headline).toBe("Containment held");
-  });
-
-  it("rates a concentrated acid room as hostile", () => {
-    const state = createInitialGame();
-    state.rooms.reservoir.liquid.acid = 40;
-    const analysis = analyzeRoom(state.rooms.reservoir);
-
-    expect(analysis.hazard).toBeGreaterThan(25);
-    expect(analysis.effects).toContain("Ground armor dissolving");
-  });
-
-  it("makes water tactically dilute an existing acid pool", () => {
-    let state = prime();
-    state.rooms.reservoir.liquid.acid = 34;
-    const before = analyzeRoom(state.rooms.reservoir);
-    state = activate(state, "reservoir", "liquid_water");
-    const after = analyzeRoom(state.rooms.reservoir);
-
-    expect(after.liquidTotal).toBeGreaterThan(before.liquidTotal);
-    expect(after.hazard).toBeLessThan(before.hazard);
+    const chlorine =
+      state.gasBuffers.anode_header.gas.chlorine +
+      state.gasJunctions.lower_intake.gas.chlorine +
+      state.gasConduits.cell_absorber.gas.chlorine;
+    const hydrogen =
+      state.gasBuffers.cathode_header.gas.hydrogen +
+      state.gasJunctions.lower_intake.gas.hydrogen +
+      state.gasConduits.cell_absorber.gas.hydrogen;
+    const caustic =
+      state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide +
+      state.liquidJunctions.lower_intake.liquid.sodium_hydroxide;
+    expect(chlorine).toBeGreaterThan(0);
+    expect(hydrogen).toBeGreaterThan(0);
+    expect(caustic).toBeGreaterThan(0);
   });
 });

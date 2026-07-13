@@ -1,15 +1,124 @@
-export const GAS_TYPES = ["oxygen", "co2", "toxic_gas", "fuel_gas", "steam"] as const;
+import type { HazardChannels } from "./gameStateTypes";
+import type { RoomEquipment } from "./facilityTypes";
 
-export const LIQUID_TYPES = ["water", "acid", "caustic", "sludge", "neutral_liquid"] as const;
+export * from "./gameStateTypes";
+export * from "./facilityTypes";
+
+export const GAS_TYPES = [
+  "oxygen",
+  "nitrogen",
+  "carbon_dioxide",
+  "chlorine",
+  "hydrogen",
+  "hydrogen_chloride",
+  "steam",
+] as const;
+
+export const GAS_ZONES = ["lower", "upper"] as const;
+
+export const LIQUID_TYPES = [
+  "water",
+  "sodium_chloride",
+  "sodium_hydroxide",
+  "sodium_hypochlorite",
+  "hydrochloric_acid",
+] as const;
 
 export const ENEMY_TYPES = ["crawler", "skimmer", "floater", "shell", "bellows"] as const;
+export const ENEMY_ROUTE_IDS = ["entry_to_core"] as const;
+
+export const GAS_SOURCE_IDS = ["starter_gas_header"] as const;
+export const LIQUID_SOURCE_IDS = ["water_tank", "sodium_chloride_tank"] as const;
+export const GAS_BUFFER_IDS = ["anode_header", "cathode_header"] as const;
+export const LIQUID_BUFFER_IDS = ["cell_liquor"] as const;
+
+export const TRANSPORT_RUN_IDS = [
+  "core_furnace",
+  "cell_furnace",
+  "core_cell",
+  "cell_absorber",
+  "furnace_return",
+  "return_final",
+  "return_outer",
+  "core_final",
+  "absorber_final",
+  "core_absorber",
+] as const;
+
+export const EQUIPMENT_IDS = [
+  "gas_agitator",
+  "wet_contactor",
+  "thermal_coil",
+  "membrane_cell",
+] as const;
+
+export const EQUIPMENT_SOCKET_IDS = ["socket_a", "socket_b"] as const;
+
+export const PROCESS_IDS = ["chlor_alkali_cell"] as const;
+
+export const DAMAGE_SOURCE_IDS = [
+  "atmospheric_exposure",
+  "surface_corrosion",
+  "thermal_exposure",
+  "catastrophic_overpressure",
+  "radiation_field",
+  "hydrogen_oxygen_combustion",
+  "legacy_unattributed",
+] as const;
+
+export const REACTION_IDS = [
+  "chlor_alkali_electrolysis",
+  "hydrogen_oxygen_combustion",
+  "hydrogen_chlorine_recombination",
+  "hydrogen_chloride_absorption",
+  "acid_neutralization",
+  "hypochlorite_formation",
+  "acid_chlorine_release",
+] as const;
+
+export const LEVEL_IDS = [
+  "flash_point",
+  "make_the_reagent",
+  "acid_line",
+  "stored_chlorine",
+  "commissioning_exam",
+] as const;
+
+export const ROOM_REACTION_IDS = [
+  "hydrogen_oxygen_combustion",
+  "hydrogen_chlorine_recombination",
+  "hydrogen_chloride_absorption",
+  "acid_neutralization",
+  "hypochlorite_formation",
+  "acid_chlorine_release",
+] as const;
 
 export type GasType = (typeof GAS_TYPES)[number];
+export type GasZone = (typeof GAS_ZONES)[number];
 export type LiquidType = (typeof LIQUID_TYPES)[number];
+export type SpeciesId = GasType | LiquidType;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
+export type EnemyRouteId = (typeof ENEMY_ROUTE_IDS)[number];
+export type GasSourceId = (typeof GAS_SOURCE_IDS)[number];
+export type LiquidSourceId = (typeof LIQUID_SOURCE_IDS)[number];
+export type GasBufferId = (typeof GAS_BUFFER_IDS)[number];
+export type LiquidBufferId = (typeof LIQUID_BUFFER_IDS)[number];
+export type TransportRunId = (typeof TRANSPORT_RUN_IDS)[number];
+export type EquipmentId = (typeof EQUIPMENT_IDS)[number];
+export type EquipmentSocketId = (typeof EQUIPMENT_SOCKET_IDS)[number];
+export type EquipmentLevel = 1 | 2 | 3;
+export type TransportPhase = "gas" | "liquid";
+export type ProcessId = (typeof PROCESS_IDS)[number];
+export type ReactionId = (typeof REACTION_IDS)[number];
+export type RoomReactionId = (typeof ROOM_REACTION_IDS)[number];
+export type LevelId = (typeof LEVEL_IDS)[number];
+export type DamageSourceId = (typeof DAMAGE_SOURCE_IDS)[number];
 
 export type GasAmounts = Record<GasType, number>;
+export type GasLayers = Record<GasZone, GasAmounts>;
+export type GasTemperatures = Record<GasZone, number>;
 export type LiquidAmounts = Record<LiquidType, number>;
+export type ElementalComposition = Record<string, number>;
 
 export type RoomId =
   | "west_intake"
@@ -21,71 +130,201 @@ export type RoomId =
   | "washlock"
   | "core";
 
-export type DeviceKind =
-  "gas_tank" | "liquid_tank" | "vent" | "drain" | "igniter" | "door" | "boiler" | "fan";
-
-export type DeviceKey =
-  | "gas_toxic"
-  | "gas_co2"
-  | "gas_fuel"
-  | "liquid_acid"
-  | "liquid_caustic"
-  | "liquid_water"
-  | "liquid_sludge"
-  | "vent"
-  | "drain"
-  | "igniter"
-  | "door"
-  | "boiler"
-  | "fan";
-
 export interface Point {
   x: number;
   y: number;
 }
 
-export interface RoomDefinition {
-  id: RoomId;
-  name: string;
-  code: string;
-  kind: "spawn" | "chamber" | "core";
-  position: Point;
-  neighbors: RoomId[];
-  forward: RoomId[];
-  slots: number;
-  blurb: string;
+export interface WorldPoint {
+  x: number;
+  elevation: number;
 }
 
-export interface ConnectionDefinition {
-  from: RoomId;
-  to: RoomId;
+export interface GridCell {
+  column: number;
+  elevation: number;
 }
 
-export interface DeviceDefinition {
-  key: DeviceKey;
-  kind: DeviceKind;
+export interface RoomGeometryDefinition {
+  x: number;
+  floorElevation: number;
+  width: number;
+  height: number;
+}
+
+export type ActuatorKind = "fan" | "pump" | "passive";
+
+export interface LiquidSourceDefinition {
+  id: LiquidSourceId;
   name: string;
-  family: string;
-  description: string;
-  activeLabel: string;
-  cost: number;
-  energyCost: number;
-  cooldown: number;
+  formula: string;
+  substance: LiquidType;
+  capacity: number;
+  initialAmount: number;
+  chargeAmount: number;
+  chargeCost: number;
+  hostRoomId: RoomId;
   accent: string;
-  gasPayload?: GasType;
-  liquidPayload?: LiquidType;
+}
+
+export interface GasSourceDefinition {
+  id: GasSourceId;
+  name: string;
+  formula: string;
+  capacity: number;
+  initialGas: Partial<GasAmounts>;
+  chargeGas: Partial<GasAmounts>;
+  chargeCost: number;
+  hostRoomId: RoomId;
+  accent: string;
+}
+
+export interface GasBufferDefinition {
+  id: GasBufferId;
+  name: string;
+  capacity: number;
+  hostRoomId: RoomId;
+  accent: string;
+}
+
+export interface LiquidBufferDefinition {
+  id: LiquidBufferId;
+  name: string;
+  capacity: number;
+  hostRoomId: RoomId;
+  accent: string;
+}
+
+export interface ProcessDefinition {
+  id: ProcessId;
+  name: string;
+  description: string;
+  reactionId: ReactionId;
+  equipmentId: EquipmentId;
+  accent: string;
+}
+
+export interface SpeciesDefinition {
+  id: SpeciesId;
+  name: string;
+  formula: string;
+  phase: "gas" | "liquid";
+  elements: ElementalComposition;
+  molarMass: number;
+  referenceDensity: number;
+  color: string;
+}
+
+export interface ReactionParticipant {
+  species: SpeciesId;
+  coefficient: number;
+}
+
+export interface ReactionDefinition {
+  id: ReactionId;
+  code: string;
+  name: string;
+  kind: "chemical" | "physical";
+  equation: string;
+  reactants: ReactionParticipant[];
+  products: ReactionParticipant[];
+}
+
+export interface ReactionTelemetry {
+  lastRate: number;
+  limitingReactant: string;
 }
 
 export interface RoomState {
   id: RoomId;
-  gas: GasAmounts;
+  gas: GasLayers;
+  gasTemperature: GasTemperatures;
   liquid: LiquidAmounts;
   temperature: number;
   residue: number;
-  sealTimer: number;
-  flashTimer: number;
-  flashIntensity: number;
-  devices: DeviceKey[];
+  reactionIntensity: number;
+  pressurePulse: number;
+  flashCooldown: Record<GasZone, number>;
+  combustionCount: number;
+  reactions: Record<RoomReactionId, ReactionTelemetry>;
+  equipment: RoomEquipment;
+}
+
+export interface GasSourceState {
+  gas: GasAmounts;
+}
+
+export interface LiquidSourceState {
+  liquid: LiquidAmounts;
+}
+
+export interface GasBufferState {
+  gas: GasAmounts;
+}
+
+export interface LiquidBufferState {
+  liquid: LiquidAmounts;
+}
+
+export interface GasConduitState {
+  installed: boolean;
+  enabled: boolean;
+  route: GridCell[];
+  gas: GasAmounts;
+  lastFlow: number;
+  lastSpeciesFlow: GasAmounts;
+  blocked: boolean;
+  flowCause: FlowCause;
+  temperature: number;
+}
+
+export interface LiquidConduitState {
+  installed: boolean;
+  enabled: boolean;
+  route: GridCell[];
+  liquid: LiquidAmounts;
+  lastFlow: number;
+  lastSpeciesFlow: LiquidAmounts;
+  blocked: boolean;
+  flowCause: FlowCause;
+}
+
+export interface GasJunctionState {
+  gas: GasAmounts;
+  temperature: number;
+}
+
+export interface LiquidJunctionState {
+  liquid: LiquidAmounts;
+}
+
+export type FlowCause =
+  | "idle"
+  | "priming"
+  | "pressure"
+  | "buoyancy"
+  | "fan"
+  | "gravity"
+  | "siphon"
+  | "pump"
+  | "backpressure";
+
+export interface ProcessState {
+  setting: number;
+  lastRate: number;
+  totalProcessed: number;
+  limitingReactant: string;
+  powerDraw: number;
+  separatorLeakTotal: number;
+}
+
+export type DamageLedger = Record<DamageSourceId, HazardChannels>;
+
+export interface DamageReceipt {
+  sourceId: DamageSourceId;
+  channels: HazardChannels;
+  amount: number;
+  elapsed: number;
 }
 
 export interface EnemyDefinition {
@@ -97,12 +336,10 @@ export interface EnemyDefinition {
   coreDamage: number;
   needsOxygen: boolean;
   flying: boolean;
-  toxicMultiplier: number;
-  acidMultiplier: number;
-  causticMultiplier: number;
-  heatMultiplier: number;
+  hazardMultipliers: HazardChannels;
   color: string;
   residueOnDeath: number;
+  matterYield: number;
 }
 
 export interface EnemyState {
@@ -110,103 +347,28 @@ export interface EnemyState {
   type: EnemyType;
   health: number;
   maxHealth: number;
-  route: RoomId[];
-  segment: number;
+  routeId: EnemyRouteId;
+  path: EnemyPathStep[];
+  pathIndex: number;
   progress: number;
+  mode: EnemyLocomotionMode;
+  facing: -1 | 1;
   spawnAge: number;
   damageTaken: number;
-  disrupted: boolean;
+  damageBySource: DamageLedger;
+  lastDamage: DamageReceipt | null;
+}
+
+export type EnemyLocomotionMode = "walking" | "climbing" | "falling" | "door" | "flying";
+
+export interface EnemyPathStep {
+  cell: GridCell;
+  mode: EnemyLocomotionMode;
+  portalId: string | null;
 }
 
 export interface WaveEntry {
   at: number;
   type: EnemyType;
-  route: RoomId[];
-}
-
-export type GamePhase = "build" | "prime" | "assault" | "settle" | "victory" | "defeat";
-
-export interface CycleStats {
-  spawned: number;
-  killed: number;
-  breached: number;
-  coreDamage: number;
-  damageDealt: number;
-  reactions: number;
-  peakHazard: number;
-}
-
-export interface CycleReport extends CycleStats {
-  cycle: number;
-  headline: string;
-  detail: string;
-}
-
-export type EventTone = "info" | "good" | "warning" | "danger" | "reaction";
-
-export interface GameEvent {
-  id: number;
-  cycle: number;
-  phase: GamePhase;
-  tone: EventTone;
-  title: string;
-  detail: string;
-  roomId?: RoomId;
-}
-
-export interface GameState {
-  version: 1;
-  phase: GamePhase;
-  cycle: number;
-  phaseTime: number;
-  elapsed: number;
-  rooms: Record<RoomId, RoomState>;
-  enemies: EnemyState[];
-  spawnCursor: number;
-  nextEnemyId: number;
-  nextEventId: number;
-  coreIntegrity: number;
-  energy: number;
-  buildPoints: number;
-  cooldowns: Partial<Record<string, number>>;
-  paused: boolean;
-  speed: 1 | 2;
-  stats: CycleStats;
-  lastReport: CycleReport | null;
-  events: GameEvent[];
-}
-
-export interface RoomAnalysis {
-  gasTotal: number;
-  liquidTotal: number;
-  pressure: number;
-  dominantGas: GasType;
-  dominantGasPercent: number;
-  dominantLiquid: LiquidType | null;
-  dominantLiquidPercent: number;
-  hazard: number;
-  hazardLabel: "CLEAR" | "LOW" | "HOSTILE" | "LETHAL";
-  effects: string[];
-}
-
-export type GameCommand =
-  | { type: "activate_device"; roomId: RoomId; device: DeviceKey }
-  | { type: "install_device"; roomId: RoomId; device: DeviceKey }
-  | { type: "remove_device"; roomId: RoomId; device: DeviceKey }
-  | { type: "start_prime" }
-  | { type: "start_assault" }
-  | { type: "toggle_pause" }
-  | { type: "set_speed"; speed: 1 | 2 };
-
-export interface CommandResult {
-  state: GameState;
-  accepted: boolean;
-  reason?: string;
-}
-
-export interface DevicePreview {
-  accepted: boolean;
-  title: string;
-  summary: string;
-  changes: string[];
+  routeId: EnemyRouteId;
 }
