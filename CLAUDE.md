@@ -55,6 +55,16 @@ Ahara's S3 and CloudFront website module.
 - Planning freezes the process, priming consumes real inventory, and assault locks all setpoints.
 - The UI exposes current first-order state but does not calculate cascade forecasts.
 - Zustand is only the React/Pixi bridge; it is not the domain model.
+- `src/audio/` owns all sound: a Web Audio engine (buses, per-stem voice groups, a shared FX
+  rack with procedural convolution reverb and tempo-synced delay sends, unlock-on-gesture), a
+  music director combining horizontal resequencing (bar/beat-quantized staggered handovers)
+  with vertical layering (named moods ramp stem levels/sends on the playing track), and a pure
+  cue selector mapping store state to a track+mood. The simulation never imports it;
+  `attachAudioDirector` subscribes to the store from the application layer.
+- Music ships as per-voice stems: `music/*.rb` (Partitura, sibling sigillum-library repo) is
+  rendered offline by `music/build.sh` to `public/audio/<track>/<stem>.ogg`
+  (pulse1/pulse2/triangle/noise, sample-aligned). Track metadata (bpm, bars, stems) lives in
+  `src/audio/tracks.ts` and must match the sources; mood mixes live in `src/audio/moods.ts`.
 - Saves are versioned and validated with Zod before restoration. V8 owns conduit routes, junctions,
   damage ledgers, and incidents; the V7 migration merges every legacy sub-line without deleting its
   inventory and leaves ambiguous migrated actuators off.

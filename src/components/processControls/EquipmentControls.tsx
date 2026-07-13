@@ -1,9 +1,8 @@
 import { Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
-import { EQUIPMENT_DEFINITIONS, equipmentGrade } from "../../game/config";
+import { EQUIPMENT_DEFINITIONS } from "../../game/config";
 import { commandDecision as evaluateCommand } from "../../presentation/selectors";
 import { useGameStore } from "../../application/store";
-import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import {
   EQUIPMENT_IDS,
   type EquipmentInstance,
@@ -196,7 +195,6 @@ const InstalledEquipmentSocket = ({
   socketId: EquipmentSocketId;
 }) => {
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  const grade = equipmentGrade(instance.equipmentId, instance.level);
   return (
     <article
       className={`equipment-socket installed ${instance.enabled ? "active" : "offline"}`}
@@ -209,11 +207,6 @@ const InstalledEquipmentSocket = ({
         </strong>
         <em>{instance.enabled ? "RUNNING" : "OFFLINE"}</em>
       </header>
-      <p>{definition.description}</p>
-      <div className="equipment-rating">
-        <span>{equipmentGradeEffect(grade)}</span>
-        <small>{grade.occupiedVolume} room volume</small>
-      </div>
       <EquipmentActions instance={instance} roomId={roomId} socketId={socketId} />
     </article>
   );

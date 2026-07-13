@@ -11,7 +11,7 @@
 }
 .inspector-header {
   position: relative;
-  padding: 17px 18px 15px;
+  padding: 13px 14px 12px;
   border-bottom: 1px solid var(--line);
   background:
     radial-gradient(circle at 90% 0%, rgba(120, 170, 150, 0.09), transparent 42%),
@@ -37,7 +37,7 @@
   text-transform: uppercase;
 }
 .inspector-header h2 {
-  margin: 0 80px 6px 0;
+  margin: 0 80px 10px 0;
   color: var(--text-strong);
   font-size: 22px;
   line-height: 1.1;
@@ -62,8 +62,8 @@
 }
 .hazard-badge {
   position: absolute;
-  top: 17px;
-  right: 17px;
+  top: 13px;
+  right: 13px;
   display: grid;
   min-width: 58px;
   padding: 6px 7px;
@@ -108,7 +108,7 @@
 
 .metric-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   border-bottom: 1px solid var(--line);
 }
 .metric-grid > div {
@@ -116,7 +116,7 @@
   justify-items: start;
   gap: 4px;
   min-width: 0;
-  padding: 11px 9px;
+  padding: 10px 8px;
   border-right: 1px solid #204539;
 }
 .metric-grid > div:last-child {
@@ -144,7 +144,7 @@
 }
 
 .inspector-section {
-  padding: 14px 16px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--line);
 }
 .section-title-row {
@@ -340,6 +340,55 @@
 }
 .recent-incidents {
   background: #111d18;
+}
+
+.room-details-modal {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: min(760px, 94vw);
+  max-height: min(780px, 90vh);
+  overflow: hidden;
+  border: 1px solid #477968;
+  border-radius: 8px;
+  background: #0b1713;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.62);
+}
+.room-details-modal > header {
+  position: relative;
+  padding: 17px 20px;
+  border-bottom: 1px solid #295042;
+  background: #0d1c18;
+}
+.room-details-modal > header span {
+  color: var(--lime);
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.room-details-modal > header h2 {
+  margin: 6px 44px 0 0;
+  color: var(--text-strong);
+  font-size: 21px;
+}
+.room-details-scroll {
+  min-height: 0;
+  overflow-y: auto;
+}
+.room-details-blurb {
+  margin: 0;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--line);
+  color: #82a294;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.room-details-modal > footer {
+  padding: 12px 16px;
+  border-top: 1px solid #295042;
+}
+.room-details-modal .architectural-connection-list {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .architectural-connections {
   background: #0b1815;

@@ -9,6 +9,7 @@ export interface IncidentAggregate {
   height: number;
   kills: number;
   pressureDamage: number;
+  heatDamage: number;
   pressureImpulse: number;
   roomId: RoomId;
   width: number;
@@ -48,6 +49,7 @@ export const incidentMapAggregates = (game: IncidentTimeline): IncidentAggregate
         (total, incident) => total + incident.damageByChannel.pressure,
         0
       ),
+      heatDamage: incidents.reduce((total, incident) => total + incident.damageByChannel.heat, 0),
       pressureImpulse: Math.max(...incidents.map((incident) => incident.pressureImpulse)),
       roomId,
       width: room.width,

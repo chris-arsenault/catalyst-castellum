@@ -67,6 +67,8 @@ export interface LevelDefinition {
   focusRoomId: RoomId;
   startingMatter: number;
   startingCoreIntegrity: number;
+  /** Soundtrack for assault rounds; boss levels get the boss theme. */
+  assaultTheme: "standard" | "boss";
   loadout: FacilityLoadout;
   rounds: RoundDefinition[];
   playtestActions: GameCommand[];
@@ -124,6 +126,7 @@ const flashPoint: LevelDefinition = {
   focusRoomId: "furnace",
   startingMatter: 16,
   startingCoreIntegrity: 100,
+  assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
     gasConduits: { core_furnace: gasRun(false) },
@@ -189,6 +192,7 @@ const makeTheReagent: LevelDefinition = {
   focusRoomId: "lower_intake",
   startingMatter: 28,
   startingCoreIntegrity: 100,
+  assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
     gasConduits: { cell_absorber: gasRun(true), core_cell: gasRun(false) },
@@ -247,6 +251,7 @@ const acidLine: LevelDefinition = {
   focusRoomId: "furnace",
   startingMatter: 42,
   startingCoreIntegrity: 100,
+  assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
     equipment: {
@@ -326,6 +331,7 @@ const storedChlorine: LevelDefinition = {
   focusRoomId: "reservoir",
   startingMatter: 42,
   startingCoreIntegrity: 100,
+  assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
     equipment: {
@@ -416,6 +422,7 @@ const commissioningExam: LevelDefinition = {
   focusRoomId: "lower_intake",
   startingMatter: 58,
   startingCoreIntegrity: 100,
+  assaultTheme: "boss",
   loadout: {
     ...emptyLoadout(),
     equipment: TUTORIAL_EQUIPMENT,

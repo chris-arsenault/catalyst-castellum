@@ -5,17 +5,22 @@ import type { RoomViewModel } from "../../presentation/selectors";
 export interface RoomDrawModel {
   analysis: RoomViewModel;
   coreIntegrity: number;
+  elapsed: number;
+  gasInflowRate: number;
   height: number;
   cells: readonly RoomDrawCell[];
   structure: RoomDefinition["structure"];
   liquidColor: number;
+  liquidInflowRate: number;
   lowerGasColor: number;
+  lowerGasFill: number;
   occupied: number;
   pressurePulse: number;
   reactionIntensity: number;
   ring: FacilityRing;
   selected: boolean;
   upperGasColor: number;
+  upperGasFill: number;
   width: number;
 }
 
@@ -47,30 +52,60 @@ const drawHazardGlow = (graphics: Graphics, model: RoomDrawModel): void => {
 const drawRoomShell = (graphics: Graphics, model: RoomDrawModel): void => {
   const left = -model.width / 2;
   const top = -model.height / 2;
-  // The shell is a physical excavation lip, not a floating process-card border.
+  graphics
+    .rect(left + 5, top + 7, model.width + 8, model.height + 8)
+    .fill({ color: 0x020604, alpha: 0.78 });
   graphics
     .rect(left - 5, top - 5, model.width + 10, model.height + 10)
-    .fill({ color: 0x192d23 })
-    .stroke({ color: 0x315242, width: 3, alpha: 0.9 });
+    .fill({ color: 0x243c32 })
+    .stroke({ color: 0x4b7564, width: 2, alpha: 0.94 });
   graphics
     .rect(left, top, model.width, model.height)
-    .fill({ color: 0x0a1210 })
+    .fill({ color: 0x07100d })
     .stroke({ color: roomBorderColor(model), width: model.selected ? 5 : 3, alpha: 0.96 });
   graphics
-    .moveTo(left + 3, -top - 3)
-    .lineTo(-left - 3, -top - 3)
-    .stroke({ color: 0x869f91, width: 6, alpha: 0.7 });
+    .moveTo(left + 2, top + 2)
+    .lineTo(-left - 2, top + 2)
+    .lineTo(-left - 2, -top - 2)
+    .stroke({ color: 0xa8c5b6, width: 2.5, alpha: 0.48 });
+  graphics
+    .moveTo(left + 2, -top - 2)
+    .lineTo(-left - 2, -top - 2)
+    .lineTo(-left - 2, top + 2)
+    .stroke({ color: 0x020605, width: 4, alpha: 0.72 });
   for (const x of [left + 8, -left - 8]) {
-    graphics
-      .moveTo(x, top + 8)
-      .lineTo(x, -top - 8)
-      .stroke({ color: 0x426352, width: 3, alpha: 0.72 });
+    for (const y of [top + 8, -top - 8]) {
+      graphics.circle(x, y, 2.5).fill({ color: 0xb2c5b6, alpha: 0.7 });
+    }
   }
+};
+
+const drawGasInflow = (graphics: Graphics, model: RoomDrawModel): void => {
+  if (model.gasInflowRate <= 0.002 || model.structure === "core") return;
+  const left = -model.width / 2 + 10;
+  const travel =
+    (model.elapsed * (24 + Math.min(46, model.gasInflowRate * 4))) % (model.width - 20);
+  const intensity = Math.min(1, 0.35 + Math.sqrt(model.gasInflowRate) * 0.3);
+  for (let index = 0; index < 9; index += 1) {
+    const x = left + ((travel + index * 31) % (model.width - 20));
+    const upper = index % 2 === 0;
+    const baseY = upper ? -model.height * 0.23 : model.height * 0.23;
+    const y = baseY + Math.sin(model.elapsed * 4 + index * 1.7) * 10;
+    graphics
+      .circle(x, y, 2.2 + (index % 3))
+      .fill({ color: upper ? model.upperGasColor : model.lowerGasColor, alpha: intensity });
+  }
+  const pulse = 10 + ((model.elapsed * 28) % 24);
+  graphics
+    .circle(-model.width / 2 + 4, 0, pulse)
+    .stroke({ color: model.lowerGasColor, width: 3, alpha: 0.8 * (1 - (pulse - 10) / 24) });
 };
 
 const drawRoomAtmosphere = (graphics: Graphics, model: RoomDrawModel): void => {
   for (const atmosphericCell of model.cells) {
     const upper = atmosphericCell.zone === "upper";
+    const fill = upper ? model.upperGasFill : model.lowerGasFill;
+    if (fill < 0.002) continue;
     graphics
       .rect(
         atmosphericCell.left + 0.8,
@@ -80,14 +115,25 @@ const drawRoomAtmosphere = (graphics: Graphics, model: RoomDrawModel): void => {
       )
       .fill({
         color: upper ? model.upperGasColor : model.lowerGasColor,
-        alpha:
-          0.1 +
-          (upper
-            ? model.analysis.upperDominantGasPercent
-            : model.analysis.lowerDominantGasPercent) *
-            0.17,
+        alpha: 0.06 + Math.sqrt(fill) * 0.48,
       });
   }
+  const half = model.height / 2;
+  if (model.upperGasFill > 0.01) {
+    graphics
+      .rect(-model.width / 2 + 2, -half + 2, model.width - 4, 5)
+      .fill({ color: model.upperGasColor, alpha: 0.55 + model.upperGasFill * 0.35 });
+  }
+  if (model.lowerGasFill > 0.01) {
+    graphics
+      .rect(-model.width / 2 + 2, half - 7, model.width - 4, 5)
+      .fill({ color: model.lowerGasColor, alpha: 0.55 + model.lowerGasFill * 0.35 });
+  }
+  graphics
+    .moveTo(-model.width / 2 + 8, 0)
+    .lineTo(model.width / 2 - 8, 0)
+    .stroke({ color: 0x83a99a, width: 1, alpha: 0.22 });
+  drawGasInflow(graphics, model);
 };
 
 const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
@@ -98,12 +144,21 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
     const surface = atmosphericCell.top + atmosphericCell.size - fillHeight;
     graphics
       .rect(atmosphericCell.left + 0.8, surface, atmosphericCell.size - 1.6, fillHeight)
-      .fill({ color: model.liquidColor, alpha: 0.42 });
+      .fill({ color: model.liquidColor, alpha: 0.7 });
     if (atmosphericCell.liquidFill < 1) {
       graphics
         .moveTo(atmosphericCell.left + 1, surface)
         .lineTo(atmosphericCell.left + atmosphericCell.size - 1, surface)
         .stroke({ color: model.liquidColor, width: 2, alpha: 0.9 });
+    }
+  }
+  if (model.liquidInflowRate > 0.002) {
+    const y = model.height / 2 - Math.max(8, model.analysis.liquidTotal * 0.1);
+    for (let x = -model.width / 2 + 12; x < model.width / 2 - 8; x += 18) {
+      graphics
+        .moveTo(x, y + Math.sin(model.elapsed * 5 + x * 0.08) * 3)
+        .lineTo(x + 12, y + Math.sin(model.elapsed * 5 + x * 0.08 + 1) * 3)
+        .stroke({ color: model.liquidColor, width: 2.5, alpha: 0.9 });
     }
   }
 };

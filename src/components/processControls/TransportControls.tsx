@@ -100,19 +100,14 @@ const TransportPhasePanel = ({
           <PhaseIcon phase={phase} />
         </span>
         <strong>{model.label}</strong>
-        <em>{model.installed ? "PHYSICAL ROUTE" : "AVAILABLE TO BUILD"}</em>
+        <em>{model.installed ? "READY" : "BUILD READY"}</em>
         <PhaseAction installed={model.installed} phase={phase} runId={runId} />
       </header>
       {model.installed ? (
         <div className="actuator-list">
           <ConduitActuator phase={phase} runId={runId} />
         </div>
-      ) : (
-        <p>
-          Build along the fixed spatial route. The conduit begins empty, then carries a mixed
-          inventory within its rated capacity.
-        </p>
-      )}
+      ) : null}
     </div>
   );
 };

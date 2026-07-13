@@ -283,7 +283,7 @@ export const OutcomeModal = () => {
         <p>
           {victory
             ? `All five checkpoints and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
-            : `${levelDefinitionFor(game).name}, round ${game.campaign.roundIndex + 1}, failed. The trace preserves the immediate cause.`}
+            : `The core fell during ${levelDefinitionFor(game).name}, round ${game.campaign.roundIndex + 1}. The trace preserves the immediate cause and supports the next attempt.`}
         </p>
         <div className="outcome-stats">
           <div>

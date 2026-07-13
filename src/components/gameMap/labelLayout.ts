@@ -1,0 +1,154 @@
+import { FACILITY_MAP, ROOM_DEFINITIONS, ROOM_ORDER, facilityCells } from "../../game/config";
+import type { RoomId } from "../../game/types";
+import {
+  WORLD_MAP_HEIGHT,
+  WORLD_MAP_WIDTH,
+  gridCellMapRect,
+  roomMapRect,
+  type MapRect,
+} from "./mapGeometry";
+
+const EDGE_PADDING = 8;
+const LABEL_PADDING_X = 8;
+const LABEL_HEIGHT_SCALE = 1.55;
+
+export interface MapLabelPlacement extends MapRect {
+  fontSize: number;
+  roomId: RoomId;
+  selected: boolean;
+  text: string;
+}
+
+interface TaggedObstacle extends MapRect {
+  labelMayOverlapForRoomId: RoomId | null;
+}
+
+interface Candidate {
+  allowOwnRoom: boolean;
+  left: number;
+  top: number;
+}
+
+const intersects = (left: MapRect, right: MapRect): boolean =>
+  left.left < right.left + right.width &&
+  left.left + left.width > right.left &&
+  left.top < right.top + right.height &&
+  left.top + left.height > right.top;
+
+const withinMap = (rect: MapRect): boolean =>
+  rect.left >= EDGE_PADDING &&
+  rect.top >= EDGE_PADDING &&
+  rect.left + rect.width <= WORLD_MAP_WIDTH - EDGE_PADDING &&
+  rect.top + rect.height <= WORLD_MAP_HEIGHT - EDGE_PADDING;
+
+const estimateLabelSize = (text: string, fontSize: number): Pick<MapRect, "height" | "width"> => ({
+  width: Math.ceil(text.length * fontSize * 0.61 + LABEL_PADDING_X * 2),
+  height: Math.ceil(fontSize * LABEL_HEIGHT_SCALE),
+});
+
+const candidatesFor = (roomId: RoomId, width: number, height: number): Candidate[] => {
+  const room = roomMapRect(roomId);
+  const centerX = room.left + room.width / 2;
+  const centerY = room.top + room.height / 2;
+  return [
+    { left: centerX - width / 2, top: room.top - height - 7, allowOwnRoom: false },
+    { left: centerX - width / 2, top: room.top + room.height + 7, allowOwnRoom: false },
+    { left: room.left - width - 7, top: centerY - height / 2, allowOwnRoom: false },
+    { left: room.left + room.width + 7, top: centerY - height / 2, allowOwnRoom: false },
+    { left: room.left + 9, top: room.top + 9, allowOwnRoom: true },
+    { left: room.left + room.width - width - 9, top: room.top + 9, allowOwnRoom: true },
+    { left: room.left + 9, top: room.top + room.height - height - 9, allowOwnRoom: true },
+    {
+      left: room.left + room.width - width - 9,
+      top: room.top + room.height - height - 9,
+      allowOwnRoom: true,
+    },
+  ];
+};
+
+const structureObstacles = (): TaggedObstacle[] =>
+  facilityCells()
+    .filter(({ terrain }) => terrain === "platform" || terrain === "ladder")
+    .map(({ cell }) => ({ ...gridCellMapRect(cell), labelMayOverlapForRoomId: null }));
+
+const roomObstacles = (): TaggedObstacle[] =>
+  ROOM_ORDER.map((roomId) => ({
+    ...roomMapRect(roomId),
+    labelMayOverlapForRoomId: roomId,
+  }));
+
+const utilityNodeObstacles = (): TaggedObstacle[] =>
+  Object.values(FACILITY_MAP.utilityNodes).map(({ cell }) => {
+    const rect = gridCellMapRect(cell);
+    return {
+      left: rect.left - 16,
+      top: rect.top - 24,
+      width: rect.width + 32,
+      height: rect.height + 48,
+      labelMayOverlapForRoomId: null,
+    };
+  });
+
+const placementIsFree = (
+  rect: MapRect,
+  roomId: RoomId,
+  allowOwnRoom: boolean,
+  obstacles: readonly TaggedObstacle[],
+  placed: readonly MapLabelPlacement[]
+): boolean =>
+  withinMap(rect) &&
+  !placed.some((label) => intersects(rect, label)) &&
+  !obstacles.some(
+    (obstacle) =>
+      intersects(rect, obstacle) && !(allowOwnRoom && obstacle.labelMayOverlapForRoomId === roomId)
+  );
+
+const labelPriority = (roomId: RoomId, selectedRoomId: RoomId): number => {
+  if (roomId === selectedRoomId) return 100;
+  if (roomId === "core") return 90;
+  return 50 - roomMapRect(roomId).width / 100;
+};
+
+export const layoutMapLabels = (selectedRoomId: RoomId): MapLabelPlacement[] => {
+  const obstacles = [...roomObstacles(), ...structureObstacles(), ...utilityNodeObstacles()];
+  const placed: MapLabelPlacement[] = [];
+  const ordered = [...ROOM_ORDER].sort(
+    (left, right) => labelPriority(right, selectedRoomId) - labelPriority(left, selectedRoomId)
+  );
+  for (const roomId of ordered) {
+    const definition = ROOM_DEFINITIONS[roomId];
+    const textOptions = [`${definition.code} · ${definition.name}`, definition.code];
+    let accepted: MapLabelPlacement | null = null;
+    for (const text of textOptions) {
+      for (const fontSize of [17, 14, 12]) {
+        const size = estimateLabelSize(text, fontSize);
+        const candidate = candidatesFor(roomId, size.width, size.height).find((position) =>
+          placementIsFree(
+            { left: position.left, top: position.top, ...size },
+            roomId,
+            position.allowOwnRoom,
+            obstacles,
+            placed
+          )
+        );
+        if (!candidate) continue;
+        accepted = {
+          left: candidate.left,
+          top: candidate.top,
+          ...size,
+          fontSize,
+          roomId,
+          selected: roomId === selectedRoomId,
+          text,
+        };
+        break;
+      }
+      if (accepted) break;
+    }
+    if (accepted) placed.push(accepted);
+  }
+  return placed;
+};
+
+export const labelsOverlap = (labels: readonly MapLabelPlacement[]): boolean =>
+  labels.some((label, index) => labels.slice(index + 1).some((other) => intersects(label, other)));

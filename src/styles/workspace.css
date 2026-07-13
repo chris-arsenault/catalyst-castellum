@@ -1,114 +1,105 @@
-/* Main workspace */
+/* Game-first workspace and round HUD */
 
 .workspace {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 390px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 10px;
   min-height: 0;
-  padding: 12px;
+  padding: 10px;
   overflow: hidden;
 }
 
 .defense-board {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 146px;
-  gap: 10px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 8px;
   min-width: 0;
   min-height: 0;
 }
 
-.phase-banner {
+.phase-hud {
   display: grid;
-  grid-template-columns: auto minmax(260px, 1fr) auto auto;
+  grid-template-columns: auto minmax(220px, 1fr) auto auto;
   align-items: center;
-  gap: 16px;
-  min-height: 76px;
-  padding: 11px 13px;
+  gap: 12px;
+  min-height: 58px;
+  padding: 7px 9px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--mint);
   border-radius: 6px;
-  background: linear-gradient(90deg, rgba(68, 119, 103, 0.1), transparent 30%), var(--panel);
+  background: linear-gradient(90deg, rgba(83, 150, 126, 0.12), transparent 38%), var(--panel);
 }
 
-.phase-icon {
+.phase-hud.phase-assault {
+  border-left-color: var(--red);
+}
+.phase-hud.phase-prime {
+  border-left-color: #6dd2dc;
+}
+
+.phase-hud-icon {
   display: grid;
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   place-items: center;
   border: 1px solid #467868;
   border-radius: 50%;
   background: #112b23;
-  color: #9fc9b7;
+  color: #a8d4c0;
 }
 
-.phase-icon.pulse {
-  animation: soft-pulse 2.2s infinite;
-}
-.phase-icon.danger-pulse {
-  color: #f78d6b;
-  border-color: #a54936;
-}
-
-@keyframes soft-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(113, 203, 176, 0);
-  }
-  50% {
-    box-shadow: 0 0 0 7px rgba(113, 203, 176, 0.08);
-  }
-}
-
-.phase-copy {
+.phase-hud-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 3px 10px;
   min-width: 0;
 }
-.phase-copy > span {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--muted);
-  font: 600 10px/1.2 var(--mono);
+
+.phase-hud-copy > span {
+  color: var(--lime);
+  font: 700 9px/1 var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
 }
-.phase-copy strong {
-  display: block;
-  margin-bottom: 3px;
-  color: var(--text-strong);
-  font-size: 17px;
-  line-height: 1.2;
-}
-.phase-copy p {
-  max-width: 680px;
-  margin: 0;
+
+.phase-hud-copy strong {
   overflow: hidden;
-  color: #87a597;
-  font-size: 13px;
-  line-height: 1.4;
+  color: var(--text-strong);
+  font-size: 15px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.phase-resource {
-  min-width: 91px;
-  padding-right: 14px;
-  border-right: 1px solid #295346;
-  text-align: right;
+.phase-hud-copy small {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  color: #759789;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.phase-resource span,
-.phase-resource small {
-  display: block;
-  color: var(--muted);
-  font: 600 10px/1.2 var(--mono);
+
+.round-info-button,
+.room-details-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 9px;
+  border: 1px solid #315e50;
+  border-radius: 4px;
+  background: #0d1a16;
+  color: #8daf9f;
+  font: 700 9px/1 var(--mono);
   text-transform: uppercase;
+  cursor: pointer;
 }
-.phase-resource strong {
-  display: block;
-  margin: 4px 0;
-  color: var(--lime);
-  font: 700 18px/1 var(--mono);
-}
-.phase-resource small {
-  font-size: 9px;
+
+.round-info-button:hover,
+.room-details-button:hover {
+  border-color: #6c9e8b;
+  color: #d9e9dc;
 }
 
 .primary-action,
@@ -117,79 +108,75 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
+  gap: 8px;
   border: 1px solid #daee64;
   border-radius: 4px;
   background: var(--lime);
   color: #10180f;
-  font: 750 13px/1 var(--mono);
+  font: 750 11px/1 var(--mono);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  transition: 130ms ease;
 }
+
 .primary-action {
-  min-width: 144px;
-  height: 42px;
-  padding: 0 14px;
-  box-shadow: 0 0 22px rgba(231, 247, 111, 0.22);
+  min-width: 132px;
+  height: 38px;
+  padding: 0 12px;
 }
-.primary-action:hover,
-.enter-button:hover {
+.primary-action:hover:not(:disabled) {
   background: #f0fa9d;
-  transform: translateY(-1px);
-  box-shadow: 0 0 30px rgba(231, 247, 111, 0.4);
+}
+.primary-action:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
 }
 .danger-action {
   border-color: #f6744e;
   background: #f66950;
   color: #fef2e9;
 }
-.danger-action:hover {
-  background: #f7795d;
+
+.round-brief-modal {
+  position: relative;
+  width: min(480px, 94vw);
+  padding: 28px;
+  border: 1px solid #477968;
+  border-radius: 8px;
+  background: #0c1814;
+  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.6);
 }
 
-.prime-checks {
-  display: grid;
-  gap: 5px;
-  min-width: 115px;
-  color: #517b6c;
-  font: 600 10px/1 var(--mono);
+.round-brief-kicker {
+  color: var(--lime);
+  font: 700 10px/1 var(--mono);
   text-transform: uppercase;
 }
-.prime-checks span {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.round-brief-modal h2 {
+  margin: 10px 40px 8px 0;
+  color: var(--text-strong);
 }
-.prime-checks span.ready {
-  color: #9dc582;
+.round-brief-modal > p {
+  color: #88a99a;
+  font-size: 13px;
+  line-height: 1.55;
 }
-
-.assault-banner {
-  border-left-color: var(--red);
-}
-.assault-stats {
+.round-brief-modal dl {
   display: grid;
-  grid-template-columns: repeat(3, auto);
-  gap: 18px;
-  padding: 0 10px;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 20px 0;
 }
-.assault-stats div {
-  text-align: right;
+.round-brief-modal dl div {
+  padding: 9px;
+  border: 1px solid #295142;
 }
-.assault-stats span {
-  display: block;
-  color: var(--muted);
-  font: 600 9px/1 var(--mono);
+.round-brief-modal dt {
+  color: #5f8878;
+  font: 700 8px/1 var(--mono);
   text-transform: uppercase;
 }
-.assault-stats strong {
-  display: block;
-  margin-top: 5px;
-  color: #c7ddcc;
-  font: 700 15px/1 var(--mono);
-}
-.assault-stats strong.bad {
-  color: var(--red);
+.round-brief-modal dd {
+  margin: 6px 0 0;
+  color: #c1d5c7;
+  font: 700 11px/1.2 var(--mono);
 }

@@ -4,16 +4,17 @@ import { useState } from "react";
 import { FACILITY_MAP, ROOM_ORDER } from "../game/config";
 import type { GameState, RoomId, SpeciesId, TransportRunId } from "../game/types";
 import { EnemyNode } from "./gameMap/EnemyNode";
+import { DamageNumberLayer } from "./gameMap/DamageNumberLayer";
 import {
   MapBackdrop,
   FacilityCorridors,
   FacilityDoors,
   IncidentLayer,
-  ProcessNodeLabels,
   ProcessNodes,
   TransportNetwork,
 } from "./gameMap/MapLayers";
 import { MapChrome } from "./gameMap/MapChrome";
+import { MapLabelLayer } from "./gameMap/MapLabelLayer";
 import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH, type CameraTransform } from "./gameMap/mapGeometry";
 import { RoomNode } from "./gameMap/RoomNode";
 import { useMapCamera } from "./gameMap/useMapCamera";
@@ -29,6 +30,7 @@ interface GameMapProps {
 interface MapSceneProps extends GameMapProps {
   camera: CameraTransform;
   hoveredRunId: TransportRunId | null;
+  onHoverRoom: (roomId: RoomId | null) => void;
   onHoverRun: (runId: TransportRunId | null) => void;
   selectedSpecies: SpeciesId | null;
 }
@@ -37,6 +39,7 @@ const MapScene = ({
   camera,
   game,
   hoveredRunId,
+  onHoverRoom,
   onHoverRun,
   onSelectRoom,
   selectedRoomId,
@@ -59,6 +62,7 @@ const MapScene = ({
           game={game}
           roomId={roomId}
           selected={selectedRoomId === roomId}
+          onHover={onHoverRoom}
           onSelect={onSelectRoom}
         />
       ))}
@@ -71,11 +75,12 @@ const MapScene = ({
         selectedSpecies={selectedSpecies}
       />
       <ProcessNodes game={game} />
-      <ProcessNodeLabels />
+      <MapLabelLayer selectedRoomId={selectedRoomId} />
       <IncidentLayer game={game} />
       {game.enemies.map((enemy) => (
         <EnemyNode key={enemy.id} enemy={enemy} />
       ))}
+      <DamageNumberLayer game={game} />
     </pixiContainer>
   </Application>
 );
@@ -83,6 +88,7 @@ const MapScene = ({
 export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) => {
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [hoveredRunId, setHoveredRunId] = useState<TransportRunId | null>(null);
+  const [hoveredRoomId, setHoveredRoomId] = useState<RoomId | null>(null);
   const {
     camera,
     handlePointerDown,
@@ -117,6 +123,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
         camera={camera}
         game={game}
         hoveredRunId={hoveredRunId}
+        onHoverRoom={setHoveredRoomId}
         onHoverRun={setHoveredRunId}
         onSelectRoom={onSelectRoom}
         selectedRoomId={selectedRoomId}
@@ -125,6 +132,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
       <MapChrome
         game={game}
         hoveredRunId={hoveredRunId}
+        hoveredRoomId={hoveredRoomId}
         onResetCamera={resetCamera}
         onSelectSpecies={setSelectedSpecies}
         onZoom={zoomBy}

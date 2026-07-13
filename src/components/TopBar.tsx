@@ -7,23 +7,26 @@ import {
   Play,
   RotateCcw,
   Shield,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { setMuted, setMusicVolume, setSfxVolume, useAudioSettings } from "../audio";
 import { levelDefinitionFor } from "../game/queries";
 import { commandDecision as evaluateCommand } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
 import type { GamePhase, GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 
-const phases: Array<{ id: GamePhase; label: string }> = [
-  { id: "build", label: "Plan" },
-  { id: "prime", label: "Prime" },
-  { id: "assault", label: "Locked assault" },
-];
-
-const phaseIndex = (phase: GamePhase): number => {
-  const index = phases.findIndex((entry) => entry.id === phase);
-  return index < 0 ? phases.length : index;
+const phaseLabel: Record<GamePhase, string> = {
+  level_briefing: "Briefing",
+  build: "Planning",
+  prime: "Prime live",
+  assault: "Assault",
+  round_result: "Round result",
+  level_complete: "Level complete",
+  victory: "Victory",
+  defeat: "Defeat",
 };
 
 const BrandLockup = () => (
@@ -37,12 +40,10 @@ const BrandLockup = () => (
       <p>Catalyst</p>
       <strong>Castellum</strong>
     </div>
-    <span className="prototype-badge">CHLOR-ALKALI MVP</span>
   </div>
 );
 
 const CycleStatus = ({ game }: { game: GameState }) => {
-  const currentIndex = phaseIndex(game.phase);
   const level = levelDefinitionFor(game);
   return (
     <div className="cycle-status">
@@ -55,18 +56,7 @@ const CycleStatus = ({ game }: { game: GameState }) => {
           {String(level.rounds.length).padStart(2, "0")}
         </strong>
       </div>
-      <ol className="phase-stepper" aria-label="Round phases">
-        {phases.map((phase, index) => (
-          <li
-            key={phase.id}
-            className={`${index === currentIndex ? "active" : ""} ${index < currentIndex ? "complete" : ""}`}
-            aria-current={index === currentIndex ? "step" : undefined}
-          >
-            <span className="step-dot">{index + 1}</span>
-            <span>{phase.label}</span>
-          </li>
-        ))}
-      </ol>
+      <span className={`topbar-phase phase-${game.phase}`}>{phaseLabel[game.phase]}</span>
     </div>
   );
 };
@@ -132,6 +122,64 @@ const RestartSaveConfirmation = ({
   </div>
 );
 
+const AudioControls = () => {
+  const settings = useAudioSettings();
+  const [open, setOpen] = useState(false);
+  const muteLabel = settings.muted ? "Unmute audio" : "Mute audio";
+  return (
+    <div className="audio-controls" data-testid="audio-controls">
+      <button
+        className="icon-button"
+        type="button"
+        aria-label="Audio settings"
+        title="Audio settings"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+      >
+        {settings.muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+      </button>
+      {open && (
+        <div className="audio-popover" role="group" aria-label="Audio settings">
+          <label>
+            <span>Music</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={settings.musicVolume}
+              aria-label="Music volume"
+              onChange={(event) => setMusicVolume(Number(event.target.value))}
+            />
+          </label>
+          <label>
+            <span>Effects</span>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={settings.sfxVolume}
+              aria-label="Effects volume"
+              onChange={(event) => setSfxVolume(Number(event.target.value))}
+            />
+          </label>
+          <button
+            type="button"
+            data-testid="audio-mute-toggle"
+            onClick={() => setMuted(!settings.muted)}
+          >
+            {settings.muted ? <Volume2 size={14} /> : <VolumeX size={14} />} {muteLabel}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const simulationPauseLabel = (game: GameState): string =>
+  game.paused ? "Resume simulation" : "Pause simulation";
+
 const GlobalControls = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
   const setShowHelp = useGameStore((state) => state.setShowHelp);
@@ -142,7 +190,6 @@ const GlobalControls = ({ game }: { game: GameState }) => {
   const speedCommand = { type: "set_speed", speed: game.speed === 1 ? 2 : 1 } as const;
   const pauseDecision = evaluateCommand(game, pauseCommand);
   const speedDecision = evaluateCommand(game, speedCommand);
-  const pauseLabel = game.paused ? "Resume simulation" : "Pause simulation";
   const restart = useCallback(() => {
     setConfirmingRestart(false);
     reset();
@@ -153,8 +200,8 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       <button
         className="icon-button"
         type="button"
-        aria-label={pauseLabel}
-        title={pauseLabel}
+        aria-label={simulationPauseLabel(game)}
+        title={simulationPauseLabel(game)}
         disabled={!pauseDecision.allowed}
         onClick={() => dispatch(pauseCommand)}
       >
@@ -173,6 +220,7 @@ const GlobalControls = ({ game }: { game: GameState }) => {
         <FastForward size={15} /> {game.speed}×
       </button>
       <span className="control-divider" />
+      <AudioControls />
       <button
         className="icon-button"
         type="button"

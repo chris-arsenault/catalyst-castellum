@@ -1,52 +1,38 @@
+import { Plus, PackageOpen } from "lucide-react";
 import { useCallback } from "react";
-import { Atom, Plus, Recycle, Wind } from "lucide-react";
-import {
-  GAS_JUNCTIONS,
-  GAS_LABELS,
-  GAS_SOURCES,
-  LIQUID_LABELS,
-  LIQUID_SOURCES,
-  SPECIES_DEFINITIONS,
-} from "../game/config";
+import { GAS_SOURCES, LIQUID_SOURCES, SPECIES_DEFINITIONS } from "../game/config";
 import { gasAmountTotal, liquidAmountTotal } from "../game/queries";
-import { commandDecision as evaluateCommand } from "../presentation/selectors";
-import { useGameStore } from "../application/store";
 import {
   GAS_SOURCE_IDS,
   GAS_TYPES,
   LIQUID_SOURCE_IDS,
-  LIQUID_TYPES,
   type GasAmounts,
   type GasSourceId,
   type LiquidSourceId,
 } from "../game/types";
+import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { useGameStore } from "../application/store";
 
-const MIN_VISIBLE_AMOUNT = 0.005;
-
-const gasComposition = (gas: GasAmounts): string => {
-  const entries = GAS_TYPES.filter((species) => gas[species] >= MIN_VISIBLE_AMOUNT);
-  if (entries.length === 0) return "empty";
-  return entries
+const gasComposition = (gas: GasAmounts): string =>
+  GAS_TYPES.filter((species) => gas[species] >= 0.005)
     .sort((left, right) => gas[right] - gas[left])
     .map((species) => `${SPECIES_DEFINITIONS[species].formula} ${gas[species].toFixed(1)}`)
-    .join(" · ");
-};
+    .join(" · ") || "Empty";
 
-interface InventoryCardProps {
+interface SupplyProps {
   accent: string;
   amount: number;
   capacity: number;
   chargeAmount: number;
   chargeCost: number;
   detail: string;
-  detailTestId: string;
   formula: string;
   name: string;
   sourceId: GasSourceId | LiquidSourceId;
   sourceKind: "gas" | "liquid";
 }
 
-const InventoryCard = (props: InventoryCardProps) => {
+const Supply = (props: SupplyProps) => {
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const command =
@@ -54,93 +40,78 @@ const InventoryCard = (props: InventoryCardProps) => {
       ? ({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId } as const)
       : ({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId } as const);
   const decision = evaluateCommand(game, command);
-  const handleCharge = useCallback(() => {
+  const charge = useCallback(() => {
     if (props.sourceKind === "gas") {
       dispatch({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId });
       return;
     }
     dispatch({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId });
   }, [dispatch, props.sourceId, props.sourceKind]);
-  const displayedAmount = decision.amount > 0 ? decision.amount : props.chargeAmount;
-  const displayedCost = decision.cost > 0 ? decision.cost : props.chargeCost;
+  const fill = Math.min(100, (props.amount / props.capacity) * 100);
   return (
-    <div className="feedstock-card" style={{ "--feedstock": props.accent }}>
-      <span>
-        {props.formula} · {props.name}
+    <article className="supply-card" style={{ "--supply": props.accent }}>
+      <span className="supply-formula">{props.formula}</span>
+      <span className="supply-name">{props.name}</span>
+      <span className="supply-fill" aria-hidden="true">
+        <i style={{ "--supply-fill": `${fill}%` }} />
       </span>
-      <strong data-testid={`source-${props.sourceId}`}>
-        {props.amount.toFixed(1)} / {props.capacity} <small>mol-eq</small>
-      </strong>
-      <small data-testid={props.detailTestId}>{props.detail}</small>
+      <strong data-testid={`source-${props.sourceId}`}>{props.amount.toFixed(0)}</strong>
       <button
         type="button"
         disabled={!decision.allowed}
-        title={decision.reason ?? undefined}
-        onClick={handleCharge}
+        title={decision.reason ?? `Restock ${props.formula}`}
+        aria-label={`Restock ${props.name}`}
+        onClick={charge}
       >
-        <Plus size={12} /> {displayedAmount.toFixed(0)} · {displayedCost}m
+        <Plus size={13} />
       </button>
-    </div>
+      <span className="supply-tooltip" role="tooltip">
+        <b>{props.name}</b>
+        {props.detail}
+        <small>
+          {props.amount.toFixed(1)} / {props.capacity} mol-eq · +{props.chargeAmount.toFixed(0)} for{" "}
+          {props.chargeCost} matter
+        </small>
+      </span>
+    </article>
   );
 };
 
-const GasSourceCard = ({ sourceId }: { sourceId: GasSourceId }) => {
+const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
   const game = useGameStore((state) => state.game);
   const source = GAS_SOURCES[sourceId];
   const gas = game.gasSources[sourceId].gas;
-  const amount = gasAmountTotal(gas);
-  const chargeAmount = Object.values(source.chargeGas).reduce(
-    (total, entry) => total + (entry ?? 0),
-    0
-  );
-  const detailTestId =
-    sourceId === "starter_gas_header"
-      ? "starter-gas-composition"
-      : `source-${sourceId}-composition`;
   return (
-    <>
-      <InventoryCard
-        accent={source.accent}
-        amount={amount}
-        capacity={source.capacity}
-        chargeAmount={chargeAmount}
-        chargeCost={source.chargeCost}
-        detail={gasComposition(gas)}
-        detailTestId={detailTestId}
-        formula={source.formula}
-        name={source.name}
-        sourceId={sourceId}
-        sourceKind="gas"
-      />
-      {sourceId === "starter_gas_header" && (
-        <div className="feedstock-card" style={{ "--feedstock": "#d0855b" }}>
-          <span>CORE · Mixed gas service junction</span>
-          <strong data-testid="core-gas-junction">
-            {gasAmountTotal(game.gasJunctions.core.gas).toFixed(1)} / {GAS_JUNCTIONS.core.capacity}{" "}
-            <small>mol-eq</small>
-          </strong>
-          <small data-testid="core-gas-junction-composition">
-            {gasComposition(game.gasJunctions.core.gas)} · feeds Core–R-02 gas duct
-          </small>
-        </div>
+    <Supply
+      accent={source.accent}
+      amount={gasAmountTotal(gas)}
+      capacity={source.capacity}
+      chargeAmount={Object.values(source.chargeGas).reduce(
+        (total, amount) => total + (amount ?? 0),
+        0
       )}
-    </>
+      chargeCost={source.chargeCost}
+      detail={gasComposition(gas)}
+      formula={source.formula}
+      name={source.name}
+      sourceId={sourceId}
+      sourceKind="gas"
+    />
   );
 };
 
-const LiquidSourceCard = ({ sourceId }: { sourceId: LiquidSourceId }) => {
+const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
   const game = useGameStore((state) => state.game);
   const source = LIQUID_SOURCES[sourceId];
   const amount = liquidAmountTotal(game.liquidSources[sourceId].liquid);
   return (
-    <InventoryCard
+    <Supply
       accent={source.accent}
       amount={amount}
       capacity={source.capacity}
       chargeAmount={source.chargeAmount}
       chargeCost={source.chargeCost}
       detail={`${source.formula} ${amount.toFixed(1)}`}
-      detailTestId={`source-${sourceId}-composition`}
       formula={source.formula}
       name={source.name}
       sourceId={sourceId}
@@ -151,50 +122,21 @@ const LiquidSourceCard = ({ sourceId }: { sourceId: LiquidSourceId }) => {
 
 export const FeedstockStrip = () => {
   const game = useGameStore((state) => state.game);
-  const ventTotal = gasAmountTotal(game.gasVent);
-  const drainTotal = liquidAmountTotal(game.liquidDrain);
-  const ventDominant = GAS_TYPES.reduce((best, type) =>
-    game.gasVent[type] > game.gasVent[best] ? type : best
-  );
-  const drainDominant = LIQUID_TYPES.reduce((best, type) =>
-    game.liquidDrain[type] > game.liquidDrain[best] ? type : best
-  );
   return (
-    <section className="feedstock-strip" aria-label="Core material inventories">
-      <div className="feedstock-heading">
-        <span>Core material manifold</span>
-        <small>
-          <Atom size={12} /> EXOTIC TRANSMUTATION · elemental conservation waived
-        </small>
-      </div>
+    <section className="supply-dock" aria-label="Supplies" data-testid="supply-dock">
+      <span className="supply-dock-label">
+        <PackageOpen size={14} /> Supplies
+      </span>
       {GAS_SOURCE_IDS.filter((sourceId) => game.availability.gasSources.includes(sourceId)).map(
         (sourceId) => (
-          <GasSourceCard key={sourceId} sourceId={sourceId} />
+          <GasSupply key={sourceId} sourceId={sourceId} />
         )
       )}
       {LIQUID_SOURCE_IDS.filter((sourceId) =>
         game.availability.liquidSources.includes(sourceId)
       ).map((sourceId) => (
-        <LiquidSourceCard key={sourceId} sourceId={sourceId} />
+        <LiquidSupply key={sourceId} sourceId={sourceId} />
       ))}
-      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#69c5cd" }}>
-        <span>
-          <Wind size={12} /> Gas vent inventory
-        </span>
-        <strong data-testid="gas-vent-total">{ventTotal.toFixed(1)} mol-eq</strong>
-        <small>
-          {ventTotal > 0.01 ? `${GAS_LABELS[ventDominant]} dominant` : "isolated · empty"}
-        </small>
-      </div>
-      <div className="feedstock-card recovery-card" style={{ "--feedstock": "#548ada" }}>
-        <span>
-          <Recycle size={12} /> Liquid recovery
-        </span>
-        <strong data-testid="liquid-drain-total">{drainTotal.toFixed(1)} mol-eq</strong>
-        <small>
-          {drainTotal > 0.01 ? `${LIQUID_LABELS[drainDominant]} dominant` : "isolated · empty"}
-        </small>
-      </div>
     </section>
   );
 };

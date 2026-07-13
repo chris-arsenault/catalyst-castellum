@@ -3,12 +3,16 @@ import {
   GAS_TYPES,
   LIQUID_TYPES,
   type GameState,
+  type RoomId,
   type SpeciesId,
   type TransportRunId,
 } from "../../game/types";
 import { SPECIES_DEFINITIONS } from "../../game/config";
 import { FIT_ZOOM } from "./mapGeometry";
 import { TransportTooltip } from "./TransportTooltip";
+import { RoomTooltip } from "./RoomTooltip";
+
+// HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
 interface MaterialFlowControlProps {
   selectedSpecies: SpeciesId | null;
@@ -72,6 +76,7 @@ const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => (
 interface MapChromeProps {
   game: GameState;
   hoveredRunId: TransportRunId | null;
+  hoveredRoomId: RoomId | null;
   onResetCamera: () => void;
   onSelectSpecies: (species: SpeciesId | null) => void;
   onZoom: (factor: number) => void;
@@ -82,6 +87,7 @@ interface MapChromeProps {
 export const MapChrome = ({
   game,
   hoveredRunId,
+  hoveredRoomId,
   onResetCamera,
   onSelectSpecies,
   onZoom,
@@ -96,5 +102,20 @@ export const MapChrome = ({
     <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
     <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
     <TransportTooltip game={game} runId={hoveredRunId} selectedSpecies={selectedSpecies} />
+    <RoomTooltip game={game} roomId={hoveredRoomId} />
+    <div className="map-material-legend" aria-label="Map materials and damage legend">
+      <span>
+        <i className="upper-gas" /> upper gas
+      </span>
+      <span>
+        <i className="lower-gas" /> lower gas
+      </span>
+      <span>
+        <i className="liquid" /> liquid
+      </span>
+      <span>
+        <i className="damage" /> typed damage
+      </span>
+    </div>
   </div>
 );

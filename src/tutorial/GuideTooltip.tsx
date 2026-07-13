@@ -1,9 +1,8 @@
 import { useCallback } from "react";
-import { ArrowRight, Check, Eye, MousePointerClick, X } from "lucide-react";
+import { Check, Eye, MousePointerClick, X } from "lucide-react";
 import type { TooltipRenderProps } from "react-joyride";
 import { useGameStore } from "../application/store";
 import type { GuideStepDefinition } from "./guideModel";
-import { useGuideAdvance } from "./guideUiContext";
 
 interface GuideStepData {
   definition: GuideStepDefinition;
@@ -17,13 +16,11 @@ const StepIcon = ({ kind }: Pick<GuideStepDefinition, "kind">) => {
 };
 
 const CoachFooter = ({
-  advance,
   complete,
   dismiss,
   satisfied,
   stepKind,
 }: {
-  advance: () => void;
   complete: boolean;
   dismiss: () => void;
   satisfied: boolean;
@@ -44,10 +41,7 @@ const CoachFooter = ({
   if (satisfied) {
     return (
       <div className="tutorial-coach-reflection">
-        <small>RESULT RECORDED · inspect the board, then continue</small>
-        <button type="button" data-testid="tutorial-continue" onClick={advance}>
-          Continue <ArrowRight size={15} />
-        </button>
+        <small>RESULT RECORDED · advancing with game state</small>
       </div>
     );
   }
@@ -63,17 +57,12 @@ const CoachFooter = ({
 export const GuideTooltip = ({ index, size, step, tooltipProps }: TooltipRenderProps) => {
   const game = useGameStore((state) => state.game);
   const dismiss = useGameStore((state) => state.dismissTutorialGuide);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const advance = useGuideAdvance();
   const { definition, guideLabel } = step.data as GuideStepData;
   const complete = definition.kind === "complete";
   const satisfied = !complete && definition.completed(game);
   const finish = useCallback(() => {
-    if (game.paused && (game.phase === "prime" || game.phase === "assault")) {
-      dispatch({ type: "set_pause", paused: false });
-    }
     dismiss();
-  }, [dismiss, dispatch, game.paused, game.phase]);
+  }, [dismiss]);
 
   return (
     <div
@@ -118,7 +107,6 @@ export const GuideTooltip = ({ index, size, step, tooltipProps }: TooltipRenderP
       </div>
 
       <CoachFooter
-        advance={advance}
         complete={complete}
         dismiss={finish}
         satisfied={satisfied}

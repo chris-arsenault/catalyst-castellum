@@ -4,7 +4,7 @@
   position: relative;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(235px, 0.72fr) minmax(390px, 1.3fr) minmax(230px, 0.7fr) auto;
+  grid-template-columns: minmax(205px, 0.75fr) minmax(250px, 1fr) minmax(205px, 0.7fr) auto;
   align-items: stretch;
   min-width: 0;
   border-bottom: 1px solid var(--line);
@@ -17,7 +17,7 @@
   align-items: center;
   gap: 12px;
   min-width: 0;
-  padding: 0 20px;
+  padding: 0 16px;
   border-right: 1px solid rgba(75, 110, 99, 0.35);
 }
 
@@ -106,10 +106,29 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   min-width: 0;
-  padding: 0 22px;
+  padding: 0 16px;
   border-right: 1px solid rgba(75, 110, 99, 0.35);
+}
+
+.topbar-phase {
+  justify-self: start;
+  padding: 5px 7px;
+  border: 1px solid #396858;
+  border-radius: 999px;
+  color: #94b4a4;
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.topbar-phase.phase-assault {
+  border-color: #9a4a3d;
+  color: #ff967b;
+}
+.topbar-phase.phase-prime {
+  border-color: #4a8990;
+  color: #83d3dc;
 }
 
 .cycle-number span,
@@ -375,4 +394,52 @@
   height: 25px;
   margin: 0 2px;
   background: #294e42;
+}
+
+.audio-controls {
+  position: relative;
+  display: grid;
+}
+.audio-popover {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 12px);
+  right: -8px;
+  display: grid;
+  width: 210px;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #294e42;
+  border-radius: 6px;
+  background: #0d1512;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+.audio-popover label {
+  display: grid;
+  gap: 4px;
+  font: 600 11px/1 var(--mono);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.audio-popover input[type="range"] {
+  width: 100%;
+  accent-color: var(--lime);
+}
+.audio-popover > button {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  border: 1px solid #294e42;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  font: 600 11px/1 var(--mono);
+  cursor: pointer;
+}
+.audio-popover > button:hover {
+  border-color: #629482;
+  color: var(--lime);
 }

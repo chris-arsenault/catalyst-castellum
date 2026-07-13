@@ -6,13 +6,15 @@ import {
   type MaterialRunFlow,
   type TransportPhaseStatus,
 } from "../../game/queries";
-import type {
-  GameState,
-  GridCell,
-  Point,
-  SpeciesId,
-  TransportPhase,
-  TransportRunId,
+import {
+  GAS_TYPES,
+  LIQUID_TYPES,
+  type GameState,
+  type GridCell,
+  type Point,
+  type SpeciesId,
+  type TransportPhase,
+  type TransportRunId,
 } from "../../game/types";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
 
@@ -108,13 +110,31 @@ const drawFlowArrows = (
   if (rate <= FLOW_EPSILON) return;
   const direction = flow.net > 0 ? 1 : -1;
   const size = 5 + Math.min(8, Math.sqrt(rate) * 5);
+  const travel = (elapsed * (0.11 + Math.min(0.2, rate * 0.018))) % 1;
   for (let index = 1; index <= 5; index += 1) {
-    const progress = direction > 0 ? index / 6 : 1 - index / 6;
+    const forwardProgress = (index / 5 + travel) % 1;
+    const progress = direction > 0 ? forwardProgress : 1 - forwardProgress;
     const sample = samplePath(points, progress);
     if (direction < 0) sample.angle += Math.PI;
     const pulse = 0.48 + 0.42 * (0.5 + 0.5 * Math.sin(elapsed * 5 + index * 1.2));
     drawArrow(graphics, sample, size, color, pulse, flow.priming);
   }
+};
+
+const drawArrivalPulse = (
+  graphics: Graphics,
+  points: readonly Point[],
+  flow: MaterialRunFlow,
+  elapsed: number,
+  color: number
+): void => {
+  if (flow.priming || Math.abs(flow.net) <= FLOW_EPSILON) return;
+  const destination = samplePath(points, flow.net > 0 ? 1 : 0).point;
+  const progress = (elapsed * 1.8) % 1;
+  graphics
+    .circle(destination.x, destination.y, 7 + progress * 20)
+    .stroke({ color, width: 3 - progress * 1.5, alpha: 0.86 * (1 - progress) });
+  graphics.circle(destination.x, destination.y, 5).fill({ color, alpha: 0.9 });
 };
 
 const drawStopMarker = (graphics: Graphics, points: readonly Point[]): void => {
@@ -184,6 +204,7 @@ const drawLane = (graphics: Graphics, model: LaneModel): void => {
       alpha: 0.4,
     });
     drawFlowArrows(graphics, model.points, model.flow, model.elapsed, model.color);
+    drawArrivalPulse(graphics, model.points, model.flow, model.elapsed, model.color);
   }
   if (model.status.blocked && model.hovered) drawStopMarker(graphics, model.points);
 };
@@ -200,9 +221,38 @@ interface PhaseLaneModel {
   state: GameState;
 }
 
+const mixedPhaseColor = (
+  state: GameState,
+  runId: TransportRunId,
+  phase: TransportPhase,
+  fallback: number
+): number => {
+  const rates =
+    phase === "gas"
+      ? GAS_TYPES.map((species) => ({
+          color: colorNumber(SPECIES_DEFINITIONS[species].color),
+          rate: Math.abs(state.gasConduits[runId].lastSpeciesFlow[species]),
+        }))
+      : LIQUID_TYPES.map((species) => ({
+          color: colorNumber(SPECIES_DEFINITIONS[species].color),
+          rate: Math.abs(state.liquidConduits[runId].lastSpeciesFlow[species]),
+        }));
+  const total = rates.reduce((sum, entry) => sum + entry.rate, 0);
+  if (total <= FLOW_EPSILON) return fallback;
+  const mixed = rates.reduce(
+    (rgb, entry) => ({
+      red: rgb.red + ((entry.color >> 16) & 0xff) * (entry.rate / total),
+      green: rgb.green + ((entry.color >> 8) & 0xff) * (entry.rate / total),
+      blue: rgb.blue + (entry.color & 0xff) * (entry.rate / total),
+    }),
+    { red: 0, green: 0, blue: 0 }
+  );
+  return (Math.round(mixed.red) << 16) | (Math.round(mixed.green) << 8) | Math.round(mixed.blue);
+};
+
 const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
   const points = offsetPath(model.basePath, model.offset);
-  let color = model.baseColor;
+  let color = mixedPhaseColor(model.state, model.runId, model.phase, model.baseColor);
   let flow: MaterialRunFlow | null = null;
   let status = transportRunPhaseStatus(model.state, model.runId, model.phase);
   if (model.selectedSpecies && SPECIES_DEFINITIONS[model.selectedSpecies].phase === model.phase) {
@@ -219,6 +269,14 @@ const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
     };
   } else if (model.selectedSpecies) {
     status = { ...status, active: false, configured: false };
+  } else if (status.rate > FLOW_EPSILON) {
+    flow = {
+      forward: status.rate,
+      reverse: 0,
+      net: status.rate,
+      blocked: status.blocked,
+      priming: status.priming,
+    };
   }
   drawLane(graphics, {
     points,

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { attachAudioDirector } from "../audio";
 import { useGameStore } from "./store";
 import { flushScheduledGameSave } from "./persistence/saveScheduler";
 
@@ -11,6 +12,10 @@ export const useApplicationInitialization = (): void => {
     window.addEventListener("pagehide", flush);
     return () => window.removeEventListener("pagehide", flush);
   }, [initialize]);
+};
+
+export const useAudioDirector = (): void => {
+  useEffect(() => attachAudioDirector(useGameStore), []);
 };
 
 export const useSimulationClock = (): void => {

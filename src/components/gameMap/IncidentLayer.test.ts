@@ -60,6 +60,7 @@ describe("incident map aggregation", () => {
       count: 2,
       kills: 1,
       pressureDamage: 26,
+      heatDamage: 0,
     });
   });
 });

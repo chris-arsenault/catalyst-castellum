@@ -1,4 +1,5 @@
-import { Activity, Biohazard, Droplets, FlaskConical, Gauge, Thermometer } from "lucide-react";
+import { Activity, Droplets, FlaskConical, Gauge, Info, Thermometer, X } from "lucide-react";
+import { useCallback, useState } from "react";
 import {
   GAS_COLORS,
   GAS_LABELS,
@@ -7,11 +8,9 @@ import {
   LIQUID_LABELS,
   REACTION_DEFINITIONS,
   ROOM_DEFINITIONS,
-  ROOM_GEOMETRY,
-  roomRing,
+  roomVolume,
 } from "../game/config";
 import { gasPercent, liquidPercent } from "../game/queries";
-import { equipmentFunctionalSummary } from "../presentation/roomCopy";
 import { limitingFactorCopy } from "../presentation/limitingFactorCopy";
 import { roomAnalysis } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
@@ -105,12 +104,13 @@ const LiquidComposition = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
   const analysis = roomAnalysis(room);
+  const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
   const presentLiquids = LIQUID_TYPES.filter((liquid) => room.liquid[liquid] > 0.05);
   return (
     <div className="composition-group liquid-group">
       <div className="composition-heading">
         <span>Liquid inventory</span>
-        <strong>{Math.round(analysis.liquidTotal)}% fill</strong>
+        <strong>{formatPercent(fill)} fill</strong>
       </div>
       <div className="stacked-bar liquid-bar" aria-label="Liquid composition">
         {analysis.liquidTotal <= 0.1 && <span className="empty-liquid">DRY</span>}
@@ -160,6 +160,7 @@ const RoomMetrics = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
   const analysis = roomAnalysis(room);
+  const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
 
   return (
     <section className="metric-grid" aria-label="Room metrics">
@@ -173,7 +174,7 @@ const RoomMetrics = () => {
       </div>
       <div>
         <Thermometer size={15} />
-        <span>Gas upper/lower</span>
+        <span>Temperature</span>
         <strong>
           {Math.round(analysis.upperGasTemperature)}°
           <small> / {Math.round(analysis.lowerGasTemperature)}°C</small>
@@ -181,17 +182,9 @@ const RoomMetrics = () => {
       </div>
       <div>
         <Droplets size={15} />
-        <span>Liquid fill</span>
+        <span>Liquid</span>
         <strong>
-          {Math.round(analysis.liquidTotal)}
-          <small>% · z{analysis.liquidSurfaceElevation.toFixed(1)}</small>
-        </strong>
-      </div>
-      <div>
-        <Biohazard size={15} />
-        <span>Enemy residue</span>
-        <strong>
-          {Math.round(room.residue)}
+          {Math.round(fill * 100)}
           <small>%</small>
         </strong>
       </div>
@@ -267,7 +260,7 @@ const ReactionPanel = () => {
 const RecentIncidents = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const incidents = game.incidents.filter((incident) => incident.roomId === roomId).slice(0, 3);
+  const incidents = game.incidents.filter((incident) => incident.roomId === roomId).slice(0, 1);
   return (
     <section
       className="effects-panel recent-incidents"
@@ -306,23 +299,62 @@ const RecentIncidents = () => {
   );
 };
 
+const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
+  const roomId = useGameStore((state) => state.selectedRoomId);
+  const definition = ROOM_DEFINITIONS[roomId];
+  return (
+    <div className="modal-backdrop room-details-backdrop">
+      <section
+        className="room-details-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="room-details-title"
+      >
+        <header>
+          <div>
+            <span>{definition.code} · Room details</span>
+            <h2 id="room-details-title">{definition.name}</h2>
+          </div>
+          <button
+            type="button"
+            className="modal-close"
+            aria-label="Close room details"
+            onClick={onClose}
+          >
+            <X size={18} />
+          </button>
+        </header>
+        <div className="room-details-scroll">
+          <p className="room-details-blurb">{definition.blurb}</p>
+          <Composition />
+          <EffectsPanel />
+          <ReactionPanel />
+          <ArchitecturalConnections />
+        </div>
+        <footer>
+          <button type="button" className="secondary-action wide" onClick={onClose}>
+            Back to the map
+          </button>
+        </footer>
+      </section>
+    </div>
+  );
+};
+
 export const RoomInspector = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const definition = ROOM_DEFINITIONS[roomId];
-  const geometry = ROOM_GEOMETRY[roomId];
-  const ring = roomRing(roomId);
   const analysis = roomAnalysis(game.rooms[roomId]);
+  const [showDetails, setShowDetails] = useState(false);
+  const closeDetails = useCallback(() => setShowDetails(false), [setShowDetails]);
 
   return (
     <aside className="room-inspector" data-testid="room-inspector">
       <div className="inspector-header">
         <div className="inspector-room-code">
           <span>{definition.code}</span>
-          <em>{ring} ring</em>
-          <em>
-            z{geometry.floorElevation}–{geometry.floorElevation + geometry.height}
-          </em>
+          <em>Selected room</em>
         </div>
         <div
           className={`hazard-badge hazard-${analysis.hazardLabel.toLowerCase()}`}
@@ -332,26 +364,17 @@ export const RoomInspector = () => {
           <strong>{Math.round(analysis.hazard)}</strong>
         </div>
         <h2 data-testid="room-name">{definition.name}</h2>
-        <p>{definition.blurb}</p>
-        {definition.structure === "room" && (
-          <div className="room-function-label">
-            {equipmentFunctionalSummary(game.rooms[roomId])}
-          </div>
-        )}
+        <button className="room-details-button" type="button" onClick={() => setShowDetails(true)}>
+          <Info size={14} /> Room details
+        </button>
       </div>
 
       <div className="inspector-scroll">
         <RoomMetrics />
-        <ArchitecturalConnections />
-        <RecentIncidents />
-        <Composition />
-        <EffectsPanel />
-        <ReactionPanel />
         <ProcessControls />
-        <div className="inspector-end-mark">
-          <span /> END CHAMBER RECORD <span />
-        </div>
+        <RecentIncidents />
       </div>
+      {showDetails && <RoomDetailsModal onClose={closeDetails} />}
     </aside>
   );
 };

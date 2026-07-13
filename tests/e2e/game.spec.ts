@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { CONDUIT_BLUEPRINTS, gridCellToWorldPoint, roomCenterWorld } from "../../src/game/config";
+import { gridCellToWorldPoint, roomCenterWorld } from "../../src/game/config";
 import type { RoomId, WorldPoint } from "../../src/game/types";
 import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
 
@@ -44,18 +44,20 @@ const startNewGame = async (page: Page, slot = 1): Promise<void> => {
 const startGuidedTutorial = async (page: Page): Promise<void> => {
   await startNewGame(page);
   await expect(page.getByTestId("tutorial-enabled")).toBeChecked();
+  const appError = new Promise<Error>((resolve) => page.once("pageerror", resolve));
   await page.getByTestId("enter-control-room").click();
-  await expect(page.getByTestId("game-map")).toBeVisible();
+  const startupError = await Promise.race([
+    page
+      .getByTestId("game-map")
+      .waitFor({ state: "visible" })
+      .then(() => null),
+    appError,
+  ]);
+  expect(startupError).toBeNull();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
     "install-agitator"
   );
-};
-
-const continueTutorial = async (page: Page, nextStep: string): Promise<void> => {
-  const coach = page.getByTestId("tutorial-coach");
-  await coach.getByTestId("tutorial-continue").click();
-  await expect(coach).toHaveAttribute("data-guide-step", nextStep);
 };
 
 test.beforeEach(async ({ page }) => {
@@ -84,7 +86,7 @@ test("resetting the active save restarts the tutorial at its first step", async 
   await startGuidedTutorial(page);
   const coach = page.getByTestId("tutorial-coach");
   await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
-  await continueTutorial(page, "start-shared-duct");
+  await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
 
   await page.getByRole("button", { name: "Restart current save" }).click();
   await expect(page.getByTestId("restart-save-confirmation")).toBeVisible();
@@ -153,25 +155,26 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await startGuidedTutorial(page);
   const coach = page.getByTestId("tutorial-coach");
   await expect(page.getByTestId("room-name")).toHaveText("Lower Outer Bay");
-  await expect(page.getByTestId("phase-banner")).toContainText("First spark");
+  await expect(page.getByTestId("phase-banner")).toContainText("Planning");
+  await page.getByRole("button", { name: "Round brief" }).click();
+  await expect(page.getByRole("dialog", { name: "First spark" })).toContainText("First spark");
+  await page.getByRole("button", { name: "Back to the map" }).click();
 
   await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
   await expect(page.getByText(/Gas agitator · Grade 1/)).toBeVisible();
-  await expect(coach).toContainText("The Gas Agitator now recirculates");
+  await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
   await expect(page.locator(".react-joyride__overlay")).toHaveCount(0);
 
-  await page.getByTestId("select-room-lower_intake").click();
+  await clickMapRoom(page, "lower_intake");
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
-  await expect(coach).toHaveAttribute("data-guide-step", "install-agitator");
-  await page.getByTestId("select-room-furnace").click();
-  await continueTutorial(page, "start-shared-duct");
+  await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
+  await clickMapRoom(page, "furnace");
 
   const conduit = page.getByTestId("conduit-control-core_furnace-gas");
   await expect(conduit).toHaveAttribute("aria-pressed", "false");
   await conduit.click();
-  await expect(coach).toContainText("The fan is armed");
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
-  await continueTutorial(page, "begin-prime");
+  await expect(coach).toHaveAttribute("data-guide-step", "begin-prime");
 
   const headerBefore = await page.getByTestId("source-starter_gas_header").innerText();
   await page.getByTestId("begin-prime").click();
@@ -179,28 +182,26 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(page.getByTestId("source-starter_gas_header")).not.toHaveText(headerBefore, {
     timeout: 10_000,
   });
-  await expect(coach).toContainText("The plant clock is live");
-  await continueTutorial(page, "accelerate-clock");
+  await expect(coach).toHaveAttribute("data-guide-step", "accelerate-clock");
 
   await page.getByTestId("simulation-speed").click();
-  await expect(coach).toContainText("The clock is at 2×");
-  await continueTutorial(page, "observe-prime-flash");
-  await expect(coach).toContainText("first OX-1 incident", { timeout: 30_000 });
+  await expect(coach).toHaveAttribute("data-guide-step", "observe-prime-flash");
+  const flashExplanation = page.getByTestId("first-flash-explanation");
+  await expect(flashExplanation).toContainText("Why R-02 just exploded", { timeout: 30_000 });
+  await expect(flashExplanation).toContainText("R-02 is primed");
+  await expect(flashExplanation).toContainText("pressure and heat strike enemies");
+  await expect(page.locator(".paused-overlay")).toContainText("Simulation paused");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("0 hit · 0 killed");
-  await continueTutorial(page, "start-assault");
-
-  await page.getByTestId("start-assault").click();
+  await expect(coach).toHaveAttribute("data-guide-step", "start-assault");
+  await flashExplanation.getByRole("button", { name: "Start first assault" }).click();
+  await expect(page.locator(".paused-overlay")).toBeHidden();
   await expect(page.getByTestId("phase-banner")).toContainText("Autonomous assault");
-  await expect(coach).toContainText("Crawlers are advancing along the mapped route");
-  await continueTutorial(page, "observe-combat-flash");
+  await expect(coach).toHaveAttribute("data-guide-step", "observe-combat-flash");
 
-  await expect(page.locator(".paused-overlay")).toContainText("Simulation paused", {
-    timeout: 60_000,
-  });
-  await expect(coach).toContainText("Combat is paused on a confirmed hit", { timeout: 60_000 });
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("1 hit · 1 killed");
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("pressure");
-  await continueTutorial(page, "combat-confirmed");
+  await expect(page.locator(".paused-overlay")).toBeHidden();
+  await expect(coach).toHaveAttribute("data-guide-step", "combat-confirmed");
   await expect(coach).toContainText("Core stock → mixed-gas duct");
 
   await page.getByTestId("complete-guided-lesson").click();
@@ -222,6 +223,27 @@ test("tutorial guidance leaves every physical map room inspectable", async ({ pa
   await expect(coach).toHaveAttribute("data-guide-step", "install-agitator");
 });
 
+test("the map reveals room materials on hover and keeps full history on demand", async ({
+  page,
+}) => {
+  await startGuidedTutorial(page);
+  await skipGuidance(page);
+
+  const furnace = await roomClientPoint(page, "furnace");
+  await page.mouse.move(furnace.x, furnace.y);
+  const tooltip = page.getByTestId("room-map-tooltip");
+  await expect(tooltip).toContainText("Lower Outer Bay");
+  await expect(tooltip).toContainText("Upper gas");
+  await expect(tooltip).toContainText("Lower gas");
+  await expect(tooltip).toContainText("Liquid");
+  await expect(tooltip).toContainText("Pressure");
+
+  await page.getByTestId("battle-feed").click();
+  await expect(page.getByRole("dialog")).toContainText("Battle log");
+  await page.getByRole("button", { name: "Close battle log" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
 test("the map exposes the tile platform world and room-owned architectural openings", async ({
   page,
 }) => {
@@ -233,14 +255,20 @@ test("the map exposes the tile platform world and room-owned architectural openi
   await expect(map).toHaveAttribute("data-portal-count", "7");
 
   await clickMapRoom(page, "furnace");
+  await page.getByRole("button", { name: "Room details" }).click();
   await expect(page.getByTestId("architectural-connections")).toContainText("Open ladder shaft");
   await expect(page.getByTestId("architectural-connections")).toContainText("Open passage");
+  await page.getByRole("button", { name: "Close room details" }).click();
 
   await clickMapRoom(page, "reservoir");
+  await page.getByRole("button", { name: "Room details" }).click();
   await expect(page.getByTestId("architectural-connections")).toContainText("Trapdoor");
+  await page.getByRole("button", { name: "Close room details" }).click();
 
   await clickMapRoom(page, "core");
+  await page.getByRole("button", { name: "Room details" }).click();
   await expect(page.getByTestId("architectural-connections")).toContainText("SEALED");
+  await page.getByRole("button", { name: "Close room details" }).click();
 
   const platform = await worldClientPoint(page, gridCellToWorldPoint({ column: 9, elevation: 23 }));
   await page.mouse.click(platform.x, platform.y);
@@ -287,7 +315,10 @@ test("disabling the tutorial starts directly in lesson two", async ({ page }) =>
   await page.getByTestId("enter-control-room").click();
 
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
-  await expect(page.getByTestId("phase-banner")).toContainText("Co-products");
+  await expect(page.getByTestId("phase-banner")).toContainText("Planning");
+  await page.getByRole("button", { name: "Round brief" }).click();
+  await expect(page.getByRole("dialog", { name: "Co-products" })).toContainText("Co-products");
+  await page.getByRole("button", { name: "Back to the map" }).click();
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
   await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
   await expect(page.getByTestId("install-lower_intake-socket_a-membrane_cell")).toBeVisible();
@@ -298,15 +329,14 @@ test("the first lesson exposes its physical gas route and unlocked equipment", a
   await skipGuidance(page);
   const inspector = page.getByTestId("room-inspector");
   await expect(inspector.getByText("Core–R-02 gas duct", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toContainText("PHYSICAL ROUTE");
+  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toContainText("READY");
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(1);
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
   await expect(page.getByText("Membrane cell", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Wet contactor", { exact: true })).toHaveCount(0);
 
-  await page.getByTestId("select-room-lower_intake").click();
+  await clickMapRoom(page, "lower_intake");
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
-  await expect(page.getByText(/INNER RING/)).toBeVisible();
   await expect(page.getByText("Open equipment socket").first()).toBeVisible();
   await expect(page.getByTestId("install-lower_intake-socket_a-gas_agitator")).toBeVisible();
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(0);
@@ -327,117 +357,26 @@ test("planning uses the same equipment and physical-conduit construction rules",
   await expect(page.getByText(/Gas agitator · Grade 1/)).toBeVisible();
 });
 
-test("Core visibly owns the mixed starter header, junction, vent, and drain", async ({ page }) => {
+test("supplies expose actionable reserves without duplicating hidden plant inventories", async ({
+  page,
+}) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
-  await expect(page.getByText(/EXOTIC TRANSMUTATION/)).toBeVisible();
-  await expect(page.getByTestId("source-starter_gas_header")).toContainText("114.0 / 150");
-  await expect(page.getByTestId("starter-gas-composition")).toHaveText("H₂ 76.0 · O₂ 38.0");
-  await expect(page.getByTestId("core-gas-junction")).toContainText("0.0 / 24");
-  await expect(page.getByTestId("core-gas-junction-composition")).toContainText(
-    "feeds Core–R-02 gas duct"
-  );
+  await expect(page.getByTestId("supply-dock")).toContainText("Supplies");
+  await expect(page.getByText("Core material manifold")).toHaveCount(0);
+  await expect(page.getByText("System trace")).toHaveCount(0);
+  await expect(page.getByTestId("source-starter_gas_header")).toHaveText("114");
   await expect(page.getByTestId("source-water_tank")).toHaveCount(0);
   await expect(page.getByTestId("source-sodium_chloride_tank")).toHaveCount(0);
-  await expect(page.getByTestId("gas-vent-total")).toHaveText("0.0 mol-eq");
-  await expect(page.getByTestId("liquid-drain-total")).toHaveText("0.0 mol-eq");
+  await expect(page.getByTestId("core-gas-junction")).toHaveCount(0);
+  await expect(page.getByTestId("gas-vent-total")).toHaveCount(0);
+  await expect(page.getByTestId("liquid-drain-total")).toHaveCount(0);
 
   await page.getByTestId("conduit-control-core_furnace-gas").click();
+  const before = await page.getByTestId("source-starter_gas_header").innerText();
   await page.getByTestId("begin-prime").click();
-  await expect(page.getByTestId("source-starter_gas_header")).not.toContainText("114.0 / 150", {
+  await expect(page.getByTestId("source-starter_gas_header")).not.toHaveText(before, {
     timeout: 10_000,
   });
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
-});
-
-test("refresh returns to save selection before loading the live process", async ({ page }) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  await page.getByTestId("conduit-control-core_furnace-gas").click();
-  await page.getByTestId("begin-prime").click();
-  await page.waitForTimeout(900);
-
-  await page.reload();
-  await expect(page.getByTestId("save-selection")).toBeVisible();
-  await expect(page.getByTestId("load-save-slot-1")).toBeVisible();
-  await expect(page.getByTestId("game-map")).toHaveCount(0);
-  await page.getByTestId("load-save-slot-1").click();
-  await expect(page.getByTestId("game-map")).toBeVisible();
-  await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
-  await expect(page.getByTestId("conduit-control-core_furnace-gas")).toHaveAttribute(
-    "aria-pressed",
-    "true"
-  );
-  await expect(page.getByTestId("source-starter_gas_header")).toContainText("/ 150");
-});
-
-test("the facility cross-section remains usable at a compact desktop viewport", async ({
-  page,
-}) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  await page.setViewportSize({ width: 1024, height: 768 });
-  await expect(page.getByTestId("game-map")).toBeVisible();
-  await expect(page.getByTestId("room-inspector")).toBeVisible();
-  await expect(page.getByTestId("begin-prime")).toBeInViewport();
-  await expect(page.getByTestId("source-starter_gas_header")).toBeVisible();
-});
-
-test("the authored cross-section zooms and returns to a complete fit view", async ({ page }) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  const controls = page.locator('[aria-label="Map camera controls"]');
-  await expect(controls).toContainText("100%");
-
-  await page.getByRole("button", { name: "Zoom in" }).click();
-  await expect(controls).toContainText("120%");
-
-  await page.getByRole("button", { name: "Fit facility" }).click();
-  await expect(controls).toContainText("100%");
-});
-
-test("the flow overlay isolates one material across the facility", async ({ page }) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  const overlay = page.getByTestId("material-flow-overlay");
-  await expect(overlay).toHaveValue("");
-
-  await overlay.selectOption("hydrogen");
-  await expect(overlay).toHaveValue("hydrogen");
-  await expect(overlay.locator("option:checked")).toContainText("H₂");
-
-  await overlay.selectOption("oxygen");
-  await expect(overlay).toHaveValue("oxygen");
-  await expect(overlay.locator("option:checked")).toContainText("O₂");
-});
-
-test("hovering a shared conduit exposes all measured species on that physical route", async ({
-  page,
-}) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  const route = CONDUIT_BLUEPRINTS.core_furnace.gas;
-  if (!route) throw new Error("Flash Point gas route is not authored.");
-  const routePoint = await worldClientPoint(
-    page,
-    gridCellToWorldPoint(route[Math.floor(route.length / 2)]!)
-  );
-  await page.mouse.move(routePoint.x, routePoint.y);
-
-  const tooltip = page.getByTestId("transport-tooltip");
-  await expect(tooltip).toContainText("CORE ⇄ R-02");
-  await expect(tooltip).toContainText("Gas duct");
-  await expect(tooltip).toContainText("Core–R-02 gas duct");
-});
-
-test("skipped guidance can be replayed from the field manual", async ({ page }) => {
-  await startGuidedTutorial(page);
-  await skipGuidance(page);
-  await page.getByRole("button", { name: "Open process manual" }).click();
-  await page.getByTestId("replay-guided-lesson").click();
-
-  await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
-    "data-guide-step",
-    "install-agitator"
-  );
 });

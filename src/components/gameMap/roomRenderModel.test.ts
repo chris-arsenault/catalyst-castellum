@@ -25,5 +25,29 @@ describe("canonical room rendering projection", () => {
 
     expect(model.cells.some(({ cell }) => cell.column === 9 && cell.elevation === 23)).toBe(false);
     expect(model.cells.some(({ liquidFill }) => liquidFill > 0)).toBe(true);
+    expect(model.lowerGasFill).toBeGreaterThan(0);
+    expect(model.upperGasFill).toBeGreaterThan(0);
+  });
+
+  it("renders empty atmosphere as empty instead of a decorative tint", () => {
+    const game = createScenarioGame("flash_point");
+    for (const gas of Object.keys(game.rooms.gallery.gas.upper)) {
+      game.rooms.gallery.gas.upper[gas as keyof typeof game.rooms.gallery.gas.upper] = 0;
+      game.rooms.gallery.gas.lower[gas as keyof typeof game.rooms.gallery.gas.lower] = 0;
+    }
+    const model = roomRenderModel(game, "gallery", false, 0);
+    expect(model.upperGasFill).toBe(0);
+    expect(model.lowerGasFill).toBe(0);
+  });
+
+  it("exposes delivered conduit flow to the room animation instead of relying on gas labels", () => {
+    const game = createScenarioGame("flash_point");
+    game.gasConduits.core_furnace.lastFlow = 1.4;
+    game.gasConduits.core_furnace.flowCause = "fan";
+
+    const model = roomRenderModel(game, "furnace", false, 0);
+
+    expect(model.gasInflowRate).toBeCloseTo(1.4);
+    expect(model.liquidInflowRate).toBe(0);
   });
 });

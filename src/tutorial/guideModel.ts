@@ -115,7 +115,7 @@ const flashPointGuide: GuideDefinition = {
         "When the H₂/O₂ mixture reaches its ignition threshold, R-02 produces an OX-1 pressure and heat pulse. The incident log records its impulse, reaction extent, and target count.",
       instruction: "Wait for the first priming flash, then inspect its incident record.",
       result:
-        "Prime is paused on the first OX-1 incident. Read its pressure impulse, reaction extent, and target count.",
+        "The first OX-1 flash opens a one-time explanation of its gas feed, ignition threshold, pressure, and heat.",
       completed: (game) => Boolean(flashIncident(game, (incident) => incident.phase === "prime")),
     },
     {
@@ -140,7 +140,7 @@ const flashPointGuide: GuideDefinition = {
         "After the first hit, the incident log identifies each target, applied pressure and heat damage, and the resulting kills.",
       instruction: "Wait for an assault OX-1 flash that neutralizes at least one enemy.",
       result:
-        "Combat is paused on a confirmed hit. The incident log and system trace show OX-1’s damage channels, hit count, and kill count.",
+        "The live incident record tracks OX-1 damage channels, hit count, and kill count during combat.",
       completed: assaultFlashKilled,
     },
     {

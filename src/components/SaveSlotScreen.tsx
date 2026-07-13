@@ -51,7 +51,7 @@ const SlotInlineConfirmation = ({
     <span>
       {action === "overwrite"
         ? "Plant, campaign, and tutorial progress will be replaced."
-        : "This local record cannot be recovered."}
+        : "Deletion clears this local record and frees the slot for a new game."}
     </span>
     <div>
       <button type="button" data-testid={`cancel-${action}-${slotId}`} onClick={onCancel}>

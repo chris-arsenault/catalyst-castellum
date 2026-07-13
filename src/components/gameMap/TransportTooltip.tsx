@@ -45,7 +45,7 @@ const phaseAmount = (game: GameState, runId: TransportRunId, phase: TransportPha
 const phaseName = (phase: TransportPhase): string => (phase === "gas" ? "Gas duct" : "Liquid pipe");
 
 const conduitStateLabel = (conduit: GasConduitState | LiquidConduitState): string => {
-  if (!conduit.installed) return "NOT BUILT";
+  if (!conduit.installed) return "BUILD READY";
   if (conduit.blocked) return "STALLED";
   if (!conduit.enabled) return "OFF";
   return conduit.flowCause.toUpperCase();

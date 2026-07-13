@@ -47,7 +47,7 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
         }}
       />
       <pixiText
-        text={`PRESSURE −${Math.round(incident.pressureDamage)} · KILL ×${incident.kills}`}
+        text={`−${Math.round(incident.pressureDamage)} PRESSURE · −${Math.round(incident.heatDamage)} HEAT · KILL ×${incident.kills}`}
         y={-incident.height / 2 - 43}
         anchor={{ x: 0.5, y: 0 }}
         eventMode="none"

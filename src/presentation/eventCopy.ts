@@ -86,7 +86,7 @@ const flashIncidentCopy = (event: GameEvent): EventCopy => {
   const killed = number(event, "killed");
   const hitSummary =
     hits === 0
-      ? "No hostiles occupied the chamber at the instant of ignition."
+      ? "The chamber was clear at the instant of ignition."
       : `${hits} hit; ${killed} neutralized; ${number(event, "damage")} applied pressure/heat damage.`;
   return {
     title: `OX-1 flash — ${hits} hit, ${killed} neutralized`,
@@ -228,13 +228,13 @@ const campaignEventCopy = (event: GameEvent): EventCopy | null => {
     case "scenario_defeated":
       return {
         title: "Catalyst core lost",
-        detail: `${LEVEL_DEFINITIONS[event.levelId].name}, round ${event.round}, failed. The checkpoint can be retried from its original facility state.`,
+        detail: `The core fell during ${LEVEL_DEFINITIONS[event.levelId].name}, round ${event.round}. The original facility state is ready for another attempt.`,
       };
     case "physical_conduit_migrated":
       return {
         title: "Physical conduit migration completed",
         detail:
-          "Legacy sub-lines were conservatively merged by room pair and phase. No material was discarded; all migrated conduits were left OFF because their former directions were ambiguous.",
+          "The migration preserved every material, merged legacy sub-lines by room pair and phase, and set each migrated conduit to OFF for a fresh direction choice.",
       };
     case "legacy_message":
       return { title: text(event, "title"), detail: text(event, "detail") };
