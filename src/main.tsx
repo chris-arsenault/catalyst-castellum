@@ -11,6 +11,7 @@ import "./styles/event-log.css";
 import "./styles/inspector.css";
 import "./styles/process-controls.css";
 import "./styles/modals.css";
+import "./styles/manual.css";
 import "./styles/tutorial.css";
 import "./styles/responsive.css";
 

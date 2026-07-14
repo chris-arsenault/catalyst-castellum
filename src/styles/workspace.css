@@ -17,6 +17,13 @@
   min-height: 0;
 }
 
+.defense-board > .phase-hud {
+  grid-row: 1;
+}
+.defense-board > .map-module {
+  grid-row: 2;
+}
+
 .phase-hud {
   display: grid;
   grid-template-columns: auto minmax(220px, 1fr) auto auto;

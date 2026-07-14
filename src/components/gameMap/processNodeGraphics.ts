@@ -1,15 +1,7 @@
 import type { Graphics } from "pixi.js";
+import { GAS_SOURCES, LIQUID_SOURCES, utilityNodeWorldPoint } from "../../game/config";
 import {
-  GAS_BUFFERS,
-  GAS_SOURCES,
-  LIQUID_BUFFERS,
-  LIQUID_SOURCES,
-  utilityNodeWorldPoint,
-} from "../../game/config";
-import {
-  GAS_BUFFER_IDS,
   GAS_SOURCE_IDS,
-  LIQUID_BUFFER_IDS,
   LIQUID_SOURCE_IDS,
   type GameState,
   type WorldPoint,
@@ -25,26 +17,16 @@ const drawTank = (
 ): void => {
   const point = worldToMapPoint(worldPoint);
   graphics
-    .roundRect(point.x - 13, point.y - 22, 26, 44, 7)
-    .fill({ color: 0x0a1411 })
-    .stroke({ color, width: 3, alpha: 0.92 });
+    .roundRect(point.x - 11, point.y - 20, 22, 40, 9)
+    .fill({ color: 0x09110f })
+    .stroke({ color: 0x57766a, width: 1, alpha: 0.82 });
   const level = 32 * Math.min(1, fill);
-  graphics.rect(point.x - 9, point.y + 16 - level, 18, level).fill({ color, alpha: 0.55 });
-  graphics.circle(point.x, point.y - 25, 4).fill({ color, alpha: 0.9 });
-};
-
-const drawBuffer = (
-  graphics: Graphics,
-  worldPoint: WorldPoint,
-  color: number,
-  fill: number
-): void => {
-  const point = worldToMapPoint(worldPoint);
+  graphics.roundRect(point.x - 7, point.y + 16 - level, 14, level, 4).fill({ color, alpha: 0.48 });
   graphics
-    .circle(point.x, point.y, 11)
-    .fill({ color: 0x0a1411 })
-    .stroke({ color, width: 3, alpha: 0.92 });
-  graphics.circle(point.x, point.y, 7 * Math.min(1, fill)).fill({ color, alpha: 0.85 });
+    .moveTo(point.x - 6, point.y + 16 - level)
+    .lineTo(point.x + 6, point.y + 16 - level)
+    .stroke({ color, width: 1, alpha: 0.9 });
+  graphics.circle(point.x, point.y - 23, 2.5).fill({ color, alpha: 0.9 });
 };
 
 const drawTerminal = (
@@ -56,15 +38,15 @@ const drawTerminal = (
 ): void => {
   const point = worldToMapPoint(worldPoint);
   graphics
-    .rect(point.x - 12, point.y - 12, 24, 24)
+    .roundRect(point.x - 10, point.y - 10, 20, 20, 6)
     .fill({ color: 0x09120f })
-    .stroke({ color, width: 3, alpha: 0.9 });
-  graphics.circle(point.x, point.y, 7 * Math.min(1, fill)).fill({ color, alpha: 0.8 });
+    .stroke({ color: 0x57766a, width: 1, alpha: 0.82 });
+  graphics.circle(point.x, point.y, 6 * Math.min(1, fill)).fill({ color, alpha: 0.72 });
   const direction = pointsUp ? -1 : 1;
   graphics
-    .moveTo(point.x, point.y + direction * 12)
-    .lineTo(point.x, point.y + direction * 28)
-    .stroke({ color, width: 4, alpha: 0.8 });
+    .moveTo(point.x, point.y + direction * 10)
+    .lineTo(point.x, point.y + direction * 24)
+    .stroke({ color, width: 1.5, alpha: 0.72 });
 };
 
 export const drawProcessNodes = (graphics: Graphics, state: GameState): void => {
@@ -78,16 +60,6 @@ export const drawProcessNodes = (graphics: Graphics, state: GameState): void => 
     const definition = LIQUID_SOURCES[sourceId];
     const fill = liquidAmountTotal(state.liquidSources[sourceId].liquid) / definition.capacity;
     drawTank(graphics, utilityNodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
-  }
-  for (const bufferId of GAS_BUFFER_IDS) {
-    const definition = GAS_BUFFERS[bufferId];
-    const fill = gasAmountTotal(state.gasBuffers[bufferId].gas) / definition.capacity;
-    drawBuffer(graphics, utilityNodeWorldPoint(bufferId), colorNumber(definition.accent), fill);
-  }
-  for (const bufferId of LIQUID_BUFFER_IDS) {
-    const definition = LIQUID_BUFFERS[bufferId];
-    const fill = liquidAmountTotal(state.liquidBuffers[bufferId].liquid) / definition.capacity;
-    drawBuffer(graphics, utilityNodeWorldPoint(bufferId), colorNumber(definition.accent), fill);
   }
   drawTerminal(
     graphics,

@@ -27,6 +27,15 @@ const browserDependencies: GameStoreDependencies = {
   flushSave: flushScheduledGameSave,
 };
 
+const CLEAN_TUTORIAL_UI = {
+  acknowledgedStageIntroIds: [],
+  dismissedGuideIds: [],
+  showHelp: false,
+  manualSection: "operations" as const,
+  equipmentBuildTarget: null,
+  notice: null,
+};
+
 const createLifecycleActions = (
   set: StoreSet,
   get: StoreGet,
@@ -41,7 +50,7 @@ const createLifecycleActions = (
       initialized: true,
       activeSlotId: null,
       saveSlots: dependencies.loadSlots(),
-      dismissedGuideIds: [],
+      ...CLEAN_TUTORIAL_UI,
     });
   },
   selectSaveSlot: (slotId) => {
@@ -54,10 +63,9 @@ const createLifecycleActions = (
       activeSlotId: slotId,
       game: record.game,
       selectedRoomId: DEFAULT_GAME_RUNTIME.level(record.game).focusRoomId,
+      ...CLEAN_TUTORIAL_UI,
       dismissedGuideIds: record.dismissedGuideIds,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
-      showHelp: false,
-      notice: null,
     }));
   },
   startNewGame: (slotId) => {
@@ -74,10 +82,8 @@ const createLifecycleActions = (
       },
       game,
       selectedRoomId: DEFAULT_GAME_RUNTIME.level(game).focusRoomId,
-      dismissedGuideIds: [],
+      ...CLEAN_TUTORIAL_UI,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
-      showHelp: false,
-      notice: null,
     }));
   },
   deleteSaveSlot: (slotId) => {
@@ -92,9 +98,7 @@ const createLifecycleActions = (
     set({
       activeSlotId: null,
       saveSlots: dependencies.loadSlots(),
-      dismissedGuideIds: [],
-      showHelp: false,
-      notice: null,
+      ...CLEAN_TUTORIAL_UI,
     });
   },
   reset: () => {
@@ -113,9 +117,7 @@ export const createGameStoreState = (
     saveSlots: emptySaveSlotCatalog(),
     game: initialGame,
     selectedRoomId: DEFAULT_GAME_RUNTIME.level(initialGame).focusRoomId,
-    showHelp: false,
-    notice: null,
-    dismissedGuideIds: [],
+    ...CLEAN_TUTORIAL_UI,
     tutorialSessionRevision: 0,
     ...createLifecycleActions(set, get, dependencies),
     ...createGameSessionActions(set, get, dependencies),

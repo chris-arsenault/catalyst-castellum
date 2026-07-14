@@ -2,6 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { CONDUIT_BLUEPRINTS, FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
 import type { WorldPoint } from "../../src/game/types";
 import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
+import { installEquipment } from "./tutorialAssertions";
 
 const mapCamera = async (page: Page): Promise<CameraTransform> => {
   const map = page.getByTestId("game-map");
@@ -26,23 +27,44 @@ const startGuidedTutorial = async (page: Page): Promise<void> => {
   await page.getByTestId("enter-control-room").click();
   const startupError = await Promise.race([
     page
-      .getByTestId("game-map")
+      .getByTestId("tutorial-stage-intro")
       .waitFor({ state: "visible" })
       .then(() => null),
     appError,
   ]);
   expect(startupError).toBeNull();
+  await page.getByTestId("enter-stage-controls").click();
+  await expect(page.getByTestId("game-map")).toBeVisible();
 };
 
 const skipGuidance = async (page: Page): Promise<void> => {
-  const coach = page.getByTestId("tutorial-coach");
-  if (await coach.isVisible())
-    await coach.getByRole("button", { name: "Skip guided lesson" }).click();
+  const taskCard = page.getByTestId("tutorial-task-card");
+  if (await taskCard.isVisible())
+    await taskCard.getByRole("button", { name: "Skip guided lesson" }).click();
 };
 
 test.beforeEach(async ({ page }) => {
   await page.goto("/");
   await expect(page.getByTestId("save-selection")).toBeVisible();
+});
+
+test("the tutorial task list occupies a collapsible left rail", async ({ page }) => {
+  await startGuidedTutorial(page);
+  const map = page.getByTestId("game-map");
+  const expandedBounds = await map.boundingBox();
+  if (!expandedBounds) throw new Error("Expanded tutorial map bounds are absent");
+
+  await page.getByRole("button", { name: "Collapse tutorial tasks" }).click();
+  await expect(page.getByTestId("tutorial-task-card")).toHaveAttribute("data-expanded", "false");
+  await expect(page.getByRole("button", { name: "Expand tutorial tasks" })).toBeVisible();
+  const collapsedBounds = await map.boundingBox();
+  if (!collapsedBounds) throw new Error("Collapsed tutorial map bounds are absent");
+  expect(collapsedBounds.width).toBeGreaterThan(expandedBounds.width + 200);
+  expect(collapsedBounds.height).toBeGreaterThanOrEqual(expandedBounds.height - 1);
+
+  await page.getByRole("button", { name: "Expand tutorial tasks" }).click();
+  await expect(page.getByTestId("tutorial-task-card")).toHaveAttribute("data-expanded", "true");
+  await expect(page.getByTestId("tutorial-task-card")).toContainText("Commission the OX-1 cycle");
 });
 
 test("refresh returns to save selection before loading the live process", async ({ page }) => {
@@ -99,6 +121,23 @@ test("the flow overlay isolates one material across the facility", async ({ page
   await expect(overlay.locator("option:checked")).toContainText("O₂");
 });
 
+test("R-02 details expose the live OX-1 ignition gate and pressure model", async ({ page }) => {
+  await startGuidedTutorial(page);
+  await skipGuidance(page);
+  await page.getByRole("button", { name: "Room details" }).click();
+
+  const gate = page.getByTestId("ox1-ignition-gate");
+  await expect(gate).toContainText("OX-1 ignition gate");
+  await expect(gate).toContainText("Upper layer");
+  await expect(gate).toContainText("Lower layer");
+  await expect(gate).toContainText("H₂");
+  await expect(gate).toContainText("O₂");
+  await expect(gate).toContainText("Batch");
+  await expect(gate).toContainText("Agitator required");
+  await expect(gate).toContainText("Static pressure follows retained inventory");
+  await expect(gate).toContainText("Pressure-driven passage outflow grows");
+});
+
 test("hovering a shared conduit exposes all measured species on that physical route", async ({
   page,
 }) => {
@@ -119,7 +158,7 @@ test("hovering a shared conduit exposes all measured species on that physical ro
 
 test("installed equipment appears on its authored room socket", async ({ page }) => {
   await startGuidedTutorial(page);
-  await page.getByTestId("install-furnace-socket_a-gas_agitator").click();
+  await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await expect(page.getByTestId("game-map")).toHaveAttribute("data-installed-equipment-count", "1");
 
   const socket = FACILITY_MAP.rooms.furnace.socketCells.socket_a;
@@ -140,7 +179,7 @@ test("installed equipment appears on its authored room socket", async ({ page })
 test("skipped guidance can be replayed from the field manual", async ({ page }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
-  await page.getByRole("button", { name: "Open process manual" }).click();
+  await page.getByRole("button", { name: "Open facility manual" }).click();
   await page.getByTestId("replay-guided-lesson").click();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",

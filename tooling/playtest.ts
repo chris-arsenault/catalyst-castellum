@@ -70,6 +70,9 @@ const main = (): void => {
       const reasons: string[] = [];
       if (!evaluation.intended.success) reasons.push("intended policy failed");
       if (!evaluation.intended.stable) reasons.push("intended policy was unstable");
+      if (evaluation.intended.breached > 0) reasons.push("intended policy allowed a breach");
+      if (evaluation.intended.coreIntegrity < 100)
+        reasons.push("intended policy finished below full core integrity");
       if (evaluation.doNothing.success) reasons.push("do-nothing policy unexpectedly passed");
       return reasons.length > 0 ? [`${evaluation.levelId}: ${reasons.join(", ")}`] : [];
     });

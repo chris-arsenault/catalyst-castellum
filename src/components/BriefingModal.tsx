@@ -38,14 +38,17 @@ const BriefingObjective = ({
   const round = roundDefinitionFor(game);
   const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
   const nextRoom = ROOM_DEFINITIONS[nextLevel.focusRoomId];
-  const detail = tutorialSkipped
-    ? `${nextLevel.name} begins immediately in frozen planning at ${nextRoom.code}.`
-    : `${round.objective} You have ${round.primeSeconds} seconds of live priming before the configuration locks automatically.`;
+  let detail = `${round.objective} You have ${round.primeSeconds} seconds of live priming before the configuration locks automatically.`;
+  let label = "Round 1 objective";
+  if (tutorialSkipped) {
+    detail = `${nextLevel.name} begins immediately in frozen planning at ${nextRoom.code}.`;
+    label = "Starting at Lesson 02";
+  }
   return (
     <div className="briefing-objective">
       <div>
         <Gauge size={19} />
-        <span>{tutorialSkipped ? "Starting at Lesson 02" : "Round 1 objective"}</span>
+        <span>{label}</span>
       </div>
       <p>{detail}</p>
     </div>
@@ -77,33 +80,37 @@ const TutorialStartChoice = ({
   </div>
 );
 
-const actionLabel = (guided: boolean, tutorialEnabled: boolean): string => {
-  if (!guided) return "Begin checkpoint";
+const actionLabel = (offersOpeningDrill: boolean, tutorialEnabled: boolean): string => {
+  if (!offersOpeningDrill) return "Begin checkpoint";
   return tutorialEnabled ? "Begin field drill" : "Begin lesson 2";
 };
 
-const hint = (game: GameState, guided: boolean, tutorialEnabled: boolean): string => {
+const hint = (game: GameState, offersOpeningDrill: boolean, tutorialEnabled: boolean): string => {
   const level = levelDefinitionFor(game);
-  if (!guided) return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${level.lesson}`;
+  if (!offersOpeningDrill)
+    return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${level.lesson}`;
   if (!tutorialEnabled)
     return "Lesson 02 opens in frozen planning at R-05. Restart the campaign to replay Flash Point.";
-  return `Follow the highlighted controls in ${ROOM_DEFINITIONS[level.focusRoomId].code} and inspect the board between actions.`;
+  return `Enter the checkpoint to receive the field assignment at ${ROOM_DEFINITIONS[level.focusRoomId].code}.`;
 };
 
 const BriefingContent = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
+  const dismissTutorialGuide = useGameStore((state) => state.dismissTutorialGuide);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const level = levelDefinitionFor(game);
-  const guided = Boolean(guideDefinitionFor(game));
-  const tutorialSkipped = guided && !tutorialEnabled;
+  const guide = guideDefinitionFor(game);
+  const offersOpeningDrill = game.campaign.levelId === "flash_point" && Boolean(guide);
+  const tutorialSkipped = offersOpeningDrill && !tutorialEnabled;
   const begin = () => {
     if (tutorialSkipped) {
+      dismissTutorialGuide();
       dispatch({ type: "skip_tutorial" });
       return;
     }
-    if (guided) restartTutorialGuide();
+    if (offersOpeningDrill) restartTutorialGuide();
     dispatch({ type: "begin_level" });
   };
 
@@ -121,13 +128,11 @@ const BriefingContent = ({ game }: { game: GameState }) => {
             <span /> {level.kicker}
           </div>
           <h1 id="briefing-title">
-            <span>Catalyst</span> Castellum
+            <span>Checkpoint {String(level.number).padStart(2, "0")}</span> {level.name}
           </h1>
-          <p className="briefing-lede">
-            <strong>{level.name}.</strong> {level.briefing}
-          </p>
+          <p className="briefing-lede">{level.briefing}</p>
           <BriefingObjective game={game} tutorialSkipped={tutorialSkipped} />
-          {guided && (
+          {offersOpeningDrill && (
             <TutorialStartChoice enabled={tutorialEnabled} onChange={setTutorialEnabled} />
           )}
           <div className="briefing-actions">
@@ -145,10 +150,10 @@ const BriefingContent = ({ game }: { game: GameState }) => {
               data-testid="enter-control-room"
               onClick={begin}
             >
-              {actionLabel(guided, tutorialEnabled)} <ArrowRight size={18} />
+              {actionLabel(offersOpeningDrill, tutorialEnabled)} <ArrowRight size={18} />
             </button>
           </div>
-          <small className="briefing-hint">{hint(game, guided, tutorialEnabled)}</small>
+          <small className="briefing-hint">{hint(game, offersOpeningDrill, tutorialEnabled)}</small>
         </div>
       </div>
     </div>

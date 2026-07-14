@@ -85,6 +85,13 @@
     gap: 4px;
     padding-right: 7px;
   }
+  .menu-shortcut-button span {
+    display: none;
+  }
+  .menu-shortcut-button {
+    width: 34px;
+    padding: 0;
+  }
   .phase-hud {
     grid-template-columns: auto minmax(0, 1fr) auto;
   }

@@ -299,6 +299,11 @@ describe("OX-1 burst incidents", () => {
   it("turns a real conserved H₂/O₂ reaction into an explicit combat burst", () => {
     const target = enemy(200);
     const state = stateFor(room(), [target]);
+    state.rooms.furnace.equipment.socket_a = {
+      equipmentId: "gas_agitator",
+      level: 1,
+      enabled: true,
+    };
     state.rooms.furnace.gas.lower.hydrogen = 16;
 
     const flash = simulateHydrogenOxygenFlash(state, state.rooms.furnace, "lower", 0.1);
@@ -310,6 +315,28 @@ describe("OX-1 burst incidents", () => {
     expect(state.rooms.furnace.gas.lower.steam).toBeGreaterThan(6);
     expect(target.damageBySource.hydrogen_oxygen_combustion.pressure).toBeGreaterThan(80);
     expect(state.incidents[0]?.reactionExtent).toBeCloseTo(6, 8);
+  });
+
+  it("keeps a combustible batch inert until its installed agitator is running", () => {
+    const state = stateFor(room());
+    state.rooms.furnace.gas.lower.hydrogen = 16;
+
+    expect(simulateHydrogenOxygenFlash(state, state.rooms.furnace, "lower", 0.1)).toBeNull();
+    expect(state.rooms.furnace.reactions.hydrogen_oxygen_combustion.limitingFactor).toMatchObject({
+      kind: "condition",
+      code: "gas_agitation",
+      zone: "lower",
+    });
+
+    state.rooms.furnace.equipment.socket_a = {
+      equipmentId: "gas_agitator",
+      level: 1,
+      enabled: false,
+    };
+    expect(simulateHydrogenOxygenFlash(state, state.rooms.furnace, "lower", 0.1)).toBeNull();
+
+    state.rooms.furnace.equipment.socket_a.enabled = true;
+    expect(simulateHydrogenOxygenFlash(state, state.rooms.furnace, "lower", 0.1)).not.toBeNull();
   });
 
   it("applies a flash once and never turns its residual pressure impulse into later damage", () => {

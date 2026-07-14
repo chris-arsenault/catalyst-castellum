@@ -9,8 +9,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     accent: "#65cfc4",
     buildCost: 12,
     upgradeCosts: [10, 17],
-    allowedRings: ["outer", "middle", "inner"],
-    requiredFeature: null,
     unique: false,
     grades: [
       {
@@ -38,8 +36,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     accent: "#5e92e3",
     buildCost: 14,
     upgradeCosts: [12, 20],
-    allowedRings: ["middle", "inner"],
-    requiredFeature: null,
     unique: false,
     grades: [
       {
@@ -67,8 +63,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     accent: "#f58844",
     buildCost: 10,
     upgradeCosts: [9, 16],
-    allowedRings: ["outer", "middle", "inner"],
-    requiredFeature: null,
     unique: false,
     grades: [
       {
@@ -96,8 +90,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     accent: "#c5f540",
     buildCost: 20,
     upgradeCosts: [17, 28],
-    allowedRings: ["inner"],
-    requiredFeature: "separated_cell_manifold",
     unique: true,
     grades: [
       {

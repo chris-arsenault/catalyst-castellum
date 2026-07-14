@@ -180,9 +180,22 @@ const AudioControls = () => {
 const simulationPauseLabel = (game: GameState): string =>
   game.paused ? "Resume simulation" : "Pause simulation";
 
+const SaveSlotsButton = ({ onClick }: { onClick: () => void }) => (
+  <button
+    className="menu-shortcut-button"
+    type="button"
+    aria-label="Return to save slots"
+    data-testid="save-slots-button"
+    title="Save slots"
+    onClick={onClick}
+  >
+    <LogOut size={17} /> <span>Save slots</span>
+  </button>
+);
+
 const GlobalControls = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
-  const setShowHelp = useGameStore((state) => state.setShowHelp);
+  const openManual = useGameStore((state) => state.openManual);
   const reset = useGameStore((state) => state.reset);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [confirmingRestart, setConfirmingRestart] = useState(false);
@@ -221,21 +234,13 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       </button>
       <span className="control-divider" />
       <AudioControls />
+      <SaveSlotsButton onClick={returnToMainMenu} />
       <button
         className="icon-button"
         type="button"
-        aria-label="Return to save slots"
-        title="Save slots"
-        onClick={returnToMainMenu}
-      >
-        <LogOut size={17} />
-      </button>
-      <button
-        className="icon-button"
-        type="button"
-        aria-label="Open process manual"
-        title="Process manual"
-        onClick={() => setShowHelp(true)}
+        aria-label="Open facility manual"
+        title="Facility manual"
+        onClick={() => openManual("operations")}
       >
         <CircleHelp size={18} />
       </button>

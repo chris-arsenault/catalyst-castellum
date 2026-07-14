@@ -13,6 +13,9 @@ import { TransportTooltip } from "./TransportTooltip";
 import { RoomTooltip } from "./RoomTooltip";
 import { EquipmentTooltip } from "./EquipmentTooltip";
 import type { EquipmentHover } from "./EquipmentLayer";
+import { EnemyTooltip } from "./EnemyTooltip";
+import { CellOutletTooltip } from "./CellOutletTooltip";
+import type { CellOutletId } from "./cellOutletRenderModel";
 
 // HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
@@ -77,7 +80,9 @@ const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => (
 
 interface MapChromeProps {
   game: GameState;
+  hoveredCellOutletId: CellOutletId | null;
   hoveredEquipment: EquipmentHover | null;
+  hoveredEnemyId: number | null;
   hoveredRunId: TransportRunId | null;
   hoveredRoomId: RoomId | null;
   onResetCamera: () => void;
@@ -89,7 +94,9 @@ interface MapChromeProps {
 
 export const MapChrome = ({
   game,
+  hoveredCellOutletId,
   hoveredEquipment,
+  hoveredEnemyId,
   hoveredRunId,
   hoveredRoomId,
   onResetCamera,
@@ -105,13 +112,32 @@ export const MapChrome = ({
   >
     <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
     <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
-    <EquipmentTooltip game={game} equipment={hoveredEquipment} />
+    <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
+    <CellOutletTooltip
+      game={game}
+      bufferId={hoveredEnemyId === null ? hoveredCellOutletId : null}
+    />
+    <EquipmentTooltip
+      game={game}
+      equipment={hoveredEnemyId === null && hoveredCellOutletId === null ? hoveredEquipment : null}
+    />
     <TransportTooltip
       game={game}
-      runId={hoveredEquipment ? null : hoveredRunId}
+      runId={
+        hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
+          ? null
+          : hoveredRunId
+      }
       selectedSpecies={selectedSpecies}
     />
-    <RoomTooltip game={game} roomId={hoveredEquipment ? null : hoveredRoomId} />
+    <RoomTooltip
+      game={game}
+      roomId={
+        hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
+          ? null
+          : hoveredRoomId
+      }
+    />
     <div className="map-material-legend" aria-label="Map materials and damage legend">
       <span>
         <i className="upper-gas" /> upper gas

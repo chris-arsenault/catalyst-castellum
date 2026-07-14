@@ -122,6 +122,59 @@
   filter: saturate(0.55);
   opacity: 0.78;
 }
+.equipment-socket.empty {
+  border-style: dashed;
+  border-left-style: solid;
+}
+.equipment-socket-build {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 67px;
+  padding: 10px;
+  border: 0;
+  background: linear-gradient(105deg, rgba(86, 125, 105, 0.08), transparent);
+  color: #78998a;
+  text-align: left;
+  cursor: pointer;
+}
+.equipment-socket-build:hover {
+  background: linear-gradient(105deg, rgba(183, 218, 98, 0.11), transparent);
+  color: var(--lime);
+}
+.equipment-socket-build > i {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid #466d5b;
+  border-radius: 4px;
+  background: #10241d;
+  font-style: normal;
+}
+.equipment-socket-build > span {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.equipment-socket-build small,
+.equipment-socket-build em {
+  color: #6c8e7f;
+  font: 700 8px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.equipment-socket-build strong {
+  color: #bdd0c1;
+  font-size: 11px;
+}
+.equipment-socket-build em {
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+}
 .equipment-socket > header {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -178,7 +231,6 @@
 }
 .equipment-actions button,
 .transport-phase-control header button,
-.equipment-picker button,
 .binary-control {
   display: inline-flex;
   align-items: center;
@@ -195,17 +247,15 @@
 }
 .equipment-actions button:hover:not(:disabled),
 .transport-phase-control header button:hover:not(:disabled),
-.equipment-picker button:hover:not(:disabled),
 .binary-control:hover:not(:disabled) {
   border-color: var(--lime);
   color: #e2f5a0;
 }
 .equipment-actions button:disabled,
 .transport-phase-control header button:disabled,
-.equipment-picker button:disabled,
 .binary-control:disabled {
   cursor: not-allowed;
-  opacity: 0.4;
+  opacity: 0.62;
 }
 .binary-control.active {
   border-color: #67a289;
@@ -216,26 +266,6 @@
   border-color: #58453c;
   background: #171b18;
   color: #847569;
-}
-.equipment-picker {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-  padding: 9px;
-}
-.equipment-picker button {
-  justify-content: flex-start;
-  min-width: 0;
-  min-height: 36px;
-}
-.equipment-picker button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.equipment-picker button strong {
-  margin-left: auto;
-  color: var(--lime);
 }
 .equipment-process-readout {
   display: grid;

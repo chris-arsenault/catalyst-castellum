@@ -4,8 +4,10 @@ import {
   GAS_TYPES,
   LIQUID_TYPES,
   TRANSPORT_RUN_IDS,
+  type GasBufferId,
   type GameState,
   type GasAmounts,
+  type LiquidBufferId,
   type LiquidAmounts,
   type RoomId,
   type TransportPhase,
@@ -20,6 +22,36 @@ const STANDARD_SOURCE_TEMPERATURE = 22;
 interface GasPool {
   contents: GasAmounts;
   temperature: number;
+}
+
+function processBuffersInRoom(
+  state: GameState,
+  roomId: RoomId,
+  phase: "gas",
+  gameDefinition: GameDefinition
+): GasBufferId[];
+function processBuffersInRoom(
+  state: GameState,
+  roomId: RoomId,
+  phase: "liquid",
+  gameDefinition: GameDefinition
+): LiquidBufferId[];
+function processBuffersInRoom(
+  state: GameState,
+  roomId: RoomId,
+  phase: "gas" | "liquid",
+  gameDefinition: GameDefinition
+): (GasBufferId | LiquidBufferId)[] {
+  const installedIds = new Set(
+    Object.values(state.rooms[roomId].equipment).flatMap((instance) =>
+      instance ? [instance.equipmentId] : []
+    )
+  );
+  const bufferIds = Object.values(gameDefinition.processes).flatMap((process) => {
+    if (!installedIds.has(process.equipmentId)) return [];
+    return process.outputs.flatMap((output) => (output.phase === phase ? [output.bufferId] : []));
+  });
+  return [...new Set(bufferIds)] as (GasBufferId | LiquidBufferId)[];
 }
 
 const gasJunctionDemanded = (
@@ -54,10 +86,10 @@ const gasPools = (state: GameState, roomId: RoomId, gameDefinition: GameDefiniti
       temperature: STANDARD_SOURCE_TEMPERATURE,
     });
   }
-  for (const bufferId of definition.bufferIds) {
+  for (const bufferId of processBuffersInRoom(state, roomId, "gas", gameDefinition)) {
     pools.push({
       contents: state.gasBuffers[bufferId].gas,
-      temperature: state.rooms[gameDefinition.gasBuffers[bufferId].hostRoomId].temperature,
+      temperature: state.rooms[roomId].temperature,
     });
   }
   if (definition.includeRoomInventory) {
@@ -82,7 +114,8 @@ const liquidPools = (
       pools.push(state.liquidSources[sourceId].liquid);
     }
   }
-  for (const bufferId of definition.bufferIds) pools.push(state.liquidBuffers[bufferId].liquid);
+  for (const bufferId of processBuffersInRoom(state, roomId, "liquid", gameDefinition))
+    pools.push(state.liquidBuffers[bufferId].liquid);
   if (
     definition.includeRoomInventory &&
     liquidFillRatio(state.rooms[roomId], gameDefinition) >= definition.roomPortHeight

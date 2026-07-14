@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test";
 const enterGame = async (page: Page): Promise<void> => {
   await page.getByTestId("new-game-slot-1").click();
   await page.getByTestId("enter-control-room").click();
+  await page.getByTestId("enter-stage-controls").click();
   await page.getByTestId("game-map").waitFor({ state: "visible" });
 };
 

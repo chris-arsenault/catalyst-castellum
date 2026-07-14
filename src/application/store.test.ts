@@ -67,6 +67,25 @@ describe("game store composition", () => {
     expect(store.getState().notice).toContain("Choose a save slot");
     expect(adapters.scheduleSave).not.toHaveBeenCalled();
   });
+
+  it("carries a socket target through the build manual and clears it on close", () => {
+    const store = createStore<GameStore>(createGameStoreState(dependencies()));
+
+    store.getState().openEquipmentBuild("furnace", "socket_a");
+    expect(store.getState()).toMatchObject({
+      showHelp: true,
+      manualSection: "build",
+      equipmentBuildTarget: { roomId: "furnace", socketId: "socket_a" },
+    });
+
+    store.getState().setManualSection("encyclopedia");
+    expect(store.getState().equipmentBuildTarget).toEqual({
+      roomId: "furnace",
+      socketId: "socket_a",
+    });
+    store.getState().closeManual();
+    expect(store.getState()).toMatchObject({ showHelp: false, equipmentBuildTarget: null });
+  });
 });
 
 describe("active save-slot lifecycle", () => {
@@ -90,7 +109,8 @@ describe("active save-slot lifecycle", () => {
     const store = createStore<GameStore>(createGameStoreState(adapters));
     store.getState().initialize();
     store.getState().startNewGame("slot-1");
-    store.setState({ dismissedGuideIds: ["flash_point:first_spark:v2"] });
+    store.setState({ dismissedGuideIds: ["flash_point:first_spark:v3"] });
+    store.getState().acknowledgeStageIntro("flash_point:first_spark:v5");
     store.getState().selectRoom("washlock");
     const revision = store.getState().tutorialSessionRevision;
 
@@ -102,6 +122,7 @@ describe("active save-slot lifecycle", () => {
     expect(store.getState()).toMatchObject({
       activeSlotId: "slot-1",
       dismissedGuideIds: [],
+      acknowledgedStageIntroIds: [],
       selectedRoomId: "furnace",
       tutorialSessionRevision: revision + 1,
     });

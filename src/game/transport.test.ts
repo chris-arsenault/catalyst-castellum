@@ -114,6 +114,55 @@ describe("shared conserved mixture transport", () => {
   });
 });
 
+describe("equipment-owned process buffers", () => {
+  it("connects membrane-cell buffers to the installed room junction", () => {
+    const state = command(createScenarioGame("commissioning_exam"), { type: "begin_level" });
+    for (const room of Object.values(state.rooms)) {
+      room.equipment.socket_a = null;
+      room.equipment.socket_b = null;
+    }
+    state.rooms.furnace.equipment.socket_a = {
+      equipmentId: "membrane_cell",
+      level: 1,
+      enabled: true,
+    };
+    state.gasBuffers.anode_header.gas.chlorine = 8;
+    state.gasConduits.furnace_return.enabled = true;
+
+    simulateNetworks(state, 0.5);
+
+    expect(state.gasBuffers.anode_header.gas.chlorine).toBeLessThan(8);
+    expect(
+      state.gasJunctions.furnace.gas.chlorine + state.gasConduits.furnace_return.gas.chlorine
+    ).toBeGreaterThan(0);
+    expect(state.gasJunctions.lower_intake.gas.chlorine).toBe(0);
+  });
+
+  it("connects the cell-liquor buffer to the installed room liquid junction", () => {
+    const state = command(createScenarioGame("commissioning_exam"), { type: "begin_level" });
+    for (const room of Object.values(state.rooms)) {
+      room.equipment.socket_a = null;
+      room.equipment.socket_b = null;
+    }
+    state.rooms.reservoir.equipment.socket_a = {
+      equipmentId: "membrane_cell",
+      level: 1,
+      enabled: true,
+    };
+    state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide = 8;
+    state.liquidConduits.absorber_final.enabled = true;
+
+    simulateNetworks(state, 0.5);
+
+    expect(state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide).toBeLessThan(8);
+    expect(
+      state.liquidJunctions.reservoir.liquid.sodium_hydroxide +
+        state.liquidConduits.absorber_final.liquid.sodium_hydroxide
+    ).toBeGreaterThan(0);
+    expect(state.liquidJunctions.lower_intake.liquid.sodium_hydroxide).toBe(0);
+  });
+});
+
 describe("backpressure capacity", () => {
   it("never admits replacement inventory for discharge blocked at the destination", () => {
     const gasState = enter("flash_point");

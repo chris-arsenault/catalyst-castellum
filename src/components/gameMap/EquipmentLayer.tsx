@@ -30,15 +30,15 @@ const EquipmentMarker = ({ model, onHover, onSelectRoom }: EquipmentMarkerProps)
       <pixiText
         text={model.code}
         x={0}
-        y={-10}
+        y={-9}
         anchor={{ x: 0.5, y: 0.5 }}
         eventMode="none"
         style={{
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
-          fontSize: 8,
-          fontWeight: "900",
-          fill: "#dcebe1",
-          letterSpacing: 0.5,
+          fontSize: 7,
+          fontWeight: "700",
+          fill: "#c8d8cf",
+          letterSpacing: 0.35,
         }}
       />
     </pixiContainer>

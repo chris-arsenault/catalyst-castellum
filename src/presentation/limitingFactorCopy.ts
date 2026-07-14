@@ -16,6 +16,7 @@ const CONDITION_COPY: Record<LimitConditionCode, string> = {
   cell_current: "cell current",
   ignition_hydrogen: "H₂ ignition concentration",
   ignition_oxygen: "O₂ ignition concentration",
+  gas_agitation: "active gas agitation",
   combustible_batch: "combustible batch / gas mixing",
   cooldown: "flash cooldown",
 };

@@ -14,7 +14,7 @@ import {
 type FacilityPortal = (typeof FACILITY_MAP.portals)[number];
 
 const drawGeologicalStrata = (graphics: Graphics): void => {
-  for (let elevation = 7; elevation < FACILITY_MAP.height; elevation += 12) {
+  for (let elevation = 7; elevation < FACILITY_MAP.height; elevation += 10) {
     const y = WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT;
     graphics
       .moveTo(WORLD_MARGIN_X, y)
@@ -26,7 +26,7 @@ const drawGeologicalStrata = (graphics: Graphics): void => {
         WORLD_MAP_WIDTH - WORLD_MARGIN_X,
         y - 7
       )
-      .stroke({ color: 0x315044, width: 6, alpha: 0.13 });
+      .stroke({ color: 0x527466, width: 1, alpha: 0.12 });
     graphics
       .moveTo(WORLD_MARGIN_X, y + 5)
       .bezierCurveTo(
@@ -37,7 +37,7 @@ const drawGeologicalStrata = (graphics: Graphics): void => {
         WORLD_MAP_WIDTH - WORLD_MARGIN_X,
         y - 2
       )
-      .stroke({ color: 0x020605, width: 2, alpha: 0.32 });
+      .stroke({ color: 0x020605, width: 3, alpha: 0.16 });
   }
 };
 
@@ -51,14 +51,14 @@ const drawRockTexture = (graphics: Graphics): void => {
         .moveTo(x - 6, y + 3)
         .lineTo(x, y - 2)
         .lineTo(x + 8, y + 1)
-        .stroke({ color: 0x4c6e5d, width: 2, alpha: 0.12 });
+        .stroke({ color: 0x769184, width: 1, alpha: 0.09 });
     }
   }
 };
 
 export const drawBackdrop = (graphics: Graphics): void => {
   graphics.clear();
-  graphics.rect(0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT).fill({ color: 0x050b09 });
+  graphics.rect(0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT).fill({ color: 0x040806 });
   graphics
     .rect(
       WORLD_MARGIN_X,
@@ -66,7 +66,31 @@ export const drawBackdrop = (graphics: Graphics): void => {
       FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
       FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
     )
-    .fill({ color: 0x0b1713 });
+    .fill({ color: 0x0a1310 });
+  const core = gridCellMapRect(FACILITY_MAP.coreAnchor);
+  const coreX = core.left + core.width / 2;
+  const coreY = core.top + core.height / 2;
+  graphics.circle(coreX, coreY, 320).fill({ color: 0xb89b56, alpha: 0.018 });
+  graphics.circle(coreX, coreY, 220).fill({ color: 0xb89b56, alpha: 0.025 });
+  graphics.circle(coreX, coreY, 130).fill({ color: 0xd2b85f, alpha: 0.03 });
+  graphics.circle(WORLD_MARGIN_X + 210, WORLD_GROUND_Y - 210, 250).fill({
+    color: 0x4b9f8b,
+    alpha: 0.018,
+  });
+  for (let column = 0; column <= FACILITY_MAP.width; column += 4) {
+    const x = WORLD_MARGIN_X + column * WORLD_PIXELS_PER_UNIT;
+    graphics
+      .moveTo(x, WORLD_MARGIN_Y)
+      .lineTo(x, WORLD_GROUND_Y)
+      .stroke({ color: 0x89a397, width: 1, alpha: column % 12 === 0 ? 0.055 : 0.025 });
+  }
+  for (let elevation = 0; elevation <= FACILITY_MAP.height; elevation += 4) {
+    const y = WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT;
+    graphics
+      .moveTo(WORLD_MARGIN_X, y)
+      .lineTo(WORLD_MAP_WIDTH - WORLD_MARGIN_X, y)
+      .stroke({ color: 0x89a397, width: 1, alpha: elevation % 12 === 0 ? 0.055 : 0.025 });
+  }
   drawGeologicalStrata(graphics);
   drawRockTexture(graphics);
   graphics
@@ -76,14 +100,24 @@ export const drawBackdrop = (graphics: Graphics): void => {
       FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
       FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
     )
-    .stroke({ color: 0x365f50, width: 4, alpha: 0.7 });
+    .stroke({ color: 0x46685a, width: 1, alpha: 0.5 });
   graphics
     .moveTo(WORLD_MARGIN_X, WORLD_GROUND_Y)
     .lineTo(WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_GROUND_Y)
-    .stroke({ color: 0x7ba08a, width: 4, alpha: 0.62 });
-  graphics
-    .rect(14, 14, WORLD_MAP_WIDTH - 28, WORLD_MAP_HEIGHT - 28)
-    .stroke({ color: 0x2d5647, width: 2, alpha: 0.8 });
+    .stroke({ color: 0x98ad9f, width: 1.5, alpha: 0.42 });
+  const corner = 28;
+  for (const [x, y, dx, dy, color] of [
+    [WORLD_MARGIN_X, WORLD_MARGIN_Y, 1, 1, 0x54a891],
+    [WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_MARGIN_Y, -1, 1, 0x629db3],
+    [WORLD_MARGIN_X, WORLD_GROUND_Y, 1, -1, 0x54a891],
+    [WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_GROUND_Y, -1, -1, 0xd2b85f],
+  ] as const) {
+    graphics
+      .moveTo(x, y + dy * corner)
+      .lineTo(x, y)
+      .lineTo(x + dx * corner, y)
+      .stroke({ color, width: 2, alpha: 0.72 });
+  }
 };
 
 const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
@@ -92,36 +126,36 @@ const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
   const rightRail = rect.left + rect.width * 0.75;
   graphics
     .rect(rect.left + 2, rect.top - 1, rect.width - 4, rect.height + 2)
-    .fill({ color: 0x050907, alpha: 0.9 });
+    .fill({ color: 0x050907, alpha: 0.58 });
   graphics
     .moveTo(leftRail + 2, rect.top)
     .lineTo(leftRail + 2, rect.top + rect.height)
     .moveTo(rightRail + 2, rect.top)
     .lineTo(rightRail + 2, rect.top + rect.height)
-    .stroke({ color: 0x090704, width: 5, alpha: 0.9 });
+    .stroke({ color: 0x090704, width: 3, alpha: 0.56 });
   graphics
     .moveTo(leftRail, rect.top - 1)
     .lineTo(leftRail, rect.top + rect.height + 1)
     .moveTo(rightRail, rect.top - 1)
     .lineTo(rightRail, rect.top + rect.height + 1)
-    .stroke({ color: 0xf1be56, width: 3.2, alpha: 1 });
+    .stroke({ color: 0xd6af61, width: 1.6, alpha: 0.9 });
   for (const y of [rect.top + 3, rect.top + rect.height / 2, rect.top + rect.height - 3]) {
     graphics
       .moveTo(leftRail, y)
       .lineTo(rightRail, y)
-      .stroke({ color: 0xffd77d, width: 2.2, alpha: 0.96 });
+      .stroke({ color: 0xe9ca83, width: 1.2, alpha: 0.82 });
   }
 };
 
 const drawPlatformCell = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
-    .rect(rect.left + 3, rect.top + 5, rect.width, rect.height)
-    .fill({ color: 0x020504, alpha: 0.75 });
+    .rect(rect.left + 2, rect.top + 3, rect.width, rect.height)
+    .fill({ color: 0x020504, alpha: 0.42 });
   graphics
-    .rect(rect.left, rect.top, rect.width, rect.height)
-    .fill({ color: 0x38584b })
-    .stroke({ color: 0x8cb5a2, width: 1.6, alpha: 0.95 });
+    .roundRect(rect.left, rect.top, rect.width, rect.height, 2)
+    .fill({ color: 0x243d34 })
+    .stroke({ color: 0x739486, width: 1, alpha: 0.72 });
   graphics
     .poly([
       rect.left,
@@ -133,21 +167,21 @@ const drawPlatformCell = (graphics: Graphics, gridCell: GridCell): void => {
       rect.left + rect.width,
       rect.top,
     ])
-    .fill({ color: 0xb8d4bd, alpha: 0.96 });
+    .fill({ color: 0x9ab7a8, alpha: 0.7 });
   graphics
     .moveTo(rect.left + 2, rect.top + rect.height - 2)
     .lineTo(rect.left + rect.width - 2, rect.top + 2)
     .moveTo(rect.left + 2, rect.top + 2)
     .lineTo(rect.left + rect.width - 2, rect.top + rect.height - 2)
-    .stroke({ color: 0x192b24, width: 1.5, alpha: 0.8 });
+    .stroke({ color: 0x16251f, width: 1, alpha: 0.56 });
 };
 
 const drawCoreShellCell = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
     .rect(rect.left, rect.top, rect.width, rect.height)
-    .fill({ color: 0x373c2b, alpha: 0.98 })
-    .stroke({ color: 0xccb76a, width: 1.6, alpha: 0.72 });
+    .fill({ color: 0x2b3025, alpha: 0.94 })
+    .stroke({ color: 0xa99a61, width: 1, alpha: 0.58 });
   graphics
     .moveTo(rect.left + 3, rect.top + rect.height - 3)
     .lineTo(rect.left + rect.width - 3, rect.top + 3)
@@ -230,7 +264,7 @@ const drawDoorPortal = (
     graphics
       .roundRect(x, rect.top + 1, width, rect.height - 2, 2)
       .fill({ color: 0x101814, alpha: 0.95 })
-      .stroke({ color: 0xe19165, width: 2.5, alpha: 0.95 });
+      .stroke({ color: 0xd78562, width: 1.5, alpha: 0.92 });
   }
 };
 
@@ -242,13 +276,13 @@ const drawTrapdoorCell = (graphics: Graphics, trapdoor: GridCell, open: boolean)
       .lineTo(rect.left + 4, rect.top + rect.height)
       .moveTo(rect.left + rect.width, rect.top)
       .lineTo(rect.left + rect.width - 4, rect.top + rect.height)
-      .stroke({ color: 0xe19165, width: 2.5, alpha: 0.9 });
+      .stroke({ color: 0xd78562, width: 1.5, alpha: 0.88 });
     return;
   }
   graphics
     .rect(rect.left, rect.top + 5, rect.width, rect.height - 10)
     .fill({ color: 0x2b3c34 })
-    .stroke({ color: 0xe19165, width: 2, alpha: 0.9 });
+    .stroke({ color: 0xd78562, width: 1.25, alpha: 0.88 });
 };
 
 const drawTrapdoorPortal = (
@@ -281,7 +315,7 @@ const drawPortalCut = (graphics: Graphics, gridCell: GridCell): void => {
   const rect = gridCellMapRect(gridCell);
   graphics
     .rect(rect.left - 0.6, rect.top - 0.6, rect.width + 1.2, rect.height + 1.2)
-    .stroke({ color: 0x506f5f, width: 1, alpha: 0.38 });
+    .stroke({ color: 0x607b6f, width: 1, alpha: 0.22 });
 };
 
 const drawPortalCuts = (graphics: Graphics): void => {
@@ -309,7 +343,7 @@ const drawPassageFrames = (graphics: Graphics): void => {
       const rect = gridCellMapRect(connector);
       graphics
         .rect(rect.left, rect.top, rect.width, rect.height)
-        .stroke({ color: 0x506f5f, width: 1.5, alpha: 0.45 });
+        .stroke({ color: 0x607b6f, width: 1, alpha: 0.28 });
     }
   }
 };

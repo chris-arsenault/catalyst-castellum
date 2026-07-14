@@ -4,6 +4,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useGameStore } from "../application/store";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import { commandDecision } from "../presentation/selectors";
+import { guideDefinitionFor } from "../tutorial/guideModel";
+import { FacilityManual } from "./manual/FacilityManual";
 import { NoticeToast } from "./Modals";
 import { PhaseBanner } from "./PhaseBanner";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
@@ -13,7 +15,7 @@ const buildState = () =>
     type: "begin_level",
   }).state;
 
-const publish = (game = buildState()): void => {
+const publish = (game = buildState(), dismissedGuideIds: string[] = []): void => {
   act(() => {
     useGameStore.setState({
       initialized: true,
@@ -21,6 +23,10 @@ const publish = (game = buildState()): void => {
       game,
       selectedRoomId: DEFAULT_GAME_RUNTIME.level(game).focusRoomId,
       notice: null,
+      dismissedGuideIds,
+      showHelp: false,
+      manualSection: "operations",
+      equipmentBuildTarget: null,
     });
   });
 };
@@ -34,7 +40,9 @@ afterEach(() => {
 describe("application decision and phase rendering", () => {
   it("renders and executes the phase action through the authoritative command path", () => {
     vi.useFakeTimers();
-    publish();
+    const game = buildState();
+    const guide = guideDefinitionFor(game);
+    publish(game, guide ? [guide.dismissalId] : []);
     render(<PhaseBanner />);
 
     const button = screen.getByTestId("begin-prime") as HTMLButtonElement;
@@ -55,12 +63,47 @@ describe("application decision and phase rendering", () => {
       equipmentId: "gas_agitator",
     } as const;
     const decision = commandDecision(game, command);
-    render(<EquipmentSocket roomId="furnace" socketId="socket_a" />);
+    render(
+      <>
+        <EquipmentSocket roomId="furnace" socketId="socket_a" />
+        <FacilityManual />
+      </>
+    );
 
+    fireEvent.click(screen.getByTestId("open-equipment-build-furnace-socket_a"));
     const button = screen.getByTestId("install-furnace-socket_a-gas_agitator") as HTMLButtonElement;
     expect(decision.allowed).toBe(false);
     expect(button.disabled).toBe(true);
     expect(button.title).toBe(decision.reason);
+  });
+
+  it("shows the complete equipment catalog with lesson choices disabled", () => {
+    const game = DEFAULT_GAME_RUNTIME.execute(
+      DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent"),
+      { type: "begin_level" }
+    ).state;
+    publish(game);
+    render(
+      <>
+        <EquipmentSocket roomId="lower_intake" socketId="socket_a" />
+        <FacilityManual />
+      </>
+    );
+
+    fireEvent.click(screen.getByTestId("open-equipment-build-lower_intake-socket_a"));
+    const membrane = screen.getByTestId(
+      "install-lower_intake-socket_a-membrane_cell"
+    ) as HTMLButtonElement;
+    expect(membrane.disabled).toBe(false);
+    for (const equipmentId of ["gas_agitator", "wet_contactor", "thermal_coil"] as const) {
+      fireEvent.click(screen.getByTestId(`manual-equipment-choice-${equipmentId}`));
+      const choice = screen.getByTestId(
+        `install-lower_intake-socket_a-${equipmentId}`
+      ) as HTMLButtonElement;
+      expect(choice.disabled).toBe(true);
+      expect(choice.title).toContain("Current operation authorizes Membrane cell");
+      expect(screen.getByText(/Current operation authorizes Membrane cell/)).toBeTruthy();
+    }
   });
 
   it("surfaces and dismisses rejected-command notices", () => {

@@ -168,6 +168,7 @@ export const LIMIT_CONDITION_CODES = [
   "cell_current",
   "ignition_hydrogen",
   "ignition_oxygen",
+  "gas_agitation",
   "combustible_batch",
   "cooldown",
 ] as const;

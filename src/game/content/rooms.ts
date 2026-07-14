@@ -8,7 +8,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "entry",
     ambientTemperature: 22,
     socketCount: 0,
-    features: [],
     blurb: "Hostiles enter through this excavated breach before following the outer spiral.",
   },
   switchyard: {
@@ -18,7 +17,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: [],
     blurb: "A high outer chamber on the hostile path with two equipment sockets.",
   },
   furnace: {
@@ -28,7 +26,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: [],
     blurb:
       "A deep outer chamber on the hostile path with sockets for thermal and mixing equipment.",
   },
@@ -39,7 +36,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: [],
     blurb: "A broad middle chamber with two equipment sockets and space for gas–liquid processing.",
   },
   gallery: {
@@ -49,7 +45,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: [],
     blurb: "A low middle chamber where the inward corridor turns toward the Core.",
   },
   lower_intake: {
@@ -59,9 +54,7 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: ["separated_cell_manifold"],
-    blurb:
-      "A high inner chamber equipped with a separated-outlet manifold for membrane electrolysis.",
+    blurb: "A high inner chamber with two universal equipment sockets beside the Core approach.",
   },
   washlock: {
     id: "washlock",
@@ -70,7 +63,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "room",
     ambientTemperature: 22,
     socketCount: 2,
-    features: [],
     blurb: "A low inner chamber on the final Core approach with two equipment sockets.",
   },
   core: {
@@ -80,7 +72,6 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
     structure: "core",
     ambientTemperature: 26,
     socketCount: 0,
-    features: [],
     blurb:
       "The central keep houses feedstock, exhaust, recovery, and the structure the facility defends.",
   },

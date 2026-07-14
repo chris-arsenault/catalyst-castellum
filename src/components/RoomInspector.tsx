@@ -18,6 +18,8 @@ import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { GAS_TYPES, LIQUID_TYPES, ROOM_REACTION_IDS } from "../game/types";
 import type { GasZone } from "../game/types";
 import { ArchitecturalConnections } from "./ArchitecturalConnections";
+import { HydrogenChlorineGate } from "./HydrogenChlorineGate";
+import { OxidizerIgnitionGate } from "./OxidizerIgnitionGate";
 import { ProcessControls } from "./ProcessControls";
 
 const formatPercent = (value: number): string => {
@@ -225,11 +227,16 @@ const ReactionPanel = () => {
     <section
       className="effects-panel reaction-readout"
       data-tutorial={`${roomId}-reaction-readout`}
+      data-tutorial-anchor={
+        roomId === "furnace" ? TUTORIAL_ANCHORS.furnaceReactionReadout : undefined
+      }
     >
       <div className="section-title-row">
         <h3>Measured room chemistry</h3>
         <FlaskConical size={15} />
       </div>
+      {roomId === "furnace" && game.campaign.levelId === "flash_point" && <OxidizerIgnitionGate />}
+      {roomId === "furnace" && game.campaign.levelId === "acid_line" && <HydrogenChlorineGate />}
       {active.length === 0 ? (
         <p className="no-reaction">Reaction rate idle in this sample.</p>
       ) : (

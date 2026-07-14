@@ -5,6 +5,7 @@ import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import type { GamePhase, GameState } from "../game/types";
 import { commandDecision as evaluateCommand } from "../presentation/selectors";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
+import { guidedPhaseActionReason } from "../tutorial/guideModel";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -20,7 +21,16 @@ interface PhaseHudModel {
 }
 
 const phaseHudModel = (game: GameState): PhaseHudModel => {
+  const level = levelDefinitionFor(game);
   const round = roundDefinitionFor(game);
+  if (game.phase === "level_briefing") {
+    return {
+      label: "Checkpoint briefing",
+      value: level.name,
+      detail: "Review the objective and enter planning.",
+      tone: "frozen",
+    };
+  }
   if (game.phase === "build") {
     return {
       label: "Planning",
@@ -46,10 +56,31 @@ const phaseHudModel = (game: GameState): PhaseHudModel => {
       tone: "assault",
     };
   }
+  if (game.phase === "round_result")
+    return {
+      label: "Round complete",
+      value: `Core ${Math.round(game.coreIntegrity)}%`,
+      detail: "Round analysis is ready.",
+      tone: "frozen",
+    };
+  if (game.phase === "level_complete")
+    return {
+      label: "Checkpoint secured",
+      value: level.name,
+      detail: "The next checkpoint is ready.",
+      tone: "frozen",
+    };
+  if (game.phase === "victory")
+    return {
+      label: "Campaign complete",
+      value: `Core ${Math.round(game.coreIntegrity)}%`,
+      detail: "The final campaign record is ready.",
+      tone: "frozen",
+    };
   return {
-    label: game.phase === "defeat" ? "Core lost" : "Round frozen",
-    value: game.phase === "victory" ? "Campaign complete" : "Review the result",
-    detail: "Open the round brief for the full objective and outcome.",
+    label: "Core lost",
+    value: level.name,
+    detail: "Retry restores this checkpoint for a new defense plan.",
     tone: "frozen",
   };
 };
@@ -62,17 +93,19 @@ const PhaseIcon = ({ phase }: { phase: GamePhase }) => {
 
 const PhaseAction = ({ game }: { game: GameState }) => {
   const dispatch = useGameStore((state) => state.dispatch);
+  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   if (game.phase === "build") {
     const command = { type: "start_prime" } as const;
     const decision = evaluateCommand(game, command);
+    const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
     return (
       <button
         className="primary-action"
         type="button"
         data-testid="begin-prime"
         data-tutorial-anchor={TUTORIAL_ANCHORS.beginPrime}
-        disabled={!decision.allowed}
-        title={decision.reason ?? undefined}
+        disabled={!decision.allowed || Boolean(guideReason)}
+        title={guideReason ?? decision.reason ?? undefined}
         onClick={() => dispatch(command)}
       >
         Start prime <ArrowRight size={16} />
@@ -82,14 +115,15 @@ const PhaseAction = ({ game }: { game: GameState }) => {
   if (game.phase !== "prime") return null;
   const command = { type: "start_assault" } as const;
   const decision = evaluateCommand(game, command);
+  const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
   return (
     <button
       className="primary-action danger-action"
       type="button"
       data-testid="start-assault"
       data-tutorial-anchor={TUTORIAL_ANCHORS.startAssault}
-      disabled={!decision.allowed}
-      title={decision.reason ?? undefined}
+      disabled={!decision.allowed || Boolean(guideReason)}
+      title={guideReason ?? decision.reason ?? undefined}
       onClick={() => dispatch(command)}
     >
       Start assault <LockKeyhole size={15} />
@@ -151,7 +185,11 @@ export const PhaseBanner = () => {
   const model = phaseHudModel(game);
   return (
     <>
-      <section className={`phase-hud phase-${model.tone}`} data-testid="phase-banner">
+      <section
+        className={`phase-hud phase-${model.tone}`}
+        data-testid="phase-banner"
+        data-tutorial-anchor={TUTORIAL_ANCHORS.phaseBanner}
+      >
         <div className="phase-hud-icon">
           <PhaseIcon phase={game.phase} />
         </div>

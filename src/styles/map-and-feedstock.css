@@ -3,15 +3,16 @@
 .supply-dock {
   position: absolute;
   z-index: 7;
-  bottom: 10px;
-  left: 10px;
+  bottom: 12px;
+  left: 12px;
   display: flex;
   align-items: stretch;
   min-height: 44px;
-  border: 1px solid #355f52;
-  border-radius: 5px;
-  background: rgba(7, 16, 13, 0.94);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.38);
+  border: 1px solid rgba(119, 153, 140, 0.3);
+  border-radius: 10px;
+  background: rgba(7, 14, 12, 0.84);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(14px);
 }
 
 .supply-dock-label {
@@ -19,9 +20,13 @@
   align-items: center;
   gap: 6px;
   padding: 0 9px;
-  border-right: 1px solid #2a5044;
-  color: #87a99a;
-  font: 700 9px/1 var(--mono);
+  border-right: 1px solid rgba(119, 153, 140, 0.2);
+  color: #92aa9f;
+  font:
+    650 9px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   text-transform: uppercase;
 }
 
@@ -34,8 +39,8 @@
   gap: 3px 8px;
   min-width: 76px;
   padding: 5px 28px 5px 8px;
-  border-right: 1px solid #294d42;
-  box-shadow: inset 0 2px color-mix(in srgb, var(--supply) 70%, transparent);
+  border-right: 1px solid rgba(119, 153, 140, 0.16);
+  box-shadow: inset 0 1px color-mix(in srgb, var(--supply) 60%, transparent);
 }
 
 .supply-card:last-child {
@@ -55,7 +60,8 @@
 }
 .supply-fill {
   grid-column: 1 / -1;
-  height: 3px;
+  height: 2px;
+  border-radius: 1px;
   overflow: hidden;
   background: #18382e;
 }
@@ -74,9 +80,9 @@
   height: 26px;
   padding: 0;
   place-items: center;
-  border: 1px solid #356454;
-  border-radius: 3px;
-  background: #10221c;
+  border: 1px solid rgba(119, 153, 140, 0.28);
+  border-radius: 6px;
+  background: rgba(20, 37, 31, 0.72);
   color: #9ebaae;
   cursor: pointer;
 }
@@ -120,7 +126,7 @@
   min-height: 0;
   place-items: center;
   overflow: hidden;
-  background: #091310;
+  background: radial-gradient(circle at 50% 38%, rgba(51, 91, 75, 0.1), transparent 52%), #060c0a;
 }
 .game-map-canvas {
   position: relative;
@@ -131,6 +137,11 @@
   place-items: center;
   cursor: grab;
   touch-action: none;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 78% 58%, rgba(194, 159, 78, 0.09), transparent 25%),
+    radial-gradient(circle at 26% 48%, rgba(67, 146, 126, 0.065), transparent 31%),
+    linear-gradient(135deg, rgba(61, 104, 89, 0.025), transparent 38%), #040907;
 }
 .game-map-canvas:active {
   cursor: grabbing;
@@ -150,18 +161,23 @@
 }
 .material-flow-control {
   position: absolute;
-  top: 9px;
-  left: 10px;
+  top: 12px;
+  left: 12px;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 5px 6px 5px 9px;
-  border: 1px solid #356453;
-  border-radius: 4px;
-  background: rgba(7, 16, 13, 0.94);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
-  color: #83a596;
-  font: 700 10px/1 var(--mono);
+  gap: 9px;
+  padding: 5px 6px 5px 11px;
+  border: 1px solid rgba(130, 164, 151, 0.3);
+  border-radius: 9px;
+  background: rgba(7, 15, 12, 0.78);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  color: #8fa99d;
+  font:
+    650 9px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
+  backdrop-filter: blur(14px);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   pointer-events: auto;
@@ -169,14 +185,18 @@
 .material-flow-control select {
   width: 250px;
   min-width: 0;
-  height: 25px;
+  height: 27px;
   padding: 0 24px 0 8px;
-  border: 1px solid #3e7163;
-  border-radius: 3px;
+  border: 1px solid rgba(130, 164, 151, 0.32);
+  border-radius: 6px;
   outline: 0;
-  background: #101d19;
+  background: rgba(18, 32, 27, 0.9);
   color: #d8e9db;
-  font: 700 11px/1 var(--mono);
+  font:
+    600 10px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   cursor: pointer;
 }
 .material-flow-control select:focus-visible {
@@ -186,16 +206,17 @@
 .map-camera-controls {
   position: absolute;
   z-index: 4;
-  top: 9px;
-  right: 10px;
+  top: 12px;
+  right: 12px;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   padding: 4px;
-  border: 1px solid #356453;
-  border-radius: 4px;
-  background: rgba(7, 16, 13, 0.9);
-  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(130, 164, 151, 0.3);
+  border-radius: 9px;
+  background: rgba(7, 15, 12, 0.78);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(14px);
   pointer-events: auto;
 }
 .map-camera-controls > span {
@@ -203,30 +224,35 @@
   align-items: center;
   gap: 5px;
   padding: 0 5px;
-  color: #729787;
-  font: 700 9px/1 var(--mono);
+  color: #829e92;
+  font:
+    600 9px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   text-transform: uppercase;
 }
 .map-camera-controls button {
   display: grid;
-  width: 25px;
-  height: 25px;
+  width: 27px;
+  height: 27px;
   padding: 0;
   place-items: center;
-  border: 1px solid #326352;
-  border-radius: 3px;
-  background: #101d19;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: rgba(22, 40, 33, 0.72);
   color: #95b6a6;
   cursor: pointer;
 }
 .map-camera-controls button:hover {
-  border-color: #7ba793;
+  border-color: rgba(155, 189, 176, 0.5);
+  background: rgba(36, 59, 50, 0.9);
   color: #dfebe2;
 }
 .map-camera-controls strong {
   min-width: 34px;
-  color: #95b19d;
-  font: 700 9px/1 var(--mono);
+  color: #a4b9af;
+  font: 600 9px/1 var(--mono);
   text-align: center;
 }
 .transport-tooltip {
@@ -264,7 +290,11 @@
 }
 .transport-tooltip > header strong {
   color: #edf4ee;
-  font: 750 14px/1 var(--sans);
+  font:
+    750 14px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   letter-spacing: 0.04em;
 }
 .transport-tooltip > header em {
@@ -317,7 +347,11 @@
 .transport-channel b {
   overflow: hidden;
   color: #ccddd4;
-  font: 700 10px/1.15 var(--sans);
+  font:
+    700 10px/1.15 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -417,6 +451,159 @@
   text-transform: uppercase;
 }
 
+.room-detail-tooltip {
+  width: min(390px, calc(100% - 20px));
+}
+.room-composition {
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px;
+  border-bottom: 1px solid #244a3e;
+}
+.room-composition-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.room-composition-heading strong {
+  color: #88ad9e;
+  font: 750 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+.room-composition-heading span {
+  color: #acc5b7;
+  font: 700 9px/1 var(--mono);
+}
+.room-species-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.room-species-list > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border: 1px solid color-mix(in srgb, var(--species) 55%, #294d42);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--species) 9%, #0b1713);
+  font: 700 8px/1 var(--mono);
+}
+.room-species-list b {
+  color: color-mix(in srgb, var(--species) 75%, #f1f7f2);
+}
+.room-species-list em {
+  color: #86a698;
+  font-style: normal;
+}
+.room-species-list > small {
+  color: #608577;
+  font: 650 8px/1 var(--mono);
+  text-transform: uppercase;
+}
+.room-detail-readout dd {
+  max-width: 250px;
+  text-align: right;
+}
+.room-pressure-explanation {
+  padding: 8px 10px;
+  border-top: 1px solid #244a3e;
+  background: rgba(57, 106, 88, 0.08);
+  color: #82a496;
+  font-size: 9px;
+  line-height: 1.45;
+}
+.room-exposure-detail {
+  display: grid;
+  gap: 7px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid #244a3e;
+}
+.room-exposure-row {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 8px;
+  align-items: baseline;
+}
+.room-exposure-row > strong {
+  color: #6f9383;
+  font: 700 8px/1 var(--mono);
+  text-transform: uppercase;
+}
+.room-exposure-row > span {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 9px;
+}
+.room-exposure-row em {
+  font: normal 800 8px/1 var(--mono);
+}
+.room-exposure-detail > small {
+  color: #658a7a;
+  font-size: 8px;
+  line-height: 1.45;
+}
+
+.enemy-map-tooltip {
+  width: min(390px, calc(100% - 20px));
+}
+.enemy-health-detail {
+  height: 4px;
+  background: #1d342c;
+}
+.enemy-health-detail span {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #db6b50, #f5c15f);
+}
+.enemy-exposure-detail,
+.enemy-last-damage {
+  display: grid;
+  gap: 7px;
+  padding: 9px 10px;
+  border-top: 1px solid #244a3e;
+}
+.enemy-exposure-detail > strong {
+  color: #8fb0a1;
+  font: 750 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+.enemy-exposure-detail > div {
+  display: grid;
+  grid-template-columns: 72px auto;
+  gap: 4px 10px;
+  align-items: baseline;
+}
+.enemy-exposure-detail > div > span,
+.enemy-exposure-detail > div > b,
+.enemy-last-damage > span,
+.enemy-last-damage > strong {
+  font: 800 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+.enemy-exposure-detail > div > b {
+  color: #d5e3da;
+}
+.enemy-exposure-detail small,
+.enemy-last-damage small {
+  grid-column: 1 / -1;
+  color: #76978a;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.enemy-exposure-detail p {
+  margin: 0;
+  color: #759789;
+  font-size: 9px;
+}
+.enemy-last-damage {
+  background: rgba(213, 108, 67, 0.06);
+}
+.enemy-last-damage strong {
+  color: #bacfc2;
+}
+
 .equipment-map-tooltip {
   width: 340px;
 }
@@ -431,13 +618,22 @@
 
 .map-material-legend {
   position: absolute;
-  right: 10px;
-  bottom: 56px;
+  right: 12px;
+  bottom: 54px;
   display: flex;
-  gap: 10px;
-  color: #668b7c;
-  font: 700 8px/1 var(--mono);
+  gap: 11px;
+  padding: 7px 9px;
+  border: 1px solid rgba(130, 164, 151, 0.18);
+  border-radius: 8px;
+  background: rgba(7, 15, 12, 0.58);
+  color: #789489;
+  font:
+    600 8px/1 Inter,
+    ui-sans-serif,
+    system-ui,
+    sans-serif;
   text-transform: uppercase;
+  backdrop-filter: blur(10px);
 }
 .map-material-legend span {
   display: flex;
@@ -445,8 +641,9 @@
   gap: 4px;
 }
 .map-material-legend i {
-  width: 9px;
-  height: 5px;
+  width: 12px;
+  height: 2px;
+  border-radius: 2px;
   background: #70c7d5;
 }
 .map-material-legend .lower-gas {
@@ -456,6 +653,8 @@
   background: #4d8ae7;
 }
 .map-material-legend .damage {
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   background: #ff755c;
   box-shadow: 0 0 5px #ff755c;
@@ -501,4 +700,59 @@
 }
 .right-readout {
   right: 10px;
+}
+
+/* Shared glass treatment keeps map detail visually secondary to the playfield. */
+.transport-tooltip,
+.room-map-tooltip,
+.supply-tooltip {
+  border-color: rgba(132, 164, 151, 0.32);
+  border-radius: 11px;
+  background: rgba(6, 13, 11, 0.88);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.42),
+    inset 0 1px rgba(223, 239, 230, 0.035);
+  backdrop-filter: blur(16px);
+}
+
+.transport-tooltip,
+.room-map-tooltip {
+  top: 56px;
+  left: 12px;
+}
+
+.transport-tooltip > header,
+.room-map-tooltip header {
+  border-bottom-color: rgba(117, 150, 137, 0.2);
+  background: rgba(18, 32, 27, 0.66);
+}
+
+.transport-tooltip > header strong,
+.room-map-tooltip header strong {
+  font-weight: 620;
+  letter-spacing: 0.01em;
+}
+
+.transport-phase + .transport-phase,
+.transport-channel,
+.transport-tooltip > footer,
+.room-map-tooltip > small,
+.room-composition,
+.room-pressure-explanation,
+.room-exposure-detail,
+.enemy-exposure-detail,
+.enemy-last-damage {
+  border-color: rgba(117, 150, 137, 0.16);
+}
+
+.transport-phase > header {
+  background: rgba(31, 51, 43, 0.36);
+}
+
+.room-map-tooltip dl div + div {
+  border-top: 1px solid rgba(117, 150, 137, 0.08);
+}
+
+.room-species-list > span {
+  border-radius: 6px;
 }

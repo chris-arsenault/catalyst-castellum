@@ -6,6 +6,8 @@ import type { GameState, RoomId, SpeciesId, TransportRunId } from "../game/types
 import { EnemyNode } from "./gameMap/EnemyNode";
 import { DamageNumberLayer } from "./gameMap/DamageNumberLayer";
 import { EquipmentLayer, type EquipmentHover } from "./gameMap/EquipmentLayer";
+import { CellOutletLayer } from "./gameMap/CellOutletLayer";
+import { cellOutletAssemblyModel, type CellOutletId } from "./gameMap/cellOutletRenderModel";
 import {
   MapBackdrop,
   FacilityCorridors,
@@ -31,7 +33,9 @@ interface GameMapProps {
 interface MapSceneProps extends GameMapProps {
   camera: CameraTransform;
   hoveredRunId: TransportRunId | null;
+  onHoverCellOutlet: (bufferId: CellOutletId | null) => void;
   onHoverEquipment: (equipment: EquipmentHover | null) => void;
+  onHoverEnemy: (enemyId: number | null) => void;
   onHoverRoom: (roomId: RoomId | null) => void;
   onHoverRun: (runId: TransportRunId | null) => void;
   selectedSpecies: SpeciesId | null;
@@ -41,7 +45,9 @@ const MapScene = ({
   camera,
   game,
   hoveredRunId,
+  onHoverCellOutlet,
   onHoverEquipment,
+  onHoverEnemy,
   onHoverRoom,
   onHoverRun,
   onSelectRoom,
@@ -78,11 +84,12 @@ const MapScene = ({
         selectedSpecies={selectedSpecies}
       />
       <ProcessNodes game={game} />
+      <CellOutletLayer game={game} onHover={onHoverCellOutlet} onSelectRoom={onSelectRoom} />
       <EquipmentLayer game={game} onHover={onHoverEquipment} onSelectRoom={onSelectRoom} />
-      <MapLabelLayer selectedRoomId={selectedRoomId} />
+      <MapLabelLayer game={game} selectedRoomId={selectedRoomId} />
       <IncidentLayer game={game} />
       {game.enemies.map((enemy) => (
-        <EnemyNode key={enemy.id} enemy={enemy} />
+        <EnemyNode key={enemy.id} enemy={enemy} onHover={onHoverEnemy} />
       ))}
       <DamageNumberLayer game={game} />
     </pixiContainer>
@@ -92,8 +99,10 @@ const MapScene = ({
 export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) => {
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [hoveredRunId, setHoveredRunId] = useState<TransportRunId | null>(null);
+  const [hoveredCellOutletId, setHoveredCellOutletId] = useState<CellOutletId | null>(null);
   const [hoveredRoomId, setHoveredRoomId] = useState<RoomId | null>(null);
   const [hoveredEquipment, setHoveredEquipment] = useState<EquipmentHover | null>(null);
+  const [hoveredEnemyId, setHoveredEnemyId] = useState<number | null>(null);
   const {
     camera,
     handlePointerDown,
@@ -116,6 +125,7 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
       (total, room) => total + Object.values(room.equipment).filter(Boolean).length,
       0
     ),
+    "data-cell-outlet-room": cellOutletAssemblyModel(game)?.roomId ?? "",
   };
   const mapInteractions = {
     onWheel: handleWheel,
@@ -132,7 +142,9 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
         camera={camera}
         game={game}
         hoveredRunId={hoveredRunId}
+        onHoverCellOutlet={setHoveredCellOutletId}
         onHoverEquipment={setHoveredEquipment}
+        onHoverEnemy={setHoveredEnemyId}
         onHoverRoom={setHoveredRoomId}
         onHoverRun={setHoveredRunId}
         onSelectRoom={onSelectRoom}
@@ -141,7 +153,9 @@ export const GameMap = ({ game, selectedRoomId, onSelectRoom }: GameMapProps) =>
       />
       <MapChrome
         game={game}
+        hoveredCellOutletId={hoveredCellOutletId}
         hoveredEquipment={hoveredEquipment}
+        hoveredEnemyId={hoveredEnemyId}
         hoveredRunId={hoveredRunId}
         hoveredRoomId={hoveredRoomId}
         onResetCamera={resetCamera}

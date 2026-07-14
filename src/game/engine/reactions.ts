@@ -66,6 +66,56 @@ const roomReactionInventory = (room: RoomState, zone: GasZone): MutableReactionI
   },
 });
 
+export interface HydrogenChlorineReactionStatus {
+  activation: number;
+  activationTemperature: number;
+  availableExtent: number;
+  chlorineAmount: number;
+  chlorineReady: boolean;
+  fullActivationTemperature: number;
+  hydrogenAmount: number;
+  hydrogenReady: boolean;
+  reactionMultiplier: number;
+  ready: boolean;
+  temperature: number;
+  temperatureReady: boolean;
+  zone: GasZone;
+}
+
+export const hydrogenChlorineReactionStatus = (
+  room: RoomState,
+  zone: GasZone,
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): HydrogenChlorineReactionStatus => {
+  const behavior = definition.reactions.hydrogen_chlorine_recombination.behavior;
+  if (behavior.kind !== "gas_recombination")
+    throw new Error("Hydrogen-chlorine reaction is misconfigured");
+  const gas = room.gas[zone];
+  const activation = clamp(
+    (room.gasTemperature[zone] - behavior.activationTemperature) / behavior.activationRange,
+    0,
+    1
+  );
+  const hydrogenReady = gas.hydrogen > 1e-8;
+  const chlorineReady = gas.chlorine > 1e-8;
+  const temperatureReady = activation > 0;
+  return {
+    activation,
+    activationTemperature: behavior.activationTemperature,
+    availableExtent: Math.min(gas.hydrogen, gas.chlorine),
+    chlorineAmount: gas.chlorine,
+    chlorineReady,
+    fullActivationTemperature: behavior.activationTemperature + behavior.activationRange,
+    hydrogenAmount: gas.hydrogen,
+    hydrogenReady,
+    reactionMultiplier: roomGasReactionMultiplier(room, definition),
+    ready: hydrogenReady && chlorineReady && temperatureReady,
+    temperature: room.gasTemperature[zone],
+    temperatureReady,
+    zone,
+  };
+};
+
 const simulateHydrogenChlorine = (
   state: GameState,
   room: RoomState,
@@ -78,17 +128,12 @@ const simulateHydrogenChlorine = (
   if (behavior.kind !== "gas_recombination")
     throw new Error("Hydrogen-chlorine reaction is misconfigured");
   const inventory = roomReactionInventory(room, zone);
-  const activation = clamp(
-    (room.gasTemperature[zone] - behavior.activationTemperature) / behavior.activationRange,
-    0,
-    1
-  );
-  const equipmentMultiplier = roomGasReactionMultiplier(room, definition);
+  const status = hydrogenChlorineReactionStatus(room, zone, definition);
   const candidates: Array<[LimitingFactor, number]> = [
     ...reactionReactantCandidates(reaction, inventory, definition, zone),
     [
       { kind: "condition", code: "activation_temperature", zone },
-      behavior.maximumRate * activation * equipmentMultiplier * dt,
+      behavior.maximumRate * status.activation * status.reactionMultiplier * dt,
     ],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));

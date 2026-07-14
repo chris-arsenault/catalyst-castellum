@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand";
-import type { GameCommand, GameState, RoomId } from "../game/types";
+import type { EquipmentSocketId, GameCommand, GameState, RoomId } from "../game/types";
 import type { SaveSlotCatalog, SaveSlotId } from "./saveSlots";
 
 export interface ApplicationLifecycleSlice {
@@ -20,14 +20,29 @@ export interface GameSessionSlice {
   tick: (dt: number) => void;
 }
 
+export type ManualSection = "operations" | "build" | "encyclopedia" | "threats";
+
+export interface EquipmentBuildTarget {
+  roomId: RoomId;
+  socketId: EquipmentSocketId;
+}
+
 export interface UiSlice {
   selectedRoomId: RoomId;
+  acknowledgedStageIntroIds: string[];
   showHelp: boolean;
+  manualSection: ManualSection;
+  equipmentBuildTarget: EquipmentBuildTarget | null;
   notice: string | null;
   dismissedGuideIds: string[];
   tutorialSessionRevision: number;
+  acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setShowHelp: (show: boolean) => void;
+  openManual: (section?: ManualSection) => void;
+  openEquipmentBuild: (roomId: RoomId, socketId: EquipmentSocketId) => void;
+  setManualSection: (section: ManualSection) => void;
+  closeManual: () => void;
   dismissTutorialGuide: () => void;
   restartTutorialGuide: () => void;
   clearNotice: () => void;

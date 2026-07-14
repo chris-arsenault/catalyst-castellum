@@ -2,9 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   CONDUIT_BLUEPRINTS,
   FACILITY_MAP,
-  GAS_BUFFERS,
   GAS_SOURCES,
-  LIQUID_BUFFERS,
   LIQUID_SOURCES,
   ROOM_VOLUME_PER_CELL,
   TRANSPORT_RUNS,
@@ -24,9 +22,7 @@ import {
   roomVolume,
 } from "./config";
 import {
-  GAS_BUFFER_IDS,
   GAS_SOURCE_IDS,
-  LIQUID_BUFFER_IDS,
   LIQUID_SOURCE_IDS,
   TRANSPORT_RUN_IDS,
   type CellRect,
@@ -174,12 +170,6 @@ describe("room-derived physical capacity", () => {
     for (const sourceId of LIQUID_SOURCE_IDS)
       expect(FACILITY_MAP.utilityNodes[sourceId].hostRoomId).toBe(
         LIQUID_SOURCES[sourceId].hostRoomId
-      );
-    for (const bufferId of GAS_BUFFER_IDS)
-      expect(FACILITY_MAP.utilityNodes[bufferId].hostRoomId).toBe(GAS_BUFFERS[bufferId].hostRoomId);
-    for (const bufferId of LIQUID_BUFFER_IDS)
-      expect(FACILITY_MAP.utilityNodes[bufferId].hostRoomId).toBe(
-        LIQUID_BUFFERS[bufferId].hostRoomId
       );
   });
 

@@ -1,138 +1,9 @@
-import {
-  ArrowRight,
-  Biohazard,
-  CheckCircle2,
-  Droplets,
-  Flame,
-  Gauge,
-  LogOut,
-  RotateCcw,
-  Wind,
-  X,
-} from "lucide-react";
+import { ArrowRight, Biohazard, CheckCircle2, Gauge, LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback } from "react";
 import { LEVEL_DEFINITIONS, nextLevelId } from "../game/config";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
-import { guideDefinitionFor } from "../tutorial/guideModel";
 import { roundReportCopy } from "../presentation/roundReportCopy";
-
-const ManualPhases = () => (
-  <div className="manual-phases">
-    <div>
-      <em>01</em>
-      <strong>Plan</strong>
-      <p>Configure equipment, conduits, and feedstocks while simulation time is frozen.</p>
-    </div>
-    <div>
-      <em>02</em>
-      <strong>Prime</strong>
-      <p>Prime the plant before the wave arrives. Feedstocks, products, and byproducts persist.</p>
-    </div>
-    <div>
-      <em>03</em>
-      <strong>Assault</strong>
-      <p>
-        Binary controls and routing policies lock. The plant runs autonomously through the wave.
-      </p>
-    </div>
-    <div>
-      <em>04</em>
-      <strong>Analyze</strong>
-      <p>The end state freezes. Harvested matter is banked before the next plan.</p>
-    </div>
-  </div>
-);
-
-const ManualTips = () => (
-  <div className="manual-tips">
-    <div>
-      <Wind size={18} />
-      <p>
-        <strong>The membrane cell feeds three separated outlets.</strong> Cl₂, H₂, and NaOH
-        accumulate separately; blocking one eventually limits the whole electrolyzer.
-      </p>
-    </div>
-    <div>
-      <Flame size={18} />
-      <p>
-        <strong>Equipment defines room chemistry.</strong> A thermal coil and gas agitator let R-02
-        recombine routed H₂ and Cl₂ into HCl.
-      </p>
-    </div>
-    <div>
-      <Droplets size={18} />
-      <p>
-        <strong>NaOCl stores chlorine potential.</strong> R-03 needs Cl₂ and twice as much NaOH. In
-        R-06, leftover NaOH consumes HCl before acid can release Cl₂.
-      </p>
-    </div>
-    <div>
-      <Biohazard size={18} />
-      <p>
-        <strong>Core recovery retains relief streams.</strong> Vents and drains create headroom by
-        moving complete mixtures into persistent recovery inventories.
-      </p>
-    </div>
-  </div>
-);
-
-export const HelpModal = () => {
-  const game = useGameStore((state) => state.game);
-  const show = useGameStore((state) => state.showHelp);
-  const setShow = useGameStore((state) => state.setShowHelp);
-  const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
-  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
-  if (!show) return null;
-  const guide = guideDefinitionFor(game);
-
-  return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="manual-title">
-      <div className="help-modal">
-        <button
-          className="modal-close"
-          type="button"
-          aria-label="Close field manual"
-          onClick={() => setShow(false)}
-        >
-          <X size={18} />
-        </button>
-        <div className="eyebrow">
-          <span /> Operations field manual
-        </div>
-        <h2 id="manual-title">Run the defense machine</h2>
-        <p>
-          Each round moves through four operating moments. Process state persists within a level;
-          each completed level becomes a clean retry checkpoint.
-        </p>
-
-        <ManualPhases />
-        <ManualTips />
-
-        {guide && (
-          <div className="manual-guide-replay">
-            <div>
-              <strong>Need the pointer again?</strong>
-              <span>Replay {guide.label} from the next incomplete action.</span>
-            </div>
-            <button type="button" data-testid="replay-guided-lesson" onClick={restartTutorialGuide}>
-              Replay guidance <RotateCcw size={15} />
-            </button>
-          </div>
-        )}
-
-        <div className="modal-footer-actions">
-          <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
-            <LogOut size={15} /> Save slots
-          </button>
-          <button className="secondary-action wide" type="button" onClick={() => setShow(false)}>
-            Return to controls
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 interface ProgressFrameProps {
   actionLabel: string;
@@ -149,61 +20,60 @@ const ProgressFrame = (props: ProgressFrameProps) => {
   const game = useGameStore((state) => state.game);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   return (
-    <div
-      className="modal-backdrop outcome-backdrop"
-      role="dialog"
-      aria-modal="true"
+    <section
+      className="progress-dock"
+      aria-live="polite"
       aria-labelledby="progress-title"
+      data-testid="campaign-progress-panel"
     >
-      <div className="outcome-modal outcome-victory">
-        <div className="outcome-seal">
-          <CheckCircle2 size={42} />
+      <header>
+        <div className="progress-dock-seal">
+          <CheckCircle2 size={24} />
         </div>
-        <div className="eyebrow">
-          <span /> {props.eyebrow}
+        <div>
+          <span>{props.eyebrow}</span>
+          <h2 id="progress-title">{props.title}</h2>
         </div>
-        <h2 id="progress-title">{props.title}</h2>
-        <p>{props.detail}</p>
-        <div className="outcome-stats">
-          <div>
-            <span>Neutralized</span>
-            <strong>{game.lastReport?.killed ?? 0}</strong>
-          </div>
-          <div>
-            <span>Breaches</span>
-            <strong>{game.lastReport?.breached ?? 0}</strong>
-          </div>
-          <div>
-            <span>Core</span>
-            <strong>{Math.round(game.coreIntegrity)}%</strong>
-          </div>
-          <div>
-            <span>Reactions</span>
-            <strong>{game.lastReport?.reactions.toFixed(1) ?? "0.0"}</strong>
-          </div>
+      </header>
+      <p>{props.detail}</p>
+      <dl className="progress-dock-stats">
+        <div>
+          <dt>Neutralized</dt>
+          <dd>{game.lastReport?.killed ?? 0}</dd>
         </div>
-        <div className="briefing-objective">
-          <div>
-            <Gauge size={19} />
-            <span>{props.nextLabel}</span>
-          </div>
-          <p>{props.nextDetail}</p>
+        <div>
+          <dt>Breaches</dt>
+          <dd>{game.lastReport?.breached ?? 0}</dd>
         </div>
-        <div className="modal-footer-actions">
-          <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
-            <LogOut size={15} /> Save slots
-          </button>
-          <button
-            className="enter-button"
-            type="button"
-            data-testid={props.testId}
-            onClick={props.onAdvance}
-          >
-            {props.actionLabel} <ArrowRight size={17} />
-          </button>
+        <div>
+          <dt>Core</dt>
+          <dd>{Math.round(game.coreIntegrity)}%</dd>
         </div>
+        <div>
+          <dt>Reactions</dt>
+          <dd>{game.lastReport?.reactions.toFixed(1) ?? "0.0"}</dd>
+        </div>
+      </dl>
+      <div className="progress-dock-next">
+        <span>
+          <Gauge size={15} /> {props.nextLabel}
+        </span>
+        <p>{props.nextDetail}</p>
       </div>
-    </div>
+      <footer>
+        <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
+          <LogOut size={15} /> Save slots
+        </button>
+        <button
+          className="enter-button"
+          type="button"
+          data-testid={props.testId}
+          onClick={props.onAdvance}
+        >
+          {props.actionLabel} <ArrowRight size={17} />
+        </button>
+      </footer>
+    </section>
   );
 };
 

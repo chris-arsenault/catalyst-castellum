@@ -8,11 +8,11 @@
   padding: 24px;
   place-items: center;
   overflow-y: auto;
-  background: rgba(3, 9, 7, 0.82);
-  backdrop-filter: blur(8px);
+  background: rgba(3, 9, 7, 0.62);
+  backdrop-filter: blur(3px);
 }
 .briefing-backdrop {
-  background: rgba(2, 8, 6, 0.9);
+  background: rgba(2, 8, 6, 0.7);
 }
 .briefing-modal {
   display: grid;
@@ -249,7 +249,7 @@
   line-height: 1.45;
 }
 .briefing-objective {
-  margin-top: 22px;
+  margin-top: 16px;
   padding: 12px 14px;
   border-left: 2px solid var(--lime);
   background: rgba(231, 247, 111, 0.055);
@@ -330,7 +330,6 @@
   text-transform: uppercase;
 }
 
-.help-modal,
 .outcome-modal {
   position: relative;
   width: min(680px, 94vw);
@@ -339,45 +338,6 @@
   border-radius: 8px;
   background: linear-gradient(145deg, #11211c, #0b1613);
   box-shadow: 0 28px 80px rgba(0, 0, 0, 0.5);
-}
-
-.manual-guide-replay {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  margin-top: 18px;
-  padding: 13px 14px;
-  border: 1px solid #517c4e;
-  border-radius: 5px;
-  background: rgba(231, 247, 111, 0.055);
-}
-.manual-guide-replay div {
-  display: grid;
-  gap: 4px;
-}
-.manual-guide-replay strong {
-  color: #e3f4a5;
-  font-size: 12px;
-}
-.manual-guide-replay span {
-  color: #749789;
-  font-size: 10px;
-  line-height: 1.45;
-}
-.manual-guide-replay button {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  gap: 7px;
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid #7ba34d;
-  border-radius: 4px;
-  background: #193220;
-  color: var(--lime);
-  font: 700 10px/1 var(--mono);
-  text-transform: uppercase;
 }
 .modal-footer-actions {
   display: flex;
@@ -394,4 +354,136 @@
 .modal-footer-actions .menu-return-button {
   flex: 0 0 auto;
   padding: 0 13px;
+}
+
+.progress-dock {
+  position: fixed;
+  z-index: 26;
+  right: 360px;
+  bottom: 18px;
+  display: grid;
+  width: min(470px, calc(100vw - 390px));
+  overflow: hidden;
+  border: 1px solid #72945a;
+  border-radius: 8px;
+  background: rgba(8, 18, 14, 0.97);
+  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.58);
+  animation: progress-dock-enter 360ms 650ms ease-out both;
+}
+@keyframes progress-dock-enter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.progress-dock > header {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  border-bottom: 1px solid #2b5042;
+  background: linear-gradient(90deg, rgba(190, 221, 91, 0.08), transparent);
+}
+.progress-dock-seal {
+  display: grid;
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #91af56;
+  border-radius: 50%;
+  color: var(--lime);
+}
+.progress-dock > header > div:last-child {
+  display: grid;
+  gap: 4px;
+}
+.progress-dock > header span {
+  color: #8ead69;
+  font: 750 8px/1 var(--mono);
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+.progress-dock h2 {
+  margin: 0;
+  color: #e9f3dd;
+  font-size: 17px;
+  line-height: 1.1;
+}
+.progress-dock > p {
+  margin: 0;
+  padding: 10px 14px;
+  color: #89a698;
+  font-size: 10px;
+  line-height: 1.5;
+}
+.progress-dock-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0 14px;
+  border: 1px solid #2a5142;
+}
+.progress-dock-stats div {
+  padding: 7px 8px;
+  border-right: 1px solid #2a5142;
+}
+.progress-dock-stats div:last-child {
+  border-right: 0;
+}
+.progress-dock-stats dt {
+  color: #668b7b;
+  font: 700 7px/1 var(--mono);
+  text-transform: uppercase;
+}
+.progress-dock-stats dd {
+  margin: 5px 0 0;
+  color: #cfddd3;
+  font: 800 11px/1 var(--mono);
+}
+.progress-dock-next {
+  display: grid;
+  gap: 4px;
+  margin: 10px 14px 0;
+  padding: 9px 10px;
+  border-left: 2px solid var(--lime);
+  background: rgba(224, 239, 107, 0.05);
+}
+.progress-dock-next > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--lime);
+  font: 750 8px/1 var(--mono);
+  text-transform: uppercase;
+}
+.progress-dock-next p {
+  margin: 0;
+  color: #819f91;
+  font-size: 9px;
+  line-height: 1.4;
+}
+.progress-dock footer {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 8px;
+  padding: 11px 14px 13px;
+}
+.progress-dock footer .menu-return-button {
+  padding-inline: 11px;
+}
+.progress-dock footer .enter-button {
+  min-height: 39px;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .progress-dock {
+    right: 12px;
+    bottom: 12px;
+    width: min(470px, calc(100vw - 24px));
+  }
 }

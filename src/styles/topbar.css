@@ -358,7 +358,8 @@
 }
 
 .icon-button,
-.speed-button {
+.speed-button,
+.menu-shortcut-button {
   display: grid;
   height: 34px;
   place-items: center;
@@ -379,14 +380,24 @@
   padding: 0 9px;
   font: 700 12px/1 var(--mono);
 }
+.menu-shortcut-button {
+  grid-auto-flow: column;
+  gap: 6px;
+  padding: 0 10px;
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
 .icon-button:hover:not(:disabled),
 .speed-button:hover:not(:disabled),
+.menu-shortcut-button:hover:not(:disabled),
 .speed-button.active {
   border-color: #629482;
   color: var(--lime);
 }
 .icon-button:disabled,
-.speed-button:disabled {
+.speed-button:disabled,
+.menu-shortcut-button:disabled {
   opacity: 0.35;
 }
 .control-divider {

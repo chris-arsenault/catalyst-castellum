@@ -4,6 +4,7 @@ import { enemyRoomId } from "../../game/queries";
 import type { GameState, RoomId } from "../../game/types";
 import { roomMapRect } from "./mapGeometry";
 import { drawRoom } from "./roomGraphics";
+import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
 
 interface RoomNodeProps {
@@ -18,11 +19,13 @@ export const RoomNode = ({ game, roomId, selected, onHover, onSelect }: RoomNode
   const geometry = roomMapRect(roomId);
   const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy) === roomId).length;
   const model = roomRenderModel(game, roomId, selected, occupied);
+  const hitArea = roomHitArea(model);
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);
   return (
     <pixiContainer x={geometry.center.x} y={geometry.center.y} eventMode="passive">
       <pixiGraphics
         draw={draw}
+        hitArea={hitArea}
         eventMode="static"
         cursor="pointer"
         onPointerOver={() => onHover(roomId)}
@@ -35,7 +38,7 @@ export const RoomNode = ({ game, roomId, selected, onHover, onSelect }: RoomNode
           eventMode="none"
           anchor={{ x: 0.5, y: 0.5 }}
           y={10}
-          style={{ fontFamily: "IBM Plex Mono", fontSize: 20, fontWeight: "800", fill: "#f3fbba" }}
+          style={{ fontFamily: "IBM Plex Sans", fontSize: 16, fontWeight: "600", fill: "#eef3c2" }}
         />
       )}
       {occupied > 0 && (
@@ -45,7 +48,7 @@ export const RoomNode = ({ game, roomId, selected, onHover, onSelect }: RoomNode
           anchor={{ x: 1, y: 0 }}
           x={model.width / 2 - 10}
           y={-model.height / 2 + 8}
-          style={{ fontFamily: "IBM Plex Mono", fontSize: 18, fontWeight: "800", fill: "#fff3dc" }}
+          style={{ fontFamily: "IBM Plex Mono", fontSize: 12, fontWeight: "700", fill: "#fff3dc" }}
         />
       )}
     </pixiContainer>

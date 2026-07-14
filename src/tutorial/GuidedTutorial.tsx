@@ -1,18 +1,22 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Joyride, type Options, type Step, type Styles } from "react-joyride";
 import { useGameStore } from "../application/store";
-import type { CombatIncident } from "../game/types";
+import type { GameState } from "../game/types";
 import {
   guideCanRun,
   guideDefinitionFor,
   guideStepIndexFor,
+  primeFlashIncident,
   type GuideDefinition,
 } from "./guideModel";
 import { GuideTooltip } from "./GuideTooltip";
 import { FirstFlashExplanation } from "./FirstFlashExplanation";
 import { tutorialAnchorSelector } from "./anchors";
+import { TutorialTaskCard } from "./TutorialTaskCard";
+import { TutorialStageIntro } from "./TutorialStageIntro";
 
-const COACH_ANCHOR = '[data-tutorial="coach-anchor"]';
+const TASK_SLOT = '[data-tutorial="task-slot"]';
 
 const JOYRIDE_STYLES: Partial<Styles> = {
   floater: { filter: "drop-shadow(0 22px 45px rgba(0, 0, 0, 0.55))" },
@@ -30,23 +34,20 @@ const JOYRIDE_OPTIONS: Partial<Options> = {
   skipBeacon: true,
   targetWaitTimeout: 2500,
   textColor: "#d9ebde",
-  width: 365,
+  width: 250,
   zIndex: 80,
 };
 
 const stepsFor = (guide: GuideDefinition): Step[] =>
   guide.steps.map((definition) => ({
     id: definition.id,
-    target: COACH_ANCHOR,
-    scrollTarget: () =>
-      document.querySelector<HTMLElement>(tutorialAnchorSelector(definition.target)),
-    placement: "top-start",
-    isFixed: true,
+    target: tutorialAnchorSelector(definition.target),
+    placement: "auto",
     title: definition.title,
     content: definition.explanation,
-    data: { definition, guideLabel: guide.label },
+    data: { definition },
     blockTargetInteraction: false,
-    floatingOptions: { hideArrow: true },
+    floatingOptions: { hideArrow: false },
   }));
 
 const stepIsSatisfied = (
@@ -54,57 +55,76 @@ const stepIsSatisfied = (
   game: Parameters<GuideDefinition["steps"][number]["completed"]>[0]
 ): boolean => Boolean(step && step.kind !== "complete" && step.completed(game));
 
-const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
-  const game = useGameStore((state) => state.game);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const showHelp = useGameStore((state) => state.showHelp);
-  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
-  const stepIndex = guideStepIndexFor(game, guide);
-  const pausedPrimeIncidentId = useRef<number | null>(null);
-  const [teachingBreak, setTeachingBreak] = useState<{
-    incident: CombatIncident;
-    resumeOnClose: boolean;
-  } | null>(null);
-  const steps = useMemo(() => stepsFor(guide), [guide]);
-  const activeStep = guide.steps[stepIndex] ?? null;
-  const primeTeachingBreakArmed = useRef(activeStep?.id === "observe-prime-flash");
-  const dismissed = dismissedGuideIds.includes(guide.id);
-  const run = guideCanRun(game) && !dismissed && !showHelp;
-  const satisfied = stepIsSatisfied(activeStep, game);
+const stageIntroShouldShow = (
+  guide: GuideDefinition,
+  game: GameState,
+  guideDismissed: boolean,
+  acknowledgedStageIntroIds: string[]
+): boolean =>
+  guide.showStageIntro &&
+  !acknowledgedStageIntroIds.includes(guide.id) &&
+  !guideDismissed &&
+  game.phase === "build" &&
+  guide.steps[0]?.completed(game) === false;
 
-  useEffect(() => {
-    if (activeStep?.id === "observe-prime-flash") primeTeachingBreakArmed.current = true;
-  }, [activeStep?.id]);
+const guideShouldRun = (
+  game: GameState,
+  dismissed: boolean,
+  showHelp: boolean,
+  showStageIntro: boolean
+): boolean => guideCanRun(game) && !dismissed && !showHelp && !showStageIntro;
 
-  useEffect(() => {
-    if (!run || game.phase !== "prime" || !primeTeachingBreakArmed.current) return;
-    const incident = game.incidents.find(
-      (entry) => entry.sourceId === "hydrogen_oxygen_combustion" && entry.phase === "prime"
-    );
-    if (!incident || pausedPrimeIncidentId.current === incident.id) return;
-    primeTeachingBreakArmed.current = false;
-    pausedPrimeIncidentId.current = incident.id;
-    const resumeOnClose = !game.paused;
-    if (resumeOnClose) dispatch({ type: "set_pause", paused: true });
-    setTeachingBreak({ incident, resumeOnClose });
-  }, [activeStep?.id, dispatch, game.incidents, game.paused, game.phase, run]);
+const teachingBreakFor = (game: GameState, guide: GuideDefinition, run: boolean) => {
+  if (!run || !guide.firstFlashTeachingBreak || game.phase !== "prime") return null;
+  return primeFlashIncident(game);
+};
 
-  const closeTeachingBreak = useCallback(() => {
-    if (teachingBreak?.resumeOnClose) dispatch({ type: "start_assault" });
-    setTeachingBreak(null);
-  }, [dispatch, teachingBreak]);
+interface TutorialPresentationProps {
+  activeStep: GuideDefinition["steps"][number] | null;
+  game: Parameters<GuideDefinition["steps"][number]["completed"]>[0];
+  guide: GuideDefinition;
+  onCloseTeachingBreak: () => void;
+  onEnterStage: () => void;
+  run: boolean;
+  showTaskCard: boolean;
+  showStageIntro: boolean;
+  stepIndex: number;
+  steps: Step[];
+  teachingBreak: ReturnType<typeof primeFlashIncident>;
+}
 
-  useEffect(() => {
-    if (!run || !activeStep || satisfied) return;
-    const element = document.querySelector<HTMLElement>(tutorialAnchorSelector(activeStep.target));
-    if (!element) return;
-    element.classList.add("tutorial-active-target");
-    return () => element.classList.remove("tutorial-active-target");
-  }, [activeStep, run, satisfied]);
+const TaskCardPortal = ({
+  activeStep,
+  guide,
+  game,
+}: {
+  activeStep: GuideDefinition["steps"][number] | null;
+  guide: GuideDefinition;
+  game: GameState;
+}) => {
+  const slot = document.querySelector<HTMLElement>(TASK_SLOT);
+  return slot
+    ? createPortal(<TutorialTaskCard activeStep={activeStep} guide={guide} game={game} />, slot)
+    : null;
+};
 
-  if (!activeStep) return null;
-  return (
-    <>
+const TutorialPresentation = ({
+  activeStep,
+  game,
+  guide,
+  onCloseTeachingBreak,
+  onEnterStage,
+  run,
+  showTaskCard,
+  showStageIntro,
+  stepIndex,
+  steps,
+  teachingBreak,
+}: TutorialPresentationProps) => (
+  <>
+    {showStageIntro && <TutorialStageIntro guide={guide} onEnter={onEnterStage} />}
+    {showTaskCard && <TaskCardPortal activeStep={activeStep} guide={guide} game={game} />}
+    {activeStep && (
       <Joyride
         run={run}
         steps={steps}
@@ -114,14 +134,69 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
         styles={JOYRIDE_STYLES}
         options={JOYRIDE_OPTIONS}
       />
-      {teachingBreak && (
-        <FirstFlashExplanation
-          incident={teachingBreak.incident}
-          resumeOnClose={teachingBreak.resumeOnClose}
-          onClose={closeTeachingBreak}
-        />
-      )}
-    </>
+    )}
+    {teachingBreak && (
+      <FirstFlashExplanation incident={teachingBreak} onClose={onCloseTeachingBreak} />
+    )}
+  </>
+);
+
+const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const showHelp = useGameStore((state) => state.showHelp);
+  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
+  const acknowledgedStageIntroIds = useGameStore((state) => state.acknowledgedStageIntroIds);
+  const acknowledgeStageIntro = useGameStore((state) => state.acknowledgeStageIntro);
+  const stepIndex = guideStepIndexFor(game, guide);
+  const steps = useMemo(() => stepsFor(guide), [guide]);
+  const activeStep = guide.steps[stepIndex] ?? null;
+  const dismissed = dismissedGuideIds.includes(guide.dismissalId);
+  const showStageIntro = stageIntroShouldShow(guide, game, dismissed, acknowledgedStageIntroIds);
+  const enterStage = useCallback(
+    () => acknowledgeStageIntro(guide.id),
+    [acknowledgeStageIntro, guide.id]
+  );
+  const run = guideShouldRun(game, dismissed, showHelp, showStageIntro);
+  const showTaskCard =
+    !dismissed &&
+    !showHelp &&
+    !showStageIntro &&
+    (guideCanRun(game) || game.phase === "round_result" || game.phase === "level_complete");
+  const satisfied = stepIsSatisfied(activeStep, game);
+  const teachingBreak = teachingBreakFor(game, guide, run);
+
+  useEffect(() => {
+    if (teachingBreak && !game.paused) dispatch({ type: "set_pause", paused: true });
+  }, [dispatch, game.paused, teachingBreak]);
+
+  const closeTeachingBreak = useCallback(() => {
+    dispatch({ type: "start_assault" });
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (!run || !activeStep || satisfied) return;
+    const element = document.querySelector<HTMLElement>(tutorialAnchorSelector(activeStep.target));
+    if (!element) return;
+    element.classList.add("tutorial-active-target");
+    return () => element.classList.remove("tutorial-active-target");
+  }, [activeStep, run, satisfied]);
+
+  if (!showTaskCard && !teachingBreak && !showStageIntro) return null;
+  return (
+    <TutorialPresentation
+      activeStep={activeStep}
+      game={game}
+      guide={guide}
+      onCloseTeachingBreak={closeTeachingBreak}
+      onEnterStage={enterStage}
+      run={run}
+      showTaskCard={showTaskCard}
+      showStageIntro={showStageIntro}
+      stepIndex={stepIndex}
+      steps={steps}
+      teachingBreak={teachingBreak}
+    />
   );
 };
 

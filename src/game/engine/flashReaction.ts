@@ -7,7 +7,7 @@ import type {
   RoomState,
 } from "../types";
 import { emptyHazardChannels, type HazardBurst } from "./damage";
-import { roomGasReactionMultiplier } from "./equipment";
+import { roomEquipmentIsActive, roomGasReactionMultiplier } from "./equipment";
 import { addEvent } from "./events";
 import { clamp } from "./math";
 import { gasPercent } from "./physics";
@@ -15,21 +15,67 @@ import { applyReactionExtent, type MutableReactionInventory } from "./reactionEx
 
 type FlashBehavior = Extract<ReactionBehaviorDefinition, { kind: "flash" }>;
 
-const limitingCondition = (
+export interface FlashIgnitionStatus {
+  agitationReady: boolean;
+  availableExtent: number;
+  batchReady: boolean;
+  cooldownReady: boolean;
+  cooldownSeconds: number;
+  hydrogenFraction: number;
+  hydrogenReady: boolean;
+  minimumHydrogenFraction: number;
+  minimumOxygenFraction: number;
+  oxygenFraction: number;
+  oxygenReady: boolean;
+  ready: boolean;
+  requiredExtent: number;
+  zone: GasZone;
+}
+
+export const hydrogenOxygenFlashStatus = (
+  room: RoomState,
   zone: GasZone,
-  hydrogenFraction: number,
-  oxygenFraction: number,
-  availableExtent: number,
-  requiredExtent: number,
-  behavior: FlashBehavior
-): LimitingFactor => {
-  if (hydrogenFraction < behavior.minimumHydrogenFraction)
-    return { kind: "condition", code: "ignition_hydrogen", zone };
-  if (oxygenFraction < behavior.minimumOxygenFraction)
-    return { kind: "condition", code: "ignition_oxygen", zone };
-  if (availableExtent < requiredExtent)
-    return { kind: "condition", code: "combustible_batch", zone };
-  return { kind: "condition", code: "cooldown", zone };
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+): FlashIgnitionStatus => {
+  const behavior = definition.reactions.hydrogen_oxygen_combustion.behavior;
+  if (behavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
+  const gas = room.gas[zone];
+  const availableExtent = Math.min(gas.hydrogen / 2, gas.oxygen);
+  const hydrogenFraction = gasPercent(room, "hydrogen", zone);
+  const oxygenFraction = gasPercent(room, "oxygen", zone);
+  const agitationReady = roomEquipmentIsActive(room, "gas_agitator");
+  const requiredExtent = behavior.ignitionExtent / 2 / roomGasReactionMultiplier(room, definition);
+  const hydrogenReady = hydrogenFraction >= behavior.minimumHydrogenFraction;
+  const oxygenReady = oxygenFraction >= behavior.minimumOxygenFraction;
+  const batchReady = availableExtent >= requiredExtent;
+  const cooldownReady = room.flashCooldown[zone] <= 0;
+  return {
+    agitationReady,
+    availableExtent,
+    batchReady,
+    cooldownReady,
+    cooldownSeconds: room.flashCooldown[zone],
+    hydrogenFraction,
+    hydrogenReady,
+    minimumHydrogenFraction: behavior.minimumHydrogenFraction,
+    minimumOxygenFraction: behavior.minimumOxygenFraction,
+    oxygenFraction,
+    oxygenReady,
+    ready: agitationReady && hydrogenReady && oxygenReady && batchReady && cooldownReady,
+    requiredExtent,
+    zone,
+  };
+};
+
+const limitingCondition = (status: FlashIgnitionStatus): LimitingFactor => {
+  if (!status.agitationReady)
+    return { kind: "condition", code: "gas_agitation", zone: status.zone };
+  if (!status.hydrogenReady)
+    return { kind: "condition", code: "ignition_hydrogen", zone: status.zone };
+  if (!status.oxygenReady) return { kind: "condition", code: "ignition_oxygen", zone: status.zone };
+  if (!status.batchReady)
+    return { kind: "condition", code: "combustible_batch", zone: status.zone };
+  return { kind: "condition", code: "cooldown", zone: status.zone };
 };
 
 const setFlashTelemetry = (
@@ -48,20 +94,6 @@ const setFlashTelemetry = (
     telemetry.limitingFactor = limitingFactor;
   }
 };
-
-const flashReady = (
-  room: RoomState,
-  zone: GasZone,
-  availableExtent: number,
-  hydrogenFraction: number,
-  oxygenFraction: number,
-  requiredExtent: number,
-  behavior: FlashBehavior
-): boolean =>
-  room.flashCooldown[zone] <= 0 &&
-  availableExtent >= requiredExtent &&
-  hydrogenFraction >= behavior.minimumHydrogenFraction &&
-  oxygenFraction >= behavior.minimumOxygenFraction;
 
 const makeBurst = (
   room: RoomState,
@@ -96,38 +128,13 @@ export const simulateHydrogenOxygenFlash = (
   const behavior = reaction.behavior;
   if (behavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
   const gas = room.gas[zone];
-  const availableExtent = Math.min(gas.hydrogen / 2, gas.oxygen);
-  const hydrogenFraction = gasPercent(room, "hydrogen", zone);
-  const oxygenFraction = gasPercent(room, "oxygen", zone);
-  const requiredExtent = behavior.ignitionExtent / 2 / roomGasReactionMultiplier(room, definition);
-  if (
-    !flashReady(
-      room,
-      zone,
-      availableExtent,
-      hydrogenFraction,
-      oxygenFraction,
-      requiredExtent,
-      behavior
-    )
-  ) {
-    setFlashTelemetry(
-      room,
-      0,
-      dt,
-      limitingCondition(
-        zone,
-        hydrogenFraction,
-        oxygenFraction,
-        availableExtent,
-        requiredExtent,
-        behavior
-      )
-    );
+  const status = hydrogenOxygenFlashStatus(room, zone, definition);
+  if (!status.ready) {
+    setFlashTelemetry(room, 0, dt, limitingCondition(status));
     return null;
   }
 
-  const reacted = Math.min(availableExtent, behavior.maximumExtent);
+  const reacted = Math.min(status.availableExtent, behavior.maximumExtent);
   const limitingFactor: LimitingFactor = {
     kind: "species",
     speciesId: gas.hydrogen / 2 <= gas.oxygen ? "hydrogen" : "oxygen",

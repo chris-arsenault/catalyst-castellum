@@ -35,6 +35,22 @@ import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors"
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
+const CONDUIT_TUTORIAL_ANCHORS: Partial<
+  Record<`${TransportRunId}:${TransportPhase}`, TutorialAnchorId>
+> = {
+  "cell_furnace:gas": TUTORIAL_ANCHORS.conduitCellFurnaceGas,
+  "core_cell:gas": TUTORIAL_ANCHORS.conduitCoreCellGas,
+  "core_cell:liquid": TUTORIAL_ANCHORS.conduitCoreCellLiquid,
+  "core_furnace:gas": TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
+  "furnace_return:gas": TUTORIAL_ANCHORS.conduitFurnaceReturnGas,
+  "return_final:gas": TUTORIAL_ANCHORS.conduitReturnFinalGas,
+};
+
+const conduitTutorialAnchor = (
+  runId: TransportRunId,
+  phase: TransportPhase
+): TutorialAnchorId | null => CONDUIT_TUTORIAL_ANCHORS[`${runId}:${phase}`] ?? null;
+
 const gasMixtureSummary = (gas: GasAmounts): string => {
   const total = gasAmountTotal(gas);
   if (total < MIN_VISIBLE_AMOUNT) return "empty";
@@ -226,11 +242,7 @@ export const ConduitActuator = ({
         disabled={!decision.allowed}
         inactiveLabel={inactiveLabel}
         testId={`conduit-control-${runId}-${phase}`}
-        tutorialAnchor={
-          runId === "core_furnace" && phase === "gas"
-            ? TUTORIAL_ANCHORS.conduitCoreFurnaceGas
-            : null
-        }
+        tutorialAnchor={conduitTutorialAnchor(runId, phase)}
         onClick={toggle}
       />
     </div>
@@ -270,7 +282,7 @@ export const OutletBuffers = () => {
     },
   ];
   return (
-    <div className="outlet-buffer-panel">
+    <div className="outlet-buffer-panel" data-tutorial-anchor={TUTORIAL_ANCHORS.lowerIntakeOutlets}>
       <div className="control-kind-heading">
         <Gauge size={14} /> Separated equipment outlets
       </div>

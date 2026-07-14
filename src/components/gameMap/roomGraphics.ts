@@ -7,6 +7,7 @@ export interface RoomDrawModel {
   coreIntegrity: number;
   elapsed: number;
   gasInflowRate: number;
+  gasInflowColors: readonly number[];
   height: number;
   cells: readonly RoomDrawCell[];
   structure: RoomDefinition["structure"];
@@ -41,42 +42,83 @@ const roomBorderColor = (model: RoomDrawModel): number => {
   return 0x458774;
 };
 
+interface RoomPalette {
+  accent: number;
+  base: number;
+  inset: number;
+}
+
+const roomPalette = (model: RoomDrawModel): RoomPalette => {
+  if (model.structure === "core") return { accent: 0xd2b85f, base: 0x18170f, inset: 0x292719 };
+  if (model.ring === "inner") return { accent: 0xc49d64, base: 0x171a19, inset: 0x2b2a21 };
+  if (model.ring === "middle") return { accent: 0x629db3, base: 0x0d171c, inset: 0x182b33 };
+  return { accent: 0x54a891, base: 0x0b1815, inset: 0x163129 };
+};
+
+const chamberPath = (left: number, top: number, width: number, height: number, cut: number) => [
+  left + cut,
+  top,
+  left + width - cut,
+  top,
+  left + width,
+  top + cut,
+  left + width,
+  top + height - cut,
+  left + width - cut,
+  top + height,
+  left + cut,
+  top + height,
+  left,
+  top + height - cut,
+  left,
+  top + cut,
+];
+
 const drawHazardGlow = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.analysis.hazard < 32) return;
   const color = model.analysis.hazard >= 65 ? 0xdaf64c : 0xf0ba4d;
   graphics
-    .rect(-model.width / 2 - 8, -model.height / 2 - 8, model.width + 16, model.height + 16)
-    .stroke({ color, width: model.analysis.hazard >= 65 ? 5 : 3, alpha: 0.32 });
+    .roundRect(-model.width / 2 - 5, -model.height / 2 - 5, model.width + 10, model.height + 10, 11)
+    .stroke({ color, width: model.analysis.hazard >= 65 ? 2 : 1.25, alpha: 0.34 });
 };
 
 const drawRoomShell = (graphics: Graphics, model: RoomDrawModel): void => {
   const left = -model.width / 2;
   const top = -model.height / 2;
+  const palette = roomPalette(model);
   graphics
-    .rect(left + 5, top + 7, model.width + 8, model.height + 8)
-    .fill({ color: 0x020604, alpha: 0.78 });
+    .poly(chamberPath(left + 5, top + 7, model.width, model.height, 8))
+    .fill({ color: 0x010302, alpha: 0.58 });
   graphics
-    .rect(left - 5, top - 5, model.width + 10, model.height + 10)
-    .fill({ color: 0x243c32 })
-    .stroke({ color: 0x4b7564, width: 2, alpha: 0.94 });
+    .poly(chamberPath(left - 2, top - 2, model.width + 4, model.height + 4, 10))
+    .fill({ color: palette.inset, alpha: 0.98 })
+    .stroke({ color: palette.accent, width: 1, alpha: 0.42 });
   graphics
-    .rect(left, top, model.width, model.height)
-    .fill({ color: 0x07100d })
-    .stroke({ color: roomBorderColor(model), width: model.selected ? 5 : 3, alpha: 0.96 });
+    .poly(chamberPath(left, top, model.width, model.height, 8))
+    .fill({ color: palette.base })
+    .stroke({
+      color: roomBorderColor(model),
+      width: model.selected ? 2.5 : 1,
+      alpha: model.selected ? 1 : 0.82,
+    });
+  if (model.selected) {
+    graphics
+      .poly(chamberPath(left + 2, top + 2, model.width - 4, model.height - 4, 7))
+      .fill({ color: 0xdbea83, alpha: 0.055 });
+  }
   graphics
-    .moveTo(left + 2, top + 2)
-    .lineTo(-left - 2, top + 2)
-    .lineTo(-left - 2, -top - 2)
-    .stroke({ color: 0xa8c5b6, width: 2.5, alpha: 0.48 });
+    .moveTo(left + 10, top + 1)
+    .lineTo(left + model.width * 0.4, top + 1)
+    .stroke({ color: palette.accent, width: model.selected ? 3 : 2, alpha: 0.92 });
   graphics
-    .moveTo(left + 2, -top - 2)
-    .lineTo(-left - 2, -top - 2)
-    .lineTo(-left - 2, top + 2)
-    .stroke({ color: 0x020605, width: 4, alpha: 0.72 });
-  for (const x of [left + 8, -left - 8]) {
-    for (const y of [top + 8, -top - 8]) {
-      graphics.circle(x, y, 2.5).fill({ color: 0xb2c5b6, alpha: 0.7 });
-    }
+    .moveTo(-left - 18, top + 1)
+    .lineTo(-left - 9, top + 1)
+    .lineTo(-left - 1, top + 9)
+    .stroke({ color: palette.accent, width: 1, alpha: 0.6 });
+  if (model.selected) {
+    graphics
+      .poly(chamberPath(left + 5, top + 5, model.width - 10, model.height - 10, 5))
+      .stroke({ color: 0xedfaa5, width: 1, alpha: 0.32 });
   }
 };
 
@@ -91,44 +133,55 @@ const drawGasInflow = (graphics: Graphics, model: RoomDrawModel): void => {
     const upper = index % 2 === 0;
     const baseY = upper ? -model.height * 0.23 : model.height * 0.23;
     const y = baseY + Math.sin(model.elapsed * 4 + index * 1.7) * 10;
-    graphics
-      .circle(x, y, 2.2 + (index % 3))
-      .fill({ color: upper ? model.upperGasColor : model.lowerGasColor, alpha: intensity });
+    graphics.circle(x, y, 2.2 + (index % 3)).fill({
+      color:
+        model.gasInflowColors[index % model.gasInflowColors.length] ??
+        (upper ? model.upperGasColor : model.lowerGasColor),
+      alpha: intensity,
+    });
   }
 };
 
 const drawRoomAtmosphere = (graphics: Graphics, model: RoomDrawModel): void => {
-  for (const atmosphericCell of model.cells) {
-    const upper = atmosphericCell.zone === "upper";
-    const fill = upper ? model.upperGasFill : model.lowerGasFill;
-    if (fill < 0.002) continue;
-    graphics
-      .rect(
-        atmosphericCell.left + 0.8,
-        atmosphericCell.top + 0.8,
-        atmosphericCell.size - 1.6,
-        atmosphericCell.size - 1.6
-      )
-      .fill({
-        color: upper ? model.upperGasColor : model.lowerGasColor,
-        alpha: 0.06 + Math.sqrt(fill) * 0.48,
-      });
-  }
   const half = model.height / 2;
+  if (model.upperGasFill > 0.002) {
+    graphics
+      .rect(-model.width / 2 + 3, -half + 3, model.width - 6, half - 3)
+      .fill({ color: model.upperGasColor, alpha: 0.035 + Math.sqrt(model.upperGasFill) * 0.24 });
+  }
+  if (model.lowerGasFill > 0.002) {
+    graphics
+      .rect(-model.width / 2 + 3, 0, model.width - 6, half - 3)
+      .fill({ color: model.lowerGasColor, alpha: 0.035 + Math.sqrt(model.lowerGasFill) * 0.24 });
+  }
+  for (const atmosphericCell of model.cells) {
+    if (atmosphericCell.cell.column % 3 === 0) {
+      graphics
+        .moveTo(atmosphericCell.left, atmosphericCell.top)
+        .lineTo(atmosphericCell.left, atmosphericCell.top + atmosphericCell.size)
+        .stroke({ color: 0x9ab0a6, width: 1, alpha: 0.075 });
+    }
+    if (atmosphericCell.cell.elevation % 3 === 0) {
+      graphics
+        .moveTo(atmosphericCell.left, atmosphericCell.top)
+        .lineTo(atmosphericCell.left + atmosphericCell.size, atmosphericCell.top)
+        .stroke({ color: 0x9ab0a6, width: 1, alpha: 0.075 });
+    }
+  }
   if (model.upperGasFill > 0.01) {
     graphics
-      .rect(-model.width / 2 + 2, -half + 2, model.width - 4, 5)
-      .fill({ color: model.upperGasColor, alpha: 0.55 + model.upperGasFill * 0.35 });
+      .roundRect(-model.width / 2 + 6, -half + 5, model.width - 12, 2, 1)
+      .fill({ color: model.upperGasColor, alpha: 0.5 + model.upperGasFill * 0.28 });
   }
   if (model.lowerGasFill > 0.01) {
     graphics
-      .rect(-model.width / 2 + 2, half - 7, model.width - 4, 5)
-      .fill({ color: model.lowerGasColor, alpha: 0.55 + model.lowerGasFill * 0.35 });
+      .roundRect(-model.width / 2 + 6, half - 7, model.width - 12, 2, 1)
+      .fill({ color: model.lowerGasColor, alpha: 0.5 + model.lowerGasFill * 0.28 });
   }
   graphics
     .moveTo(-model.width / 2 + 8, 0)
     .lineTo(model.width / 2 - 8, 0)
-    .stroke({ color: 0x83a99a, width: 1, alpha: 0.22 });
+    .stroke({ color: 0x83a99a, width: 1, alpha: 0.12 });
   drawGasInflow(graphics, model);
 };
 
@@ -140,12 +193,12 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
     const surface = atmosphericCell.top + atmosphericCell.size - fillHeight;
     graphics
       .rect(atmosphericCell.left + 0.8, surface, atmosphericCell.size - 1.6, fillHeight)
-      .fill({ color: model.liquidColor, alpha: 0.7 });
+      .fill({ color: model.liquidColor, alpha: 0.58 });
     if (atmosphericCell.liquidFill < 1) {
       graphics
         .moveTo(atmosphericCell.left + 1, surface)
         .lineTo(atmosphericCell.left + atmosphericCell.size - 1, surface)
-        .stroke({ color: model.liquidColor, width: 2, alpha: 0.9 });
+        .stroke({ color: model.liquidColor, width: 1.25, alpha: 0.86 });
     }
   }
   if (model.liquidInflowRate > 0.002) {
@@ -154,7 +207,7 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
       graphics
         .moveTo(x, y + Math.sin(model.elapsed * 5 + x * 0.08) * 3)
         .lineTo(x + 12, y + Math.sin(model.elapsed * 5 + x * 0.08 + 1) * 3)
-        .stroke({ color: model.liquidColor, width: 2.5, alpha: 0.9 });
+        .stroke({ color: model.liquidColor, width: 1.5, alpha: 0.82 });
     }
   }
 };
@@ -169,11 +222,21 @@ const drawCore = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.structure !== "core") return;
   const radius = Math.min(model.width, model.height) * 0.24;
   const integrity = model.coreIntegrity / 100;
-  graphics.circle(0, 10, radius).stroke({ color: 0x2f6153, width: 12, alpha: 0.96 });
+  graphics.circle(0, 10, radius + 12).fill({ color: 0xc8b85f, alpha: 0.045 });
+  graphics.circle(0, 10, radius + 6).fill({ color: 0x090d0a, alpha: 0.9 });
+  for (let index = 0; index < 12; index += 1) {
+    const angle = (index / 12) * Math.PI * 2;
+    graphics
+      .moveTo(Math.cos(angle) * (radius + 8), 10 + Math.sin(angle) * (radius + 8))
+      .lineTo(Math.cos(angle) * (radius + 13), 10 + Math.sin(angle) * (radius + 13))
+      .stroke({ color: 0xd2b85f, width: 1, alpha: 0.5 });
+  }
+  graphics.circle(0, 10, radius).stroke({ color: 0x4c5130, width: 5, alpha: 0.92 });
   graphics
     .arc(0, 10, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * integrity)
-    .stroke({ color: integrityColor(integrity), width: 12 });
-  graphics.circle(0, 10, radius * 0.25).fill({ color: 0xf6fbb9, alpha: 0.92 });
+    .stroke({ color: integrityColor(integrity), width: 5 });
+  graphics.circle(0, 10, radius * 0.35).fill({ color: 0x22251a, alpha: 0.98 });
+  graphics.circle(0, 10, radius * 0.14).fill({ color: 0xf6fbb9, alpha: 0.92 });
 };
 
 const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
@@ -185,7 +248,7 @@ const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.reactionIntensity > 0.08) {
     graphics
       .rect(left + 10, top + 10, model.width - 20, model.height - 20)
-      .stroke({ color: 0xc1f64a, width: 3, alpha: 0.8 });
+      .stroke({ color: 0xc1f64a, width: 1.5, alpha: 0.72 });
   }
   if (model.pressurePulse > 1) {
     const pulse = Math.min(1, model.pressurePulse / 160);
@@ -196,10 +259,10 @@ const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
         model.width + 10 + pulse * 16,
         model.height + 10 + pulse * 16
       )
-      .stroke({ color: 0xf6a35b, width: 3 + pulse * 3, alpha: 0.4 + pulse * 0.4 });
+      .stroke({ color: 0xf6a35b, width: 1 + pulse * 1.5, alpha: 0.35 + pulse * 0.35 });
   }
   if (model.occupied > 0) {
-    graphics.circle(-left - 12, top + 12, 17).fill({ color: 0xe9584a });
+    graphics.circle(-left - 12, top + 12, 11).fill({ color: 0xe9584a, alpha: 0.9 });
   }
 };
 

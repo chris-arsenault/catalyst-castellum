@@ -58,14 +58,12 @@ export const GAS_BUFFERS: Record<GasBufferId, GasBufferDefinition> = {
     id: "anode_header",
     name: "Cl₂ anode header",
     capacity: 18,
-    hostRoomId: "lower_intake",
     accent: "#c5f540",
   },
   cathode_header: {
     id: "cathode_header",
     name: "H₂ cathode header",
     capacity: 18,
-    hostRoomId: "lower_intake",
     accent: "#f5a249",
   },
 };
@@ -75,7 +73,6 @@ export const LIQUID_BUFFERS: Record<LiquidBufferId, LiquidBufferDefinition> = {
     id: "cell_liquor",
     name: "NaOH cell-liquor outlet",
     capacity: 30,
-    hostRoomId: "lower_intake",
     accent: "#b555f5",
   },
 };
@@ -85,7 +82,6 @@ const roomGasJunction = (): GasJunctionDefinition => ({
   includeRoomInventory: true,
   roomPortHeight: 0.72,
   sourceIds: [],
-  bufferIds: [],
 });
 
 const roomLiquidJunction = (): LiquidJunctionDefinition => ({
@@ -93,7 +89,6 @@ const roomLiquidJunction = (): LiquidJunctionDefinition => ({
   includeRoomInventory: true,
   roomPortHeight: 0.12,
   sourceIds: [],
-  bufferIds: [],
 });
 
 export const GAS_JUNCTIONS: Record<RoomId, GasJunctionDefinition> = {
@@ -103,19 +98,12 @@ export const GAS_JUNCTIONS: Record<RoomId, GasJunctionDefinition> = {
   reservoir: roomGasJunction(),
   gallery: roomGasJunction(),
   washlock: roomGasJunction(),
-  lower_intake: {
-    capacity: 22,
-    includeRoomInventory: true,
-    roomPortHeight: 0.72,
-    sourceIds: [],
-    bufferIds: ["anode_header", "cathode_header"],
-  },
+  lower_intake: { ...roomGasJunction(), capacity: 22 },
   core: {
     capacity: 24,
     includeRoomInventory: false,
     roomPortHeight: 0.72,
     sourceIds: ["starter_gas_header"],
-    bufferIds: [],
   },
 };
 
@@ -126,18 +114,11 @@ export const LIQUID_JUNCTIONS: Record<RoomId, LiquidJunctionDefinition> = {
   reservoir: roomLiquidJunction(),
   gallery: roomLiquidJunction(),
   washlock: roomLiquidJunction(),
-  lower_intake: {
-    capacity: 24,
-    includeRoomInventory: true,
-    roomPortHeight: 0.12,
-    sourceIds: [],
-    bufferIds: ["cell_liquor"],
-  },
+  lower_intake: { ...roomLiquidJunction(), capacity: 24 },
   core: {
     capacity: 28,
     includeRoomInventory: false,
     roomPortHeight: 0.12,
     sourceIds: ["water_tank", "sodium_chloride_tank"],
-    bufferIds: [],
   },
 };

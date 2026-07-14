@@ -96,7 +96,7 @@ const drawArrow = (
       .lineTo(sample.point.x, sample.point.y);
   }
   graphics.moveTo(left.x, left.y).lineTo(sample.point.x, sample.point.y).lineTo(right.x, right.y);
-  graphics.stroke({ color, width: hollow ? 2 : 2.8, alpha });
+  graphics.stroke({ color, width: hollow ? 1.25 : 1.75, alpha });
 };
 
 const drawFlowArrows = (
@@ -132,20 +132,20 @@ const drawArrivalPulse = (
   const destination = samplePath(points, flow.net > 0 ? 1 : 0).point;
   const progress = (elapsed * 1.8) % 1;
   graphics
-    .circle(destination.x, destination.y, 7 + progress * 20)
-    .stroke({ color, width: 3 - progress * 1.5, alpha: 0.86 * (1 - progress) });
-  graphics.circle(destination.x, destination.y, 5).fill({ color, alpha: 0.9 });
+    .circle(destination.x, destination.y, 5 + progress * 14)
+    .stroke({ color, width: 1.5 - progress * 0.5, alpha: 0.72 * (1 - progress) });
+  graphics.circle(destination.x, destination.y, 3).fill({ color, alpha: 0.9 });
 };
 
 const drawStopMarker = (graphics: Graphics, points: readonly Point[]): void => {
   const { point } = samplePath(points, 0.5);
-  graphics.circle(point.x, point.y, 7).fill({ color: 0x170b09, alpha: 0.92 });
+  graphics.circle(point.x, point.y, 6).fill({ color: 0x170b09, alpha: 0.92 });
   graphics
     .moveTo(point.x - 4, point.y - 4)
     .lineTo(point.x + 4, point.y + 4)
     .moveTo(point.x + 4, point.y - 4)
     .lineTo(point.x - 4, point.y + 4)
-    .stroke({ color: 0xf6644c, width: 2.5, alpha: 0.95 });
+    .stroke({ color: 0xf6644c, width: 1.5, alpha: 0.95 });
 };
 
 interface LaneModel {
@@ -169,13 +169,13 @@ const laneAlpha = (model: LaneModel): number => {
 };
 
 const laneShellWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return 5;
-  return model.hovered ? 12 : 10;
+  if (!model.status.installed) return 3;
+  return model.hovered ? 6 : 4.5;
 };
 
 const laneCoreWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return 2;
-  return model.hovered ? 6 : 5;
+  if (!model.status.installed) return 1;
+  return model.hovered ? 3 : 2;
 };
 
 const laneColor = (model: LaneModel): number => {
@@ -188,7 +188,7 @@ const drawLane = (graphics: Graphics, model: LaneModel): void => {
   graphics.stroke({
     color: 0x020705,
     width: laneShellWidth(model),
-    alpha: model.status.installed ? 0.9 : 0.35,
+    alpha: model.status.installed ? 0.72 : 0.28,
   });
   tracePath(graphics, model.points);
   graphics.stroke({
@@ -200,8 +200,8 @@ const drawLane = (graphics: Graphics, model: LaneModel): void => {
     tracePath(graphics, model.points);
     graphics.stroke({
       color: model.color,
-      width: 2.5 + Math.min(5, Math.sqrt(Math.abs(model.flow.net)) * 2.6),
-      alpha: 0.4,
+      width: 1.5 + Math.min(2.5, Math.sqrt(Math.abs(model.flow.net)) * 1.35),
+      alpha: 0.34,
     });
     drawFlowArrows(graphics, model.points, model.flow, model.elapsed, model.color);
     drawArrivalPulse(graphics, model.points, model.flow, model.elapsed, model.color);
@@ -327,8 +327,8 @@ const coincidentLaneOffsets = (
   liquidCells: readonly GridCell[] | null
 ): PhaseLaneOffsets => {
   if (!gasCells || !liquidCells) return { gas: 0, liquid: 0 };
-  if (routesMatch(gasCells, liquidCells, false)) return { gas: -5, liquid: 5 };
-  if (routesMatch(gasCells, liquidCells, true)) return { gas: -5, liquid: -5 };
+  if (routesMatch(gasCells, liquidCells, false)) return { gas: -3, liquid: 3 };
+  if (routesMatch(gasCells, liquidCells, true)) return { gas: -3, liquid: -3 };
   return { gas: 0, liquid: 0 };
 };
 

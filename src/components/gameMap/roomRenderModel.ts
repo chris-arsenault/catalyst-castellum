@@ -3,16 +3,15 @@ import {
   GAS_COLORS,
   LIQUID_COLORS,
   ROOM_DEFINITIONS,
-  TRANSPORT_RUNS,
   facilityRingForRoom,
   roomAtmosphericCells,
   roomCenterWorld,
   roomVolume,
 } from "../../game/config";
 import { roomAnalysis } from "../../presentation/selectors";
+import { roomGasInflow, roomLiquidInflowRate } from "../../presentation/roomFlow";
 import {
   GAS_TYPES,
-  TRANSPORT_RUN_IDS,
   type GameState,
   type GasAmounts,
   type GasZone,
@@ -45,15 +44,6 @@ const weightedGasColor = (gas: GasAmounts): number => {
   return (Math.round(rgb.red) << 16) | (Math.round(rgb.green) << 8) | Math.round(rgb.blue);
 };
 
-const roomInflow = (game: GameState, roomId: RoomId, phase: "gas" | "liquid"): number =>
-  TRANSPORT_RUN_IDS.reduce((total, runId) => {
-    const definition = TRANSPORT_RUNS[runId][phase];
-    if (!definition || definition.direction[1] !== roomId) return total;
-    const conduit = phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId];
-    const delivering = phase === "gas" ? conduit.flowCause === "fan" : conduit.flowCause === "pump";
-    return delivering ? total + Math.abs(conduit.lastFlow) : total;
-  }, 0);
-
 /** Pure projection from canonical room cells and simulation state to the room renderer. */
 export const roomRenderModel = (
   game: GameState,
@@ -75,6 +65,10 @@ export const roomRenderModel = (
   const zoneCapacity = Math.max(1, roomVolume(roomId) / 2);
   const gasFill = (amount: number): number =>
     Math.min(1, 1 - Math.exp(-Math.max(0, amount) / zoneCapacity));
+  const gasInflow = roomGasInflow(game, roomId);
+  const gasInflowColors = GAS_TYPES.filter((species) => gasInflow.species[species] > 0.001)
+    .sort((left, right) => gasInflow.species[right] - gasInflow.species[left])
+    .map((species) => colorNumber(GAS_COLORS[species]));
   return {
     width: dimensions.width,
     height: dimensions.height,
@@ -104,8 +98,9 @@ export const roomRenderModel = (
     reactionIntensity: room.reactionIntensity,
     pressurePulse: room.pressurePulse,
     elapsed: game.elapsed,
-    gasInflowRate: roomInflow(game, roomId, "gas"),
-    liquidInflowRate: roomInflow(game, roomId, "liquid"),
+    gasInflowRate: gasInflow.rate,
+    gasInflowColors,
+    liquidInflowRate: roomLiquidInflowRate(game, roomId),
     occupied,
     coreIntegrity: game.coreIntegrity,
   };

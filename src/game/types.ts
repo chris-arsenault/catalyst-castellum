@@ -113,7 +113,6 @@ export interface GasBufferDefinition {
   id: GasBufferId;
   name: string;
   capacity: number;
-  hostRoomId: RoomId;
   accent: string;
 }
 
@@ -121,7 +120,6 @@ export interface LiquidBufferDefinition {
   id: LiquidBufferId;
   name: string;
   capacity: number;
-  hostRoomId: RoomId;
   accent: string;
 }
 

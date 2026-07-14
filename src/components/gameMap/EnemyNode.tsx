@@ -4,7 +4,13 @@ import type { EnemyState } from "../../game/types";
 import { drawEnemy } from "./enemyGraphics";
 import { enemyRenderModel } from "./enemyRenderModel";
 
-export const EnemyNode = ({ enemy }: { enemy: EnemyState }) => {
+export const EnemyNode = ({
+  enemy,
+  onHover,
+}: {
+  enemy: EnemyState;
+  onHover: (enemyId: number | null) => void;
+}) => {
   const model = enemyRenderModel(enemy);
   const draw = useCallback(
     (graphics: Graphics) => drawEnemy(graphics, model.type, model.color, model.health, model.mode),
@@ -12,7 +18,13 @@ export const EnemyNode = ({ enemy }: { enemy: EnemyState }) => {
   );
   return (
     <pixiContainer x={model.position.x} y={model.position.y} scale={{ x: model.facing, y: 1 }}>
-      <pixiGraphics draw={draw} />
+      <pixiGraphics
+        draw={draw}
+        eventMode="static"
+        cursor="help"
+        onPointerOver={() => onHover(enemy.id)}
+        onPointerOut={() => onHover(null)}
+      />
     </pixiContainer>
   );
 };

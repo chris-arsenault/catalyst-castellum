@@ -1,5 +1,6 @@
 import { FACILITY_MAP, ROOM_DEFINITIONS, ROOM_ORDER, facilityCells } from "../../game/config";
-import type { RoomId } from "../../game/types";
+import type { GameState, RoomId } from "../../game/types";
+import { cellOutletAssemblyModel } from "./cellOutletRenderModel";
 import {
   WORLD_MAP_HEIGHT,
   WORLD_MAP_WIDTH,
@@ -106,6 +107,18 @@ const equipmentSocketObstacles = (): TaggedObstacle[] =>
     })
   );
 
+const cellOutletObstacles = (game?: GameState): TaggedObstacle[] => {
+  const assembly = game ? cellOutletAssemblyModel(game) : null;
+  if (!assembly) return [];
+  return assembly.outlets.map((outlet) => ({
+    left: outlet.x - 18,
+    top: outlet.y - 29,
+    width: 36,
+    height: 58,
+    labelMayOverlapForRoomId: null,
+  }));
+};
+
 const placementIsFree = (
   rect: MapRect,
   roomId: RoomId,
@@ -126,12 +139,13 @@ const labelPriority = (roomId: RoomId, selectedRoomId: RoomId): number => {
   return 50 - roomMapRect(roomId).width / 100;
 };
 
-export const layoutMapLabels = (selectedRoomId: RoomId): MapLabelPlacement[] => {
+export const layoutMapLabels = (selectedRoomId: RoomId, game?: GameState): MapLabelPlacement[] => {
   const obstacles = [
     ...roomObstacles(),
     ...structureObstacles(),
     ...utilityNodeObstacles(),
     ...equipmentSocketObstacles(),
+    ...cellOutletObstacles(game),
   ];
   const placed: MapLabelPlacement[] = [];
   const ordered = [...ROOM_ORDER].sort(

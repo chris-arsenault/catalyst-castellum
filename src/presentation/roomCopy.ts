@@ -103,11 +103,7 @@ export const roomRingDescription = (
   definition: GameDefinition = DEFAULT_GAME_DEFINITION
 ): string => {
   const room = definition.rooms[roomId];
-  const ring = definition.facility.ringForRoom(roomId);
   if (room.structure === "entry") return "Structural entry space · path and atmosphere monitoring";
-  if (ring === "inner") return "Two equipment sockets · all equipment grades permitted";
-  if (ring === "middle")
-    return "Two equipment sockets · contact, heat, and mixing equipment permitted";
-  if (ring === "outer") return "Two equipment sockets · heat and gas mixing equipment permitted";
+  if (room.structure === "room") return "Two universal sockets · every equipment type fits";
   return "Protected utility and stock manifold";
 };

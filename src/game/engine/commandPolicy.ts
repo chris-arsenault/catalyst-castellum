@@ -44,6 +44,15 @@ const configurationUnlocked = (state: GameState): boolean =>
 const simulationActive = (state: GameState): boolean =>
   state.phase === "prime" || state.phase === "assault";
 
+const availableEquipmentCopy = (state: GameState, gameDefinition: GameDefinition): string => {
+  const names = state.availability.equipment.map(
+    (equipmentId) => gameDefinition.equipment[equipmentId].name
+  );
+  return names.length > 0
+    ? `Current operation authorizes ${names.join(", ")}.`
+    : "Current operation equipment catalog is sealed.";
+};
+
 const equipmentFits = (
   state: GameState,
   roomId: RoomId,
@@ -66,28 +75,14 @@ const evaluateInstallationPlacement = (
   gameDefinition: GameDefinition
 ): CommandDecision | null => {
   const definition = gameDefinition.equipment[command.equipmentId];
-  const room = gameDefinition.rooms[command.roomId];
   if (!equipmentAvailable(state, command.equipmentId))
-    return reject("unavailable", "This equipment has not been unlocked in the current lesson.", {
-      cost,
-    });
+    return reject("unavailable", availableEquipmentCopy(state, gameDefinition), { cost });
   if (!roomSocketIds(command.roomId, gameDefinition).includes(command.socketId))
     return reject("placement", "This space has no compatible equipment socket.", { cost });
   if (state.rooms[command.roomId].equipment[command.socketId])
     return reject(
       "occupied_socket",
       "Dismantle the installed equipment before reusing this socket.",
-      { cost }
-    );
-  const ring = gameDefinition.facility.ringForRoom(command.roomId);
-  if (!definition.allowedRings.includes(ring))
-    return reject("placement", `${definition.name} cannot be mounted in the ${ring} ring.`, {
-      cost,
-    });
-  if (definition.requiredFeature && !room.features.includes(definition.requiredFeature))
-    return reject(
-      "placement",
-      `${definition.name} requires the separated outlet manifold shown in R-05.`,
       { cost }
     );
   if (definition.unique && findEquipmentInstallation(state, command.equipmentId, gameDefinition))

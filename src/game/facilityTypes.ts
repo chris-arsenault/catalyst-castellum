@@ -2,17 +2,14 @@ import type {
   EquipmentId,
   EquipmentLevel,
   EquipmentSocketId,
-  GasBufferId,
   GasSourceId,
   GridCell,
-  LiquidBufferId,
   LiquidSourceId,
   RoomId,
   TransportRunId,
 } from "./types";
 
 export type FacilityRing = "outer" | "middle" | "inner" | "core";
-export type RoomFeatureId = "separated_cell_manifold";
 
 export interface RoomDefinition {
   id: RoomId;
@@ -21,7 +18,6 @@ export interface RoomDefinition {
   structure: "entry" | "room" | "core";
   ambientTemperature: number;
   socketCount: 0 | 2;
-  features: readonly RoomFeatureId[];
   blurb: string;
 }
 
@@ -58,8 +54,6 @@ export interface EquipmentDefinition {
   accent: string;
   buildCost: number;
   upgradeCosts: readonly [number, number];
-  allowedRings: readonly FacilityRing[];
-  requiredFeature: RoomFeatureId | null;
   unique: boolean;
   grades: readonly [EquipmentGradeDefinition, EquipmentGradeDefinition, EquipmentGradeDefinition];
 }
@@ -131,8 +125,7 @@ export interface FacilityPortalState {
   lastLiquidFlow: number;
 }
 
-export type FacilityUtilityNodeId =
-  GasSourceId | LiquidSourceId | GasBufferId | LiquidBufferId | "gas_vent" | "liquid_drain";
+export type FacilityUtilityNodeId = GasSourceId | LiquidSourceId | "gas_vent" | "liquid_drain";
 
 export interface FacilityUtilityNodeDefinition {
   cell: GridCell;
@@ -166,7 +159,6 @@ export interface GasJunctionDefinition {
   includeRoomInventory: boolean;
   roomPortHeight: number;
   sourceIds: readonly GasSourceId[];
-  bufferIds: readonly GasBufferId[];
 }
 
 export interface LiquidJunctionDefinition {
@@ -174,7 +166,6 @@ export interface LiquidJunctionDefinition {
   includeRoomInventory: boolean;
   roomPortHeight: number;
   sourceIds: readonly LiquidSourceId[];
-  bufferIds: readonly LiquidBufferId[];
 }
 
 export interface FacilityMapDefinition {

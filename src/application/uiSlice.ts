@@ -8,15 +8,35 @@ export const createUiActions = (
   dependencies: GameStoreDependencies
 ): Pick<
   UiSlice,
-  "selectRoom" | "setShowHelp" | "dismissTutorialGuide" | "restartTutorialGuide" | "clearNotice"
+  | "selectRoom"
+  | "setShowHelp"
+  | "openManual"
+  | "openEquipmentBuild"
+  | "setManualSection"
+  | "closeManual"
+  | "dismissTutorialGuide"
+  | "restartTutorialGuide"
+  | "acknowledgeStageIntro"
+  | "clearNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
-  setShowHelp: (showHelp) => set({ showHelp }),
+  setShowHelp: (showHelp) =>
+    set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),
+  openManual: (manualSection = "operations") =>
+    set({ showHelp: true, manualSection, equipmentBuildTarget: null }),
+  openEquipmentBuild: (roomId, socketId) =>
+    set({
+      showHelp: true,
+      manualSection: "build",
+      equipmentBuildTarget: { roomId, socketId },
+    }),
+  setManualSection: (manualSection) => set({ manualSection }),
+  closeManual: () => set({ showHelp: false, equipmentBuildTarget: null }),
   dismissTutorialGuide: () => {
     const state = get();
     const guide = guideDefinitionFor(state.game);
     if (!guide || !state.activeSlotId) return;
-    const dismissedGuideIds = [...new Set([...state.dismissedGuideIds, guide.id])];
+    const dismissedGuideIds = [...new Set([...state.dismissedGuideIds, guide.dismissalId])];
     dependencies.scheduleSave(state.activeSlotId, state.game, dismissedGuideIds);
     set({ dismissedGuideIds });
   },
@@ -24,15 +44,20 @@ export const createUiActions = (
     const state = get();
     const guide = guideDefinitionFor(state.game);
     if (!guide || !state.activeSlotId) return;
-    const dismissedGuideIds = state.dismissedGuideIds.filter((id) => id !== guide.id);
+    const dismissedGuideIds = state.dismissedGuideIds.filter((id) => id !== guide.dismissalId);
     dependencies.scheduleSave(state.activeSlotId, state.game, dismissedGuideIds);
     set({
       dismissedGuideIds,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
       selectedRoomId: DEFAULT_GAME_RUNTIME.level(state.game).focusRoomId,
       showHelp: false,
+      equipmentBuildTarget: null,
       notice: null,
     });
   },
+  acknowledgeStageIntro: (guideId) =>
+    set((state) => ({
+      acknowledgedStageIntroIds: [...new Set([...state.acknowledgedStageIntroIds, guideId])],
+    })),
   clearNotice: () => set({ notice: null }),
 });

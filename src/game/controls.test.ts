@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { GAS_SOURCES, roomRing } from "./config";
 import { createScenarioGame, executeCommand } from "./simulation";
+import { EQUIPMENT_IDS, ROOM_IDS } from "./types";
 
 describe("simple conduit controls", () => {
   it("locks the one actuator during assault", () => {
@@ -80,5 +81,32 @@ describe("derived rings and mixed exotic stock", () => {
       ),
       5
     );
+  });
+});
+
+describe("universal equipment sockets", () => {
+  it("accepts every equipment type in every standard room", () => {
+    for (const roomId of ROOM_IDS.filter(
+      (candidate) => !["west_intake", "core"].includes(candidate)
+    )) {
+      for (const equipmentId of EQUIPMENT_IDS) {
+        const entered = executeCommand(createScenarioGame("commissioning_exam"), {
+          type: "begin_level",
+        }).state;
+        for (const room of Object.values(entered.rooms)) {
+          room.equipment.socket_a = null;
+          room.equipment.socket_b = null;
+        }
+        entered.matter = 999;
+        const result = executeCommand(entered, {
+          type: "install_equipment",
+          roomId,
+          socketId: "socket_a",
+          equipmentId,
+        });
+
+        expect(result.accepted, `${equipmentId} in ${roomId}: ${result.reason}`).toBe(true);
+      }
+    }
   });
 });

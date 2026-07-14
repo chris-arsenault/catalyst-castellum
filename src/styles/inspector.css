@@ -469,6 +469,121 @@
 .reaction-readout {
   background: #0c1815;
 }
+.ignition-gate {
+  display: grid;
+  gap: 9px;
+  margin-bottom: 9px;
+  padding: 10px;
+  border: 1px solid rgba(245, 187, 71, 0.22);
+  border-radius: 8px;
+  background: rgba(8, 20, 17, 0.72);
+}
+.ignition-gate > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.ignition-gate > header span {
+  color: #f5bb47;
+  font: 700 0.66rem/1.1 var(--font-display);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.ignition-gate > header p,
+.ignition-gate > footer {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+.ignition-gate > header > strong {
+  flex: 0 0 auto;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #f5bb47;
+  background: rgba(245, 187, 71, 0.1);
+  font: 700 0.58rem/1 var(--font-display);
+  letter-spacing: 0.06em;
+}
+.ignition-gate > header > strong.ready {
+  color: #b9e870;
+  background: rgba(185, 232, 112, 0.12);
+}
+.ignition-layer-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+.ignition-layer-list article {
+  display: grid;
+  gap: 7px;
+  padding: 8px;
+  border: 1px solid rgba(148, 180, 160, 0.14);
+  border-radius: 6px;
+  background: rgba(18, 39, 32, 0.56);
+}
+.ignition-layer-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.66rem;
+}
+.ignition-layer-heading > span {
+  color: #f5bb47;
+  font: 700 0.56rem/1 var(--font-display);
+  letter-spacing: 0.05em;
+}
+.ignition-condition-grid {
+  display: grid;
+  gap: 4px;
+}
+.ignition-condition-grid > span {
+  display: grid;
+  grid-template-columns: 11px 42px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px;
+  min-height: 15px;
+  color: #d4a961;
+  font-size: 0.62rem;
+}
+.ignition-condition-grid > span::before {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin-left: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.ignition-condition-grid > span.ready {
+  color: #b9e870;
+}
+.ignition-condition-grid > span.ready::before {
+  display: none;
+}
+.ignition-condition-grid em {
+  color: var(--muted);
+  font-style: normal;
+}
+.ignition-condition-grid strong {
+  overflow: hidden;
+  color: currentColor;
+  font-weight: 650;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ignition-gate > footer {
+  margin: 0;
+  padding-top: 7px;
+  border-top: 1px solid rgba(148, 180, 160, 0.12);
+}
+@media (max-width: 720px) {
+  .ignition-layer-list {
+    grid-template-columns: 1fr;
+  }
+}
 .reaction-rate-list {
   display: grid;
   gap: 6px;

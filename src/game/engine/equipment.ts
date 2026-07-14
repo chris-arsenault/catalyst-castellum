@@ -74,6 +74,9 @@ const activeGrade = (
   return level ? gradeFor(equipmentId, level, definition) : null;
 };
 
+export const roomEquipmentIsActive = (room: RoomState, equipmentId: EquipmentId): boolean =>
+  activeLevel(room, equipmentId) !== null;
+
 export const roomGasMixingRate = (
   room: RoomState,
   definition: GameDefinition = DEFAULT_GAME_DEFINITION

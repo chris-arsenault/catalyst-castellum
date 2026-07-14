@@ -1,82 +1,43 @@
-import { Plus, Trash2, Wrench } from "lucide-react";
+import { ChevronRight, Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
 import { EQUIPMENT_DEFINITIONS } from "../../game/config";
 import { commandDecision as evaluateCommand } from "../../presentation/selectors";
 import { useGameStore } from "../../application/store";
 import {
-  EQUIPMENT_IDS,
   type EquipmentInstance,
   type EquipmentId,
   type EquipmentSocketId,
-  type GameCommand,
   type GameState,
   type RoomId,
 } from "../../game/types";
 import { BinaryControl } from "./ActuatorControls";
-import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
+import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 
 const socketLabel = (socketId: EquipmentSocketId): string =>
   socketId === "socket_a" ? "SOCKET A" : "SOCKET B";
 
-const installCommand = (
+const equipmentToggleTutorialAnchor = (
   roomId: RoomId,
-  socketId: EquipmentSocketId,
   equipmentId: EquipmentId
-): Extract<GameCommand, { type: "install_equipment" }> => ({
-  type: "install_equipment",
-  roomId,
-  socketId,
-  equipmentId,
-});
+): TutorialAnchorId | null =>
+  roomId === "furnace" && equipmentId === "gas_agitator"
+    ? TUTORIAL_ANCHORS.furnaceAgitatorToggle
+    : null;
 
-const equipmentVisibleForSocket = (
-  game: GameState,
-  roomId: RoomId,
-  socketId: EquipmentSocketId,
-  equipmentId: EquipmentId
-): boolean => {
-  const decision = evaluateCommand(game, installCommand(roomId, socketId, equipmentId));
-  return (
-    decision.allowed || decision.code === "insufficient_matter" || decision.code === "capacity"
-  );
-};
-
-const EquipmentChoice = ({
-  equipmentId,
-  roomId,
-  socketId,
-}: {
-  equipmentId: EquipmentId;
-  roomId: RoomId;
-  socketId: EquipmentSocketId;
-}) => {
-  const game = useGameStore((state) => state.game);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const definition = EQUIPMENT_DEFINITIONS[equipmentId];
-  const command = installCommand(roomId, socketId, equipmentId);
-  const decision = evaluateCommand(game, command);
-  const install = useCallback(
-    () => dispatch({ type: "install_equipment", roomId, socketId, equipmentId }),
-    [dispatch, equipmentId, roomId, socketId]
-  );
-  return (
-    <button
-      type="button"
-      disabled={!decision.allowed}
-      title={decision.reason ?? undefined}
-      data-testid={`install-${roomId}-${socketId}-${equipmentId}`}
-      data-tutorial-anchor={
-        roomId === "furnace" && equipmentId === "gas_agitator"
-          ? TUTORIAL_ANCHORS.furnaceAgitator
-          : undefined
-      }
-      onClick={install}
-    >
-      <Plus size={13} />
-      <span>{definition.name}</span>
-      <strong>{definition.buildCost} M</strong>
-    </button>
-  );
+const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnchorId | null => {
+  if (roomId === "lower_intake" && game.campaign.levelId === "make_the_reagent")
+    return TUTORIAL_ANCHORS.lowerIntakeMembraneCell;
+  if (roomId !== "furnace") return null;
+  if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
+  if (game.campaign.levelId === "acid_line") {
+    const thermalInstalled = Object.values(game.rooms.furnace.equipment).some(
+      (instance) => instance?.equipmentId === "thermal_coil"
+    );
+    return thermalInstalled
+      ? TUTORIAL_ANCHORS.furnaceAgitator
+      : TUTORIAL_ANCHORS.furnaceThermalCoil;
+  }
+  return null;
 };
 
 const EmptyEquipmentSocket = ({
@@ -87,25 +48,26 @@ const EmptyEquipmentSocket = ({
   socketId: EquipmentSocketId;
 }) => {
   const game = useGameStore((state) => state.game);
-  const available = EQUIPMENT_IDS.filter((equipmentId) =>
-    equipmentVisibleForSocket(game, roomId, socketId, equipmentId)
-  );
+  const openEquipmentBuild = useGameStore((state) => state.openEquipmentBuild);
   return (
     <article className="equipment-socket empty">
-      <header>
-        <span>{socketLabel(socketId)}</span>
-        <strong>Open equipment socket</strong>
-      </header>
-      <div className="equipment-picker">
-        {available.map((equipmentId) => (
-          <EquipmentChoice
-            key={equipmentId}
-            equipmentId={equipmentId}
-            roomId={roomId}
-            socketId={socketId}
-          />
-        ))}
-      </div>
+      <button
+        className="equipment-socket-build"
+        type="button"
+        data-testid={`open-equipment-build-${roomId}-${socketId}`}
+        data-tutorial-anchor={emptySocketTutorialAnchor(game, roomId) ?? undefined}
+        onClick={() => openEquipmentBuild(roomId, socketId)}
+      >
+        <i>
+          <Plus size={17} />
+        </i>
+        <span>
+          <small>{socketLabel(socketId)}</small>
+          <strong>Install equipment</strong>
+          <em>Open build catalog</em>
+        </span>
+        <ChevronRight size={16} />
+      </button>
     </article>
   );
 };
@@ -160,7 +122,7 @@ const EquipmentActions = ({
         disabled={!toggleDecision.allowed}
         inactiveLabel="OFF"
         testId={`equipment-toggle-${roomId}-${socketId}`}
-        tutorialAnchor={null}
+        tutorialAnchor={equipmentToggleTutorialAnchor(roomId, instance.equipmentId)}
         onClick={toggle}
       />
       <button

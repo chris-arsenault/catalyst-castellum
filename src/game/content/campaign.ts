@@ -137,10 +137,10 @@ const flashPoint: LevelDefinition = {
       id: "first_spark",
       title: "First spark",
       detail:
-        "Eight crawlers are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
+        "Ten crawlers are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
       objective: "Install a Gas Agitator in R-02 and switch on the Core–R-02 gas duct.",
       primeSeconds: 24,
-      wave: enemySequence(8, "crawler", 0.5, 2.2),
+      wave: enemySequence(10, "crawler", 0.5, 2.2),
       availability: flashAvailability,
     },
     {
@@ -186,7 +186,7 @@ const makeTheReagent: LevelDefinition = {
   name: "Make the Reagent",
   kicker: "Lesson 02 · One reaction, one junction",
   briefing:
-    "A Core–R-05 feed pipe carries mixed water and brine to a membrane-cell manifold. The cell’s separated outlets feed a shared gas junction and a liquid junction.",
+    "A Core–R-05 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The cell brings separated product buffers into R-05’s gas and liquid junctions.",
   lesson:
     "The membrane cell produces Cl₂, H₂, and NaOH together. Outlet pressure and shared-junction flow determine how long the cell can sustain production.",
   focusRoomId: "lower_intake",
@@ -206,7 +206,7 @@ const makeTheReagent: LevelDefinition = {
       detail: "A crawler column will cross R-03 as the R-05 gas stream arrives.",
       objective: "Install the Membrane Cell and observe all three conserved outputs.",
       primeSeconds: 25,
-      wave: enemySequence(10, "crawler", 0.5, 2),
+      wave: enemySequence(5, "crawler", 10.5, 2),
       availability: reagentRoundOne,
     },
     {
@@ -366,9 +366,7 @@ const storedChlorine: LevelDefinition = {
       detail: "A slow armored wave crosses R-03 while its first NaOCl inventory forms.",
       objective: "Install a Wet Contactor in R-03 and monitor the forming liquid inventory.",
       primeSeconds: 34,
-      wave: [...enemySequence(5, "shell", 0.5, 2.8), ...enemySequence(3, "bellows", 2, 3.1)].sort(
-        (left, right) => left.at - right.at
-      ),
+      wave: enemySequence(5, "shell", 0.5, 2.8),
       availability: allAvailability,
     },
     {

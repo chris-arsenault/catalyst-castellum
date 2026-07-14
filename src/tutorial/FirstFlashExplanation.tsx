@@ -3,15 +3,10 @@ import type { CombatIncident } from "../game/types";
 
 interface FirstFlashExplanationProps {
   incident: CombatIncident;
-  resumeOnClose: boolean;
   onClose: () => void;
 }
 
-export const FirstFlashExplanation = ({
-  incident,
-  resumeOnClose,
-  onClose,
-}: FirstFlashExplanationProps) => (
+export const FirstFlashExplanation = ({ incident, onClose }: FirstFlashExplanationProps) => (
   <div className="modal-backdrop first-flash-backdrop">
     <section
       className="first-flash-modal"
@@ -21,12 +16,14 @@ export const FirstFlashExplanation = ({
       data-testid="first-flash-explanation"
     >
       <span className="first-flash-kicker">
-        <PauseCircle size={14} /> First OX-1 flash
+        <PauseCircle size={14} /> Teaching pause · First OX-1 flash
       </span>
-      <h2 id="first-flash-title">Why R-02 just exploded</h2>
+      <h2 id="first-flash-title">R-02’s first OX-1 flash</h2>
       <p>
-        The Core duct delivered hydrogen and oxygen into R-02. The agitator mixed both gas layers
-        until the chamber crossed the OX-1 ignition threshold.
+        The Core duct delivered hydrogen and oxygen into R-02. The agitator distributed them across
+        both gas layers. One layer met its H₂ concentration, O₂ concentration, stoichiometric batch,
+        agitation, and cooldown gates. Combustion consumes that mixture, creates a brief pressure
+        impulse, and raises the chamber gas temperature.
       </p>
       <div className="flash-causal-chain" aria-label="Explosion causal chain">
         <span>
@@ -43,16 +40,20 @@ export const FirstFlashExplanation = ({
         <i>→</i>
         <span>
           <Gauge size={16} />
-          <strong>Pressure + heat</strong>
-          <small>{Math.round(incident.pressureImpulse)} kPa impulse</small>
+          <strong>Blast + hot gas</strong>
+          <small>
+            {Math.round(incident.pressureImpulse)} kPa impulse · +{Math.round(incident.heatDelta)}{" "}
+            °C gas
+          </small>
         </span>
       </div>
       <p className="first-flash-note">
-        R-02 is primed. Start the assault and watch its pressure and heat strike enemies inside the
-        chamber.
+        The pressure impulse lands once at ignition. Gas above 48 °C applies continuous thermal
+        damage while a target remains inside that layer. Enemy hover shows its current HP per
+        second.
       </p>
       <button type="button" className="primary-action first-flash-resume" onClick={onClose}>
-        <Play size={15} /> {resumeOnClose ? "Start first assault" : "Return to paused game"}
+        <Play size={15} /> Start first assault
       </button>
     </section>
   </div>

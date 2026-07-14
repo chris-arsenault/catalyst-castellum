@@ -3,11 +3,13 @@ import { lazy, Suspense } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
 import { BriefingModal } from "./components/BriefingModal";
-import { CampaignProgressModal, HelpModal, NoticeToast, OutcomeModal } from "./components/Modals";
+import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/Modals";
+import { FacilityManual } from "./components/manual/FacilityManual";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
+import { GameMap } from "./components/GameMap";
 import {
   useApplicationInitialization,
   useAudioDirector,
@@ -15,7 +17,6 @@ import {
 } from "./application/hooks";
 import { useGameStore } from "./application/store";
 
-const GameMap = lazy(async () => ({ default: (await import("./components/GameMap")).GameMap }));
 const GuidedTutorial = lazy(async () => ({
   default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
 }));
@@ -26,9 +27,7 @@ const MapStage = () => {
   const selectRoom = useGameStore((state) => state.selectRoom);
   return (
     <div className="map-stage-wrap">
-      <Suspense fallback={<div className="game-map-canvas" data-testid="game-map-loading" />}>
-        <GameMap game={game} selectedRoomId={selectedRoomId} onSelectRoom={selectRoom} />
-      </Suspense>
+      <GameMap game={game} selectedRoomId={selectedRoomId} onSelectRoom={selectRoom} />
       <FeedstockStrip />
       <EventLog />
       {game.paused && (
@@ -50,6 +49,7 @@ const ActiveGame = () => {
         <section className="defense-board">
           <PhaseBanner />
           <section className="map-module">
+            <div className="tutorial-task-slot" data-tutorial="task-slot" />
             <MapStage />
           </section>
         </section>
@@ -59,10 +59,9 @@ const ActiveGame = () => {
 
       <BriefingModal />
       <CampaignProgressModal />
-      <HelpModal />
+      <FacilityManual />
       <OutcomeModal />
       <NoticeToast />
-      <div className="tutorial-coach-anchor" data-tutorial="coach-anchor" aria-hidden="true" />
       <Suspense fallback={null}>
         <GuidedTutorial />
       </Suspense>
