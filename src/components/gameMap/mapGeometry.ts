@@ -1,4 +1,8 @@
-import { FACILITY_MAP, gridCellToWorldPoint, roomCenterWorld } from "../../game/config";
+import {
+  FACILITY_MAP,
+  gridCellToWorldPoint,
+  roomCenterWorld,
+} from "../../presentation/defaultGame";
 import type { GridCell, Point, RoomId, WorldPoint } from "../../game/types";
 
 export const VIEWPORT_WIDTH = 1120;

@@ -3,7 +3,7 @@ import {
   ROOM_DEFINITIONS,
   SPECIES_DEFINITIONS,
   roomVolume,
-} from "../../game/config";
+} from "../../presentation/defaultGame";
 import { roomHazards, STANDARD_PRESSURE } from "../../game/queries";
 import {
   GAS_TYPES,
@@ -22,6 +22,7 @@ import {
 } from "../../presentation/damageCopy";
 import { activeRoomGasPortals, roomGasInflow } from "../../presentation/roomFlow";
 import { roomAnalysis } from "../../presentation/selectors";
+import { roomCopy } from "../../presentation/entityCopy";
 
 const percentage = (value: number): string => {
   if (value >= 10) return `${Math.round(value)}%`;
@@ -126,7 +127,7 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
     <aside className="room-map-tooltip room-detail-tooltip" data-testid="room-map-tooltip">
       <header>
         <span>{definition.code}</span>
-        <strong>{definition.name}</strong>
+        <strong>{roomCopy(definition).name}</strong>
         <em className={`hazard-${analysis.hazardLabel.toLowerCase()}`}>{analysis.hazardLabel}</em>
       </header>
       <GasComposition gas={room.gas.upper} zone="upper" temperature={room.gasTemperature.upper} />

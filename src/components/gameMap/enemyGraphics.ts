@@ -1,5 +1,5 @@
 import type { Graphics } from "pixi.js";
-import type { EnemyLocomotionMode, EnemyType } from "../../game/types";
+import type { EnemyAppearanceArchetype, EnemyLocomotionMode } from "../../game/types";
 
 export interface EnemyPoseModel {
   groundedShadow: boolean;
@@ -25,8 +25,12 @@ const drawFloater = (graphics: Graphics, color: number): void => {
   graphics.moveTo(7, 8).lineTo(11, 17).stroke({ color, width: 1.25, alpha: 0.8 });
 };
 
-const drawEnemyShape = (graphics: Graphics, type: EnemyType, color: number): void => {
-  switch (type) {
+const drawEnemyShape = (
+  graphics: Graphics,
+  appearance: EnemyAppearanceArchetype,
+  color: number
+): void => {
+  switch (appearance) {
     case "floater":
       return drawFloater(graphics, color);
     case "shell":
@@ -54,7 +58,7 @@ const healthColor = (health: number): number => {
 
 export const drawEnemy = (
   graphics: Graphics,
-  type: EnemyType,
+  appearance: EnemyAppearanceArchetype,
   color: number,
   health: number,
   mode: EnemyLocomotionMode
@@ -64,7 +68,7 @@ export const drawEnemy = (
   if (pose.groundedShadow) {
     graphics.ellipse(0, 10, 17, 7).fill({ color: 0x020806, alpha: 0.52 });
   }
-  drawEnemyShape(graphics, type, color);
+  drawEnemyShape(graphics, appearance, color);
   if (pose.stance === "walk") {
     graphics
       .moveTo(-7, 7)

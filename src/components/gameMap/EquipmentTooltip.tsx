@@ -1,7 +1,12 @@
-import { EQUIPMENT_DEFINITIONS, ROOM_DEFINITIONS, equipmentGrade } from "../../game/config";
+import {
+  EQUIPMENT_DEFINITIONS,
+  ROOM_DEFINITIONS,
+  equipmentGrade,
+} from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
 import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import type { EquipmentHover } from "./EquipmentLayer";
+import { equipmentCopy } from "../../presentation/entityCopy";
 
 const socketLabel = (socketId: EquipmentHover["socketId"]): string =>
   socketId === "socket_a" ? "Socket A" : "Socket B";
@@ -22,7 +27,7 @@ export const EquipmentTooltip = ({
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="equipment-map-tooltip">
       <header>
         <span style={{ color: definition.accent }}>{room.code}</span>
-        <strong>{definition.name}</strong>
+        <strong>{equipmentCopy(definition).name}</strong>
         <em>{instance.enabled ? "ACTIVE" : "STANDBY"}</em>
       </header>
       <dl>

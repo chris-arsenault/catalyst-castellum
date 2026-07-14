@@ -51,7 +51,7 @@ describe("simple conduit controls", () => {
       phase: "gas",
     });
     expect(result.accepted).toBe(false);
-    expect(result.reason).toMatch(/conserved conduit inventory/);
+    expect(result.code).toBe("capacity");
   });
 });
 
@@ -105,7 +105,7 @@ describe("universal equipment sockets", () => {
           equipmentId,
         });
 
-        expect(result.accepted, `${equipmentId} in ${roomId}: ${result.reason}`).toBe(true);
+        expect(result.accepted, `${equipmentId} in ${roomId}: ${result.code}`).toBe(true);
       }
     }
   });

@@ -1,4 +1,4 @@
-import { SPECIES_DEFINITIONS } from "../game/config";
+import { SPECIES_DEFINITIONS } from "./defaultGame";
 import type { LimitConditionCode, LimitingFactor } from "../game/types";
 
 const CONDITION_COPY: Record<LimitConditionCode, string> = {

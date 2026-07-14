@@ -14,6 +14,7 @@ import { useCallback, useState } from "react";
 import { setMuted, setMusicVolume, setSfxVolume, useAudioSettings } from "../audio";
 import { levelDefinitionFor } from "../game/queries";
 import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { levelCopy } from "../presentation/levelCopy";
 import { useGameStore } from "../application/store";
 import type { GamePhase, GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
@@ -45,11 +46,12 @@ const BrandLockup = () => (
 
 const CycleStatus = ({ game }: { game: GameState }) => {
   const level = levelDefinitionFor(game);
+  const copy = levelCopy(level);
   return (
     <div className="cycle-status">
       <div className="cycle-number">
         <span>
-          Level {level.number} · {level.name}
+          Level {level.number} · {copy.name}
         </span>
         <strong>
           Round {String(game.campaign.roundIndex + 1).padStart(2, "0")} /{" "}

@@ -1,5 +1,5 @@
 import { Activity, ArrowDownToLine, Beaker, LockKeyhole } from "lucide-react";
-import { TRANSPORT_RUNS } from "../game/config";
+import { TRANSPORT_RUNS } from "../presentation/defaultGame";
 import { roomSocketIds, transportPhaseAvailable } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { TRANSPORT_RUN_IDS } from "../game/types";

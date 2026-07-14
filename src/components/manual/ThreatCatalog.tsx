@@ -1,16 +1,17 @@
 import { Bird, Bug, Shield, Snail, Wind } from "lucide-react";
 import { useState } from "react";
-import { ENEMY_DEFINITIONS } from "../../game/config";
-import { ENEMY_TYPES, type EnemyType } from "../../game/types";
+import { ENEMY_DEFINITIONS } from "../../presentation/defaultGame";
+import { ENEMY_TYPES, type EnemyManualIcon, type EnemyType } from "../../game/types";
 import { damageChannelStyle, DAMAGE_CHANNELS } from "../../presentation/damageCopy";
 import { ENEMY_MANUAL_FLAVOR } from "../../presentation/manualContent";
+import { enemyCopy } from "../../presentation/entityCopy";
 
-const ENEMY_ICONS: Record<EnemyType, typeof Bug> = {
-  crawler: Bug,
-  skimmer: Wind,
-  floater: Bird,
-  shell: Shield,
-  bellows: Snail,
+const ENEMY_ICONS: Record<EnemyManualIcon, typeof Bug> = {
+  bug: Bug,
+  wind: Wind,
+  bird: Bird,
+  shield: Shield,
+  snail: Snail,
 };
 
 const movement = (enemyType: EnemyType): string => {
@@ -37,7 +38,7 @@ const ThreatIndex = ({
   <aside className="manual-threat-index">
     <span>Observed forms</span>
     {ENEMY_TYPES.map((enemyType) => {
-      const EnemyIcon = ENEMY_ICONS[enemyType];
+      const EnemyIcon = ENEMY_ICONS[ENEMY_DEFINITIONS[enemyType].presentation.manualIcon];
       return (
         <button
           key={enemyType}
@@ -47,7 +48,7 @@ const ThreatIndex = ({
         >
           <EnemyIcon size={18} />
           <span>
-            <strong>{ENEMY_DEFINITIONS[enemyType].name}</strong>
+            <strong>{enemyCopy(ENEMY_DEFINITIONS[enemyType]).name}</strong>
             <small>{movement(enemyType)}</small>
           </span>
         </button>
@@ -80,7 +81,8 @@ const ExposureResponses = ({ enemyType }: { enemyType: EnemyType }) => {
 export const ThreatCatalog = () => {
   const [selectedType, setSelectedType] = useState<EnemyType>(ENEMY_TYPES[0]);
   const definition = ENEMY_DEFINITIONS[selectedType];
-  const Icon = ENEMY_ICONS[selectedType];
+  const copy = enemyCopy(definition);
+  const Icon = ENEMY_ICONS[definition.presentation.manualIcon];
   return (
     <section className="manual-page manual-threat-page" data-testid="manual-threat-page">
       <ThreatIndex onSelect={setSelectedType} selectedType={selectedType} />
@@ -91,8 +93,8 @@ export const ThreatCatalog = () => {
           </div>
           <span>
             <small>{movement(selectedType)} hostile</small>
-            <h2>{definition.name}</h2>
-            <p>{definition.description}</p>
+            <h2>{copy.name}</h2>
+            <p>{copy.description}</p>
           </span>
         </header>
         <blockquote>{ENEMY_MANUAL_FLAVOR[selectedType]}</blockquote>

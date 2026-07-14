@@ -1,9 +1,10 @@
 import { ArrowRight, Biohazard, CheckCircle2, Gauge, LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback } from "react";
-import { LEVEL_DEFINITIONS, nextLevelId } from "../game/config";
+import { LEVEL_DEFINITIONS, nextLevelId } from "../presentation/defaultGame";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { roundReportCopy } from "../presentation/roundReportCopy";
+import { levelCopy, roundCopy } from "../presentation/levelCopy";
 
 interface ProgressFrameProps {
   actionLabel: string;
@@ -89,7 +90,7 @@ const RoundProgressModal = () => {
       actionLabel="Return to planning"
       detail={report?.detail ?? "The exact process state remains frozen."}
       eyebrow="Round analysis"
-      nextDetail={nextRound?.objective ?? "Continue the checkpoint."}
+      nextDetail={nextRound ? roundCopy(level, nextRound).objective : "Continue the checkpoint."}
       nextLabel="Next round"
       onAdvance={advance}
       testId="continue-round"
@@ -105,17 +106,19 @@ const LevelProgressModal = () => {
   const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
   const nextId = nextLevelId(level.id);
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
+  const levelText = levelCopy(level);
+  const nextLevelText = nextLevel ? levelCopy(nextLevel) : null;
   const advance = useCallback(() => dispatch({ type: "start_next_level" }), [dispatch]);
   return (
     <ProgressFrame
-      actionLabel={`Continue to ${nextLevel?.name ?? "campaign"}`}
+      actionLabel={`Continue to ${nextLevelText?.name ?? "campaign"}`}
       detail={report?.detail ?? "Checkpoint process record secured."}
       eyebrow="Checkpoint secured"
-      nextDetail={nextLevel?.briefing ?? "The curriculum is complete."}
+      nextDetail={nextLevelText?.briefing ?? "The curriculum is complete."}
       nextLabel="Next checkpoint"
       onAdvance={advance}
       testId="next-level"
-      title={`${level.name} complete`}
+      title={`${levelText.name} complete`}
     />
   );
 };
@@ -153,7 +156,7 @@ export const OutcomeModal = () => {
         <p>
           {victory
             ? `All five checkpoints and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
-            : `The core fell during ${levelDefinitionFor(game).name}, round ${game.campaign.roundIndex + 1}. The trace preserves the immediate cause and supports the next attempt.`}
+            : `The core fell during ${levelCopy(levelDefinitionFor(game)).name}, round ${game.campaign.roundIndex + 1}. The trace preserves the immediate cause and supports the next attempt.`}
         </p>
         <div className="outcome-stats">
           <div>

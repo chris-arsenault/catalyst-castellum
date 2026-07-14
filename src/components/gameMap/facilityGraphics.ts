@@ -1,5 +1,5 @@
 import type { Graphics } from "pixi.js";
-import { FACILITY_MAP, facilityCells } from "../../game/config";
+import { FACILITY_MAP, facilityCells } from "../../presentation/defaultGame";
 import type { FacilityPortalState, GridCell } from "../../game/types";
 import {
   WORLD_GROUND_Y,

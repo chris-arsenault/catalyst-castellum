@@ -1,4 +1,4 @@
-import { FACILITY_MAP, ROOM_DEFINITIONS } from "../game/config";
+import { FACILITY_MAP, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import { useGameStore } from "../application/store";
 import type { FacilityPortalDefinition, GameState, RoomId } from "../game/types";
 

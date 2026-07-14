@@ -3,6 +3,7 @@ import { LEVEL_DEFINITIONS } from "../src/game/config";
 import { evaluateLevel } from "../src/game/playtest/runner";
 import { LEVEL_IDS, type LevelId } from "../src/game/types";
 import type { LevelEvaluation, PlaytestResult } from "../src/game/playtest/types";
+import { levelCopy } from "../src/presentation/levelCopy";
 
 interface CliOptions {
   levelIds: LevelId[];
@@ -42,7 +43,7 @@ const resultLine = (label: string, result: PlaytestResult): string =>
 
 const printEvaluation = (evaluation: LevelEvaluation): void => {
   const level = LEVEL_DEFINITIONS[evaluation.levelId];
-  console.log(`\nL${level.number} ${level.name}`);
+  console.log(`\nL${level.number} ${levelCopy(level).name}`);
   console.log(resultLine("do nothing", evaluation.doNothing));
   console.log(resultLine("intended", evaluation.intended));
   console.log("actions       trials   pass rate   avg core");

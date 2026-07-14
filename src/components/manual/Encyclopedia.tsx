@@ -3,7 +3,7 @@ import {
   EQUIPMENT_DEFINITIONS,
   REACTION_DEFINITIONS,
   SPECIES_DEFINITIONS,
-} from "../../game/config";
+} from "../../presentation/defaultGame";
 import { EQUIPMENT_IDS, REACTION_IDS, type EquipmentId, type ReactionId } from "../../game/types";
 import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import {
@@ -14,6 +14,7 @@ import {
   reactionMechanics,
 } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
+import { equipmentCopy, reactionCopy, speciesCopy } from "../../presentation/entityCopy";
 
 export type EncyclopediaKind = "equipment" | "reactions";
 
@@ -25,6 +26,7 @@ const EquipmentEntry = ({
   onOpenReaction: (reactionId: ReactionId) => void;
 }) => {
   const definition = EQUIPMENT_DEFINITIONS[equipmentId];
+  const copy = equipmentCopy(definition);
   const manual = EQUIPMENT_MANUAL[equipmentId];
   return (
     <article className="manual-encyclopedia-entry" data-testid={`equipment-entry-${equipmentId}`}>
@@ -34,8 +36,8 @@ const EquipmentEntry = ({
           <span className="manual-entry-code">
             {EQUIPMENT_CATEGORY_LABELS[manual.category]} · {manual.designation}
           </span>
-          <h2>{definition.name}</h2>
-          <p>{definition.description}</p>
+          <h2>{copy.name}</h2>
+          <p>{copy.description}</p>
         </div>
       </div>
       <blockquote>{manual.flavor}</blockquote>
@@ -72,7 +74,7 @@ const EquipmentEntry = ({
                 <FlaskConical size={14} />
                 <span>
                   <small>{reaction.code}</small>
-                  <strong>{reaction.name}</strong>
+                  <strong>{reactionCopy(reaction).name}</strong>
                 </span>
                 <ArrowRight size={13} />
               </button>
@@ -102,7 +104,7 @@ const SpeciesSide = ({
               {participant.coefficient > 1 ? participant.coefficient : ""}
               {species.formula}
             </strong>
-            <small>{species.name}</small>
+            <small>{speciesCopy(species).name}</small>
           </i>
         );
       })}
@@ -129,7 +131,7 @@ const ReactionEntry = ({
         </div>
         <div>
           <span className="manual-entry-code">{reaction.kind} process</span>
-          <h2>{reaction.name}</h2>
+          <h2>{reactionCopy(reaction).name}</h2>
           <strong>{reaction.equation}</strong>
         </div>
       </header>
@@ -161,7 +163,7 @@ const ReactionEntry = ({
                 <Cog size={14} />
                 <span>
                   <small>{EQUIPMENT_MANUAL[equipmentId].designation}</small>
-                  <strong>{equipment.name}</strong>
+                  <strong>{equipmentCopy(equipment).name}</strong>
                 </span>
                 <ArrowRight size={13} />
               </button>
@@ -216,7 +218,7 @@ export const Encyclopedia = ({
                 onClick={() => onSelectEquipment(equipmentId)}
               >
                 <small>{EQUIPMENT_CATEGORY_LABELS[EQUIPMENT_MANUAL[equipmentId].category]}</small>
-                <strong>{EQUIPMENT_DEFINITIONS[equipmentId].name}</strong>
+                <strong>{equipmentCopy(EQUIPMENT_DEFINITIONS[equipmentId]).name}</strong>
               </button>
             ))
           : REACTION_IDS.map((reactionId) => (
@@ -227,7 +229,7 @@ export const Encyclopedia = ({
                 onClick={() => onSelectReaction(reactionId)}
               >
                 <small>{REACTION_DEFINITIONS[reactionId].code}</small>
-                <strong>{REACTION_DEFINITIONS[reactionId].name}</strong>
+                <strong>{reactionCopy(REACTION_DEFINITIONS[reactionId]).name}</strong>
               </button>
             ))}
       </div>

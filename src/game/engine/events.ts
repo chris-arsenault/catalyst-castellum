@@ -3,7 +3,7 @@ import {
   type CombatIncident,
   type EventTone,
   type GameEventCode,
-  type GameEventParameter,
+  type GameEventParameterMap,
   type GameState,
   type RoundStats,
   type RoomId,
@@ -30,11 +30,11 @@ export const makeStats = (): RoundStats => ({
   killsBySource: emptySourceTotals(),
 });
 
-export const addEvent = (
+export const addEvent = <Code extends GameEventCode>(
   state: GameState,
   tone: EventTone,
-  code: GameEventCode,
-  parameters: Record<string, GameEventParameter> = {},
+  code: Code,
+  parameters: GameEventParameterMap[Code] = {} as GameEventParameterMap[Code],
   roomId: RoomId | null = null,
   incidentId: number | null = null
 ): void => {
@@ -45,11 +45,11 @@ export const addEvent = (
     phase: state.phase,
     tone,
     code,
-    parameters,
+    parameters: parameters as GameState["events"][number]["parameters"],
     roomId,
     elapsed: state.elapsed,
     incidentId,
-  });
+  } as GameState["events"][number]);
   state.nextEventId += 1;
   if (state.events.length > 48) state.events.length = 48;
 };

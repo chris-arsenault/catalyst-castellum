@@ -135,7 +135,7 @@ const finishResult = (
 
 const enterLevel = (levelId: LevelId, runtime: GameRuntime): GameState => {
   const result = runtime.execute(runtime.createScenario(levelId), { type: "begin_level" });
-  if (!result.accepted) throw new Error(result.reason ?? `Could not enter ${levelId}`);
+  if (!result.accepted) throw new Error(result.code ?? `Could not enter ${levelId}`);
   return result.state;
 };
 

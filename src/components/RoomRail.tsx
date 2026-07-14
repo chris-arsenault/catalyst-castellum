@@ -1,6 +1,7 @@
-import { ROOM_DEFINITIONS, ROOM_ORDER, roomRing } from "../game/config";
+import { ROOM_DEFINITIONS, ROOM_ORDER, roomRing } from "../presentation/defaultGame";
 import { roomAnalysis } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
+import { roomCopy } from "../presentation/entityCopy";
 
 export const RoomRail = () => {
   const game = useGameStore((state) => state.game);
@@ -23,7 +24,7 @@ export const RoomRail = () => {
           >
             <span className={`room-status hazard-${analysis.hazardLabel.toLowerCase()}`} />
             <span>{definition.code}</span>
-            <strong>{definition.name}</strong>
+            <strong>{roomCopy(definition).name}</strong>
           </button>
         );
       })}

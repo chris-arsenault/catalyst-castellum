@@ -1,4 +1,3 @@
-import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import type { GameSessionSlice, GameStoreDependencies, StoreGet, StoreSet } from "./storeTypes";
 
 export const createGameSessionActions = (
@@ -13,9 +12,9 @@ export const createGameSessionActions = (
       return false;
     }
     const current = get().game;
-    const result = DEFAULT_GAME_RUNTIME.execute(current, command);
+    const result = dependencies.runtime.execute(current, command);
     if (!result.accepted) {
-      set({ notice: result.reason ?? "Command rejected." });
+      set({ notice: dependencies.commandCopy(result) });
       return false;
     }
     const game = result.state;
@@ -26,7 +25,7 @@ export const createGameSessionActions = (
       game,
       notice: null,
       ...(levelChanged || checkpointRestarted
-        ? { selectedRoomId: DEFAULT_GAME_RUNTIME.level(game).focusRoomId }
+        ? { selectedRoomId: dependencies.runtime.level(game).focusRoomId }
         : {}),
     });
     return true;
@@ -35,7 +34,7 @@ export const createGameSessionActions = (
     const slotId = get().activeSlotId;
     if (!get().initialized || !slotId) return;
     const current = get().game;
-    const game = DEFAULT_GAME_RUNTIME.step(current, dt);
+    const game = dependencies.runtime.step(current, dt);
     if (game !== current) {
       dependencies.scheduleSave(slotId, game, get().dismissedGuideIds);
       set({ game });

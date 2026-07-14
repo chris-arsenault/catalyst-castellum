@@ -14,7 +14,7 @@ import { TRANSPORT_RUN_IDS, type GameCommand, type GameState } from "./types";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
-  expect(result.accepted, result.reason ?? undefined).toBe(true);
+  expect(result.accepted, result.code ?? undefined).toBe(true);
   return result.state;
 };
 

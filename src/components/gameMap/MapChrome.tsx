@@ -7,7 +7,7 @@ import {
   type SpeciesId,
   type TransportRunId,
 } from "../../game/types";
-import { SPECIES_DEFINITIONS } from "../../game/config";
+import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import { FIT_ZOOM } from "./mapGeometry";
 import { TransportTooltip } from "./TransportTooltip";
 import { RoomTooltip } from "./RoomTooltip";
@@ -16,6 +16,7 @@ import type { EquipmentHover } from "./EquipmentLayer";
 import { EnemyTooltip } from "./EnemyTooltip";
 import { CellOutletTooltip } from "./CellOutletTooltip";
 import type { CellOutletId } from "./cellOutletRenderModel";
+import { speciesCopy } from "../../presentation/entityCopy";
 
 // HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
@@ -39,14 +40,16 @@ const MaterialFlowControl = ({ selectedSpecies, onSelectSpecies }: MaterialFlowC
       <optgroup label="Gas">
         {GAS_TYPES.map((species) => (
           <option key={species} value={species}>
-            {SPECIES_DEFINITIONS[species].formula} · {SPECIES_DEFINITIONS[species].name}
+            {SPECIES_DEFINITIONS[species].formula} ·{" "}
+            {speciesCopy(SPECIES_DEFINITIONS[species]).name}
           </option>
         ))}
       </optgroup>
       <optgroup label="Liquid">
         {LIQUID_TYPES.map((species) => (
           <option key={species} value={species}>
-            {SPECIES_DEFINITIONS[species].formula} · {SPECIES_DEFINITIONS[species].name}
+            {SPECIES_DEFINITIONS[species].formula} ·{" "}
+            {speciesCopy(SPECIES_DEFINITIONS[species]).name}
           </option>
         ))}
       </optgroup>

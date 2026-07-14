@@ -10,10 +10,8 @@ interface PhaseOptions {
   actuator: "fan" | "pump" | "passive";
   actuatorHead: number;
   buildCost: number;
-  description: string;
   direction: readonly [RoomId, RoomId];
   maxFlow: number;
-  name: string;
   phase: "gas" | "liquid";
   runId: TransportRunId;
   volumePerCell: number;
@@ -26,8 +24,6 @@ const phase = (
   const blueprint = CONDUIT_BLUEPRINTS[options.runId][options.phase];
   if (!blueprint) throw new Error(`${options.runId} has no ${options.phase} conduit blueprint`);
   return {
-    name: options.name,
-    description: options.description,
     direction: options.direction,
     destinationKind,
     actuator: options.actuator,
@@ -46,8 +42,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "core_furnace",
       phase: "gas",
-      name: "Core–R-02 gas duct",
-      description: "Feeds the Core starter-header mixture into R-02.",
       direction: ["core", "furnace"],
       actuator: "fan",
       actuatorHead: 2.2,
@@ -63,8 +57,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "cell_furnace",
       phase: "gas",
-      name: "R-05–R-02 gas duct",
-      description: "Carries the R-05 gas-junction stream to R-02.",
       direction: ["lower_intake", "furnace"],
       actuator: "fan",
       actuatorHead: 1.8,
@@ -81,8 +73,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
       {
         runId: "core_cell",
         phase: "gas",
-        name: "R-05 recovery duct",
-        description: "Draws the R-05 gas-junction stream into Core recovery.",
         direction: ["lower_intake", "core"],
         actuator: "fan",
         actuatorHead: 1.45,
@@ -95,8 +85,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     liquid: phase({
       runId: "core_cell",
       phase: "liquid",
-      name: "Core–R-05 feed pipe",
-      description: "Pumps mixed water and brine from Core reserves to R-05.",
       direction: ["core", "lower_intake"],
       actuator: "pump",
       actuatorHead: 34,
@@ -111,8 +99,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "cell_absorber",
       phase: "gas",
-      name: "R-05–R-03 gas duct",
-      description: "Carries the R-05 gas-junction stream into R-03.",
       direction: ["lower_intake", "reservoir"],
       actuator: "fan",
       actuatorHead: 1.55,
@@ -123,8 +109,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     liquid: phase({
       runId: "cell_absorber",
       phase: "liquid",
-      name: "R-05–R-03 liquor pipe",
-      description: "Pumps cell liquor from the R-05 junction into R-03.",
       direction: ["lower_intake", "reservoir"],
       actuator: "pump",
       actuatorHead: 24,
@@ -139,8 +123,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "furnace_return",
       phase: "gas",
-      name: "R-02–R-04 return duct",
-      description: "Draws R-02 atmosphere into R-04.",
       direction: ["furnace", "gallery"],
       actuator: "fan",
       actuatorHead: 1.5,
@@ -156,8 +138,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "return_final",
       phase: "gas",
-      name: "R-04–R-06 gas duct",
-      description: "Delivers the R-04 return stream into R-06.",
       direction: ["gallery", "washlock"],
       actuator: "fan",
       actuatorHead: 1.35,
@@ -173,8 +153,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     gas: phase({
       runId: "return_outer",
       phase: "gas",
-      name: "R-04–R-01 outer duct",
-      description: "Diverts the R-04 return stream toward R-01.",
       direction: ["gallery", "switchyard"],
       actuator: "fan",
       actuatorHead: 1.5,
@@ -191,8 +169,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
       {
         runId: "core_final",
         phase: "gas",
-        name: "R-06 recovery duct",
-        description: "Exhausts R-06 atmosphere into Core recovery.",
         direction: ["washlock", "core"],
         actuator: "fan",
         actuatorHead: 1.4,
@@ -205,8 +181,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     liquid: phase({
       runId: "core_final",
       phase: "liquid",
-      name: "Core–R-06 solvent pipe",
-      description: "Pumps Core solvent stock into R-06.",
       direction: ["core", "washlock"],
       actuator: "pump",
       actuatorHead: 24,
@@ -222,8 +196,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
     liquid: phase({
       runId: "absorber_final",
       phase: "liquid",
-      name: "R-03–R-06 transfer pipe",
-      description: "Transfers stored R-03 liquid into R-06.",
       direction: ["reservoir", "washlock"],
       actuator: "pump",
       actuatorHead: 24,
@@ -240,8 +212,6 @@ export const TRANSPORT_RUNS: Record<TransportRunId, TransportRunDefinition> = {
       {
         runId: "core_absorber",
         phase: "liquid",
-        name: "R-03 recovery pipe",
-        description: "Returns stored R-03 liquid to Core recovery.",
         direction: ["reservoir", "core"],
         actuator: "pump",
         actuatorHead: 22,

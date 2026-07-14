@@ -3,6 +3,7 @@ import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
 import { SAVE_SLOT_IDS, type SaveSlotId, type SaveSlotRecord } from "../application/saveSlots";
 import { levelDefinitionFor } from "../game/queries";
+import { levelCopy } from "../presentation/levelCopy";
 
 const slotNumber = (slotId: SaveSlotId): string => slotId.slice(-1);
 
@@ -98,12 +99,13 @@ const EmptySlot = ({ slotId }: { slotId: SaveSlotId }) => {
 
 const OccupiedSlotSummary = ({ record }: { record: SaveSlotRecord }) => {
   const level = levelDefinitionFor(record.game);
+  const copy = levelCopy(level);
   return (
     <>
       <div className="save-slot-level">
         <span>LEVEL {String(level.number).padStart(2, "0")}</span>
-        <h2>{level.name}</h2>
-        <p>{level.lesson}</p>
+        <h2>{copy.name}</h2>
+        <p>{copy.lesson}</p>
       </div>
       <dl className="save-slot-telemetry">
         <div>

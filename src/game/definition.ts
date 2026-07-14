@@ -16,7 +16,7 @@ import { PROCESS_DEFINITIONS } from "./content/processes";
 import { ROOM_DEFINITIONS, ROOM_ORDER } from "./content/rooms";
 import { ambientGas, SPECIES_DEFINITIONS } from "./content/substances";
 import { TRANSPORT_RUNS } from "./content/transportRuns";
-import { createFacilityModel } from "./engine/facilityModel";
+import { compileGamePack } from "./authoring/compiler";
 import type { GameDefinition, GameDefinitionSource } from "./definitionTypes";
 import { LEVEL_IDS } from "./identifiers";
 
@@ -32,15 +32,7 @@ export type {
   RoundDefinition,
 } from "./definitionTypes";
 
-const deepFreeze = <Value>(value: Value, seen = new WeakSet<object>()): Value => {
-  if (typeof value !== "object" || value === null || seen.has(value)) return value;
-  seen.add(value);
-  for (const child of Object.values(value)) deepFreeze(child, seen);
-  return Object.freeze(value);
-};
-
-export const defineGame = (source: GameDefinitionSource): GameDefinition =>
-  deepFreeze({ ...source, facility: createFacilityModel(source.facilityMap) });
+export const defineGame = (source: GameDefinitionSource): GameDefinition => compileGamePack(source);
 
 export const deriveGame = (
   base: GameDefinition,

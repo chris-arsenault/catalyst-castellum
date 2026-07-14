@@ -1,6 +1,7 @@
-import { EQUIPMENT_DEFINITIONS } from "../../game/config";
+import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
 import type { EquipmentId } from "../../game/types";
 import { EQUIPMENT_MANUAL } from "../../presentation/manualContent";
+import { equipmentCopy } from "../../presentation/entityCopy";
 
 export const EquipmentImage = ({
   equipmentId,
@@ -15,7 +16,10 @@ export const EquipmentImage = ({
       className={`manual-equipment-image ${compact ? "compact" : ""}`}
       style={{ "--manual-accent": definition.accent }}
     >
-      <img src={EQUIPMENT_MANUAL[equipmentId].image} alt={`${definition.name} field plate`} />
+      <img
+        src={EQUIPMENT_MANUAL[equipmentId].image}
+        alt={`${equipmentCopy(definition).name} field plate`}
+      />
     </figure>
   );
 };

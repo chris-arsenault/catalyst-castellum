@@ -1,14 +1,16 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../game/definition";
-import { installedEquipment } from "../game/engine/equipment";
+import type { GameDefinition } from "../game/definition";
 import {
   gasPartialRatio,
-  gasPercent,
+  installedEquipment,
   liquidMovementMultiplier,
   liquidStrength,
   pressureMovementMultiplier,
   roomHazards,
-} from "../game/engine/physics";
+  type GameQueries,
+} from "../game/queries";
 import type { GasZone, RoomState } from "../game/types";
+import { equipmentCopy as localizedEquipmentCopy } from "./entityCopy";
+import { DEFAULT_GAME_DEFINITION } from "./defaultGame";
 
 export type HazardLabel = "CLEAR" | "LOW" | "HOSTILE" | "LETHAL";
 
@@ -23,13 +25,14 @@ const flashExposureEffect = (
   room: RoomState,
   zone: GasZone,
   label: string,
-  definition: GameDefinition
+  definition: GameDefinition,
+  queries: Pick<GameQueries, "gasPartialRatio">
 ): string | null => {
   const behavior = definition.reactions.hydrogen_oxygen_combustion.behavior;
   if (behavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
   if (
-    gasPercent(room, "hydrogen", zone) < 0.005 ||
-    gasPercent(room, "oxygen", zone) < behavior.minimumOxygenFraction
+    queries.gasPartialRatio(room, "hydrogen", zone) < 0.005 ||
+    queries.gasPartialRatio(room, "oxygen", zone) < behavior.minimumOxygenFraction
   )
     return null;
   const extent = Math.min(room.gas[zone].hydrogen / 2, room.gas[zone].oxygen);
@@ -37,18 +40,23 @@ const flashExposureEffect = (
   return `${label} H₂/O₂ flash charge ${Math.round(charge * 100)}%`;
 };
 
-const zoneEffects = (room: RoomState, zone: GasZone, definition: GameDefinition): string[] => {
+const zoneEffects = (
+  room: RoomState,
+  zone: GasZone,
+  definition: GameDefinition,
+  queries: Pick<GameQueries, "gasPartialRatio">
+): string[] => {
   const effects: string[] = [];
   const label = zone === "lower" ? "Lower" : "Upper";
-  const chlorine = gasPartialRatio(room, "chlorine", zone, definition);
-  const hydrogenChloride = gasPartialRatio(room, "hydrogen_chloride", zone, definition);
-  const hydrogen = gasPartialRatio(room, "hydrogen", zone, definition);
-  const oxygen = gasPartialRatio(room, "oxygen", zone, definition);
+  const chlorine = queries.gasPartialRatio(room, "chlorine", zone);
+  const hydrogenChloride = queries.gasPartialRatio(room, "hydrogen_chloride", zone);
+  const hydrogen = queries.gasPartialRatio(room, "hydrogen", zone);
+  const oxygen = queries.gasPartialRatio(room, "oxygen", zone);
   if (chlorine >= 0.006)
     effects.push(`${label} Cl₂ inhalation ${chlorine >= 0.04 ? "severe" : "active"}`);
   if (hydrogenChloride >= 0.009) effects.push(`${label} HCl respiratory corrosion`);
   if (chlorine >= 0.01 && hydrogen >= 0.01) effects.push(`${label} H₂ / Cl₂ mixture`);
-  const flash = flashExposureEffect(room, zone, label, definition);
+  const flash = flashExposureEffect(room, zone, label, definition, queries);
   if (flash) effects.push(flash);
   if (oxygen < 0.13) effects.push(`${label} oxygen partial pressure low`);
   if (room.gasTemperature[zone] >= 55)
@@ -58,23 +66,32 @@ const zoneEffects = (room: RoomState, zone: GasZone, definition: GameDefinition)
 
 export const roomEffects = (
   room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition = DEFAULT_GAME_DEFINITION,
+  queries: GameQueries | null = null
 ): string[] => {
+  const q = queries ?? {
+    gasPartialRatio,
+    liquidStrength,
+    liquidMovementMultiplier,
+    pressureMovementMultiplier,
+    roomHazards,
+  };
   const effects = [
-    ...zoneEffects(room, "lower", definition),
-    ...zoneEffects(room, "upper", definition),
+    ...zoneEffects(room, "lower", definition, q),
+    ...zoneEffects(room, "upper", definition, q),
   ];
-  if (liquidStrength(room, "sodium_hydroxide") >= 4) effects.push("NaOH floor contact corrosive");
-  if (liquidStrength(room, "hydrochloric_acid") >= 4)
+  if (q.liquidStrength(room, "sodium_hydroxide") >= 4) effects.push("NaOH floor contact corrosive");
+  if (q.liquidStrength(room, "hydrochloric_acid") >= 4)
     effects.push("HCl(aq) floor contact corrosive");
-  if (liquidStrength(room, "sodium_hypochlorite") >= 7) effects.push("NaOCl oxidizer pool active");
-  const liquidMovement = liquidMovementMultiplier(room, false, definition);
-  const pressureMovement = pressureMovementMultiplier(room, definition);
+  if (q.liquidStrength(room, "sodium_hypochlorite") >= 7)
+    effects.push("NaOCl oxidizer pool active");
+  const liquidMovement = q.liquidMovementMultiplier(room, false);
+  const pressureMovement = q.pressureMovementMultiplier(room);
   if (liquidMovement < 0.99)
     effects.push(`Liquid depth slows ground movement ${Math.round((1 - liquidMovement) * 100)}%`);
   if (pressureMovement < 0.99)
     effects.push(`Overpressure slows all movement ${Math.round((1 - pressureMovement) * 100)}%`);
-  const pressureHazard = roomHazards(room, true, true, "lower", definition).pressure;
+  const pressureHazard = q.roomHazards(room, true, true, "lower").pressure;
   if (pressureHazard > 0.01)
     effects.push(`Catastrophic static pressure ${pressureHazard.toFixed(1)} pressure/s`);
   if (room.pressurePulse > 1)
@@ -93,7 +110,7 @@ export const equipmentFunctionalSummary = (
   return equipment
     .map(
       (instance) =>
-        `${definition.equipment[instance.equipmentId].name} ${instance.level}${instance.enabled ? "" : " · off"}`
+        `${localizedEquipmentCopy(definition.equipment[instance.equipmentId]).name} ${instance.level}${instance.enabled ? "" : " · off"}`
     )
     .join(" · ");
 };

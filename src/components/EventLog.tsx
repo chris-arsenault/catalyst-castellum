@@ -1,6 +1,6 @@
 import { ChevronRight, ScrollText, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../game/config";
+import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import type { GameEvent } from "../game/types";
 import { eventCopy } from "../presentation/eventCopy";
 import { useGameStore } from "../application/store";

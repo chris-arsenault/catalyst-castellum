@@ -20,16 +20,6 @@ export const GAS_LABELS: Record<GasType, string> = {
   steam: "H₂O(g)",
 };
 
-export const GAS_NAMES: Record<GasType, string> = {
-  oxygen: "Oxygen",
-  nitrogen: "Nitrogen",
-  carbon_dioxide: "Carbon dioxide",
-  chlorine: "Chlorine",
-  hydrogen: "Hydrogen",
-  hydrogen_chloride: "Hydrogen chloride",
-  steam: "Water vapor",
-};
-
 export const GAS_COLORS: Record<GasType, string> = {
   oxygen: "#73c3d4",
   nitrogen: "#507c74",
@@ -48,14 +38,6 @@ export const LIQUID_LABELS: Record<LiquidType, string> = {
   hydrochloric_acid: "HCl(aq)",
 };
 
-export const LIQUID_NAMES: Record<LiquidType, string> = {
-  water: "Water",
-  sodium_chloride: "Sodium chloride solution",
-  sodium_hydroxide: "Sodium hydroxide solution",
-  sodium_hypochlorite: "Sodium hypochlorite solution",
-  hydrochloric_acid: "Hydrochloric acid",
-};
-
 export const LIQUID_COLORS: Record<LiquidType, string> = {
   water: "#41baf5",
   sodium_chloride: "#60cce4",
@@ -67,7 +49,6 @@ export const LIQUID_COLORS: Record<LiquidType, string> = {
 export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   oxygen: {
     id: "oxygen",
-    name: GAS_NAMES.oxygen,
     formula: GAS_LABELS.oxygen,
     phase: "gas",
     elements: { O: 2 },
@@ -87,7 +68,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   nitrogen: {
     id: "nitrogen",
-    name: GAS_NAMES.nitrogen,
     formula: GAS_LABELS.nitrogen,
     phase: "gas",
     elements: { N: 2 },
@@ -98,7 +78,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   carbon_dioxide: {
     id: "carbon_dioxide",
-    name: GAS_NAMES.carbon_dioxide,
     formula: GAS_LABELS.carbon_dioxide,
     phase: "gas",
     elements: { C: 1, O: 2 },
@@ -118,7 +97,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   chlorine: {
     id: "chlorine",
-    name: GAS_NAMES.chlorine,
     formula: GAS_LABELS.chlorine,
     phase: "gas",
     elements: { Cl: 2 },
@@ -146,7 +124,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   hydrogen: {
     id: "hydrogen",
-    name: GAS_NAMES.hydrogen,
     formula: GAS_LABELS.hydrogen,
     phase: "gas",
     elements: { H: 2 },
@@ -157,7 +134,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   hydrogen_chloride: {
     id: "hydrogen_chloride",
-    name: GAS_NAMES.hydrogen_chloride,
     formula: GAS_LABELS.hydrogen_chloride,
     phase: "gas",
     elements: { H: 1, Cl: 1 },
@@ -185,7 +161,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   steam: {
     id: "steam",
-    name: GAS_NAMES.steam,
     formula: GAS_LABELS.steam,
     phase: "gas",
     elements: { H: 2, O: 1 },
@@ -205,7 +180,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   water: {
     id: "water",
-    name: LIQUID_NAMES.water,
     formula: LIQUID_LABELS.water,
     phase: "liquid",
     elements: { H: 2, O: 1 },
@@ -216,7 +190,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   sodium_chloride: {
     id: "sodium_chloride",
-    name: LIQUID_NAMES.sodium_chloride,
     formula: LIQUID_LABELS.sodium_chloride,
     phase: "liquid",
     elements: { Na: 1, Cl: 1 },
@@ -227,7 +200,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   sodium_hydroxide: {
     id: "sodium_hydroxide",
-    name: LIQUID_NAMES.sodium_hydroxide,
     formula: LIQUID_LABELS.sodium_hydroxide,
     phase: "liquid",
     elements: { Na: 1, O: 1, H: 1 },
@@ -247,7 +219,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   sodium_hypochlorite: {
     id: "sodium_hypochlorite",
-    name: LIQUID_NAMES.sodium_hypochlorite,
     formula: LIQUID_LABELS.sodium_hypochlorite,
     phase: "liquid",
     elements: { Na: 1, O: 1, Cl: 1 },
@@ -267,7 +238,6 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
   hydrochloric_acid: {
     id: "hydrochloric_acid",
-    name: LIQUID_NAMES.hydrochloric_acid,
     formula: LIQUID_LABELS.hydrochloric_acid,
     phase: "liquid",
     elements: { H: 1, Cl: 1 },

@@ -6,6 +6,8 @@ import type { GamePhase, GameState } from "../game/types";
 import { commandDecision as evaluateCommand } from "../presentation/selectors";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { guidedPhaseActionReason } from "../tutorial/guideModel";
+import { commandRejectionCopy } from "../presentation/commandCopy";
+import { levelCopy, roundCopy } from "../presentation/levelCopy";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -22,11 +24,12 @@ interface PhaseHudModel {
 
 const phaseHudModel = (game: GameState): PhaseHudModel => {
   const level = levelDefinitionFor(game);
+  const levelText = levelCopy(level);
   const round = roundDefinitionFor(game);
   if (game.phase === "level_briefing") {
     return {
       label: "Checkpoint briefing",
-      value: level.name,
+      value: levelText.name,
       detail: "Review the objective and enter planning.",
       tone: "frozen",
     };
@@ -66,7 +69,7 @@ const phaseHudModel = (game: GameState): PhaseHudModel => {
   if (game.phase === "level_complete")
     return {
       label: "Checkpoint secured",
-      value: level.name,
+      value: levelText.name,
       detail: "The next checkpoint is ready.",
       tone: "frozen",
     };
@@ -79,7 +82,7 @@ const phaseHudModel = (game: GameState): PhaseHudModel => {
     };
   return {
     label: "Core lost",
-    value: level.name,
+    value: levelText.name,
     detail: "Retry restores this checkpoint for a new defense plan.",
     tone: "frozen",
   };
@@ -105,7 +108,7 @@ const PhaseAction = ({ game }: { game: GameState }) => {
         data-testid="begin-prime"
         data-tutorial-anchor={TUTORIAL_ANCHORS.beginPrime}
         disabled={!decision.allowed || Boolean(guideReason)}
-        title={guideReason ?? decision.reason ?? undefined}
+        title={guideReason ?? commandRejectionCopy(decision) ?? undefined}
         onClick={() => dispatch(command)}
       >
         Start prime <ArrowRight size={16} />
@@ -123,7 +126,7 @@ const PhaseAction = ({ game }: { game: GameState }) => {
       data-testid="start-assault"
       data-tutorial-anchor={TUTORIAL_ANCHORS.startAssault}
       disabled={!decision.allowed || Boolean(guideReason)}
-      title={guideReason ?? decision.reason ?? undefined}
+      title={guideReason ?? commandRejectionCopy(decision) ?? undefined}
       onClick={() => dispatch(command)}
     >
       Start assault <LockKeyhole size={15} />
@@ -134,6 +137,7 @@ const PhaseAction = ({ game }: { game: GameState }) => {
 const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => void }) => {
   const level = levelDefinitionFor(game);
   const round = roundDefinitionFor(game);
+  const roundText = roundCopy(level, round);
   return (
     <div className="modal-backdrop round-brief-backdrop">
       <section
@@ -153,8 +157,8 @@ const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => vo
         <span className="round-brief-kicker">
           Level {level.number} · Round {game.campaign.roundIndex + 1}
         </span>
-        <h2 id="round-brief-title">{round.title}</h2>
-        <p>{round.objective}</p>
+        <h2 id="round-brief-title">{roundText.title}</h2>
+        <p>{roundText.objective}</p>
         <dl>
           <div>
             <dt>Incoming</dt>

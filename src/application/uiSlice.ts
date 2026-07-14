@@ -1,4 +1,3 @@
-import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import type { GameStoreDependencies, StoreGet, StoreSet, UiSlice } from "./storeTypes";
 
@@ -49,7 +48,7 @@ export const createUiActions = (
     set({
       dismissedGuideIds,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
-      selectedRoomId: DEFAULT_GAME_RUNTIME.level(state.game).focusRoomId,
+      selectedRoomId: dependencies.runtime.level(state.game).focusRoomId,
       showHelp: false,
       equipmentBuildTarget: null,
       notice: null,

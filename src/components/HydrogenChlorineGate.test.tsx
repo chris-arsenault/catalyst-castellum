@@ -10,7 +10,7 @@ afterEach(cleanup);
 describe("hydrogen-chlorine reaction gate", () => {
   it("presents the live CL-2 temperature and reactant conditions", () => {
     const entered = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" });
-    if (!entered.accepted) throw new Error(entered.reason ?? "Acid Line entry failed");
+    if (!entered.accepted) throw new Error(entered.code ?? "Acid Line entry failed");
     useGameStore.setState({ game: entered.state });
 
     render(<HydrogenChlorineGate />);

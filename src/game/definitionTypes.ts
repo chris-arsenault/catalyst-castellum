@@ -10,7 +10,6 @@ import type {
   FacilityPortalState,
   FacilityRing,
   FacilityTerrainKind,
-  GameCommand,
   GasAmounts,
   GasBufferDefinition,
   GasBufferId,
@@ -70,9 +69,6 @@ export interface FacilityLoadout {
 
 export interface RoundDefinition {
   id: string;
-  title: string;
-  detail: string;
-  objective: string;
   primeSeconds: number;
   wave: WaveEntry[];
   availability: ScenarioAvailability;
@@ -81,17 +77,12 @@ export interface RoundDefinition {
 export interface LevelDefinition {
   id: LevelId;
   number: number;
-  name: string;
-  kicker: string;
-  briefing: string;
-  lesson: string;
   focusRoomId: RoomId;
   startingMatter: number;
   startingCoreIntegrity: number;
   assaultTheme: "standard" | "boss";
   loadout: FacilityLoadout;
   rounds: RoundDefinition[];
-  playtestActions: GameCommand[];
 }
 
 export interface EnvironmentHazardRules {
@@ -130,7 +121,7 @@ export interface FacilityModel {
   roomPortHeight(roomId: RoomId, elevation: number): number;
 }
 
-export interface GameDefinitionSource {
+export interface GamePackSource {
   readonly id: string;
   readonly packId: string;
   readonly contentVersion: number;
@@ -158,3 +149,6 @@ export interface GameDefinitionSource {
 export interface GameDefinition extends GameDefinitionSource {
   readonly facility: FacilityModel;
 }
+
+/** @deprecated Use GamePackSource for authored input. */
+export type GameDefinitionSource = GamePackSource;

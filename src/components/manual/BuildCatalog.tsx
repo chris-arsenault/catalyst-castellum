@@ -2,9 +2,10 @@ import { BookOpen, Check, Hammer, LockKeyhole } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EquipmentBuildTarget } from "../../application/storeTypes";
 import { useGameStore } from "../../application/store";
-import { EQUIPMENT_DEFINITIONS, ROOM_DEFINITIONS } from "../../game/config";
+import { EQUIPMENT_DEFINITIONS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import { EQUIPMENT_IDS, type EquipmentId, type GameCommand } from "../../game/types";
 import { commandDecision } from "../../presentation/selectors";
+import { commandRejectionCopy } from "../../presentation/commandCopy";
 import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import {
   EQUIPMENT_CATEGORY_LABELS,
@@ -12,6 +13,7 @@ import {
   type EquipmentCategory,
 } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
+import { equipmentCopy } from "../../presentation/entityCopy";
 
 type CategoryFilter = "all" | EquipmentCategory;
 
@@ -103,7 +105,7 @@ const EquipmentCatalogList = ({
           >
             <EquipmentImage equipmentId={equipmentId} compact />
             <span>
-              <strong>{definition.name}</strong>
+              <strong>{equipmentCopy(definition).name}</strong>
               <small>{EQUIPMENT_CATEGORY_LABELS[EQUIPMENT_MANUAL[equipmentId].category]}</small>
             </span>
             <em className={decision?.allowed ? "available" : ""}>
@@ -138,8 +140,8 @@ const BuildDetail = ({
       <EquipmentImage equipmentId={equipmentId} compact={false} />
       <div className="manual-build-copy">
         <span className="manual-entry-code">{manual.designation}</span>
-        <h2>{definition.name}</h2>
-        <p>{definition.description}</p>
+        <h2>{equipmentCopy(definition).name}</h2>
+        <p>{equipmentCopy(definition).description}</p>
         <dl className="manual-build-specs">
           <div>
             <dt>Grade I effect</dt>
@@ -162,15 +164,15 @@ const BuildDetail = ({
             type="button"
             className="manual-build-button"
             disabled={!decision?.allowed}
-            title={decision?.reason ?? undefined}
+            title={decision ? (commandRejectionCopy(decision) ?? undefined) : undefined}
             data-testid={testId}
             onClick={onInstall}
           >
             <Hammer size={16} /> Build · {definition.buildCost} M
           </button>
         </div>
-        {decision?.reason && !decision.allowed && (
-          <small className="manual-build-reason">{decision.reason}</small>
+        {decision && !decision.allowed && (
+          <small className="manual-build-reason">{commandRejectionCopy(decision)}</small>
         )}
       </div>
     </article>

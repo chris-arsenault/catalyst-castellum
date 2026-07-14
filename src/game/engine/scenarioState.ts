@@ -8,7 +8,6 @@ import {
   LIQUID_BUFFER_IDS,
   LIQUID_SOURCE_IDS,
   PROCESS_IDS,
-  ROOM_REACTION_IDS,
   TRANSPORT_RUN_IDS,
   type GameState,
   type GasAmounts,
@@ -28,11 +27,14 @@ const emptyTelemetry = (): ReactionTelemetry => ({
   limitingFactor: { kind: "condition", code: "conditions", zone: null },
 });
 
-const emptyRoomReactions = (): Record<RoomReactionId, ReactionTelemetry> =>
-  Object.fromEntries(ROOM_REACTION_IDS.map((id) => [id, emptyTelemetry()])) as Record<
-    RoomReactionId,
-    ReactionTelemetry
-  >;
+const emptyRoomReactions = (
+  definition: GameDefinition
+): Record<RoomReactionId, ReactionTelemetry> =>
+  Object.fromEntries(
+    Object.values(definition.reactions)
+      .filter(({ behavior }) => behavior.kind !== "electrolysis")
+      .map(({ id }) => [id, emptyTelemetry()])
+  ) as Record<RoomReactionId, ReactionTelemetry>;
 
 const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefinition): RoomState => {
   const ambient = definition.ambientGas;
@@ -72,7 +74,7 @@ const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefiniti
     pressurePulse: 0,
     flashCooldown: { lower: 0, upper: 0 },
     combustionCount: 0,
-    reactions: emptyRoomReactions(),
+    reactions: emptyRoomReactions(definition),
     equipment,
   };
 };

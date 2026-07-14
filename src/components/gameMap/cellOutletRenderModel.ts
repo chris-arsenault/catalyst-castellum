@@ -1,4 +1,4 @@
-import { GAS_BUFFERS, LIQUID_BUFFERS, ROOM_DEFINITIONS } from "../../game/config";
+import { GAS_BUFFERS, LIQUID_BUFFERS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   type GasBufferId,
   type GameState,
@@ -8,6 +8,7 @@ import {
 import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { equipmentRenderModels } from "./equipmentRenderModel";
 import { colorNumber, roomMapRect } from "./mapGeometry";
+import { bufferCopy } from "../../presentation/entityCopy";
 
 export type CellOutletId = GasBufferId | LiquidBufferId;
 
@@ -81,7 +82,7 @@ export const cellOutletAssemblyModel = (game: GameState): CellOutletAssemblyMode
       capacity: definition.capacity,
       fill: amount / definition.capacity,
       formula,
-      name: definition.name,
+      name: bufferCopy(definition).name,
       phase,
       roomId: installation.roomId,
       x: centerX + (index - 1) * 34,

@@ -9,10 +9,11 @@ import {
   guideStepIndexFor,
 } from "./guideModel";
 import { TUTORIAL_ANCHORS } from "./anchors";
+import type { GuideDefinition, GuideRegistry } from "./guideModel";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
-  expect(result.accepted, result.reason ?? undefined).toBe(true);
+  expect(result.accepted, result.code ?? undefined).toBe(true);
   return result.state;
 };
 
@@ -90,6 +91,29 @@ describe("Flash Point guide definition", () => {
       false,
       false,
     ]);
+  });
+});
+
+describe("guide registration extension", () => {
+  it("registers another guided level without renderer dispatch changes", () => {
+    const game = command(createScenarioGame("stored_chlorine"), { type: "begin_level" });
+    const fixture: GuideDefinition = {
+      completion: { title: "Complete", explanation: "Complete", instruction: "Continue" },
+      id: "fixture-guide",
+      dismissalId: "fixture-guide",
+      firstFlashTeachingBreak: false,
+      label: "Fixture",
+      showStageIntro: false,
+      gatesPhaseActions: false,
+      story: { kicker: "Fixture", title: "Fixture", paragraphs: [], model: null },
+      mission: { title: "Fixture", summary: "Fixture", tasks: [] },
+      steps: [],
+    };
+    const registry: GuideRegistry = {
+      stored_chlorine: { guideFor: () => fixture },
+    };
+
+    expect(guideDefinitionFor(game, registry)).toBe(fixture);
   });
 });
 

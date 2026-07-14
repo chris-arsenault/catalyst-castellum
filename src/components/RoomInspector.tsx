@@ -3,13 +3,13 @@ import { useCallback, useState } from "react";
 import {
   GAS_COLORS,
   GAS_LABELS,
-  GAS_NAMES,
   LIQUID_COLORS,
   LIQUID_LABELS,
   REACTION_DEFINITIONS,
   ROOM_DEFINITIONS,
+  SPECIES_DEFINITIONS,
   roomVolume,
-} from "../game/config";
+} from "../presentation/defaultGame";
 import { gasPercent, liquidPercent } from "../game/queries";
 import { limitingFactorCopy } from "../presentation/limitingFactorCopy";
 import { roomAnalysis } from "../presentation/selectors";
@@ -21,6 +21,7 @@ import { ArchitecturalConnections } from "./ArchitecturalConnections";
 import { HydrogenChlorineGate } from "./HydrogenChlorineGate";
 import { OxidizerIgnitionGate } from "./OxidizerIgnitionGate";
 import { ProcessControls } from "./ProcessControls";
+import { reactionCopy, roomCopy, speciesCopy } from "../presentation/entityCopy";
 
 const formatPercent = (value: number): string => {
   if (value > 0 && value < 0.001) return "<0.1%";
@@ -51,7 +52,7 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
           return amount > 0.002 ? (
             <span
               key={gas}
-              title={`${GAS_NAMES[gas]} ${formatPercent(amount)}`}
+              title={`${speciesCopy(SPECIES_DEFINITIONS[gas]).name} ${formatPercent(amount)}`}
               style={{
                 "--segment-width": `${amount * 100}%`,
                 "--segment-color": GAS_COLORS[gas],
@@ -247,7 +248,7 @@ const ReactionPanel = () => {
             return (
               <div key={reactionId}>
                 <span>{reaction.code}</span>
-                <strong>{reaction.name}</strong>
+                <strong>{reactionCopy(reaction).name}</strong>
                 <em>{reading.lastRate.toFixed(2)} mol-eq/s</em>
                 <small>limiting: {limitingFactorCopy(reading.limitingFactor)}</small>
               </div>
@@ -320,7 +321,7 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
         <header>
           <div>
             <span>{definition.code} · Room details</span>
-            <h2 id="room-details-title">{definition.name}</h2>
+            <h2 id="room-details-title">{roomCopy(definition).name}</h2>
           </div>
           <button
             type="button"
@@ -332,7 +333,7 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
           </button>
         </header>
         <div className="room-details-scroll">
-          <p className="room-details-blurb">{definition.blurb}</p>
+          <p className="room-details-blurb">{roomCopy(definition).description}</p>
           <Composition />
           <EffectsPanel />
           <ReactionPanel />
@@ -370,7 +371,7 @@ export const RoomInspector = () => {
           <span>{analysis.hazardLabel}</span>
           <strong>{Math.round(analysis.hazard)}</strong>
         </div>
-        <h2 data-testid="room-name">{definition.name}</h2>
+        <h2 data-testid="room-name">{roomCopy(definition).name}</h2>
         <button className="room-details-button" type="button" onClick={() => setShowDetails(true)}>
           <Info size={14} /> Room details
         </button>

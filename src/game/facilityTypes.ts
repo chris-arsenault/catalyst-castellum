@@ -13,12 +13,10 @@ export type FacilityRing = "outer" | "middle" | "inner" | "core";
 
 export interface RoomDefinition {
   id: RoomId;
-  name: string;
   code: string;
   structure: "entry" | "room" | "core";
   ambientTemperature: number;
   socketCount: 0 | 2;
-  blurb: string;
 }
 
 export interface EquipmentGradeDefinition {
@@ -49,8 +47,6 @@ export type EquipmentGradeBehavior =
 
 export interface EquipmentDefinition {
   id: EquipmentId;
-  name: string;
-  description: string;
   accent: string;
   buildCost: number;
   upgradeCosts: readonly [number, number];
@@ -135,8 +131,6 @@ export interface FacilityUtilityNodeDefinition {
 export type ConduitDestinationKind = "room" | "gas_vent" | "liquid_recovery";
 
 export interface ConduitPhaseDefinition {
-  name: string;
-  description: string;
   direction: readonly [RoomId, RoomId];
   destinationKind: ConduitDestinationKind;
   actuator: "fan" | "pump" | "passive";

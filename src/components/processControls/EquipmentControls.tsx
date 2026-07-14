@@ -1,7 +1,8 @@
 import { ChevronRight, Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
-import { EQUIPMENT_DEFINITIONS } from "../../game/config";
+import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
 import { commandDecision as evaluateCommand } from "../../presentation/selectors";
+import { commandRejectionCopy } from "../../presentation/commandCopy";
 import { useGameStore } from "../../application/store";
 import {
   type EquipmentInstance,
@@ -12,6 +13,7 @@ import {
 } from "../../game/types";
 import { BinaryControl } from "./ActuatorControls";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
+import { equipmentCopy } from "../../presentation/entityCopy";
 
 const socketLabel = (socketId: EquipmentSocketId): string =>
   socketId === "socket_a" ? "SOCKET A" : "SOCKET B";
@@ -128,7 +130,7 @@ const EquipmentActions = ({
       <button
         type="button"
         disabled={!upgradeDecision.allowed}
-        title={upgradeDecision.reason ?? undefined}
+        title={commandRejectionCopy(upgradeDecision) ?? undefined}
         data-testid={`equipment-upgrade-${roomId}-${socketId}`}
         onClick={upgrade}
       >
@@ -137,8 +139,8 @@ const EquipmentActions = ({
       <button
         type="button"
         disabled={!dismantleDecision.allowed}
-        title={dismantleDecision.reason ?? undefined}
-        aria-label={`Dismantle ${definition.name}`}
+        title={commandRejectionCopy(dismantleDecision) ?? undefined}
+        aria-label={`Dismantle ${equipmentCopy(definition).name}`}
         onClick={dismantle}
       >
         <Trash2 size={13} /> +{dismantleDecision.refund} M
@@ -165,7 +167,7 @@ const InstalledEquipmentSocket = ({
       <header>
         <span>{socketLabel(socketId)}</span>
         <strong>
-          {definition.name} · Grade {instance.level}
+          {equipmentCopy(definition).name} · Grade {instance.level}
         </strong>
         <em>{instance.enabled ? "RUNNING" : "OFFLINE"}</em>
       </header>

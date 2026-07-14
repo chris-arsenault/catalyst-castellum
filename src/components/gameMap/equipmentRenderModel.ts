@@ -1,4 +1,4 @@
-import { EQUIPMENT_DEFINITIONS, FACILITY_MAP, ROOM_ORDER } from "../../game/config";
+import { EQUIPMENT_DEFINITIONS, FACILITY_MAP, ROOM_ORDER } from "../../presentation/defaultGame";
 import {
   EQUIPMENT_SOCKET_IDS,
   type EquipmentId,

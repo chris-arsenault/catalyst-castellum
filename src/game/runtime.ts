@@ -8,10 +8,15 @@ import { stepGame } from "./engine/step";
 import { validateGameState, type StateValidationIssue } from "./engine/stateValidation";
 import type { CommandDecision, CommandResult, GameCommand, GameState, LevelId } from "./types";
 import { createGameQueries, type GameQueries } from "./queries";
+import { decodeGame, encodeGame } from "./persistence/saveCodec";
 
 export interface GameRuntime {
   readonly definition: GameDefinition;
   readonly queries: GameQueries;
+  readonly save: {
+    encode: (state: GameState) => string;
+    decode: (raw: string) => GameState | null;
+  };
   createInitial: () => GameState;
   createScenario: (levelId: LevelId, completedLevelIds?: LevelId[]) => GameState;
   evaluate: (state: GameState, command: GameCommand) => CommandDecision;
@@ -26,6 +31,10 @@ export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
   Object.freeze({
     definition,
     queries: createGameQueries(definition),
+    save: Object.freeze({
+      encode: (state: GameState) => encodeGame(state, definition),
+      decode: (raw: string) => decodeGame(raw, definition),
+    }),
     createInitial: () => createInitialGame(definition),
     createScenario: (levelId: LevelId, completedLevelIds: LevelId[] = []) =>
       createScenarioGame(levelId, completedLevelIds, definition),

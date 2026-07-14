@@ -344,13 +344,47 @@ const followupGuide: GuideDefinition = {
   ],
 };
 
-export const guideDefinitionFor = (game: GameState): GuideDefinition | null => {
-  if (game.campaign.levelId === "acid_line") return acidLineGuideFor(game);
-  if (game.campaign.levelId === "make_the_reagent") return makeReagentGuideFor(game);
-  if (game.campaign.levelId !== "flash_point") return null;
+export const guideDefinitionFor = (
+  game: GameState,
+  registrations: GuideRegistry = GUIDE_REGISTRATIONS
+): GuideDefinition | null => {
+  const registration = registrations[game.campaign.levelId];
+  return registration?.guideFor(game) ?? null;
+};
+
+const flashPointGuideFor = (game: GameState): GuideDefinition | null => {
   if (game.campaign.roundIndex === 0) return flashPointGuide;
   if (game.campaign.roundIndex === 1) return followupGuide;
   return null;
+};
+
+const flashPointPhaseActionReason = (
+  game: GameState,
+  action: "start_prime" | "start_assault"
+): string | null => {
+  if (action === "start_prime") {
+    if (!furnaceAgitatorRunning(game)) return "Install and run a Gas Agitator in R-02.";
+    if (!conduitEnabled(game)) return "Switch the Core–R-02 gas fan ON.";
+    return null;
+  }
+  return primeFlashIncident(game) ? null : "Observe R-02’s first OX-1 flash to arm the assault.";
+};
+
+export interface GuideRegistration {
+  guideFor: (game: GameState) => GuideDefinition | null;
+  phaseActionReason?: (game: GameState, action: "start_prime" | "start_assault") => string | null;
+}
+
+export type GuideRegistry = Partial<Record<GameState["campaign"]["levelId"], GuideRegistration>>;
+
+/** Adding a guided level registers one provider; renderer and dispatch remain generic. */
+export const GUIDE_REGISTRATIONS: GuideRegistry = {
+  flash_point: { guideFor: flashPointGuideFor, phaseActionReason: flashPointPhaseActionReason },
+  make_the_reagent: {
+    guideFor: makeReagentGuideFor,
+    phaseActionReason: makeReagentPhaseActionReason,
+  },
+  acid_line: { guideFor: acidLineGuideFor, phaseActionReason: acidLinePhaseActionReason },
 };
 
 export const guideStepIndexFor = (game: GameState, guide: GuideDefinition): number => {
@@ -370,15 +404,7 @@ export const guidedPhaseActionReason = (
   const guide = guideDefinitionFor(game);
   if (!guide || dismissedGuideIds.includes(guide.dismissalId)) return null;
   if (!guide.gatesPhaseActions) return null;
-  if (game.campaign.levelId === "acid_line") return acidLinePhaseActionReason(game, action);
-  if (game.campaign.levelId === "make_the_reagent")
-    return makeReagentPhaseActionReason(game, action);
-  if (action === "start_prime") {
-    if (!furnaceAgitatorRunning(game)) return "Install and run a Gas Agitator in R-02.";
-    if (!conduitEnabled(game)) return "Switch the Core–R-02 gas fan ON.";
-    return null;
-  }
-  return primeFlashIncident(game) ? null : "Observe R-02’s first OX-1 flash to arm the assault.";
+  return GUIDE_REGISTRATIONS[game.campaign.levelId]?.phaseActionReason?.(game, action) ?? null;
 };
 
 export const guideCanRun = (game: GameState): boolean =>

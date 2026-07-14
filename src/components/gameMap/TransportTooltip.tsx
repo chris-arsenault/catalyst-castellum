@@ -1,4 +1,8 @@
-import { ROOM_DEFINITIONS, SPECIES_DEFINITIONS, TRANSPORT_RUNS } from "../../game/config";
+import {
+  ROOM_DEFINITIONS,
+  SPECIES_DEFINITIONS,
+  TRANSPORT_RUNS,
+} from "../../presentation/defaultGame";
 import {
   conduitCapacity,
   gasAmountTotal,
@@ -17,6 +21,7 @@ import {
   type TransportPhase,
   type TransportRunId,
 } from "../../game/types";
+import { transportCopy } from "../../presentation/entityCopy";
 
 const FLOW_EPSILON = 0.005;
 
@@ -101,7 +106,7 @@ const PhaseSection = ({
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>
-          <strong>{definition.name}</strong>
+          <strong>{transportCopy(runId, phase).name}</strong>
           <small>
             {ROOM_DEFINITIONS[definition.direction[0]].code} →{" "}
             {ROOM_DEFINITIONS[definition.direction[1]].code} · {definition.actuator}

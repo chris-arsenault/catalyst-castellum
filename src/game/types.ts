@@ -9,6 +9,7 @@ import {
   EQUIPMENT_LEVELS,
   EQUIPMENT_SOCKET_IDS,
   FLOW_CAUSES,
+  GAME_EVENT_CODES,
   GAS_BUFFER_IDS,
   GAS_SOURCE_IDS,
   GAS_TYPES,
@@ -86,7 +87,6 @@ export type ActuatorKind = "fan" | "pump" | "passive";
 
 export interface LiquidSourceDefinition {
   id: LiquidSourceId;
-  name: string;
   formula: string;
   substance: LiquidType;
   capacity: number;
@@ -99,7 +99,6 @@ export interface LiquidSourceDefinition {
 
 export interface GasSourceDefinition {
   id: GasSourceId;
-  name: string;
   formula: string;
   capacity: number;
   initialGas: Partial<GasAmounts>;
@@ -111,22 +110,18 @@ export interface GasSourceDefinition {
 
 export interface GasBufferDefinition {
   id: GasBufferId;
-  name: string;
   capacity: number;
   accent: string;
 }
 
 export interface LiquidBufferDefinition {
   id: LiquidBufferId;
-  name: string;
   capacity: number;
   accent: string;
 }
 
 export interface ProcessDefinition {
   id: ProcessId;
-  name: string;
-  description: string;
   reactionId: ReactionId;
   equipmentId: EquipmentId;
   executor: "electrolysis";
@@ -161,7 +156,6 @@ export interface SeparatorBackflowDefinition {
 
 export interface SpeciesDefinition {
   id: SpeciesId;
-  name: string;
   formula: string;
   phase: "gas" | "liquid";
   elements: ElementalComposition;
@@ -188,7 +182,6 @@ export interface ReactionParticipant {
 export interface ReactionDefinition {
   id: ReactionId;
   code: string;
-  name: string;
   kind: "chemical" | "physical";
   equation: string;
   reactants: ReactionParticipant[];
@@ -224,6 +217,7 @@ export type ReactionBehaviorDefinition =
       activationRange: number;
       gasHeatPerExtent: number;
       roomHeatPerExtent: number;
+      event?: ReactionEventTrigger;
     }
   | {
       kind: "absorption";
@@ -236,7 +230,14 @@ export type ReactionBehaviorDefinition =
       maximumRate: number;
       mixingInventoryScale: number;
       roomHeatPerExtent: number;
+      headroom?: "gas" | "liquid";
+      event?: ReactionEventTrigger;
     };
+
+export interface ReactionEventTrigger {
+  code: (typeof GAME_EVENT_CODES)[number];
+  roomId: RoomId;
+}
 
 export interface ReactionTelemetry {
   lastRate: number;
@@ -333,8 +334,6 @@ export interface DamageReceipt {
 
 export interface EnemyDefinition {
   type: EnemyType;
-  name: string;
-  description: string;
   health: number;
   speed: number;
   coreDamage: number;
@@ -344,7 +343,14 @@ export interface EnemyDefinition {
   color: string;
   residueOnDeath: number;
   matterYield: number;
+  presentation: {
+    appearance: EnemyAppearanceArchetype;
+    manualIcon: EnemyManualIcon;
+  };
 }
+
+export type EnemyAppearanceArchetype = "crawler" | "skimmer" | "floater" | "shell" | "bellows";
+export type EnemyManualIcon = "bug" | "wind" | "bird" | "shield" | "snail";
 
 export interface EnemyState {
   id: number;

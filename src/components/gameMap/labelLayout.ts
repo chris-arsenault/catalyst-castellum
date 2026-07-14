@@ -1,4 +1,9 @@
-import { FACILITY_MAP, ROOM_DEFINITIONS, ROOM_ORDER, facilityCells } from "../../game/config";
+import {
+  FACILITY_MAP,
+  ROOM_DEFINITIONS,
+  ROOM_ORDER,
+  facilityCells,
+} from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { cellOutletAssemblyModel } from "./cellOutletRenderModel";
 import {
@@ -8,6 +13,7 @@ import {
   roomMapRect,
   type MapRect,
 } from "./mapGeometry";
+import { roomCopy } from "../../presentation/entityCopy";
 
 const EDGE_PADDING = 8;
 const LABEL_PADDING_X = 8;
@@ -153,7 +159,7 @@ export const layoutMapLabels = (selectedRoomId: RoomId, game?: GameState): MapLa
   );
   for (const roomId of ordered) {
     const definition = ROOM_DEFINITIONS[roomId];
-    const textOptions = [`${definition.code} · ${definition.name}`, definition.code];
+    const textOptions = [`${definition.code} · ${roomCopy(definition).name}`, definition.code];
     let accepted: MapLabelPlacement | null = null;
     for (const text of textOptions) {
       for (const fontSize of [17, 14, 12]) {

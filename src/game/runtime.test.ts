@@ -24,4 +24,34 @@ describe("game runtime", () => {
     expect(Object.isFrozen(runtime)).toBe(true);
     expect(Object.isFrozen(runtime.definition.rooms.furnace)).toBe(true);
   });
+
+  it("keeps two pack identities, queries, projections, and saves independent", () => {
+    const alternateDefinition = deriveGame(DEFAULT_GAME_DEFINITION, {
+      id: "alternate-runtime",
+      packId: "alternate-pack",
+      contentVersion: 7,
+      levels: {
+        ...DEFAULT_GAME_DEFINITION.levels,
+        flash_point: {
+          ...DEFAULT_GAME_DEFINITION.levels.flash_point,
+          startingMatter: 91,
+        },
+      },
+    });
+    const primary = createGameRuntime(DEFAULT_GAME_DEFINITION);
+    const alternate = createGameRuntime(alternateDefinition);
+    const primaryState = primary.createInitial();
+    const alternateState = alternate.createInitial();
+
+    expect(primaryState.matter).not.toBe(alternateState.matter);
+    expect(primary.queries.levelDefinitionFor(primaryState).startingMatter).not.toBe(
+      alternate.queries.levelDefinitionFor(alternateState).startingMatter
+    );
+    expect(primary.save.decode(alternate.save.encode(alternateState))).toBeNull();
+    expect(alternate.save.decode(primary.save.encode(primaryState))).toBeNull();
+    expect(alternate.save.decode(alternate.save.encode(alternateState))?.pack).toEqual({
+      id: "alternate-pack",
+      contentVersion: 7,
+    });
+  });
 });

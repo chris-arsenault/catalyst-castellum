@@ -1,9 +1,10 @@
 import { ArrowLeft, ArrowRight, Biohazard, Droplets, Gauge } from "lucide-react";
 import { useState } from "react";
-import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../game/config";
+import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import type { GameState } from "../game/types";
+import { levelCopy, roundCopy } from "../presentation/levelCopy";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 
 const BriefingGraphic = () => (
@@ -36,12 +37,13 @@ const BriefingObjective = ({
   tutorialSkipped: boolean;
 }) => {
   const round = roundDefinitionFor(game);
+  const level = levelDefinitionFor(game);
   const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
   const nextRoom = ROOM_DEFINITIONS[nextLevel.focusRoomId];
-  let detail = `${round.objective} You have ${round.primeSeconds} seconds of live priming before the configuration locks automatically.`;
+  let detail = `${roundCopy(level, round).objective} You have ${round.primeSeconds} seconds of live priming before the configuration locks automatically.`;
   let label = "Round 1 objective";
   if (tutorialSkipped) {
-    detail = `${nextLevel.name} begins immediately in frozen planning at ${nextRoom.code}.`;
+    detail = `${levelCopy(nextLevel).name} begins immediately in frozen planning at ${nextRoom.code}.`;
     label = "Starting at Lesson 02";
   }
   return (
@@ -87,8 +89,9 @@ const actionLabel = (offersOpeningDrill: boolean, tutorialEnabled: boolean): str
 
 const hint = (game: GameState, offersOpeningDrill: boolean, tutorialEnabled: boolean): string => {
   const level = levelDefinitionFor(game);
+  const copy = levelCopy(level);
   if (!offersOpeningDrill)
-    return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${level.lesson}`;
+    return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${copy.lesson}`;
   if (!tutorialEnabled)
     return "Lesson 02 opens in frozen planning at R-05. Restart the campaign to replay Flash Point.";
   return `Enter the checkpoint to receive the field assignment at ${ROOM_DEFINITIONS[level.focusRoomId].code}.`;
@@ -101,6 +104,7 @@ const BriefingContent = ({ game }: { game: GameState }) => {
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const level = levelDefinitionFor(game);
+  const copy = levelCopy(level);
   const guide = guideDefinitionFor(game);
   const offersOpeningDrill = game.campaign.levelId === "flash_point" && Boolean(guide);
   const tutorialSkipped = offersOpeningDrill && !tutorialEnabled;
@@ -125,12 +129,12 @@ const BriefingContent = ({ game }: { game: GameState }) => {
         <BriefingGraphic />
         <div className="briefing-content">
           <div className="eyebrow">
-            <span /> {level.kicker}
+            <span /> {copy.kicker}
           </div>
           <h1 id="briefing-title">
-            <span>Checkpoint {String(level.number).padStart(2, "0")}</span> {level.name}
+            <span>Checkpoint {String(level.number).padStart(2, "0")}</span> {copy.name}
           </h1>
-          <p className="briefing-lede">{level.briefing}</p>
+          <p className="briefing-lede">{copy.briefing}</p>
           <BriefingObjective game={game} tutorialSkipped={tutorialSkipped} />
           {offersOpeningDrill && (
             <TutorialStartChoice enabled={tutorialEnabled} onChange={setTutorialEnabled} />

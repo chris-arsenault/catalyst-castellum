@@ -2,6 +2,7 @@
 import { performance } from "node:perf_hooks";
 import { roomRenderModel } from "../src/components/gameMap/roomRenderModel";
 import { DEFAULT_GAME_RUNTIME } from "../src/game/runtime";
+import { LEVEL_PLAYTEST_PLANS } from "../src/game/content/playtestPlans";
 import { cloneGame } from "../src/game/engine/roomState";
 import { decodeGame, encodeGame } from "../src/game/save";
 import type { GameState } from "../src/game/types";
@@ -37,7 +38,7 @@ const representativeState = (): GameState => {
   let state = runtime.execute(runtime.createScenario("commissioning_exam"), {
     type: "begin_level",
   }).state;
-  for (const command of runtime.definition.levels.commissioning_exam.playtestActions) {
+  for (const command of LEVEL_PLAYTEST_PLANS.commissioning_exam.commands) {
     const result = runtime.execute(state, command);
     if (result.accepted) state = result.state;
   }

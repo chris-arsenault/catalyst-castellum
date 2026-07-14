@@ -13,8 +13,9 @@ export const EnemyNode = ({
 }) => {
   const model = enemyRenderModel(enemy);
   const draw = useCallback(
-    (graphics: Graphics) => drawEnemy(graphics, model.type, model.color, model.health, model.mode),
-    [model.color, model.health, model.mode, model.type]
+    (graphics: Graphics) =>
+      drawEnemy(graphics, model.appearance, model.color, model.health, model.mode),
+    [model.appearance, model.color, model.health, model.mode]
   );
   return (
     <pixiContainer x={model.position.x} y={model.position.y} scale={{ x: model.facing, y: 1 }}>

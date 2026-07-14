@@ -229,8 +229,9 @@ export const migrateV9Game = (legacy: LegacyV9Game): LegacyV10Game => ({
   })),
 });
 
-export const migrateV10Game = (legacy: LegacyV10Game, definition: GameDefinition): GameState => ({
-  ...legacy,
-  version: 12,
-  pack: { id: definition.packId, contentVersion: definition.contentVersion },
-});
+export const migrateV10Game = (legacy: LegacyV10Game, definition: GameDefinition): GameState =>
+  ({
+    ...legacy,
+    version: 12,
+    pack: { id: definition.packId, contentVersion: definition.contentVersion },
+  }) as GameState;

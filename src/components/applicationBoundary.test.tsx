@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { useGameStore } from "../application/store";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import { commandDecision } from "../presentation/selectors";
+import { commandRejectionCopy } from "../presentation/commandCopy";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import { FacilityManual } from "./manual/FacilityManual";
 import { NoticeToast } from "./Modals";
@@ -74,7 +75,7 @@ describe("application decision and phase rendering", () => {
     const button = screen.getByTestId("install-furnace-socket_a-gas_agitator") as HTMLButtonElement;
     expect(decision.allowed).toBe(false);
     expect(button.disabled).toBe(true);
-    expect(button.title).toBe(decision.reason);
+    expect(button.title).toBe(commandRejectionCopy(decision));
   });
 
   it("shows the complete equipment catalog with lesson choices disabled", () => {
@@ -101,8 +102,8 @@ describe("application decision and phase rendering", () => {
         `install-lower_intake-socket_a-${equipmentId}`
       ) as HTMLButtonElement;
       expect(choice.disabled).toBe(true);
-      expect(choice.title).toContain("Current operation authorizes Membrane cell");
-      expect(screen.getByText(/Current operation authorizes Membrane cell/)).toBeTruthy();
+      expect(choice.title).toBe("The current operation keeps this option sealed.");
+      expect(screen.getByText("The current operation keeps this option sealed.")).toBeTruthy();
     }
   });
 

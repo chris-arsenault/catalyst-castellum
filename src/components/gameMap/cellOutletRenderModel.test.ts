@@ -15,7 +15,7 @@ describe("membrane-cell outlet rendering", () => {
       socketId: "socket_a",
       equipmentId: "membrane_cell",
     });
-    expect(installed.accepted, installed.reason ?? undefined).toBe(true);
+    expect(installed.accepted, installed.code ?? undefined).toBe(true);
     const model = cellOutletAssemblyModel(installed.state);
 
     expect(model?.roomId).toBe("switchyard");

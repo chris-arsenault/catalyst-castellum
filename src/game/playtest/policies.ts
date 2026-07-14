@@ -1,6 +1,7 @@
 import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
 import type { PlaytestPlan } from "./types";
+import { LEVEL_PLAYTEST_PLANS } from "../content/playtestPlans";
 
 export interface RandomSource {
   next: () => number;
@@ -57,7 +58,7 @@ export const doNothingPlan = (): PlaytestPlan => ({
 
 export const intendedPlan = (levelId: LevelId): PlaytestPlan => ({
   name: "intended",
-  commands: [...LEVEL_DEFINITIONS[levelId].playtestActions],
+  commands: [...LEVEL_PLAYTEST_PLANS[levelId].commands],
   primeFraction: 1,
 });
 
@@ -66,7 +67,7 @@ export const randomPlan = (
   quality: number,
   random: RandomSource
 ): PlaytestPlan => {
-  const candidates = LEVEL_DEFINITIONS[levelId].playtestActions;
+  const candidates = LEVEL_PLAYTEST_PLANS[levelId].commands;
   const selected = candidates
     .filter(() => random.next() < quality)
     .map((command) => maybeMisplace(command, quality, random));

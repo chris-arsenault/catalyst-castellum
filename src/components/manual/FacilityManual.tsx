@@ -2,9 +2,10 @@ import { LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useGameStore } from "../../application/store";
 import type { ManualSection } from "../../application/storeTypes";
-import { LEVEL_DEFINITIONS } from "../../game/config";
+import { LEVEL_DEFINITIONS } from "../../presentation/defaultGame";
 import type { EquipmentId, ReactionId } from "../../game/types";
 import { guideDefinitionFor } from "../../tutorial/guideModel";
+import { levelCopy } from "../../presentation/levelCopy";
 import { BuildCatalog } from "./BuildCatalog";
 import { Encyclopedia, type EncyclopediaKind } from "./Encyclopedia";
 import { ManualNav } from "./ManualNav";
@@ -57,6 +58,7 @@ const ManualShellHeader = () => {
   const buildTarget = useGameStore((state) => state.equipmentBuildTarget);
   const closeManual = useGameStore((state) => state.closeManual);
   const level = LEVEL_DEFINITIONS[game.campaign.levelId];
+  const copy = levelCopy(level);
   return (
     <header className="manual-shell-header">
       <div className="manual-title-block">
@@ -66,7 +68,7 @@ const ManualShellHeader = () => {
       <div className="manual-record-context">
         <small>Current record</small>
         <strong>
-          {level.number.toString().padStart(2, "0")} · {level.name}
+          {level.number.toString().padStart(2, "0")} · {copy.name}
         </strong>
         {buildTarget && <em>Construction target attached</em>}
       </div>

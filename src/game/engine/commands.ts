@@ -182,7 +182,7 @@ export const executeCommand = (
 ): CommandResult => {
   const decision = evaluateCommand(source, command, definition);
   if (!decision.allowed) {
-    return rejectCommand(source, decision.reason ?? "Command rejected.");
+    return rejectCommand(source, decision.code ?? "invalid_phase", decision.parameters);
   }
   switch (command.type) {
     case "set_conduit":

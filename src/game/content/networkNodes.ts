@@ -15,7 +15,6 @@ import type {
 export const GAS_SOURCES: Record<GasSourceId, GasSourceDefinition> = {
   starter_gas_header: {
     id: "starter_gas_header",
-    name: "Starter gas header",
     formula: "2 H₂(g) + O₂(g)",
     capacity: 150,
     initialGas: { hydrogen: 80, oxygen: 40 },
@@ -29,7 +28,6 @@ export const GAS_SOURCES: Record<GasSourceId, GasSourceDefinition> = {
 export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
   water_tank: {
     id: "water_tank",
-    name: "Water reserve",
     formula: "H₂O(l)",
     substance: "water",
     capacity: 180,
@@ -41,7 +39,6 @@ export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
   },
   sodium_chloride_tank: {
     id: "sodium_chloride_tank",
-    name: "Sodium chloride reserve",
     formula: "NaCl(aq)",
     substance: "sodium_chloride",
     capacity: 180,
@@ -56,13 +53,11 @@ export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
 export const GAS_BUFFERS: Record<GasBufferId, GasBufferDefinition> = {
   anode_header: {
     id: "anode_header",
-    name: "Cl₂ anode header",
     capacity: 18,
     accent: "#c5f540",
   },
   cathode_header: {
     id: "cathode_header",
-    name: "H₂ cathode header",
     capacity: 18,
     accent: "#f5a249",
   },
@@ -71,7 +66,6 @@ export const GAS_BUFFERS: Record<GasBufferId, GasBufferDefinition> = {
 export const LIQUID_BUFFERS: Record<LiquidBufferId, LiquidBufferDefinition> = {
   cell_liquor: {
     id: "cell_liquor",
-    name: "NaOH cell-liquor outlet",
     capacity: 30,
     accent: "#b555f5",
   },

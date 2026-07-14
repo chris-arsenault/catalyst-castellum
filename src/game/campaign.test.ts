@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { LEVEL_DEFINITIONS } from "./config";
 import { createInitialGame, createScenarioGame, executeCommand, stepGame } from "./simulation";
 import type { GameCommand, GameState, ScenarioAvailability } from "./types";
+import { LEVEL_PLAYTEST_PLANS } from "./content/playtestPlans";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
-  expect(result.accepted, result.reason ?? undefined).toBe(true);
+  expect(result.accepted, result.code ?? undefined).toBe(true);
   return result.state;
 };
 
@@ -30,7 +31,7 @@ describe("Flash Point scenario truth", () => {
 
   it("requires the authored equipment and shared fan action", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_DEFINITIONS.flash_point.playtestActions) {
+    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands) {
       state = command(state, action);
     }
     expect(state.rooms.furnace.equipment.socket_a?.equipmentId).toBe("gas_agitator");
@@ -39,7 +40,7 @@ describe("Flash Point scenario truth", () => {
 
   it("emits the real prime flash before the automatic assault removes its action button", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_DEFINITIONS.flash_point.playtestActions) {
+    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands) {
       state = command(state, action);
     }
     state = command(state, { type: "start_prime" });
@@ -86,7 +87,7 @@ describe("campaign checkpoints", () => {
             level.rounds[index - 1]!.availability,
             level.rounds[index]!.availability
           ),
-          `${level.name} round ${index + 1}`
+          `${level.id} round ${index + 1}`
         ).toBe(true);
       }
     }
@@ -94,11 +95,11 @@ describe("campaign checkpoints", () => {
 
   it("authors every level around typed whole-conduit controls", () => {
     for (const level of Object.values(LEVEL_DEFINITIONS)) {
-      const conduitActions = level.playtestActions.filter(
+      const conduitActions = LEVEL_PLAYTEST_PLANS[level.id].commands.filter(
         (action): action is Extract<GameCommand, { type: "set_conduit" }> =>
           action.type === "set_conduit"
       );
-      expect(conduitActions.length, level.name).toBeGreaterThan(0);
+      expect(conduitActions.length, level.id).toBeGreaterThan(0);
       expect(conduitActions.every((action) => action.enabled)).toBe(true);
     }
   });

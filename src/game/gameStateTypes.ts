@@ -75,18 +75,66 @@ export type EventTone = (typeof EVENT_TONES)[number];
 export type GameEventCode = (typeof GAME_EVENT_CODES)[number];
 export type GameEventParameter = boolean | number | string;
 
-export interface GameEvent {
+export interface GameEventParameterMap {
+  assault_started: { automatic: boolean };
+  campaign_completed: { completedLevels: number; coreIntegrity: number };
+  chlorine_evolution_started: Record<never, never>;
+  core_breached: { enemyType: EnemyType; coreDamage: number };
+  enemy_neutralized: {
+    enemyType: EnemyType;
+    damageTaken: number;
+    finalSource: string;
+    finalChannel: string;
+    lifetimeSource: string;
+    matterYield: number;
+  };
+  equipment_installed: { equipmentId: EquipmentId; cost: number };
+  equipment_upgraded: { equipmentId: EquipmentId; level: number };
+  flash_cycle_started: { zone: GasZone };
+  flash_incident: {
+    hitCount: number;
+    killed: number;
+    damage: number;
+    pressureImpulse: number;
+    reactionExtent: number;
+  };
+  gas_source_charged: { sourceId: GasSourceId; cost: number; amount: number };
+  hcl_production_started: Record<never, never>;
+  legacy_message: { title: string; detail: string };
+  level_planning_started: Record<never, never>;
+  liquid_source_charged: { sourceId: LiquidSourceId; cost: number; amount: number };
+  physical_conduit_migrated: Record<never, never>;
+  prime_started: { primeSeconds: number };
+  process_started: { processId: ProcessId };
+  round_advanced: Record<never, never>;
+  round_completed: {
+    breached: number;
+    killed: number;
+    coreDamage: number;
+    matterHarvested: number;
+  };
+  scenario_started: Record<never, never>;
+  scenario_defeated: Record<never, never>;
+  separator_cross_leak: Record<never, never>;
+}
+
+interface GameEventBase {
   id: number;
   levelId: LevelId;
   round: number;
   phase: GamePhase;
   tone: EventTone;
-  code: GameEventCode;
-  parameters: Record<string, GameEventParameter>;
   roomId: RoomId | null;
   elapsed: number;
   incidentId: number | null;
 }
+
+export type GameEvent = {
+  [Code in GameEventCode]: GameEventBase & {
+    code: Code;
+    parameters: GameEventParameterMap[Code];
+  };
+}[GameEventCode];
 
 export interface CombatIncidentTarget {
   enemyId: number;
@@ -218,7 +266,8 @@ export type GameCommand =
 export interface CommandResult {
   state: GameState;
   accepted: boolean;
-  reason: string | null;
+  code: CommandRejectionCode | null;
+  parameters: CommandRejectionParameters;
 }
 
 export type CommandRejectionCode =
@@ -238,8 +287,14 @@ export type CommandRejectionCode =
 export interface CommandDecision {
   allowed: boolean;
   code: CommandRejectionCode | null;
-  reason: string | null;
+  parameters: CommandRejectionParameters;
   cost: number;
   refund: number;
   amount: number;
+}
+
+export interface CommandRejectionParameters {
+  amount?: number;
+  cost?: number;
+  refund?: number;
 }

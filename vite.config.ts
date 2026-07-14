@@ -19,7 +19,7 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "tooling/**/*.test.ts"],
     coverage: {
       provider: "v8",
       thresholds: {

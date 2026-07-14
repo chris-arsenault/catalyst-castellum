@@ -10,7 +10,7 @@ afterEach(cleanup);
 
 const command = (game: GameState, value: GameCommand): GameState => {
   const result = executeCommand(game, value);
-  if (!result.accepted) throw new Error(result.reason ?? "Command rejected");
+  if (!result.accepted) throw new Error(result.code ?? "Command rejected");
   return result.state;
 };
 

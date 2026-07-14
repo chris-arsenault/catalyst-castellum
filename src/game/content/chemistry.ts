@@ -10,7 +10,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   chlor_alkali_electrolysis: {
     id: "chlor_alkali_electrolysis",
     code: "CL-1",
-    name: "Chlor-alkali electrolysis",
     kind: "chemical",
     equation: "2 NaCl(aq) + 2 H₂O(l) → Cl₂(g) + H₂(g) + 2 NaOH(aq)",
     reactants: [
@@ -27,7 +26,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   hydrogen_oxygen_combustion: {
     id: "hydrogen_oxygen_combustion",
     code: "OX-1",
-    name: "Hydrogen–oxygen flash",
     kind: "chemical",
     equation: "2 H₂(g) + O₂(g) → 2 H₂O(g) + heat + pressure",
     reactants: [
@@ -54,7 +52,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   hydrogen_chlorine_recombination: {
     id: "hydrogen_chlorine_recombination",
     code: "CL-2",
-    name: "Hydrogen–chlorine recombination",
     kind: "chemical",
     equation: "H₂(g) + Cl₂(g) → 2 HCl(g) + heat",
     reactants: [
@@ -69,12 +66,12 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       activationRange: 28,
       gasHeatPerExtent: 4.8,
       roomHeatPerExtent: 0.8,
+      event: { code: "hcl_production_started", roomId: "furnace" },
     },
   },
   hydrogen_chloride_absorption: {
     id: "hydrogen_chloride_absorption",
     code: "P-1",
-    name: "Hydrogen chloride absorption",
     kind: "physical",
     equation: "HCl(g) → HCl(aq)",
     reactants: [{ species: "hydrogen_chloride", coefficient: 1 }],
@@ -89,7 +86,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   acid_neutralization: {
     id: "acid_neutralization",
     code: "CL-3",
-    name: "Acid neutralization",
     kind: "chemical",
     equation: "HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l) + heat",
     reactants: [
@@ -110,7 +106,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   hypochlorite_formation: {
     id: "hypochlorite_formation",
     code: "CL-4",
-    name: "Hypochlorite formation",
     kind: "chemical",
     equation: "Cl₂(g) + 2 NaOH(aq) → NaOCl(aq) + NaCl(aq) + H₂O(l)",
     reactants: [
@@ -127,12 +122,12 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       maximumRate: 0.82,
       mixingInventoryScale: 6,
       roomHeatPerExtent: 0.28,
+      headroom: "liquid",
     },
   },
   acid_chlorine_release: {
     id: "acid_chlorine_release",
     code: "CL-5",
-    name: "Acid-triggered chlorine release",
     kind: "chemical",
     equation: "NaOCl(aq) + 2 HCl(aq) → NaCl(aq) + Cl₂(g) + H₂O(l)",
     reactants: [
@@ -149,6 +144,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       maximumRate: 0.72,
       mixingInventoryScale: 6,
       roomHeatPerExtent: 0.34,
+      headroom: "gas",
+      event: { code: "chlorine_evolution_started", roomId: "washlock" },
     },
   },
 };
@@ -188,5 +185,5 @@ export const validateReactionCatalog = (): string[] =>
       .filter(([, difference]) => difference !== 0)
       .map(([element, difference]) => `${element}:${difference > 0 ? "+" : ""}${difference}`)
       .join(", ");
-    return [`${reaction.code} ${reaction.name} is unbalanced (${imbalance})`];
+    return [`${reaction.code} (${reaction.id}) is unbalanced (${imbalance})`];
   });

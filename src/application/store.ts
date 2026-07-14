@@ -16,10 +16,13 @@ import type {
   StoreSet,
 } from "./storeTypes";
 import { createUiActions } from "./uiSlice";
+import { commandRejectionCopy } from "../presentation/commandCopy";
 
 export type { GameStore, GameStoreDependencies } from "./storeTypes";
 
 const browserDependencies: GameStoreDependencies = {
+  runtime: DEFAULT_GAME_RUNTIME,
+  commandCopy: commandRejectionCopy,
   loadSlots: loadSaveSlots,
   clearSlot: clearSaveSlot,
   scheduleSave: scheduleGameSave,
@@ -62,7 +65,7 @@ const createLifecycleActions = (
     set((state) => ({
       activeSlotId: slotId,
       game: record.game,
-      selectedRoomId: DEFAULT_GAME_RUNTIME.level(record.game).focusRoomId,
+      selectedRoomId: dependencies.runtime.level(record.game).focusRoomId,
       ...CLEAN_TUTORIAL_UI,
       dismissedGuideIds: record.dismissedGuideIds,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
@@ -71,7 +74,7 @@ const createLifecycleActions = (
   startNewGame: (slotId) => {
     dependencies.cancelSave(slotId);
     dependencies.clearSlot(slotId);
-    const game = DEFAULT_GAME_RUNTIME.createInitial();
+    const game = dependencies.runtime.createInitial();
     const savedAt = Date.now();
     dependencies.scheduleSave(slotId, game, []);
     set((state) => ({
@@ -81,7 +84,7 @@ const createLifecycleActions = (
         [slotId]: { id: slotId, game, dismissedGuideIds: [], savedAt },
       },
       game,
-      selectedRoomId: DEFAULT_GAME_RUNTIME.level(game).focusRoomId,
+      selectedRoomId: dependencies.runtime.level(game).focusRoomId,
       ...CLEAN_TUTORIAL_UI,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
     }));
@@ -110,13 +113,13 @@ const createLifecycleActions = (
 export const createGameStoreState = (
   dependencies: GameStoreDependencies = browserDependencies
 ): StateCreator<GameStore> => {
-  const initialGame = DEFAULT_GAME_RUNTIME.createInitial();
+  const initialGame = dependencies.runtime.createInitial();
   return (set, get) => ({
     initialized: false,
     activeSlotId: null,
     saveSlots: emptySaveSlotCatalog(),
     game: initialGame,
-    selectedRoomId: DEFAULT_GAME_RUNTIME.level(initialGame).focusRoomId,
+    selectedRoomId: dependencies.runtime.level(initialGame).focusRoomId,
     ...CLEAN_TUTORIAL_UI,
     tutorialSessionRevision: 0,
     ...createLifecycleActions(set, get, dependencies),

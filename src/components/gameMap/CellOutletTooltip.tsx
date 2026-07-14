@@ -1,4 +1,4 @@
-import { ROOM_DEFINITIONS } from "../../game/config";
+import { ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
 import { cellOutletAssemblyModel, type CellOutletId } from "./cellOutletRenderModel";
 

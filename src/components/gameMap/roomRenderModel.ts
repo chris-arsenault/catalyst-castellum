@@ -7,7 +7,7 @@ import {
   roomAtmosphericCells,
   roomCenterWorld,
   roomVolume,
-} from "../../game/config";
+} from "../../presentation/defaultGame";
 import { roomAnalysis } from "../../presentation/selectors";
 import { roomGasInflow, roomLiquidInflowRate } from "../../presentation/roomFlow";
 import {

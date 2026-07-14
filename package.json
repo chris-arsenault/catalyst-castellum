@@ -18,11 +18,13 @@
     "test:e2e": "playwright test",
     "test:e2e:smoke": "playwright test --grep \"complete causal chain\"",
     "architecture:check": "tsx tooling/checkArchitecture.ts",
+    "locales:check": "tsx tooling/checkLocales.ts",
+    "copy:export": "tsx tooling/exportCopy.ts",
     "performance:baseline": "tsx tooling/performanceBaseline.ts",
     "performance:check": "tsx tooling/performanceBaseline.ts --assert",
     "playtest": "tsx tooling/playtest.ts",
     "campaign:health": "tsx tooling/playtest.ts --runs 1 --seed 13371 --assert-intended",
-    "check": "pnpm run architecture:check && pnpm run typecheck && pnpm test"
+    "check": "pnpm run architecture:check && pnpm run locales:check && pnpm run typecheck && pnpm test"
   },
   "dependencies": {
     "@pixi/react": "^8.0.5",

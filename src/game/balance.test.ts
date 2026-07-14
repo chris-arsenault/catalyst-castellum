@@ -3,10 +3,11 @@ import { LEVEL_DEFINITIONS } from "./config";
 import { runPlan } from "./playtest/runner";
 import { intendedPlan } from "./playtest/policies";
 import type { PlaytestPlan } from "./playtest/types";
+import { LEVEL_PLAYTEST_PLANS } from "./content/playtestPlans";
 
 describe("tutorial balance contract", () => {
   it("keeps the opening lesson inert until both simple player decisions are made", () => {
-    const actions = LEVEL_DEFINITIONS.flash_point.playtestActions;
+    const actions = LEVEL_PLAYTEST_PLANS.flash_point.commands;
     expect(actions).toHaveLength(2);
     expect(actions.map((action) => action.type)).toEqual(["install_equipment", "set_conduit"]);
     expect(LEVEL_DEFINITIONS.flash_point.rounds[0]!.wave.length).toBeGreaterThan(0);
@@ -14,7 +15,7 @@ describe("tutorial balance contract", () => {
 
   it("gates every checkpoint behind at least one authored conduit action that starts off", () => {
     for (const level of Object.values(LEVEL_DEFINITIONS)) {
-      const startsOff = level.playtestActions.some((action) => {
+      const startsOff = LEVEL_PLAYTEST_PLANS[level.id].commands.some((action) => {
         if (action.type !== "set_conduit" || !action.enabled) return false;
         const loadout =
           action.phase === "gas"
@@ -22,7 +23,7 @@ describe("tutorial balance contract", () => {
             : level.loadout.liquidConduits[action.runId];
         return loadout?.installed === true && loadout.enabled === false;
       });
-      expect(startsOff, level.name).toBe(true);
+      expect(startsOff, level.id).toBe(true);
     }
   });
 

@@ -1,4 +1,4 @@
-import { FACILITY_MAP, TRANSPORT_RUNS } from "../game/config";
+import { FACILITY_MAP, TRANSPORT_RUNS } from "./defaultGame";
 import {
   GAS_TYPES,
   TRANSPORT_RUN_IDS,

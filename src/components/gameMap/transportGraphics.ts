@@ -1,5 +1,9 @@
 import type { Graphics } from "pixi.js";
-import { SPECIES_DEFINITIONS, TRANSPORT_RUNS, gridCellsToWorldPath } from "../../game/config";
+import {
+  SPECIES_DEFINITIONS,
+  TRANSPORT_RUNS,
+  gridCellsToWorldPath,
+} from "../../presentation/defaultGame";
 import {
   transportRunMaterialFlow,
   transportRunPhaseStatus,

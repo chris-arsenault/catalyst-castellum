@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import type { Graphics } from "pixi.js";
-import { ROOM_DEFINITIONS, facilityRingForRoom } from "../../game/config";
+import { ROOM_DEFINITIONS, facilityRingForRoom } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { layoutMapLabels, type MapLabelPlacement } from "./labelLayout";
 

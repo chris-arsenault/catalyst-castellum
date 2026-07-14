@@ -28,7 +28,11 @@ export const createPresentationSelectors = (runtime: GameRuntime) => {
         : (() => {
             throw new Error("Runtime queries are missing room analysis");
           })();
-      const analysis = { ...raw, hazardLabel: hazardLabel(raw.hazard), effects: roomEffects(room) };
+      const analysis = {
+        ...raw,
+        hazardLabel: hazardLabel(raw.hazard),
+        effects: roomEffects(room, runtime.definition, runtime.queries),
+      };
       roomAnalysisCache.set(room, analysis);
       return analysis;
     },

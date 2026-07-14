@@ -1,6 +1,13 @@
 import type { StoreApi } from "zustand";
-import type { EquipmentSocketId, GameCommand, GameState, RoomId } from "../game/types";
+import type {
+  CommandResult,
+  EquipmentSocketId,
+  GameCommand,
+  GameState,
+  RoomId,
+} from "../game/types";
 import type { SaveSlotCatalog, SaveSlotId } from "./saveSlots";
+import type { GameRuntime } from "../game/runtime";
 
 export interface ApplicationLifecycleSlice {
   initialized: boolean;
@@ -51,6 +58,8 @@ export interface UiSlice {
 export type GameStore = ApplicationLifecycleSlice & GameSessionSlice & UiSlice;
 
 export interface GameStoreDependencies {
+  runtime: GameRuntime;
+  commandCopy: (result: CommandResult) => string | null;
   loadSlots: () => SaveSlotCatalog;
   clearSlot: (slotId: SaveSlotId) => void;
   scheduleSave: (slotId: SaveSlotId, game: GameState, dismissedGuideIds: string[]) => void;

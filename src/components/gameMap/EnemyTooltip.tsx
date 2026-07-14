@@ -1,4 +1,4 @@
-import { ENEMY_DEFINITIONS, ROOM_DEFINITIONS } from "../../game/config";
+import { ENEMY_DEFINITIONS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   enemyGasZone,
   enemyRoomId,
@@ -16,6 +16,7 @@ import {
   dominantDamageChannel,
   formatDamageAmount,
 } from "../../presentation/damageCopy";
+import { enemyCopy } from "../../presentation/entityCopy";
 
 const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | null => {
   const roomId = enemyRoomId(enemy);
@@ -58,7 +59,7 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
     <aside className="room-map-tooltip enemy-map-tooltip" data-testid="enemy-map-tooltip">
       <header>
         <span>HOSTILE #{enemy.id}</span>
-        <strong>{definition.name}</strong>
+        <strong>{enemyCopy(definition).name}</strong>
         <em>{Math.ceil((enemy.health / enemy.maxHealth) * 100)}% HP</em>
       </header>
       <div className="enemy-health-detail">

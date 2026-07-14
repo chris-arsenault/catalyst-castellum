@@ -1,5 +1,5 @@
 import type { Graphics } from "pixi.js";
-import { GAS_SOURCES, LIQUID_SOURCES, utilityNodeWorldPoint } from "../../game/config";
+import { GAS_SOURCES, LIQUID_SOURCES, utilityNodeWorldPoint } from "../../presentation/defaultGame";
 import {
   GAS_SOURCE_IDS,
   LIQUID_SOURCE_IDS,

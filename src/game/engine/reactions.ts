@@ -1,16 +1,17 @@
 import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_ZONES,
-  ROOM_REACTION_IDS,
   type GameState,
   type GasZone,
   type LimitingFactor,
+  type ReactionBehaviorDefinition,
+  type ReactionDefinition,
   type RoomReactionId,
   type RoomState,
 } from "../types";
-import { addEvent } from "./events";
 import type { HazardBurst } from "./damage";
 import { roomContactReactionMultiplier, roomGasReactionMultiplier } from "./equipment";
+import { addEvent } from "./events";
 import { simulateHydrogenOxygenFlash } from "./flashReaction";
 import { clamp } from "./math";
 import { simulateProcesses } from "./processExecutor";
@@ -22,17 +23,17 @@ import {
 import { analyzeRoom, liquidTotal, roomGasHeadroom, roomLiquidHeadroom } from "./roomState";
 
 const PRESSURE_PULSE_DECAY_PER_SECOND = 160;
-
 const rate = (amount: number, dt: number): number => amount / Math.max(dt, 0.0001);
 
 const setTelemetry = (
   room: RoomState,
-  reactionId: RoomReactionId,
+  reactionId: ReactionDefinition["id"],
   amount: number,
   dt: number,
   limitingFactor: LimitingFactor
 ): void => {
-  const telemetry = room.reactions[reactionId];
+  const telemetry = room.reactions[reactionId as RoomReactionId];
+  if (!telemetry) throw new Error(`Room telemetry is missing reaction ${reactionId}`);
   if (amount > 0) {
     telemetry.lastRate += rate(amount, dt);
     telemetry.limitingFactor = limitingFactor;
@@ -44,13 +45,6 @@ const setTelemetry = (
 
 const limitingFactor = (candidates: Array<[LimitingFactor, number]>): LimitingFactor =>
   candidates.reduce((minimum, candidate) => (candidate[1] < minimum[1] ? candidate : minimum))[0];
-
-const recordReaction = (state: GameState, amount: number): void => {
-  state.stats.reactions += amount;
-};
-
-const hasEvent = (state: GameState, code: GameState["events"][number]["code"]): boolean =>
-  state.events.some((event) => event.code === code);
 
 const roomReactionInventory = (room: RoomState, zone: GasZone): MutableReactionInventory => ({
   amount: (speciesId) =>
@@ -65,6 +59,22 @@ const roomReactionInventory = (room: RoomState, zone: GasZone): MutableReactionI
     }
   },
 });
+
+const maybeRecordEvent = (
+  state: GameState,
+  room: RoomState,
+  amount: number,
+  event: { code: GameState["events"][number]["code"]; roomId: RoomState["id"] } | undefined
+): void => {
+  if (
+    amount > 0 &&
+    event &&
+    room.id === event.roomId &&
+    !state.events.some(({ code }) => code === event.code)
+  ) {
+    addEvent(state, "reaction", event.code, {}, event.roomId);
+  }
+};
 
 export interface HydrogenChlorineReactionStatus {
   activation: number;
@@ -116,158 +126,134 @@ export const hydrogenChlorineReactionStatus = (
   };
 };
 
-const simulateHydrogenChlorine = (
-  state: GameState,
-  room: RoomState,
-  zone: GasZone,
-  dt: number,
-  definition: GameDefinition
-): void => {
-  const reaction = definition.reactions.hydrogen_chlorine_recombination;
+interface StrategyContext {
+  state: GameState;
+  room: RoomState;
+  reaction: ReactionDefinition;
+  dt: number;
+  bursts: HazardBurst[];
+  definition: GameDefinition;
+}
+
+type RoomReactionStrategy = (context: StrategyContext) => void;
+
+const simulateGasRecombination: RoomReactionStrategy = ({
+  state,
+  room,
+  reaction,
+  dt,
+  definition,
+}) => {
   const behavior = reaction.behavior;
-  if (behavior.kind !== "gas_recombination")
-    throw new Error("Hydrogen-chlorine reaction is misconfigured");
+  if (behavior.kind !== "gas_recombination") return;
+  for (const zone of GAS_ZONES) {
+    const inventory = roomReactionInventory(room, zone);
+    const activation = clamp(
+      (room.gasTemperature[zone] - behavior.activationTemperature) / behavior.activationRange,
+      0,
+      1
+    );
+    const candidates: Array<[LimitingFactor, number]> = [
+      ...reactionReactantCandidates(reaction, inventory, zone),
+      [
+        { kind: "condition", code: "activation_temperature", zone },
+        behavior.maximumRate * activation * roomGasReactionMultiplier(room, definition) * dt,
+      ],
+    ];
+    const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
+    applyReactionExtent(reaction, inventory, reacted);
+    room.gasTemperature[zone] = clamp(
+      room.gasTemperature[zone] + reacted * behavior.gasHeatPerExtent,
+      0,
+      260
+    );
+    room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 220);
+    setTelemetry(room, reaction.id, reacted, dt, limitingFactor(candidates));
+    state.stats.reactions += reacted;
+    maybeRecordEvent(state, room, reacted, behavior.event);
+  }
+};
+
+const simulateAbsorption: RoomReactionStrategy = ({ state, room, reaction, dt, definition }) => {
+  const behavior = reaction.behavior;
+  if (behavior.kind !== "absorption") return;
+  const zone = "lower";
   const inventory = roomReactionInventory(room, zone);
-  const status = hydrogenChlorineReactionStatus(room, zone, definition);
+  const aqueousInventory = liquidTotal(room);
+  const solventFactor = clamp(aqueousInventory / behavior.solventInventoryScale, 0, 1);
+  const product = reaction.products[0]?.species;
+  const productAmount =
+    product && product in room.liquid ? room.liquid[product as keyof typeof room.liquid] : 0;
+  const productFraction = productAmount / Math.max(aqueousInventory, 0.1);
+  const concentrationHeadroom =
+    Math.max(0, behavior.maximumProductFraction - productFraction) * Math.max(aqueousInventory, 1);
   const candidates: Array<[LimitingFactor, number]> = [
     ...reactionReactantCandidates(reaction, inventory, zone),
     [
-      { kind: "condition", code: "activation_temperature", zone },
-      behavior.maximumRate * status.activation * status.reactionMultiplier * dt,
+      { kind: "condition", code: "aqueous_solvent", zone },
+      behavior.maximumRate * solventFactor * roomContactReactionMultiplier(room, definition) * dt,
     ],
+    [{ kind: "condition", code: "product_concentration", zone }, concentrationHeadroom],
+    [{ kind: "condition", code: "liquid_headroom", zone }, roomLiquidHeadroom(room, definition)],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
   applyReactionExtent(reaction, inventory, reacted);
-  room.gasTemperature[zone] = clamp(
-    room.gasTemperature[zone] + reacted * behavior.gasHeatPerExtent,
-    0,
-    260
-  );
-  room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 220);
-  setTelemetry(room, "hydrogen_chlorine_recombination", reacted, dt, limitingFactor(candidates));
-  recordReaction(state, reacted);
-  if (reacted > 0 && room.id === "furnace" && !hasEvent(state, "hcl_production_started")) {
-    addEvent(state, "reaction", "hcl_production_started", {}, "furnace");
+  setTelemetry(room, reaction.id, reacted, dt, limitingFactor(candidates));
+  state.stats.reactions += reacted;
+};
+
+const simulateMixedContact: RoomReactionStrategy = ({ state, room, reaction, dt, definition }) => {
+  const behavior = reaction.behavior;
+  if (behavior.kind !== "mixed_contact") return;
+  const zone = "lower";
+  const inventory = roomReactionInventory(room, zone);
+  const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
+  const candidates: Array<[LimitingFactor, number]> = [
+    ...reactionReactantCandidates(reaction, inventory, zone),
+    [
+      { kind: "condition", code: "liquid_mixing", zone },
+      behavior.maximumRate * mixing * roomContactReactionMultiplier(room, definition) * dt,
+    ],
+  ];
+  if (behavior.headroom === "liquid") {
+    candidates.push([
+      { kind: "condition", code: "liquid_headroom", zone },
+      roomLiquidHeadroom(room, definition),
+    ]);
+  }
+  if (behavior.headroom === "gas") {
+    candidates.push([
+      { kind: "condition", code: "gas_headroom", zone },
+      roomGasHeadroom(room, definition),
+    ]);
+  }
+  const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
+  applyReactionExtent(reaction, inventory, reacted);
+  room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
+  setTelemetry(room, reaction.id, reacted, dt, limitingFactor(candidates));
+  state.stats.reactions += reacted;
+  maybeRecordEvent(state, room, reacted, behavior.event);
+};
+
+const simulateFlash: RoomReactionStrategy = ({ state, room, reaction, dt, bursts, definition }) => {
+  if (reaction.id !== "hydrogen_oxygen_combustion")
+    throw new Error(`Flash strategy ${reaction.id} requires a named engine implementation.`);
+  for (const zone of GAS_ZONES) {
+    room.flashCooldown[zone] = Math.max(0, room.flashCooldown[zone] - dt);
+    const flash = simulateHydrogenOxygenFlash(state, room, zone, dt, definition);
+    if (flash) bursts.push(flash);
   }
 };
 
-const simulateHydrogenChlorideAbsorption = (
-  state: GameState,
-  room: RoomState,
-  dt: number,
-  definition: GameDefinition
-): void => {
-  const reaction = definition.reactions.hydrogen_chloride_absorption;
-  const behavior = reaction.behavior;
-  if (behavior.kind !== "absorption") throw new Error("Absorption reaction is misconfigured");
-  const inventory = roomReactionInventory(room, "lower");
-  const aqueousInventory = liquidTotal(room);
-  const solventFactor = clamp(aqueousInventory / behavior.solventInventoryScale, 0, 1);
-  const acidFraction = room.liquid.hydrochloric_acid / Math.max(aqueousInventory, 0.1);
-  const contactMultiplier = roomContactReactionMultiplier(room, definition);
-  const concentrationHeadroom =
-    Math.max(0, behavior.maximumProductFraction - acidFraction) * Math.max(aqueousInventory, 1);
-  const volumeHeadroom = roomLiquidHeadroom(room, definition);
-  const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, "lower"),
-    [
-      { kind: "condition", code: "aqueous_solvent", zone: "lower" },
-      behavior.maximumRate * solventFactor * contactMultiplier * dt,
-    ],
-    [{ kind: "condition", code: "product_concentration", zone: "lower" }, concentrationHeadroom],
-    [{ kind: "condition", code: "liquid_headroom", zone: "lower" }, volumeHeadroom],
-  ];
-  const absorbed = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, absorbed);
-  setTelemetry(room, "hydrogen_chloride_absorption", absorbed, dt, limitingFactor(candidates));
-  recordReaction(state, absorbed);
-};
+type RoomBehaviorKind = Exclude<ReactionBehaviorDefinition["kind"], "electrolysis">;
 
-const simulateNeutralization = (
-  state: GameState,
-  room: RoomState,
-  dt: number,
-  definition: GameDefinition
-): void => {
-  const reaction = definition.reactions.acid_neutralization;
-  const behavior = reaction.behavior;
-  if (behavior.kind !== "mixed_contact")
-    throw new Error("Neutralization reaction is misconfigured");
-  const inventory = roomReactionInventory(room, "lower");
-  const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
-  const contactMultiplier = roomContactReactionMultiplier(room, definition);
-  const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, "lower"),
-    [
-      { kind: "condition", code: "liquid_mixing", zone: "lower" },
-      behavior.maximumRate * mixing * contactMultiplier * dt,
-    ],
-  ];
-  const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted);
-  room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
-  setTelemetry(room, "acid_neutralization", reacted, dt, limitingFactor(candidates));
-  recordReaction(state, reacted);
-};
-
-const simulateHypochloriteFormation = (
-  state: GameState,
-  room: RoomState,
-  dt: number,
-  definition: GameDefinition
-): void => {
-  const reaction = definition.reactions.hypochlorite_formation;
-  const behavior = reaction.behavior;
-  if (behavior.kind !== "mixed_contact") throw new Error("Hypochlorite reaction is misconfigured");
-  const inventory = roomReactionInventory(room, "lower");
-  const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
-  const contactMultiplier = roomContactReactionMultiplier(room, definition);
-  const volumeHeadroom = roomLiquidHeadroom(room, definition);
-  const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, "lower"),
-    [
-      { kind: "condition", code: "liquid_mixing", zone: "lower" },
-      behavior.maximumRate * mixing * contactMultiplier * dt,
-    ],
-    [{ kind: "condition", code: "liquid_headroom", zone: "lower" }, volumeHeadroom],
-  ];
-  const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted);
-  room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
-  setTelemetry(room, "hypochlorite_formation", reacted, dt, limitingFactor(candidates));
-  recordReaction(state, reacted);
-};
-
-const simulateAcidChlorineRelease = (
-  state: GameState,
-  room: RoomState,
-  dt: number,
-  definition: GameDefinition
-): void => {
-  const reaction = definition.reactions.acid_chlorine_release;
-  const behavior = reaction.behavior;
-  if (behavior.kind !== "mixed_contact")
-    throw new Error("Chlorine release reaction is misconfigured");
-  const inventory = roomReactionInventory(room, "lower");
-  const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
-  const contactMultiplier = roomContactReactionMultiplier(room, definition);
-  const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, "lower"),
-    [
-      { kind: "condition", code: "liquid_mixing", zone: "lower" },
-      behavior.maximumRate * mixing * contactMultiplier * dt,
-    ],
-    [{ kind: "condition", code: "gas_headroom", zone: "lower" }, roomGasHeadroom(room, definition)],
-  ];
-  const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted);
-  room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
-  setTelemetry(room, "acid_chlorine_release", reacted, dt, limitingFactor(candidates));
-  recordReaction(state, reacted);
-  if (reacted > 0 && room.id === "washlock" && !hasEvent(state, "chlorine_evolution_started")) {
-    addEvent(state, "reaction", "chlorine_evolution_started", {}, "washlock");
-  }
-};
+export const ROOM_REACTION_STRATEGIES: Readonly<Record<RoomBehaviorKind, RoomReactionStrategy>> =
+  Object.freeze({
+    flash: simulateFlash,
+    gas_recombination: simulateGasRecombination,
+    absorption: simulateAbsorption,
+    mixed_contact: simulateMixedContact,
+  });
 
 const simulatePhaseChanges = (room: RoomState, dt: number, definition: GameDefinition): void => {
   if (room.temperature > 100 && room.liquid.water > 0.05) {
@@ -299,18 +285,19 @@ const simulateRoomChemistry = (
   bursts: HazardBurst[],
   definition: GameDefinition
 ): void => {
-  for (const reactionId of ROOM_REACTION_IDS) room.reactions[reactionId].lastRate = 0;
+  for (const telemetry of Object.values(room.reactions)) telemetry.lastRate = 0;
   room.pressurePulse = Math.max(0, room.pressurePulse - PRESSURE_PULSE_DECAY_PER_SECOND * dt);
-  for (const zone of GAS_ZONES) {
-    room.flashCooldown[zone] = Math.max(0, room.flashCooldown[zone] - dt);
-    const flash = simulateHydrogenOxygenFlash(state, room, zone, dt, definition);
-    if (flash) bursts.push(flash);
-    simulateHydrogenChlorine(state, room, zone, dt, definition);
+  for (const reaction of Object.values(definition.reactions)) {
+    if (reaction.behavior.kind === "electrolysis") continue;
+    ROOM_REACTION_STRATEGIES[reaction.behavior.kind]({
+      state,
+      room,
+      reaction,
+      dt,
+      bursts,
+      definition,
+    });
   }
-  simulateHydrogenChlorideAbsorption(state, room, dt, definition);
-  simulateNeutralization(state, room, dt, definition);
-  simulateHypochloriteFormation(state, room, dt, definition);
-  simulateAcidChlorineRelease(state, room, dt, definition);
   simulatePhaseChanges(room, dt, definition);
   const baseline = definition.rooms[room.id].ambientTemperature;
   room.temperature += (baseline - room.temperature) * 0.008 * dt;

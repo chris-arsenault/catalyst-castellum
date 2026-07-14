@@ -1,6 +1,6 @@
 import { Plus, PackageOpen } from "lucide-react";
 import { useCallback } from "react";
-import { GAS_SOURCES, LIQUID_SOURCES, SPECIES_DEFINITIONS } from "../game/config";
+import { GAS_SOURCES, LIQUID_SOURCES, SPECIES_DEFINITIONS } from "../presentation/defaultGame";
 import { gasAmountTotal, liquidAmountTotal } from "../game/queries";
 import {
   GAS_SOURCE_IDS,
@@ -11,7 +11,9 @@ import {
   type LiquidSourceId,
 } from "../game/types";
 import { commandDecision as evaluateCommand } from "../presentation/selectors";
+import { commandRejectionCopy } from "../presentation/commandCopy";
 import { useGameStore } from "../application/store";
+import { sourceCopy } from "../presentation/entityCopy";
 
 const gasComposition = (gas: GasAmounts): string =>
   GAS_TYPES.filter((species) => gas[species] >= 0.005)
@@ -59,7 +61,7 @@ const Supply = (props: SupplyProps) => {
       <button
         type="button"
         disabled={!decision.allowed}
-        title={decision.reason ?? `Restock ${props.formula}`}
+        title={commandRejectionCopy(decision) ?? `Restock ${props.formula}`}
         aria-label={`Restock ${props.name}`}
         onClick={charge}
       >
@@ -93,7 +95,7 @@ const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
       chargeCost={source.chargeCost}
       detail={gasComposition(gas)}
       formula={source.formula}
-      name={source.name}
+      name={sourceCopy(source).name}
       sourceId={sourceId}
       sourceKind="gas"
     />
@@ -113,7 +115,7 @@ const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
       chargeCost={source.chargeCost}
       detail={`${source.formula} ${amount.toFixed(1)}`}
       formula={source.formula}
-      name={source.name}
+      name={sourceCopy(source).name}
       sourceId={sourceId}
       sourceKind="liquid"
     />

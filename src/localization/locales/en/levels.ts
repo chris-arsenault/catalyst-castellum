@@ -1,0 +1,87 @@
+export const LEVEL_MESSAGES = {
+  "levels.flash_point.name": "Flash Point",
+  "levels.flash_point.kicker": "Lesson 01 · Build one dangerous room",
+  "levels.flash_point.briefing":
+    "The Core starter header holds H₂ and O₂ near their combustion ratio. Its gas duct reaches R-02, a chamber on the hostile route; the fan begins offline.",
+  "levels.flash_point.lesson":
+    "Install agitation in R-02, start its gas fan, and use transport delay to charge a repeating combustion attack.",
+  "levels.make_the_reagent.name": "Make the Reagent",
+  "levels.make_the_reagent.kicker": "Lesson 02 · One reaction, one junction",
+  "levels.make_the_reagent.briefing":
+    "A Core–R-05 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The cell brings separated product buffers into R-05’s gas and liquid junctions.",
+  "levels.make_the_reagent.lesson":
+    "The membrane cell produces Cl₂, H₂, and NaOH together. Outlet pressure and shared-junction flow determine how long the cell can sustain production.",
+  "levels.acid_line.name": "Acid Line",
+  "levels.acid_line.kicker": "Lesson 03 · Turn a mixed output into a second reaction",
+  "levels.acid_line.briefing":
+    "R-05 stores Cl₂ and H₂ in separated buffers, then combines them at its gas junction for routing. R-02 and the R-04 return await commissioning.",
+  "levels.acid_line.lesson":
+    "Heat and agitation turn the transported H₂/Cl₂ mixture into HCl. Route length and shared inventory determine when it reaches the wave.",
+  "levels.stored_chlorine.name": "Stored Chlorine",
+  "levels.stored_chlorine.kicker": "Lesson 04 · Build a delayed second-order weapon",
+  "levels.stored_chlorine.briefing":
+    "The acid line is commissioned. R-03 can bind chlorine as NaOCl, then transfer its stored liquid to R-06.",
+  "levels.stored_chlorine.lesson":
+    "A wet contactor forms NaOCl in R-03. Pumping that stored liquid into acidic R-06 releases Cl₂ and leaves its byproducts in the chamber.",
+  "levels.commissioning_exam.name": "Commissioning Exam",
+  "levels.commissioning_exam.kicker": "Checkpoint 05 · Full process plant",
+  "levels.commissioning_exam.briefing":
+    "The full plant is commissioned: rooms, junctions, and conduits follow their physical routes and carry mixed inventories.",
+  "levels.commissioning_exam.lesson":
+    "Balance finite feedstocks, mixed junctions, conduit capacity, acid production, stored oxidizer, relief, and persistent waste over three assaults.",
+  "levels.flash_point.rounds.first_spark.title": "First spark",
+  "levels.flash_point.rounds.first_spark.detail":
+    "Ten crawlers are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
+  "levels.flash_point.rounds.first_spark.objective":
+    "Install a Gas Agitator in R-02 and switch on the Core–R-02 gas duct.",
+  "levels.flash_point.rounds.stored_momentum.title": "Stored momentum",
+  "levels.flash_point.rounds.stored_momentum.detail":
+    "A faster follow-up tests the chamber inventory and the timing of its discrete flash cycle.",
+  "levels.flash_point.rounds.stored_momentum.objective":
+    "Run the established R-02 cycle and inspect each incident before adjusting it.",
+  "levels.make_the_reagent.rounds.co_products.title": "Co-products",
+  "levels.make_the_reagent.rounds.co_products.detail":
+    "A crawler column will cross R-03 as the R-05 gas stream arrives.",
+  "levels.make_the_reagent.rounds.co_products.objective":
+    "Install the Membrane Cell and observe all three conserved outputs.",
+  "levels.make_the_reagent.rounds.shared_relief.title": "Shared relief",
+  "levels.make_the_reagent.rounds.shared_relief.detail":
+    "The R-05 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
+  "levels.make_the_reagent.rounds.shared_relief.objective":
+    "Use the R-05 recovery fan when shared outlet pressure stalls the cell.",
+  "levels.acid_line.rounds.hot_mix.title": "Hot mix",
+  "levels.acid_line.rounds.hot_mix.detail":
+    "Armored shells demand a concentrated corrosive or thermal exposure.",
+  "levels.acid_line.rounds.hot_mix.objective":
+    "Equip R-02, start the mixed-gas feed, and build the downstream return.",
+  "levels.acid_line.rounds.residence_time.title": "Residence time",
+  "levels.acid_line.rounds.residence_time.detail":
+    "Skimmers race the inventory retained in the physical headers.",
+  "levels.acid_line.rounds.residence_time.objective":
+    "Read conduit fill and room conditions; adjust the limiting run.",
+  "levels.stored_chlorine.rounds.store.title": "Store the oxidizer",
+  "levels.stored_chlorine.rounds.store.detail":
+    "A slow armored wave crosses R-03 while its first NaOCl inventory forms.",
+  "levels.stored_chlorine.rounds.store.objective":
+    "Install a Wet Contactor in R-03 and monitor the forming liquid inventory.",
+  "levels.stored_chlorine.rounds.release.title": "Move, then release",
+  "levels.stored_chlorine.rounds.release.detail":
+    "The R-03–R-06 pipe now carries the persisted stored mixture into acid.",
+  "levels.stored_chlorine.rounds.release.objective":
+    "Build and enable the transfer, then inspect delayed Cl₂ release in R-06.",
+  "levels.commissioning_exam.rounds.commissioning_1.title": "Chlorine contact trial",
+  "levels.commissioning_exam.rounds.commissioning_1.detail":
+    "Eight crawlers test whether acid and hypochlorite reach R-06 early enough to establish chlorine evolution.",
+  "levels.commissioning_exam.rounds.commissioning_1.objective":
+    "Tune the plant’s coupled flows, then lock it for assault.",
+  "levels.commissioning_exam.rounds.commissioning_2.title": "Residence-time trial",
+  "levels.commissioning_exam.rounds.commissioning_2.detail":
+    "Skimmers and floaters punish long, under-filled headers and a contact room that acidifies too late.",
+  "levels.commissioning_exam.rounds.commissioning_2.objective":
+    "Tune the plant’s coupled flows, then lock it for assault.",
+  "levels.commissioning_exam.rounds.commissioning_3.title": "Corrosion balance trial",
+  "levels.commissioning_exam.rounds.commissioning_3.detail":
+    "Gas-resistant bellows and armored shells require useful HCl, NaOH, and NaOCl exposure as well as Cl₂.",
+  "levels.commissioning_exam.rounds.commissioning_3.objective":
+    "Tune the plant’s coupled flows, then lock it for assault.",
+} as const;

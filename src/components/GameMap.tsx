@@ -1,7 +1,7 @@
 import { Application, extend } from "@pixi/react";
 import { Container, Graphics, Text } from "pixi.js";
 import { useState } from "react";
-import { FACILITY_MAP, ROOM_ORDER } from "../game/config";
+import { FACILITY_MAP, ROOM_ORDER } from "../presentation/defaultGame";
 import type { GameState, RoomId, SpeciesId, TransportRunId } from "../game/types";
 import { EnemyNode } from "./gameMap/EnemyNode";
 import { DamageNumberLayer } from "./gameMap/DamageNumberLayer";

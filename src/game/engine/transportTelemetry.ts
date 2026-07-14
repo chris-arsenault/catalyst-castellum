@@ -21,7 +21,6 @@ export interface SpeciesRate {
 
 export interface TransportChannelTelemetry {
   id: string;
-  name: string;
   phase: TransportPhase;
   fromRoom: RoomId;
   toRoom: RoomId;
@@ -74,7 +73,6 @@ const phaseChannel = (
         }));
   return {
     id: `${runId}:${phase}`,
-    name: definition.name,
     phase,
     fromRoom: definition.direction[0],
     toRoom: definition.direction[1],

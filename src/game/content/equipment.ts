@@ -3,9 +3,6 @@ import type { EquipmentDefinition, EquipmentId } from "../types";
 export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
   gas_agitator: {
     id: "gas_agitator",
-    name: "Gas agitator",
-    description:
-      "Recirculates the upper and lower gas layers, accelerating eligible gas reactions and combustible mixtures.",
     accent: "#65cfc4",
     buildCost: 12,
     upgradeCosts: [10, 17],
@@ -30,9 +27,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
   },
   wet_contactor: {
     id: "wet_contactor",
-    name: "Wet contactor",
-    description:
-      "Drives gas–liquid contact and liquid mixing, accelerating every eligible contact reaction.",
     accent: "#5e92e3",
     buildCost: 14,
     upgradeCosts: [12, 20],
@@ -57,9 +51,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
   },
   thermal_coil: {
     id: "thermal_coil",
-    name: "Thermal coil",
-    description:
-      "Heats the room and both gas layers toward a fixed equipment rating, accelerating temperature-dependent chemistry.",
     accent: "#f58844",
     buildCost: 10,
     upgradeCosts: [9, 16],
@@ -84,9 +75,6 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
   },
   membrane_cell: {
     id: "membrane_cell",
-    name: "Membrane cell",
-    description:
-      "Electrolyzes NaCl and water into separated Cl₂, H₂, and NaOH outlets at its installed grade.",
     accent: "#c5f540",
     buildCost: 20,
     upgradeCosts: [17, 28],

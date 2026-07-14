@@ -1,11 +1,13 @@
 import { ArrowRightLeft, Droplets, Plus, Trash2, Wind } from "lucide-react";
 import { useCallback } from "react";
-import { ROOM_DEFINITIONS, TRANSPORT_RUNS } from "../../game/config";
+import { ROOM_DEFINITIONS, TRANSPORT_RUNS } from "../../presentation/defaultGame";
 import { transportPhaseAvailable } from "../../game/queries";
 import { commandDecision as evaluateCommand } from "../../presentation/selectors";
+import { commandRejectionCopy } from "../../presentation/commandCopy";
 import { useGameStore } from "../../application/store";
 import type { GameState, TransportPhase, TransportRunId } from "../../game/types";
 import { ConduitActuator } from "./ActuatorControls";
+import { roomCopy } from "../../presentation/entityCopy";
 
 interface PhaseModel {
   installed: boolean;
@@ -58,7 +60,7 @@ const PhaseAction = ({
       <button
         type="button"
         disabled={!decision.allowed}
-        title={decision.reason ?? undefined}
+        title={commandRejectionCopy(decision) ?? undefined}
         aria-label={`Dismantle ${phase} conduit`}
         onClick={dismantle}
       >
@@ -70,7 +72,7 @@ const PhaseAction = ({
     <button
       type="button"
       disabled={!decision.allowed}
-      title={decision.reason ?? undefined}
+      title={commandRejectionCopy(decision) ?? undefined}
       data-testid={`build-${runId}-${phase}`}
       onClick={build}
     >
@@ -124,7 +126,7 @@ export const TransportRunPanel = ({ runId }: { runId: TransportRunId }) => {
           <strong>
             {ROOM_DEFINITIONS[roomId].code} ⇄ {ROOM_DEFINITIONS[otherRoom].code}
           </strong>
-          <small>{ROOM_DEFINITIONS[otherRoom].name}</small>
+          <small>{roomCopy(ROOM_DEFINITIONS[otherRoom]).name}</small>
         </div>
       </div>
       <TransportPhasePanel phase="gas" runId={runId} />

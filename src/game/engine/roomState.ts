@@ -160,7 +160,10 @@ const cloneCombatState = (
         killsBySource: { ...state.lastReport.killsBySource },
       }
     : null,
-  events: state.events.map((event) => ({ ...event, parameters: { ...event.parameters } })),
+  events: state.events.map((event) => ({
+    ...event,
+    parameters: { ...event.parameters },
+  })) as GameState["events"],
   incidents: state.incidents.map((incident) => ({
     ...incident,
     damageByChannel: cloneHazards(incident.damageByChannel),

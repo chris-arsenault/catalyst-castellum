@@ -3,8 +3,6 @@ import type { EnemyDefinition, EnemyType, WaveEntry } from "../types";
 export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
   crawler: {
     type: "crawler",
-    name: "Crawler",
-    description: "Baseline oxygen-breathing organic with little environmental protection.",
     health: 74,
     speed: 0.105,
     coreDamage: 10,
@@ -20,12 +18,10 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     color: "#e5c675",
     residueOnDeath: 3,
     matterYield: 5,
+    presentation: { appearance: "crawler", manualIcon: "bug" },
   },
   skimmer: {
     type: "skimmer",
-    name: "Skimmer",
-    description:
-      "Fast organic that can outrun a chlorine front still propagating through long lines.",
     health: 58,
     speed: 0.19,
     coreDamage: 8,
@@ -41,12 +37,10 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     color: "#f78f61",
     residueOnDeath: 2,
     matterYield: 5,
+    presentation: { appearance: "skimmer", manualIcon: "wind" },
   },
   floater: {
     type: "floater",
-    name: "Floater",
-    description:
-      "Airborne organism that avoids liquid contact but remains vulnerable to room gases.",
     health: 72,
     speed: 0.145,
     coreDamage: 9,
@@ -62,11 +56,10 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     color: "#a07be4",
     residueOnDeath: 2,
     matterYield: 6,
+    presentation: { appearance: "floater", manualIcon: "bird" },
   },
   shell: {
     type: "shell",
-    name: "Shell",
-    description: "Mineral armor resists atmospheric exposure but fails under corrosive liquids.",
     health: 132,
     speed: 0.078,
     coreDamage: 16,
@@ -82,12 +75,10 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     color: "#8dafb2",
     residueOnDeath: 5,
     matterYield: 9,
+    presentation: { appearance: "shell", manualIcon: "shield" },
   },
   bellows: {
     type: "bellows",
-    name: "Bellows",
-    description:
-      "Large respiratory volume resists atmosphere hazards but is vulnerable to corrosion and shock.",
     health: 112,
     speed: 0.09,
     coreDamage: 14,
@@ -103,6 +94,7 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     color: "#e75667",
     residueOnDeath: 7,
     matterYield: 10,
+    presentation: { appearance: "bellows", manualIcon: "snail" },
   },
 };
 
@@ -126,22 +118,4 @@ export const COMMISSIONING_WAVES: WaveEntry[][] = [
   [...enemySequence(4, "bellows", 0.5, 2.5), ...enemySequence(5, "shell", 2, 2.3)].sort(
     (left, right) => left.at - right.at
   ),
-];
-
-export const COMMISSIONING_WAVE_BRIEFS = [
-  {
-    title: "Chlorine contact trial",
-    detail:
-      "Eight crawlers test whether acid and hypochlorite reach R-06 early enough to establish chlorine evolution.",
-  },
-  {
-    title: "Residence-time trial",
-    detail:
-      "Skimmers and floaters punish long, under-filled headers and a contact room that acidifies too late.",
-  },
-  {
-    title: "Corrosion balance trial",
-    detail:
-      "Gas-resistant bellows and armored shells require useful HCl, NaOH, and NaOCl exposure as well as Cl₂.",
-  },
 ];

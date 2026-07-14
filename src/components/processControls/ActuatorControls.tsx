@@ -9,7 +9,7 @@ import {
   ROOM_DEFINITIONS,
   SPECIES_DEFINITIONS,
   TRANSPORT_RUNS,
-} from "../../game/config";
+} from "../../presentation/defaultGame";
 import {
   conduitCapacity,
   gasAmountTotal,
@@ -32,6 +32,7 @@ import {
   type TransportRunId,
 } from "../../game/types";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
+import { bufferCopy, transportCopy } from "../../presentation/entityCopy";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -224,7 +225,7 @@ export const ConduitActuator = ({
   return (
     <div className={`actuator-row ${conduit.blocked ? "blocked" : ""}`}>
       <div className="actuator-copy">
-        <strong>{definition.name}</strong>
+        <strong>{transportCopy(runId, phase).name}</strong>
         <small>
           {from} → {to} · physical {readout.noun} · rated {definition.maxFlow.toFixed(2)}
         </small>
@@ -258,7 +259,7 @@ export const OutletBuffers = () => {
   const entries = [
     {
       id: "anode",
-      name: GAS_BUFFERS.anode_header.name,
+      name: bufferCopy(GAS_BUFFERS.anode_header).name,
       amount: gasAmountTotal(anode),
       capacity: GAS_BUFFERS.anode_header.capacity,
       composition: dominantGasInLine(anode),
@@ -266,7 +267,7 @@ export const OutletBuffers = () => {
     },
     {
       id: "cathode",
-      name: GAS_BUFFERS.cathode_header.name,
+      name: bufferCopy(GAS_BUFFERS.cathode_header).name,
       amount: gasAmountTotal(cathode),
       capacity: GAS_BUFFERS.cathode_header.capacity,
       composition: dominantGasInLine(cathode),
@@ -274,7 +275,7 @@ export const OutletBuffers = () => {
     },
     {
       id: "liquor",
-      name: LIQUID_BUFFERS.cell_liquor.name,
+      name: bufferCopy(LIQUID_BUFFERS.cell_liquor).name,
       amount: liquidAmountTotal(liquor),
       capacity: LIQUID_BUFFERS.cell_liquor.capacity,
       composition: dominantLiquidInLine(liquor),
