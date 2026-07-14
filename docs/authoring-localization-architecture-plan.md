@@ -5,9 +5,16 @@ Status: active implementation ledger
 Progress:
 
 - Phase 1: complete (definition-neutral engine, bound runtime/query/presentation selectors)
-- Phase 2: in progress (V12 pack identity and definition-aware codec complete; authoring compiler and
-  modular level registry remain)
-- Phases 3-6: pending
+- Phase 2: complete (compiler, immutable packs, V12 identity, modular levels, health-plan split)
+- Phase 3: complete (reaction strategies, dynamic telemetry, enemy archetypes, guide registry and
+  typed conditions, authored featured-reaction gates)
+- Phase 4: in progress (typed locale, formatters, command/event payloads, entities, levels, events,
+  manual and presentation copy, validation/export complete; remaining static UI and tutorial prose
+  migration is the active work)
+- Phase 5: in progress (bound presentation/application composition and forbidden component imports
+  complete; remaining raw component projections move behind presentation models with the copy pass)
+- Phase 6: in progress (architecture/copy/locale checks and extension fixtures complete;
+  documentation and final CI/browser verification remain)
 
 This plan turns the 2026-07 architecture review into an enforceable repository design. It is the
 durable source of truth for the migration and must be updated as implementation discoveries change

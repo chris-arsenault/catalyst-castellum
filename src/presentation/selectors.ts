@@ -7,6 +7,7 @@ import type {
   RoomState,
 } from "../game/types";
 import { hazardLabel, roomEffects, type HazardLabel } from "./roomCopy";
+import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 
 export interface RoomViewModel extends RoomAnalysis {
   hazardLabel: HazardLabel;
@@ -15,7 +16,10 @@ export interface RoomViewModel extends RoomAnalysis {
 
 const commandKey = (command: GameCommand): string => JSON.stringify(command);
 
-export const createPresentationSelectors = (runtime: GameRuntime) => {
+export const createPresentationSelectors = (
+  runtime: GameRuntime,
+  translator: Translator = DEFAULT_TRANSLATOR
+) => {
   const roomAnalysisCache = new WeakMap<RoomState, RoomViewModel>();
   const commandDecisionCache = new WeakMap<GameState, Map<string, CommandDecision>>();
 
@@ -31,7 +35,7 @@ export const createPresentationSelectors = (runtime: GameRuntime) => {
       const analysis = {
         ...raw,
         hazardLabel: hazardLabel(raw.hazard),
-        effects: roomEffects(room, runtime.definition, runtime.queries),
+        effects: roomEffects(room, runtime.definition, runtime.queries, translator),
       };
       roomAnalysisCache.set(room, analysis);
       return analysis;

@@ -16,13 +16,13 @@ import type {
   StoreSet,
 } from "./storeTypes";
 import { createUiActions } from "./uiSlice";
-import { commandRejectionCopy } from "../presentation/commandCopy";
+import { DEFAULT_GAME_PRESENTATION } from "../presentation/services";
 
 export type { GameStore, GameStoreDependencies } from "./storeTypes";
 
 const browserDependencies: GameStoreDependencies = {
   runtime: DEFAULT_GAME_RUNTIME,
-  commandCopy: commandRejectionCopy,
+  presentation: DEFAULT_GAME_PRESENTATION,
   loadSlots: loadSaveSlots,
   clearSlot: clearSaveSlot,
   scheduleSave: scheduleGameSave,

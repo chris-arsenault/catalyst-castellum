@@ -13,6 +13,7 @@ export const ACID_LINE_LEVEL: LevelDefinition = {
   id: "acid_line",
   number: 3,
   focusRoomId: "furnace",
+  featuredReactionIds: ["hydrogen_chlorine_recombination"],
   startingMatter: 42,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",

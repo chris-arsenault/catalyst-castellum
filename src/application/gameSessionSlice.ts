@@ -14,7 +14,7 @@ export const createGameSessionActions = (
     const current = get().game;
     const result = dependencies.runtime.execute(current, command);
     if (!result.accepted) {
-      set({ notice: dependencies.commandCopy(result) });
+      set({ notice: dependencies.presentation.commandCopy(result) });
       return false;
     }
     const game = result.state;

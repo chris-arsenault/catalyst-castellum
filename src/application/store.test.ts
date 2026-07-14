@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import { emptySaveSlotCatalog, type SaveSlotRecord } from "./saveSlots";
 import { createGameStoreState, type GameStore, type GameStoreDependencies } from "./store";
-import { commandRejectionCopy } from "../presentation/commandCopy";
+import { DEFAULT_GAME_PRESENTATION } from "../presentation/services";
 
 const dependencies = (overrides: Partial<GameStoreDependencies> = {}): GameStoreDependencies => ({
   runtime: DEFAULT_GAME_RUNTIME,
-  commandCopy: commandRejectionCopy,
+  presentation: DEFAULT_GAME_PRESENTATION,
   loadSlots: vi.fn(emptySaveSlotCatalog),
   clearSlot: vi.fn(),
   scheduleSave: vi.fn(),

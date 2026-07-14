@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { useGameStore } from "../application/store";
 import { hydrogenOxygenFlashStatus } from "../game/queries";
+import type { RoomId } from "../game/types";
 
 const formatPercent = (value: number): string => {
   if (value > 0 && value < 0.001) return "<0.1%";
@@ -24,9 +25,9 @@ const IgnitionCondition = ({
   </span>
 );
 
-export const OxidizerIgnitionGate = () => {
+export const OxidizerIgnitionGate = ({ roomId }: { roomId: RoomId }) => {
   const game = useGameStore((state) => state.game);
-  const room = game.rooms.furnace;
+  const room = game.rooms[roomId];
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenOxygenFlashStatus(room, zone)
   );

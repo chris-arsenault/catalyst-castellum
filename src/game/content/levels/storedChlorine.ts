@@ -7,6 +7,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   id: "stored_chlorine",
   number: 4,
   focusRoomId: "reservoir",
+  featuredReactionIds: ["hypochlorite_formation", "acid_chlorine_release"],
   startingMatter: 42,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",

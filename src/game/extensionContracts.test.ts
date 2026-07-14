@@ -32,7 +32,7 @@ describe("definition extension contracts", () => {
     };
 
     expect(roomGasMixingRate(state.rooms.furnace, definition)).toBe(9);
-    expect(equipmentGradeEffect(grade)).toBe("9.0 layer exchange · 4.0× gas kinetics");
+    expect(equipmentGradeEffect(grade)).toBe("9 layer exchange · 4× gas kinetics");
   });
 
   it("adds or removes species hazard policy without a physics branch", () => {

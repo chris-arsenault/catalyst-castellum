@@ -1,9 +1,12 @@
-.PHONY: ci architecture-check performance-check lint lint-fix format format-check typecheck test build campaign-health terraform-fmt-check deploy
+.PHONY: ci architecture-check copy-check performance-check lint lint-fix format format-check typecheck test build campaign-health terraform-fmt-check deploy
 
-ci: architecture-check performance-check lint format-check typecheck test build campaign-health terraform-fmt-check
+ci: architecture-check copy-check performance-check lint format-check typecheck test build campaign-health terraform-fmt-check
 
 architecture-check:
 	pnpm run architecture:check
+
+copy-check:
+	pnpm run copy:check
 
 performance-check:
 	pnpm run performance:check

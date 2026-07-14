@@ -12,6 +12,7 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
   id: "flash_point",
   number: 1,
   focusRoomId: "furnace",
+  featuredReactionIds: ["hydrogen_oxygen_combustion"],
   startingMatter: 16,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",

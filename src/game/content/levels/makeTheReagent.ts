@@ -18,6 +18,7 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   id: "make_the_reagent",
   number: 2,
   focusRoomId: "lower_intake",
+  featuredReactionIds: ["chlor_alkali_electrolysis"],
   startingMatter: 28,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",

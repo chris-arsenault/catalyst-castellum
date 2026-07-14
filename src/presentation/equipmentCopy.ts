@@ -1,20 +1,34 @@
 import type { EquipmentGradeDefinition } from "../game/types";
+import { DEFAULT_FORMATTERS, type LocaleFormatters } from "../localization/formatters";
+import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 
-const decimal = (value: number): string =>
-  value.toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 1 });
+export const createEquipmentGradeEffect =
+  (translator: Translator, formatters: LocaleFormatters) =>
+  (grade: EquipmentGradeDefinition): string => {
+    const behavior = grade.behavior;
+    switch (behavior.kind) {
+      case "gas_agitator":
+        return translator.text("presentation.equipment.agitator", {
+          exchange: formatters.number(behavior.layerExchangeRate),
+          kinetics: formatters.number(behavior.reactionMultiplier),
+        });
+      case "wet_contactor":
+        return translator.text("presentation.equipment.contactor", {
+          kinetics: formatters.number(behavior.reactionMultiplier),
+        });
+      case "thermal_coil":
+        return translator.text("presentation.equipment.coil", {
+          temperature: formatters.number(behavior.targetTemperature),
+        });
+      case "membrane_cell":
+        return translator.text("presentation.equipment.cell", {
+          rate: formatters.number(behavior.processRate),
+          power: formatters.number(behavior.powerDraw),
+        });
+    }
+  };
 
-export const equipmentGradeEffect = (grade: EquipmentGradeDefinition): string => {
-  const behavior = grade.behavior;
-  switch (behavior.kind) {
-    case "gas_agitator":
-      return `${decimal(behavior.layerExchangeRate)} layer exchange · ${decimal(
-        behavior.reactionMultiplier
-      )}× gas kinetics`;
-    case "wet_contactor":
-      return `${decimal(behavior.reactionMultiplier)}× contact kinetics`;
-    case "thermal_coil":
-      return `${behavior.targetTemperature}°C rated temperature`;
-    case "membrane_cell":
-      return `${behavior.processRate.toFixed(2)} mol-eq/s · ${behavior.powerDraw} kW-eq`;
-  }
-};
+export const equipmentGradeEffect = createEquipmentGradeEffect(
+  DEFAULT_TRANSLATOR,
+  DEFAULT_FORMATTERS
+);

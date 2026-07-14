@@ -1,6 +1,7 @@
 import { Check } from "lucide-react";
 import { useGameStore } from "../application/store";
 import { hydrogenChlorineReactionStatus } from "../game/queries";
+import type { RoomId } from "../game/types";
 
 const formatAmount = (value: number): string =>
   value > 0 && value < 0.01 ? "<0.01 mol-eq" : `${value.toFixed(2)} mol-eq`;
@@ -21,8 +22,8 @@ const ReactionCondition = ({
   </span>
 );
 
-export const HydrogenChlorineGate = () => {
-  const room = useGameStore((state) => state.game.rooms.furnace);
+export const HydrogenChlorineGate = ({ roomId }: { roomId: RoomId }) => {
+  const room = useGameStore((state) => state.game.rooms[roomId]);
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenChlorineReactionStatus(room, zone)
   );

@@ -124,10 +124,30 @@ facility, materials, reactions, equipment, hazards, transport, enemies, and camp
 browser and headless adapters share one scoped runtime, while tests can run a second definition in
 the same process.
 
-Save V11 is structurally decoded, migrated from supported V7–V10 formats, then semantically
-validated before execution. Browser restoration is explicit application initialization rather than
-an import side effect. See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership, extension, performance,
-and CI contracts.
+Save V12 identifies its owning game pack and content version, is structurally decoded, migrates
+supported V7–V11 formats, and is semantically validated before execution. A runtime rejects saves
+owned by another pack. Browser restoration is explicit application initialization rather than an
+import side effect. See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership, extension, localization,
+performance, and CI contracts.
+
+## Authoring and copy workflows
+
+Levels live in separate modules under `src/game/content/levels/` and enter campaign order through an
+explicit registry. Mechanical definitions carry stable IDs and numerical rules; player-facing
+names, briefings, entity descriptions, command rejections, events, manual entries, and presentation
+readouts live under `src/localization/locales/en/`. The pack compiler rejects broken references,
+unbalanced reactions, invalid routes/loadouts, and noncumulative round availability before a
+scenario starts.
+
+```bash
+pnpm locales:check   # missing/extra keys and placeholder parity
+pnpm copy:check      # player-copy ownership at the engine/content boundary
+pnpm copy:export     # context-grouped English review document on stdout
+```
+
+New ordinary reactions select an existing authored behavior strategy; new enemies select an
+existing appearance and manual-icon archetype. Those additions require definition and locale work,
+not engine or component branches. `ARCHITECTURE.md` contains the exact extension checklists.
 
 Gas conduits, liquid conduits, and monster corridors are independent networks in the MVP. Feedstock
 tanks, the vent, and liquid recovery are distinct ports hosted by the Core utility manifold; their

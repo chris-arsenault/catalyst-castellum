@@ -8,6 +8,12 @@ export const COMMISSIONING_EXAM_LEVEL: LevelDefinition = {
   id: "commissioning_exam",
   number: 5,
   focusRoomId: "lower_intake",
+  featuredReactionIds: [
+    "chlor_alkali_electrolysis",
+    "hydrogen_chlorine_recombination",
+    "hypochlorite_formation",
+    "acid_chlorine_release",
+  ],
   startingMatter: 58,
   startingCoreIntegrity: 100,
   assaultTheme: "boss",

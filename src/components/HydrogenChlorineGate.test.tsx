@@ -13,7 +13,7 @@ describe("hydrogen-chlorine reaction gate", () => {
     if (!entered.accepted) throw new Error(entered.code ?? "Acid Line entry failed");
     useGameStore.setState({ game: entered.state });
 
-    render(<HydrogenChlorineGate />);
+    render(<HydrogenChlorineGate roomId="furnace" />);
 
     expect(screen.getByTestId("cl2-reaction-gate").textContent).toContain("CL-2 reaction gate");
     expect(screen.getByTestId("cl2-reaction-upper").textContent).toContain("38°C");

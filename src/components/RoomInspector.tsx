@@ -5,6 +5,7 @@ import {
   GAS_LABELS,
   LIQUID_COLORS,
   LIQUID_LABELS,
+  LEVEL_DEFINITIONS,
   REACTION_DEFINITIONS,
   ROOM_DEFINITIONS,
   SPECIES_DEFINITIONS,
@@ -15,8 +16,8 @@ import { limitingFactorCopy } from "../presentation/limitingFactorCopy";
 import { roomAnalysis } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
-import { GAS_TYPES, LIQUID_TYPES, ROOM_REACTION_IDS } from "../game/types";
-import type { GasZone } from "../game/types";
+import { GAS_TYPES, LIQUID_TYPES } from "../game/types";
+import type { GasZone, ReactionId, RoomId, RoomReactionId } from "../game/types";
 import { ArchitecturalConnections } from "./ArchitecturalConnections";
 import { HydrogenChlorineGate } from "./HydrogenChlorineGate";
 import { OxidizerIgnitionGate } from "./OxidizerIgnitionGate";
@@ -217,12 +218,27 @@ const EffectsPanel = () => {
   );
 };
 
+const ReactionGate = ({ reactionId, roomId }: { reactionId: ReactionId; roomId: RoomId }) => {
+  const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+  if (behavior.kind === "flash") return <OxidizerIgnitionGate roomId={roomId} />;
+  if (behavior.kind === "gas_recombination") return <HydrogenChlorineGate roomId={roomId} />;
+  return null;
+};
+
 const ReactionPanel = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
   const telemetry = room.reactions;
-  const active = ROOM_REACTION_IDS.filter((reactionId) => telemetry[reactionId].lastRate > 0.001);
+  const active = Object.entries(telemetry) as [
+    RoomReactionId,
+    (typeof telemetry)[RoomReactionId],
+  ][];
+  const activeReactionIds = active
+    .filter(([, reading]) => reading.lastRate > 0.001)
+    .map(([reactionId]) => reactionId);
+  const level = LEVEL_DEFINITIONS[game.campaign.levelId];
+  const featured = roomId === level.focusRoomId ? level.featuredReactionIds : [];
 
   return (
     <section
@@ -236,13 +252,14 @@ const ReactionPanel = () => {
         <h3>Measured room chemistry</h3>
         <FlaskConical size={15} />
       </div>
-      {roomId === "furnace" && game.campaign.levelId === "flash_point" && <OxidizerIgnitionGate />}
-      {roomId === "furnace" && game.campaign.levelId === "acid_line" && <HydrogenChlorineGate />}
-      {active.length === 0 ? (
+      {featured.map((reactionId) => (
+        <ReactionGate key={reactionId} reactionId={reactionId} roomId={roomId} />
+      ))}
+      {activeReactionIds.length === 0 ? (
         <p className="no-reaction">Reaction rate idle in this sample.</p>
       ) : (
         <div className="reaction-rate-list">
-          {active.map((reactionId) => {
+          {activeReactionIds.map((reactionId) => {
             const reaction = REACTION_DEFINITIONS[reactionId];
             const reading = telemetry[reactionId];
             return (

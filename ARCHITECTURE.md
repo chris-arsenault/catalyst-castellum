@@ -7,31 +7,38 @@ chosen.
 ## Direction of dependency
 
 ```text
-content ──> definition ──> engine ──> runtime / queries
-                               │              │
-                               │              v
-                               └────> presentation ──> application ──> React / Pixi
-                                          save codec ──> browser persistence
+authored pack -> compiler -> immutable definition -> engine runtime / queries
+      |                                      |                 |
+      +-> reference health plans             +-> save codec    v
+locale bundle -> typed translator/formatters -> presentation services -> application -> React/Pixi
 ```
 
-- `src/game/content/**` authors the default facility, campaign, species, reaction, equipment,
-  process, hazard, and transport definitions.
-- `src/game/definition.ts` composes those catalogs into an immutable `GameDefinition`. Facility
-  caches are scoped to that definition.
+- `src/game/content/**` authors mechanics only. Each level owns one module, campaign order is an
+  explicit registry, and reference playtest plans are separate health fixtures.
+- `src/game/authoring/compiler.ts` validates identities, references, reaction balance, routes,
+  loadouts, waves, cumulative availability, and featured reactions, then deep-freezes the pack.
+- `src/game/definition.ts` composes the default `GamePackSource` into an immutable
+  `GameDefinition`. Facility caches are scoped to that definition.
 - `src/game/engine/**` owns deterministic mechanics. It has no React, Pixi, Zustand, DOM, or browser
   dependency.
 - `src/game/runtime.ts` is the public transition facade. A `GameRuntime` binds creation, command
   evaluation/execution, stepping, validation, and campaign queries to one definition.
 - `src/game/queries.ts` is the read-only application query facade. UI code may not import engine
   internals or the broad test-support `simulation.ts` barrel.
-- `src/presentation/**` converts structured domain values into copy and memoized view models.
-- `src/application/**` composes separate game-session and UI slices, explicit startup, browser
-  persistence scheduling, selection, help, notices, and tutorial progress.
+- `src/localization/**` owns typed locale bundles, placeholder validation, formatters, and English
+  copy for commands, entities, levels, events, manual content, and presentation readouts.
+- `src/presentation/**` binds a runtime and locale into event/command copy, catalogs, formatters,
+  and memoized view models. `defaultGame.ts` is the single default-pack composition seam.
+- `src/application/**` receives runtime and presentation services as dependencies and composes
+  game-session/UI slices, startup, persistence scheduling, selection, help, notices, and tutorial
+  progress.
 - `src/components/**` and `src/tutorial/**` render and dispatch; they do not author simulation
   policy.
 
-`pnpm architecture:check` enforces the dependency direction and rejects browser/UI imports from the
-domain and internal engine imports from application/UI code.
+`pnpm architecture:check` enforces the dependency direction, forbids default content/engine imports
+from application/UI code, and detects cross-layer module cycles. `pnpm copy:check` rejects display
+fields in mechanical content and current-locale prose in the engine. `pnpm locales:check` checks
+locale completeness and placeholder parity.
 
 ## Settled decisions
 
@@ -76,9 +83,10 @@ the same command decision model.
 
 ### Commands
 
-`evaluateCommand` produces the authoritative allowed/rejected result, stable rejection code,
-reason, cost, refund, and amount. Execution consumes that decision. UI and tutorial controls use
-memoized decision selectors and do not reproduce affordability, placement, phase, or refund rules.
+`evaluateCommand` produces the authoritative allowed/rejected result, stable rejection code, typed
+parameters, cost, refund, and amount. Execution consumes that decision. Presentation converts the
+code and values to locale copy. UI and tutorial controls use memoized decision selectors and do not
+reproduce affordability, placement, phase, refund, or rejection prose.
 
 ### Events and persisted copy
 
@@ -91,7 +99,8 @@ Historic labels are retained only in the explicit `legacy` compatibility variant
 
 ### Persistence and invalid saves
 
-Save V11 is current. V7–V10 remain readable through frozen compatibility schemas and migrations;
+Save V12 is current. Every state carries `{ pack.id, pack.contentVersion }`; a runtime rejects state
+owned by another pack. V7–V11 remain readable through frozen compatibility schemas and migrations;
 the conserving compatibility transforms are isolated in `persistence/legacySaveMigrations.ts`.
 The pipeline is:
 
@@ -139,12 +148,43 @@ decisions are cached per immutable snapshot/reference.
 
 ## Extension checklist
 
+### New level
+
+1. Add one rules module under `src/game/content/levels/`.
+2. Add it to the explicit ordered registry in `content/campaign.ts`.
+3. Add its English level/round keys under `src/localization/locales/en/levels.ts`.
+4. Add its reference health plan to `content/playtestPlans.ts`.
+5. Let pack compilation validate every enemy, route, loadout, availability, and reaction reference.
+
 ### Ordinary reaction
 
-1. Add the canonical ID and one definition with balanced participants and typed behavior tuning.
-2. Use the generic executor; add a strategy only for genuinely new phase/side-effect behavior.
+1. Add the canonical ID and one definition with balanced participants and a reusable behavior
+   strategy (`gas_recombination`, `absorption`, or `mixed_contact`).
+2. Use the generic executor; add a named strategy only for genuinely new phase/side-effect behavior.
 3. Add exact-delta and elemental-conservation tests.
-4. Add presentation copy only if a new behavior identity requires it.
+4. Add its entity/manual locale keys. A reaction using an existing strategy requires no engine or
+   component change.
+
+### Enemy
+
+1. Add the mechanical definition and choose a reusable `presentation.appearance` and `manualIcon`.
+2. Add entity/manual locale keys and use the enemy from a level wave.
+3. Add a renderer only when introducing a genuinely new appearance archetype.
+
+### Guided level
+
+1. Author state conditions with the typed condition evaluator.
+2. Register one provider in `GUIDE_REGISTRATIONS`; renderer and phase-action dispatch stay generic.
+3. Add a specialized reaction gate only for a new reaction behavior. Levels select featured
+   reactions as authored data.
+
+### Copy or locale
+
+1. Edit English catalog modules under `src/localization/locales/en/`.
+2. Run `pnpm copy:export` for a context-grouped review document.
+3. Add the same keys and placeholders to another locale bundle; `pnpm locales:check` validates it.
+4. Preserve formulas, stable process codes, asset paths, CSS classes, test IDs, and explicit legacy
+   saved prose as nonlocalized values.
 
 ### Equipment or grade
 

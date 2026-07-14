@@ -78,6 +78,7 @@ export interface LevelDefinition {
   id: LevelId;
   number: number;
   focusRoomId: RoomId;
+  featuredReactionIds: readonly ReactionId[];
   startingMatter: number;
   startingCoreIntegrity: number;
   assaultTheme: "standard" | "boss";

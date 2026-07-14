@@ -118,6 +118,10 @@ const validateLevel = (
 ): void => {
   if (!(level.focusRoomId in source.rooms))
     push(issues, `${path}.focusRoomId`, `Unknown room ${level.focusRoomId}.`);
+  for (const reactionId of level.featuredReactionIds) {
+    if (!(reactionId in source.reactions))
+      push(issues, `${path}.featuredReactionIds`, `Unknown reaction ${reactionId}.`);
+  }
   if (level.rounds.length === 0)
     push(issues, `${path}.rounds`, "A level must contain at least one round.");
   const roundIds = level.rounds.map(({ id }) => id);

@@ -1,4 +1,6 @@
 import type { DamageSourceId, HazardChannels } from "../game/types";
+import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
+import type { LocaleKey } from "../localization/types";
 
 export type DamageChannel = keyof HazardChannels;
 
@@ -10,42 +12,60 @@ export const DAMAGE_CHANNELS: readonly DamageChannel[] = [
   "radiation",
 ];
 
-export const damageChannelStyle: Record<DamageChannel, { color: string; label: string }> = {
-  atmosphere: { color: "#72d5e1", label: "AIR" },
-  corrosion: { color: "#9df06c", label: "CORROSION" },
-  heat: { color: "#ff755c", label: "THERMAL" },
-  pressure: { color: "#ffb14d", label: "PRESSURE" },
-  radiation: { color: "#d69cff", label: "RADIATION" },
-};
+const localized = (translator: Translator, key: string): string =>
+  translator.text(key as LocaleKey);
 
-export const damageChannelDetail: Record<DamageChannel, string> = {
-  atmosphere: "The room atmosphere is outside this target’s breathable range.",
-  corrosion: "Reactive liquid in contact with this target attacks its surface.",
-  heat: "Hot chamber gas applies continuous thermal damage while the target remains exposed.",
-  pressure: "A pressure load crushes the target throughout its body.",
-  radiation: "The room’s radiation field applies continuous damage.",
-};
+export const createDamageCopy = (translator: Translator) => ({
+  channelStyle: Object.fromEntries(
+    DAMAGE_CHANNELS.map((channel) => [
+      channel,
+      {
+        color: {
+          atmosphere: "#72d5e1",
+          corrosion: "#9df06c",
+          heat: "#ff755c",
+          pressure: "#ffb14d",
+          radiation: "#d69cff",
+        }[channel],
+        label: localized(translator, `damage.channel.${channel}.label`),
+      },
+    ])
+  ) as Record<DamageChannel, { color: string; label: string }>,
+  channelDetail: Object.fromEntries(
+    DAMAGE_CHANNELS.map((channel) => [
+      channel,
+      localized(translator, `damage.channel.${channel}.detail`),
+    ])
+  ) as Record<DamageChannel, string>,
+  sourceLabel: Object.fromEntries(
+    [
+      "atmospheric_exposure",
+      "surface_corrosion",
+      "thermal_exposure",
+      "catastrophic_overpressure",
+      "radiation_field",
+      "hydrogen_oxygen_combustion",
+      "legacy_unattributed",
+    ].map((source) => [source, localized(translator, `damage.source.${source}.label`)])
+  ) as Record<DamageSourceId, string>,
+  sourceDetail: Object.fromEntries(
+    [
+      "atmospheric_exposure",
+      "surface_corrosion",
+      "thermal_exposure",
+      "catastrophic_overpressure",
+      "radiation_field",
+      "hydrogen_oxygen_combustion",
+      "legacy_unattributed",
+    ].map((source) => [source, localized(translator, `damage.source.${source}.detail`)])
+  ) as Record<DamageSourceId, string>,
+});
 
-export const damageSourceLabel: Record<DamageSourceId, string> = {
-  atmospheric_exposure: "atmosphere",
-  surface_corrosion: "surface contact",
-  thermal_exposure: "hot gas exposure",
-  catastrophic_overpressure: "static overpressure",
-  radiation_field: "radiation field",
-  hydrogen_oxygen_combustion: "OX-1 flash",
-  legacy_unattributed: "environment",
-};
-
-export const damageSourceDetail: Record<DamageSourceId, string> = {
-  atmospheric_exposure: "Room composition applies continuous atmospheric damage.",
-  surface_corrosion: "Liquid contact applies continuous corrosion damage.",
-  thermal_exposure: "Gas above the thermal threshold applies damage every simulation tick.",
-  catastrophic_overpressure: "High static room pressure applies continuous pressure damage.",
-  radiation_field: "An active radiation field applies continuous damage.",
-  hydrogen_oxygen_combustion:
-    "An OX-1 ignition applies one pressure-and-thermal impact to targets in the chamber.",
-  legacy_unattributed: "The saved record contains damage from an earlier simulation version.",
-};
+const DEFAULT_DAMAGE_COPY = createDamageCopy(DEFAULT_TRANSLATOR);
+export const damageChannelStyle = DEFAULT_DAMAGE_COPY.channelStyle;
+export const damageChannelDetail = DEFAULT_DAMAGE_COPY.channelDetail;
+export const damageSourceLabel = DEFAULT_DAMAGE_COPY.sourceLabel;
+export const damageSourceDetail = DEFAULT_DAMAGE_COPY.sourceDetail;
 
 export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"> = {
   atmospheric_exposure: "continuous",
