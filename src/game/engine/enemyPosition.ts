@@ -1,5 +1,5 @@
-import { gridCellToWorldPoint } from "../content/facilityGeometry";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { gridCellToWorldPoint } from "../spatial";
+import type { GameDefinition } from "../definitionTypes";
 import type { EnemyState, GasZone, RoomId, WorldPoint } from "../types";
 
 export const enemyWorldPosition = (enemy: EnemyState): WorldPoint => {
@@ -14,15 +14,10 @@ export const enemyWorldPosition = (enemy: EnemyState): WorldPoint => {
   };
 };
 
-export const enemyRoomId = (
-  enemy: EnemyState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): RoomId | null => definition.facility.roomAtWorldPoint(enemyWorldPosition(enemy));
+export const enemyRoomId = (enemy: EnemyState, definition: GameDefinition): RoomId | null =>
+  definition.facility.roomAtWorldPoint(enemyWorldPosition(enemy));
 
-export const enemyGasZone = (
-  enemy: EnemyState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): GasZone => {
+export const enemyGasZone = (enemy: EnemyState, definition: GameDefinition): GasZone => {
   const roomId = enemyRoomId(enemy, definition);
   if (!roomId) return "lower";
   const bounds = definition.facilityMap.rooms[roomId].bounds;

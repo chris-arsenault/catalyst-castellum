@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInitialGame } from "../game/engine/scenarioState";
+import { createInitialGame } from "../game/simulation";
 import { commandDecision, roomAnalysis } from "./selectors";
 
 describe("snapshot selectors", () => {

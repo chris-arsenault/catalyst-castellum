@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { GAME_PHASES, type GamePhase } from "../types";
-import { createScenarioGame } from "./scenarioState";
+import { createScenarioGame } from "../simulation";
 import {
   PHASE_DEFINITIONS,
   phaseAllowsCommand,

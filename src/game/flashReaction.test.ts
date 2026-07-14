@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { hydrogenOxygenFlashStatus, simulateHydrogenOxygenFlash } from "./engine/flashReaction";
-import { createScenarioGame, executeCommand } from "./simulation";
+import {
+  createScenarioGame,
+  executeCommand,
+  hydrogenOxygenFlashStatus,
+  simulateHydrogenOxygenFlash,
+} from "./simulation";
 import type { GameCommand, GameState } from "./types";
 import { GAS_TYPES } from "./types";
 

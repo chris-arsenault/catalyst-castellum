@@ -1,5 +1,5 @@
-import { cell, cellKey } from "../content/facilityGeometry";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { cell, cellKey } from "../spatial";
+import type { GameDefinition } from "../definitionTypes";
 import type { EnemyLocomotionMode, EnemyPathStep, FacilityPortalState, GridCell } from "../types";
 
 interface NavigationNeighbor {
@@ -169,7 +169,7 @@ const openTopologyPortalStates = (
 /** Validate persisted locomotion with the same neighbor policy used by live pathfinding. */
 export const enemyPathTransitionIsLegal = (
   { flying, previous, step }: EnemyPathTransitionOptions,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): boolean => {
   const portalStates = openTopologyPortalStates(definition);
   const allowCoreBreach = sameCell(step.cell, definition.facilityMap.coreBreachCell);
@@ -223,7 +223,7 @@ const searchEnemyPath = (
 /** Deterministic breadth-first navigation over real facility cells and movement rules. */
 export const findEnemyPath = (
   options: EnemyPathOptions,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): EnemyPathStep[] =>
   searchEnemyPath(
     {
@@ -236,7 +236,7 @@ export const findEnemyPath = (
 
 export const findEnemyPathBetween = (
   options: EnemyPathSearchOptions,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): EnemyPathStep[] => searchEnemyPath(options, definition);
 
 export const pathMovementModes = (path: readonly EnemyPathStep[]): EnemyLocomotionMode[] =>

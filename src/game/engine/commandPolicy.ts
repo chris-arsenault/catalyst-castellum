@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   CommandDecision,
   CommandRejectionCode,
@@ -312,7 +312,7 @@ const evaluateLiquidCharge = (
 export const evaluateCommand = (
   state: GameState,
   command: GameCommand,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): CommandDecision => {
   if (!phaseAllowsCommand(state.phase, command.type))
     return reject(

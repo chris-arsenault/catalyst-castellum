@@ -1,4 +1,4 @@
-import type { GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   GameState,
   GasType,
@@ -138,12 +138,12 @@ const simulateElectrolysis = (
   const inventory = processInventory(state, room, processDefinition, definition);
   const maximum = membraneCellRate(installation.instance.level, definition) * dt;
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition),
+    ...reactionReactantCandidates(reaction, inventory),
     ...outputCandidates(state, processDefinition, definition),
     [{ kind: "condition", code: "cell_current", zone: null }, maximum],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
   process.lastRate = reacted / Math.max(dt, 0.0001);
   process.limitingFactor = candidates.reduce(

@@ -1,5 +1,5 @@
-import { emptyGas, emptyLiquid } from "../config";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { emptyGas, emptyLiquid } from "../materials";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -184,7 +184,7 @@ const takeLiquidFromPools = (pools: readonly LiquidAmounts[], requested: number)
 export const refillLocalJunctions = (
   state: GameState,
   dt: number,
-  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
+  gameDefinition: GameDefinition
 ): void => {
   for (const roomId of gameDefinition.roomOrder) {
     if (gasJunctionDemanded(state, roomId, gameDefinition)) {
@@ -245,7 +245,5 @@ export const junctionLiquidAvailable = (state: GameState, roomId: RoomId): numbe
 export const junctionGasTemperature = (state: GameState, roomId: RoomId): number =>
   state.gasJunctions[roomId].temperature;
 
-export const sourceDefinitionFor = (
-  phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-) => (phase === "gas" ? definition.gasSources : definition.liquidSources);
+export const sourceDefinitionFor = (phase: TransportPhase, definition: GameDefinition) =>
+  phase === "gas" ? definition.gasSources : definition.liquidSources;

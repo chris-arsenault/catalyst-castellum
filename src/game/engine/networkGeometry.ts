@@ -1,5 +1,5 @@
-import { gridCellToWorldPoint } from "../config";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { gridCellToWorldPoint } from "../spatial";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   ConduitPhaseDefinition,
   GameState,
@@ -16,7 +16,7 @@ const MAXIMUM_LENGTH_FACTOR = 1.3;
 export const conduitDefinition = (
   runId: TransportRunId,
   phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): ConduitPhaseDefinition | null => definition.transportRuns[runId][phase];
 
 export const conduitState = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
@@ -60,7 +60,7 @@ export const conduitCapacity = (
   state: GameState,
   runId: TransportRunId,
   phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   const conduit = conduitDefinition(runId, phase, definition);
   return conduit ? conduitLength(state, runId, phase) * conduit.volumePerCell : 0;
@@ -70,7 +70,7 @@ export const conduitMaxFlow = (
   state: GameState,
   runId: TransportRunId,
   phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   const conduit = conduitDefinition(runId, phase, definition);
   return conduit ? conduit.maxFlow * lengthFactor(conduitLength(state, runId, phase)) : 0;

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { encodeGame, decodeGame } from "./save";
-import { createScenarioGame } from "./simulation";
-import { validateGameState } from "./engine/stateValidation";
+import { createScenarioGame, validateGameState } from "./simulation";
 import { DEFAULT_GAME_RUNTIME } from "./runtime";
 
 describe("semantic game-state validation", () => {

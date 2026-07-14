@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_ZONES,
   ROOM_REACTION_IDS,
@@ -85,7 +85,7 @@ export interface HydrogenChlorineReactionStatus {
 export const hydrogenChlorineReactionStatus = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): HydrogenChlorineReactionStatus => {
   const behavior = definition.reactions.hydrogen_chlorine_recombination.behavior;
   if (behavior.kind !== "gas_recombination")
@@ -130,14 +130,14 @@ const simulateHydrogenChlorine = (
   const inventory = roomReactionInventory(room, zone);
   const status = hydrogenChlorineReactionStatus(room, zone, definition);
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition, zone),
+    ...reactionReactantCandidates(reaction, inventory, zone),
     [
       { kind: "condition", code: "activation_temperature", zone },
       behavior.maximumRate * status.activation * status.reactionMultiplier * dt,
     ],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.gasTemperature[zone] = clamp(
     room.gasTemperature[zone] + reacted * behavior.gasHeatPerExtent,
     0,
@@ -169,7 +169,7 @@ const simulateHydrogenChlorideAbsorption = (
     Math.max(0, behavior.maximumProductFraction - acidFraction) * Math.max(aqueousInventory, 1);
   const volumeHeadroom = roomLiquidHeadroom(room, definition);
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition, "lower"),
+    ...reactionReactantCandidates(reaction, inventory, "lower"),
     [
       { kind: "condition", code: "aqueous_solvent", zone: "lower" },
       behavior.maximumRate * solventFactor * contactMultiplier * dt,
@@ -178,7 +178,7 @@ const simulateHydrogenChlorideAbsorption = (
     [{ kind: "condition", code: "liquid_headroom", zone: "lower" }, volumeHeadroom],
   ];
   const absorbed = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, absorbed, definition);
+  applyReactionExtent(reaction, inventory, absorbed);
   setTelemetry(room, "hydrogen_chloride_absorption", absorbed, dt, limitingFactor(candidates));
   recordReaction(state, absorbed);
 };
@@ -197,14 +197,14 @@ const simulateNeutralization = (
   const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
   const contactMultiplier = roomContactReactionMultiplier(room, definition);
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition, "lower"),
+    ...reactionReactantCandidates(reaction, inventory, "lower"),
     [
       { kind: "condition", code: "liquid_mixing", zone: "lower" },
       behavior.maximumRate * mixing * contactMultiplier * dt,
     ],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
   setTelemetry(room, "acid_neutralization", reacted, dt, limitingFactor(candidates));
   recordReaction(state, reacted);
@@ -224,7 +224,7 @@ const simulateHypochloriteFormation = (
   const contactMultiplier = roomContactReactionMultiplier(room, definition);
   const volumeHeadroom = roomLiquidHeadroom(room, definition);
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition, "lower"),
+    ...reactionReactantCandidates(reaction, inventory, "lower"),
     [
       { kind: "condition", code: "liquid_mixing", zone: "lower" },
       behavior.maximumRate * mixing * contactMultiplier * dt,
@@ -232,7 +232,7 @@ const simulateHypochloriteFormation = (
     [{ kind: "condition", code: "liquid_headroom", zone: "lower" }, volumeHeadroom],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
   setTelemetry(room, "hypochlorite_formation", reacted, dt, limitingFactor(candidates));
   recordReaction(state, reacted);
@@ -252,7 +252,7 @@ const simulateAcidChlorineRelease = (
   const mixing = clamp(liquidTotal(room) / behavior.mixingInventoryScale, 0, 1);
   const contactMultiplier = roomContactReactionMultiplier(room, definition);
   const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory, definition, "lower"),
+    ...reactionReactantCandidates(reaction, inventory, "lower"),
     [
       { kind: "condition", code: "liquid_mixing", zone: "lower" },
       behavior.maximumRate * mixing * contactMultiplier * dt,
@@ -260,7 +260,7 @@ const simulateAcidChlorineRelease = (
     [{ kind: "condition", code: "gas_headroom", zone: "lower" }, roomGasHeadroom(room, definition)],
   ];
   const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
   setTelemetry(room, "acid_chlorine_release", reacted, dt, limitingFactor(candidates));
   recordReaction(state, reacted);
@@ -321,7 +321,7 @@ const simulateRoomChemistry = (
 export const simulateReactions = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): HazardBurst[] => {
   const bursts: HazardBurst[] = [];
   simulateProcesses(state, dt, definition);

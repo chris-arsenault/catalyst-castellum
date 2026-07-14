@@ -115,7 +115,11 @@ export interface CombatIncident {
 }
 
 export interface GameState {
-  version: 11;
+  version: 12;
+  pack: {
+    id: string;
+    contentVersion: number;
+  };
   phase: GamePhase;
   campaign: CampaignProgress;
   availability: ScenarioAvailability;

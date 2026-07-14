@@ -4,7 +4,8 @@ import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
 import { roomGasMixingRate } from "./engine/equipment";
 import { roomHazards } from "./engine/physics";
 import { simulateProcesses } from "./engine/processExecutor";
-import { createScenarioGame } from "./engine/scenarioState";
+import { createScenarioGame as createScenarioGameForDefinition } from "./engine/scenarioState";
+import { createScenarioGame } from "./simulation";
 
 describe("definition extension contracts", () => {
   it("drives engine behavior and copy from one equipment-grade definition", () => {
@@ -23,7 +24,7 @@ describe("definition extension contracts", () => {
         },
       },
     });
-    const state = createScenarioGame("flash_point", [], definition);
+    const state = createScenarioGameForDefinition("flash_point", [], definition);
     state.rooms.furnace.equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 1,
@@ -73,7 +74,7 @@ describe("definition extension contracts", () => {
         },
       },
     });
-    const state = createScenarioGame("commissioning_exam", [], definition);
+    const state = createScenarioGameForDefinition("commissioning_exam", [], definition);
     state.rooms.lower_intake.liquid.water = 10;
     state.rooms.lower_intake.liquid.sodium_chloride = 10;
     simulateProcesses(state, 0.5, definition);

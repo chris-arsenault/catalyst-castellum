@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type { CommandResult, GameState } from "../types";
 import { acceptCommand } from "./commandResult";
 import { addEvent } from "./events";
@@ -17,7 +17,7 @@ export const beginLevelCommand = (source: GameState): CommandResult => {
 
 export const skipTutorialCommand = (
   source: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): CommandResult => {
   const completedLevelIds = [
     ...new Set([...source.campaign.completedLevelIds, "flash_point"]),
@@ -27,7 +27,7 @@ export const skipTutorialCommand = (
 
 export const continueRoundCommand = (
   source: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): CommandResult => {
   const state = cloneGame(source);
   advanceRound(state, definition);
@@ -36,17 +36,14 @@ export const continueRoundCommand = (
 
 export const startNextLevelCommand = (
   source: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): CommandResult => {
   const next = nextLevelIdFor(source.campaign.levelId, definition);
   if (!next) throw new Error("Next-level command was applied after campaign completion.");
   return acceptCommand(createScenarioGame(next, source.campaign.completedLevelIds, definition));
 };
 
-export const retryLevelCommand = (
-  source: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): CommandResult => {
+export const retryLevelCommand = (source: GameState, definition: GameDefinition): CommandResult => {
   return acceptCommand(
     createScenarioGame(
       source.campaign.checkpointLevelId,

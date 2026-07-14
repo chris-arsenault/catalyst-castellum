@@ -1,5 +1,5 @@
 import type { GameState } from "../types";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import { moveEnemies, resolveEnemyCombat, spawnEnemies } from "./combat";
 import { simulateInstalledEquipment } from "./equipment";
 import { simulateNetworks } from "./flow";
@@ -42,10 +42,10 @@ const shouldStep = (state: GameState, dt: number): boolean =>
 export const stepGame = (
   source: GameState,
   realDt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): GameState => {
   if (!shouldStep(source, realDt)) return source;
-  const state = cloneGame(source, definition);
+  const state = cloneGame(source);
   let remaining = Math.min(realDt * source.speed, 2);
   while (remaining > 0) {
     const dt = Math.min(remaining, 0.1);

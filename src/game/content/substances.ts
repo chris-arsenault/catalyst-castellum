@@ -287,15 +287,7 @@ export const SPECIES_DEFINITIONS: Record<SpeciesId, SpeciesDefinition> = {
   },
 };
 
-export const emptyGas = (): GasAmounts => ({
-  oxygen: 0,
-  nitrogen: 0,
-  carbon_dioxide: 0,
-  chlorine: 0,
-  hydrogen: 0,
-  hydrogen_chloride: 0,
-  steam: 0,
-});
+export { emptyGas, emptyLiquid } from "../materials";
 
 export const ambientGas = (): GasAmounts => ({
   oxygen: 21,
@@ -305,12 +297,4 @@ export const ambientGas = (): GasAmounts => ({
   hydrogen: 0,
   hydrogen_chloride: 0,
   steam: 0,
-});
-
-export const emptyLiquid = (): LiquidAmounts => ({
-  water: 0,
-  sodium_chloride: 0,
-  sodium_hydroxide: 0,
-  sodium_hypochlorite: 0,
-  hydrochloric_acid: 0,
 });

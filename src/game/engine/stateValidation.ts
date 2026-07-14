@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   TRANSPORT_RUN_IDS,
   type GameState,
@@ -8,12 +8,14 @@ import {
   type TransportRunId,
 } from "../types";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
+import { enemyPathTransitionIsLegal } from "./navigation";
 
 export type StateValidationCode =
   | "availability_mismatch"
   | "campaign_mismatch"
   | "conduit_installation_mismatch"
   | "conduit_route_invalid"
+  | "enemy_navigation_invalid"
   | "identity_mismatch"
   | "identifier_sequence_invalid"
   | "phase_invariant_invalid"
@@ -312,6 +314,90 @@ const validateNextIdentifiers = (state: GameState, issues: StateValidationIssue[
   }
 };
 
+const validateEnemyNavigation = (
+  state: GameState,
+  issues: StateValidationIssue[],
+  definition: GameDefinition
+): void => {
+  for (const [enemyIndex, enemy] of state.enemies.entries()) {
+    const path = `enemies.${enemyIndex}.path`;
+    const enemyDefinition = definition.enemies[enemy.type];
+    if (!enemyDefinition) {
+      issue(
+        issues,
+        "identity_mismatch",
+        `enemies.${enemyIndex}.type`,
+        "Enemy type is not authored."
+      );
+      continue;
+    }
+    if (enemy.pathIndex >= enemy.path.length) {
+      issue(
+        issues,
+        "enemy_navigation_invalid",
+        `${path}Index`,
+        "Enemy path cursor is out of range."
+      );
+    }
+    for (const [stepIndex, step] of enemy.path.entries()) {
+      const stepPath = `${path}.${stepIndex}`;
+      if (!definition.facility.inBounds(step.cell)) {
+        issue(
+          issues,
+          "enemy_navigation_invalid",
+          `${stepPath}.cell`,
+          "Enemy path leaves the facility bounds."
+        );
+        continue;
+      }
+      const cell = definition.facility.cellDefinition(step.cell);
+      if (["solid", "platform", "core_shell"].includes(cell.terrain)) {
+        issue(
+          issues,
+          "enemy_navigation_invalid",
+          `${stepPath}.cell`,
+          "Enemy path occupies non-navigable terrain."
+        );
+      }
+      if (step.portalId !== cell.portalId) {
+        issue(
+          issues,
+          "enemy_navigation_invalid",
+          `${stepPath}.portalId`,
+          "Enemy path portal identity is inconsistent."
+        );
+      }
+      const previous = enemy.path[stepIndex - 1];
+      if (previous && !routeStepIsOrthogonal(previous.cell, step.cell)) {
+        issue(
+          issues,
+          "enemy_navigation_invalid",
+          stepPath,
+          "Enemy path contains a non-adjacent step."
+        );
+      } else if (
+        previous &&
+        !enemyPathTransitionIsLegal({ flying: enemyDefinition.flying, previous, step }, definition)
+      ) {
+        issue(
+          issues,
+          "enemy_navigation_invalid",
+          stepPath,
+          "Enemy path violates locomotion rules."
+        );
+      }
+    }
+    if (!sameCell(enemy.path.at(-1)?.cell, definition.facilityMap.coreBreachCell)) {
+      issue(
+        issues,
+        "enemy_navigation_invalid",
+        path,
+        "Enemy path does not reach the Core threshold."
+      );
+    }
+  }
+};
+
 const validatePhase = (
   state: GameState,
   issues: StateValidationIssue[],
@@ -333,24 +419,31 @@ const validatePhase = (
 
 export const validateGameState = (
   state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): StateValidationIssue[] => {
   const issues: StateValidationIssue[] = [];
+  if (
+    state.pack.id !== definition.packId ||
+    state.pack.contentVersion !== definition.contentVersion
+  ) {
+    issue(
+      issues,
+      "identity_mismatch",
+      "pack",
+      "Game state pack identity does not match the active definition."
+    );
+  }
   validateCampaign(state, issues, definition);
   validateTopology(state, issues, definition);
+  validateEnemyNavigation(state, issues, definition);
   validatePhase(state, issues, definition);
   return issues;
 };
 
-export const gameStateIsValid = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): boolean => validateGameState(state, definition).length === 0;
+export const gameStateIsValid = (state: GameState, definition: GameDefinition): boolean =>
+  validateGameState(state, definition).length === 0;
 
-export const assertValidGameState = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const assertValidGameState = (state: GameState, definition: GameDefinition): void => {
   const issues = validateGameState(state, definition);
   if (issues.length === 0) return;
   const summary = issues.map(({ path, message }) => `${path}: ${message}`).join("; ");

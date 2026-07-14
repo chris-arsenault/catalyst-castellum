@@ -4,8 +4,8 @@ import {
   simulateArchitecturalGas,
   simulateArchitecturalLiquid,
   verticalPortalOrder,
-} from "./engine/architecturalFlow";
-import { createScenarioGame } from "./simulation";
+  createScenarioGame,
+} from "./simulation";
 import { GAS_TYPES, LIQUID_TYPES, type GameState } from "./types";
 
 const gasLedger = (state: GameState) =>

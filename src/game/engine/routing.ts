@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type { GameState, TransportPhase, TransportRunId } from "../types";
 
 export const transportPhaseInstalled = (
@@ -18,5 +18,5 @@ export const transportPhaseEnabled = (
 export const transportPhaseExists = (
   runId: TransportRunId,
   phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): boolean => definition.transportRuns[runId][phase] !== null;

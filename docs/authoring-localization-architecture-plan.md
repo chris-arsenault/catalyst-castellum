@@ -2,6 +2,13 @@
 
 Status: active implementation ledger
 
+Progress:
+
+- Phase 1: complete (definition-neutral engine, bound runtime/query/presentation selectors)
+- Phase 2: in progress (V12 pack identity and definition-aware codec complete; authoring compiler and
+  modular level registry remain)
+- Phases 3-6: pending
+
 This plan turns the 2026-07 architecture review into an enforceable repository design. It is the
 durable source of truth for the migration and must be updated as implementation discoveries change
 the work. A phase is complete only when its acceptance checks pass; moving files without enforcing

@@ -1,16 +1,8 @@
-import { emptyGas, emptyLiquid } from "../config";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { emptyGas, emptyLiquid } from "../materials";
+import type { GameDefinition } from "../definitionTypes";
 import {
-  GAS_BUFFER_IDS,
-  DAMAGE_SOURCE_IDS,
-  GAS_SOURCE_IDS,
   GAS_TYPES,
-  LIQUID_BUFFER_IDS,
-  LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
-  PROCESS_IDS,
-  ROOM_REACTION_IDS,
-  TRANSPORT_RUN_IDS,
   type GameState,
   type GasAmounts,
   type HazardChannels,
@@ -41,33 +33,33 @@ const cloneLimitingFactor = (factor: LimitingFactor): LimitingFactor => ({ ...fa
 
 const cloneDamageLedger = (ledger: GameState["enemies"][number]["damageBySource"]) =>
   Object.fromEntries(
-    DAMAGE_SOURCE_IDS.map((sourceId) => [sourceId, cloneHazards(ledger[sourceId])])
+    Object.entries(ledger).map(([sourceId, channels]) => [sourceId, cloneHazards(channels)])
   ) as GameState["enemies"][number]["damageBySource"];
 
-const cloneRooms = (rooms: GameState["rooms"], definition: GameDefinition): GameState["rooms"] =>
+const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
   Object.fromEntries(
-    definition.roomOrder.map((id) => [
+    Object.entries(rooms).map(([id, room]) => [
       id,
       {
-        ...rooms[id],
+        ...room,
         gas: {
-          lower: { ...rooms[id].gas.lower },
-          upper: { ...rooms[id].gas.upper },
+          lower: { ...room.gas.lower },
+          upper: { ...room.gas.upper },
         },
-        gasTemperature: { ...rooms[id].gasTemperature },
-        flashCooldown: { ...rooms[id].flashCooldown },
-        liquid: { ...rooms[id].liquid },
+        gasTemperature: { ...room.gasTemperature },
+        flashCooldown: { ...room.flashCooldown },
+        liquid: { ...room.liquid },
         reactions: Object.fromEntries(
-          ROOM_REACTION_IDS.map((reactionId) => [
+          Object.entries(room.reactions).map(([reactionId, telemetry]) => [
             reactionId,
             {
-              ...rooms[id].reactions[reactionId],
-              limitingFactor: cloneLimitingFactor(rooms[id].reactions[reactionId].limitingFactor),
+              ...telemetry,
+              limitingFactor: cloneLimitingFactor(telemetry.limitingFactor),
             },
           ])
         ) as RoomState["reactions"],
         equipment: Object.fromEntries(
-          Object.entries(rooms[id].equipment).map(([socketId, instance]) => [
+          Object.entries(room.equipment).map(([socketId, instance]) => [
             socketId,
             instance ? { ...instance } : null,
           ])
@@ -83,53 +75,61 @@ const cloneMaterialState = (
   "gasSources" | "liquidSources" | "gasBuffers" | "liquidBuffers" | "gasVent" | "liquidDrain"
 > => ({
   gasSources: Object.fromEntries(
-    GAS_SOURCE_IDS.map((id) => [id, { gas: { ...state.gasSources[id].gas } }])
+    Object.entries(state.gasSources).map(([id, source]) => [id, { gas: { ...source.gas } }])
   ) as GameState["gasSources"],
   liquidSources: Object.fromEntries(
-    LIQUID_SOURCE_IDS.map((id) => [id, { liquid: { ...state.liquidSources[id].liquid } }])
+    Object.entries(state.liquidSources).map(([id, source]) => [
+      id,
+      { liquid: { ...source.liquid } },
+    ])
   ) as GameState["liquidSources"],
   gasBuffers: Object.fromEntries(
-    GAS_BUFFER_IDS.map((id) => [id, { gas: { ...state.gasBuffers[id].gas } }])
+    Object.entries(state.gasBuffers).map(([id, buffer]) => [id, { gas: { ...buffer.gas } }])
   ) as GameState["gasBuffers"],
   liquidBuffers: Object.fromEntries(
-    LIQUID_BUFFER_IDS.map((id) => [id, { liquid: { ...state.liquidBuffers[id].liquid } }])
+    Object.entries(state.liquidBuffers).map(([id, buffer]) => [
+      id,
+      { liquid: { ...buffer.liquid } },
+    ])
   ) as GameState["liquidBuffers"],
   gasVent: { ...state.gasVent },
   liquidDrain: { ...state.liquidDrain },
 });
 
 const cloneNetworkState = (
-  state: GameState,
-  definition: GameDefinition
+  state: GameState
 ): Pick<GameState, "gasJunctions" | "liquidJunctions" | "gasConduits" | "liquidConduits"> => ({
   gasJunctions: Object.fromEntries(
-    definition.roomOrder.map((id) => [
+    Object.entries(state.gasJunctions).map(([id, junction]) => [
       id,
-      { ...state.gasJunctions[id], gas: { ...state.gasJunctions[id].gas } },
+      { ...junction, gas: { ...junction.gas } },
     ])
   ) as GameState["gasJunctions"],
   liquidJunctions: Object.fromEntries(
-    definition.roomOrder.map((id) => [id, { liquid: { ...state.liquidJunctions[id].liquid } }])
+    Object.entries(state.liquidJunctions).map(([id, junction]) => [
+      id,
+      { liquid: { ...junction.liquid } },
+    ])
   ) as GameState["liquidJunctions"],
   gasConduits: Object.fromEntries(
-    TRANSPORT_RUN_IDS.map((id) => [
+    Object.entries(state.gasConduits).map(([id, conduit]) => [
       id,
       {
-        ...state.gasConduits[id],
-        route: state.gasConduits[id].route.map((cell) => ({ ...cell })),
-        gas: { ...state.gasConduits[id].gas },
-        lastSpeciesFlow: { ...state.gasConduits[id].lastSpeciesFlow },
+        ...conduit,
+        route: conduit.route.map((cell) => ({ ...cell })),
+        gas: { ...conduit.gas },
+        lastSpeciesFlow: { ...conduit.lastSpeciesFlow },
       },
     ])
   ) as GameState["gasConduits"],
   liquidConduits: Object.fromEntries(
-    TRANSPORT_RUN_IDS.map((id) => [
+    Object.entries(state.liquidConduits).map(([id, conduit]) => [
       id,
       {
-        ...state.liquidConduits[id],
-        route: state.liquidConduits[id].route.map((cell) => ({ ...cell })),
-        liquid: { ...state.liquidConduits[id].liquid },
-        lastSpeciesFlow: { ...state.liquidConduits[id].lastSpeciesFlow },
+        ...conduit,
+        route: conduit.route.map((cell) => ({ ...cell })),
+        liquid: { ...conduit.liquid },
+        lastSpeciesFlow: { ...conduit.lastSpeciesFlow },
       },
     ])
   ) as GameState["liquidConduits"],
@@ -172,11 +172,9 @@ const cloneCombatState = (
   })),
 });
 
-export const cloneGame = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): GameState => ({
+export const cloneGame = (state: GameState): GameState => ({
   ...state,
+  pack: { ...state.pack },
   campaign: {
     ...state.campaign,
     completedLevelIds: [...state.campaign.completedLevelIds],
@@ -188,9 +186,9 @@ export const cloneGame = (
     gasSources: [...state.availability.gasSources],
     liquidSources: [...state.availability.liquidSources],
   },
-  rooms: cloneRooms(state.rooms, definition),
+  rooms: cloneRooms(state.rooms),
   ...cloneMaterialState(state),
-  ...cloneNetworkState(state, definition),
+  ...cloneNetworkState(state),
   portalStates: Object.fromEntries(
     Object.entries(state.portalStates).map(([portalId, portalState]) => [
       portalId,
@@ -198,11 +196,11 @@ export const cloneGame = (
     ])
   ),
   processes: Object.fromEntries(
-    PROCESS_IDS.map((id) => [
+    Object.entries(state.processes).map(([id, process]) => [
       id,
       {
-        ...state.processes[id],
-        limitingFactor: cloneLimitingFactor(state.processes[id].limitingFactor),
+        ...process,
+        limitingFactor: cloneLimitingFactor(process.limitingFactor),
       },
     ])
   ) as GameState["processes"],
@@ -212,10 +210,7 @@ export const cloneGame = (
 const dominantKey = <T extends string>(values: Record<T, number>, keys: readonly T[]): T =>
   keys.reduce((best, key) => (values[key] > values[best] ? key : best), keys[0] as T);
 
-export const analyzeRoom = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): RoomAnalysis => {
+export const analyzeRoom = (room: RoomState, definition: GameDefinition): RoomAnalysis => {
   const combinedGas = combinedRoomGas(room);
   const gasAmount = gasTotal(room);
   const lowerGasAmount = gasZoneTotal(room, "lower");

@@ -7,7 +7,7 @@ import {
   type LiquidConduitState,
   type TransportRunId,
 } from "../types";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import { clamp } from "./math";
 import { addLiquid, liquidAmountTotal, takeLiquid } from "./roomState";
 import { liquidRelativeDensity, roomLiquidHeadroom } from "./physics";
@@ -185,7 +185,7 @@ const applyPlan = (
 export const simulateLiquidConduits = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const runId of TRANSPORT_RUN_IDS) clearReadout(state, runId);
   const plans = TRANSPORT_RUN_IDS.flatMap((runId) => {
@@ -213,7 +213,7 @@ export const simulateLiquidConduits = (
 export const liquidConduitFillRatio = (
   state: GameState,
   runId: TransportRunId,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   const capacity = conduitCapacity(state, runId, "liquid", definition);
   return capacity > 0 ? liquidAmountTotal(state.liquidConduits[runId].liquid) / capacity : 0;

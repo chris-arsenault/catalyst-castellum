@@ -7,25 +7,22 @@ import {
   type HazardChannels,
   type RoomState,
 } from "./types";
-import { enemyRoomId, moveEnemies, resolveEnemyCombat } from "./engine/combat";
-import { initialPortalStates, roomAtWorldPoint, roomVolume } from "./content/facilityGeometry";
 import {
   applyDamagePackets,
-  emptyDamageLedger,
-  emptyHazardChannels,
-  type HazardBurst,
-} from "./engine/damage";
-import { makeStats } from "./engine/events";
-import { simulateHydrogenOxygenFlash } from "./engine/flashReaction";
-import { findEnemyPath } from "./engine/navigation";
-import { createScenarioGame } from "./engine/scenarioState";
-import {
-  CATASTROPHIC_PRESSURE_START,
-  STANDARD_PRESSURE,
+  createScenarioGame,
+  enemyRoomId,
+  findEnemyPath,
+  moveEnemies,
   pressureMovementMultiplier,
+  resolveEnemyCombat,
   roomHazards,
   roomStaticPressure,
-} from "./engine/physics";
+  simulateHydrogenOxygenFlash,
+} from "./simulation";
+import { initialPortalStates, roomAtWorldPoint, roomVolume } from "./content/facilityGeometry";
+import { emptyDamageLedger, emptyHazardChannels, type HazardBurst } from "./engine/damage";
+import { makeStats } from "./engine/events";
+import { CATASTROPHIC_PRESSURE_START, STANDARD_PRESSURE } from "./engine/physics";
 
 const gas = (scale = 1): GasAmounts => ({
   oxygen: 10.5 * scale,

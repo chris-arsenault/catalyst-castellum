@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type { GameState, RoundReport } from "../types";
 import {
   copyAvailability,
@@ -44,10 +44,7 @@ const completeCampaign = (state: GameState, definition: GameDefinition): void =>
   });
 };
 
-export const completeAssault = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const completeAssault = (state: GameState, definition: GameDefinition): void => {
   bankRound(state);
   const level = levelDefinitionFor(state, definition);
   const finalRound = state.campaign.roundIndex >= level.rounds.length - 1;
@@ -72,10 +69,7 @@ export const beginAssault = (state: GameState, automatic: boolean): void => {
   addEvent(state, "warning", "assault_started", { automatic });
 };
 
-export const advanceRound = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const advanceRound = (state: GameState, definition: GameDefinition): void => {
   state.campaign.roundIndex += 1;
   const round = roundDefinitionFor(state, definition);
   state.availability = copyAvailability(round.availability);

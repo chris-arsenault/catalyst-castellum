@@ -1,7 +1,5 @@
 /* eslint-disable max-lines -- Authored campaign data remains a single inspectable catalog. */
 import type {
-  EquipmentInstance,
-  EquipmentSocketId,
   GameCommand,
   GasAmounts,
   GasBufferId,
@@ -13,66 +11,28 @@ import type {
   RoomId,
   ScenarioAvailability,
   TransportRunId,
-  WaveEntry,
 } from "../types";
+import type {
+  FacilityLoadout,
+  GasConduitLoadout,
+  LevelDefinition,
+  LiquidConduitLoadout,
+  RoundDefinition,
+  ScenarioRoomEquipment,
+} from "../definitionTypes";
 import { EQUIPMENT_IDS, LEVEL_IDS, TRANSPORT_RUN_IDS } from "../types";
 import { COMMISSIONING_WAVES, COMMISSIONING_WAVE_BRIEFS, enemySequence } from "./enemies";
 import { TUTORIAL_EQUIPMENT, TUTORIAL_INITIAL_TEMPERATURES } from "./scenario";
 import { TRANSPORT_RUNS } from "./transportRuns";
 
-export type ScenarioRoomEquipment = Partial<
-  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
->;
-
-export interface GasConduitLoadout {
-  installed: boolean;
-  enabled: boolean;
-  gas: Partial<GasAmounts> | null;
-}
-
-export interface LiquidConduitLoadout {
-  installed: boolean;
-  enabled: boolean;
-  liquid: Partial<LiquidAmounts> | null;
-}
-
-export interface FacilityLoadout {
-  equipment: ScenarioRoomEquipment;
-  initialTemperatures: Partial<Record<RoomId, number>>;
-  gasConduits: Partial<Record<TransportRunId, GasConduitLoadout>>;
-  liquidConduits: Partial<Record<TransportRunId, LiquidConduitLoadout>>;
-  gasSourceGas: Partial<Record<GasSourceId, Partial<GasAmounts>>>;
-  liquidSourceAmounts: Partial<Record<LiquidSourceId, number>>;
-  gasBuffers: Partial<Record<GasBufferId, Partial<GasAmounts>>>;
-  liquidBuffers: Partial<Record<LiquidBufferId, Partial<LiquidAmounts>>>;
-}
-
-export interface RoundDefinition {
-  id: string;
-  title: string;
-  detail: string;
-  objective: string;
-  primeSeconds: number;
-  wave: WaveEntry[];
-  availability: ScenarioAvailability;
-}
-
-export interface LevelDefinition {
-  id: LevelId;
-  number: number;
-  name: string;
-  kicker: string;
-  briefing: string;
-  lesson: string;
-  focusRoomId: RoomId;
-  startingMatter: number;
-  startingCoreIntegrity: number;
-  /** Soundtrack for assault rounds; boss levels get the boss theme. */
-  assaultTheme: "standard" | "boss";
-  loadout: FacilityLoadout;
-  rounds: RoundDefinition[];
-  playtestActions: GameCommand[];
-}
+export type {
+  FacilityLoadout,
+  GasConduitLoadout,
+  LevelDefinition,
+  LiquidConduitLoadout,
+  RoundDefinition,
+  ScenarioRoomEquipment,
+} from "../definitionTypes";
 
 const availability = (options: Partial<ScenarioAvailability>): ScenarioAvailability => ({
   equipment: options.equipment ?? [],

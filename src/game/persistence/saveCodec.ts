@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- Current and frozen structural schemas intentionally share exact field codecs. */
 import { z } from "zod";
+import type { GameDefinition } from "../definitionTypes";
 import {
   DAMAGE_SOURCE_IDS,
   ENEMY_LOCOMOTION_MODES,
@@ -26,13 +27,6 @@ import {
   TRANSPORT_RUN_IDS,
   type GameState,
 } from "../types";
-import {
-  ENEMY_DEFINITIONS,
-  FACILITY_MAP,
-  facilityCellDefinition,
-  inFacilityBounds,
-} from "../config";
-import { enemyPathTransitionIsLegal } from "../engine/navigation";
 import { gameStateIsValid } from "../engine/stateValidation";
 import {
   LEGACY_GAS_LINE_IDS,
@@ -197,92 +191,22 @@ const enemyPathStepSchema = z.object({
   portalId: z.string().nullable(),
 });
 
-type SavedEnemyPathStep = z.infer<typeof enemyPathStepSchema>;
-
-const enemyStepLegal = (
-  enemyType: (typeof ENEMY_TYPES)[number],
-  previous: SavedEnemyPathStep,
-  step: SavedEnemyPathStep
-): boolean =>
-  enemyPathTransitionIsLegal({
-    flying: ENEMY_DEFINITIONS[enemyType].flying,
-    previous,
-    step,
-  });
-
-interface SavedEnemyNavigation {
-  path: SavedEnemyPathStep[];
-  pathIndex: number;
-  type: (typeof ENEMY_TYPES)[number];
-}
-
-const addNavigationIssue = (context: z.RefinementCtx, message: string): void => {
-  context.addIssue({ code: "custom", message });
-};
-
-const pathCellNavigable = (step: SavedEnemyPathStep): boolean => {
-  if (!inFacilityBounds(step.cell)) return false;
-  const terrain = facilityCellDefinition(step.cell).terrain;
-  return terrain !== "solid" && terrain !== "platform" && terrain !== "core_shell";
-};
-
-const pathStepsAdjacent = (previous: SavedEnemyPathStep, step: SavedEnemyPathStep): boolean =>
-  Math.abs(previous.cell.column - step.cell.column) +
-    Math.abs(previous.cell.elevation - step.cell.elevation) ===
-  1;
-
-const validateEnemyPathStep = (
-  enemyType: SavedEnemyNavigation["type"],
-  previous: SavedEnemyPathStep | undefined,
-  step: SavedEnemyPathStep,
-  context: z.RefinementCtx
-): void => {
-  if (!pathCellNavigable(step))
-    addNavigationIssue(context, "Enemy path occupies non-navigable terrain.");
-  if (previous && !pathStepsAdjacent(previous, step))
-    addNavigationIssue(context, "Enemy path contains a non-adjacent step.");
-  if (previous && !enemyStepLegal(enemyType, previous, step))
-    addNavigationIssue(context, "Enemy path violates locomotion rules.");
-  if (step.portalId !== facilityCellDefinition(step.cell).portalId)
-    addNavigationIssue(context, "Enemy path has inconsistent portal identity.");
-};
-
-const reachesCoreThreshold = (path: readonly SavedEnemyPathStep[]): boolean => {
-  const goal = path.at(-1)?.cell;
-  return (
-    goal?.column === FACILITY_MAP.coreBreachCell.column &&
-    goal.elevation === FACILITY_MAP.coreBreachCell.elevation
-  );
-};
-
-const validateEnemyNavigation = (enemy: SavedEnemyNavigation, context: z.RefinementCtx): void => {
-  if (enemy.pathIndex >= enemy.path.length)
-    addNavigationIssue(context, "Enemy path cursor is out of range.");
-  enemy.path.forEach((step, index) =>
-    validateEnemyPathStep(enemy.type, enemy.path[index - 1], step, context)
-  );
-  if (!reachesCoreThreshold(enemy.path))
-    addNavigationIssue(context, "Enemy path does not reach the Core threshold.");
-};
-
-const enemySchema = z
-  .object({
-    id: z.number().int().positive(),
-    type: z.enum(ENEMY_TYPES),
-    health: z.number().nonnegative(),
-    maxHealth: z.number().positive(),
-    routeId: z.enum(ENEMY_ROUTE_IDS),
-    path: z.array(enemyPathStepSchema).min(1),
-    pathIndex: z.number().int().nonnegative(),
-    progress: z.number().min(0).max(1),
-    mode: z.enum(ENEMY_LOCOMOTION_MODES),
-    facing: z.union([z.literal(-1), z.literal(1)]),
-    spawnAge: z.number().nonnegative(),
-    damageTaken: z.number().nonnegative(),
-    damageBySource: damageLedgerSchema,
-    lastDamage: damageReceiptSchema.nullable(),
-  })
-  .superRefine(validateEnemyNavigation);
+const enemySchema = z.object({
+  id: z.number().int().positive(),
+  type: z.enum(ENEMY_TYPES),
+  health: z.number().nonnegative(),
+  maxHealth: z.number().positive(),
+  routeId: z.enum(ENEMY_ROUTE_IDS),
+  path: z.array(enemyPathStepSchema).min(1),
+  pathIndex: z.number().int().nonnegative(),
+  progress: z.number().min(0).max(1),
+  mode: z.enum(ENEMY_LOCOMOTION_MODES),
+  facing: z.union([z.literal(-1), z.literal(1)]),
+  spawnAge: z.number().nonnegative(),
+  damageTaken: z.number().nonnegative(),
+  damageBySource: damageLedgerSchema,
+  lastDamage: damageReceiptSchema.nullable(),
+});
 
 const statsSchema = z.object({
   spawned: z.number().int().nonnegative(),
@@ -400,11 +324,7 @@ const portalStateSchema = z.object({
   lastGasFlow: z.number(),
   lastLiquidFlow: z.number(),
 });
-const portalStatesSchema = z.object(
-  Object.fromEntries(
-    FACILITY_MAP.portals.map((portal) => [portal.id, portalStateSchema])
-  ) as Record<string, typeof portalStateSchema>
-);
+const portalStatesSchema = z.record(z.string(), portalStateSchema);
 
 const legacyV9GameSchema = legacyV8GameSchema.omit({ version: true, enemies: true }).extend({
   version: z.literal(9),
@@ -417,12 +337,27 @@ const legacyV10GameSchema = legacyV9GameSchema.omit({ version: true, events: tru
   events: z.array(eventSchema),
 });
 
-const gameSchema = legacyV10GameSchema.omit({ version: true }).extend({ version: z.literal(11) });
+const legacyV11GameSchema = legacyV10GameSchema
+  .omit({ version: true })
+  .extend({ version: z.literal(11) });
+const packIdentitySchema = z.object({
+  id: z.string().min(1),
+  contentVersion: z.number().int().min(1),
+});
+const gameSchema = legacyV11GameSchema
+  .omit({ version: true })
+  .extend({ version: z.literal(12), pack: packIdentitySchema });
 
 const saveEnvelopeSchema = z.object({
   format: z.literal("catalyst-castellum-save"),
   savedAt: z.string(),
+  pack: packIdentitySchema,
   game: gameSchema,
+});
+const legacyV11EnvelopeSchema = z.object({
+  format: z.literal("catalyst-castellum-save"),
+  savedAt: z.string(),
+  game: legacyV11GameSchema,
 });
 const legacyV10EnvelopeSchema = z.object({
   format: z.literal("catalyst-castellum-save"),
@@ -485,48 +420,88 @@ export type LegacyV8Game = z.infer<typeof legacyV8GameSchema>;
 export type LegacyV9Game = z.infer<typeof legacyV9GameSchema>;
 export type LegacyV10Game = z.infer<typeof legacyV10GameSchema>;
 
-export const encodeGame = (game: GameState): string =>
-  JSON.stringify({ format: "catalyst-castellum-save", savedAt: new Date().toISOString(), game });
+export const encodeGame = (game: GameState, definition: GameDefinition): string => {
+  if (
+    game.pack.id !== definition.packId ||
+    game.pack.contentVersion !== definition.contentVersion
+  ) {
+    throw new Error("Game state belongs to a different content pack.");
+  }
+  return JSON.stringify({
+    format: "catalyst-castellum-save",
+    savedAt: new Date().toISOString(),
+    pack: game.pack,
+    game,
+  });
+};
 
-const validGame = (game: GameState): GameState | null => (gameStateIsValid(game) ? game : null);
+const validGame = (game: GameState, definition: GameDefinition): GameState | null =>
+  gameStateIsValid(game, definition) ? game : null;
 
-const decodeCurrent = (parsed: unknown): GameState | null => {
+const decodeCurrent = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = saveEnvelopeSchema.safeParse(parsed);
-  return result.success ? validGame(result.data.game as GameState) : null;
+  if (!result.success) return null;
+  if (
+    result.data.pack.id !== definition.packId ||
+    result.data.pack.contentVersion !== definition.contentVersion
+  )
+    return null;
+  return validGame(result.data.game as GameState, definition);
 };
 
-const decodeV10 = (parsed: unknown): GameState | null => {
+const decodeV11 = (parsed: unknown, definition: GameDefinition): GameState | null => {
+  const result = legacyV11EnvelopeSchema.safeParse(parsed);
+  if (!result.success) return null;
+  return validGame(
+    {
+      ...result.data.game,
+      version: 12,
+      pack: { id: definition.packId, contentVersion: definition.contentVersion },
+    } as GameState,
+    definition
+  );
+};
+
+const decodeV10 = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = legacyV10EnvelopeSchema.safeParse(parsed);
-  return result.success ? validGame(migrateV10Game(result.data.game)) : null;
-};
-
-const decodeV9 = (parsed: unknown): GameState | null => {
-  const result = legacyV9EnvelopeSchema.safeParse(parsed);
-  return result.success ? validGame(migrateV10Game(migrateV9Game(result.data.game))) : null;
-};
-
-const decodeV8 = (parsed: unknown): GameState | null => {
-  const result = legacyV8EnvelopeSchema.safeParse(parsed);
   return result.success
-    ? validGame(migrateV10Game(migrateV9Game(migrateV8Game(result.data.game))))
+    ? validGame(migrateV10Game(result.data.game, definition), definition)
     : null;
 };
 
-const decodeV7 = (parsed: unknown): GameState | null => {
-  const result = legacyV7EnvelopeSchema.safeParse(parsed);
-  return result.success ? validGame(migrateV7Game(result.data.game)) : null;
+const decodeV9 = (parsed: unknown, definition: GameDefinition): GameState | null => {
+  const result = legacyV9EnvelopeSchema.safeParse(parsed);
+  return result.success
+    ? validGame(migrateV10Game(migrateV9Game(result.data.game), definition), definition)
+    : null;
 };
 
-const decodeParsedGame = (parsed: unknown): GameState | null =>
-  decodeCurrent(parsed) ??
-  decodeV10(parsed) ??
-  decodeV9(parsed) ??
-  decodeV8(parsed) ??
-  decodeV7(parsed);
+const decodeV8 = (parsed: unknown, definition: GameDefinition): GameState | null => {
+  const result = legacyV8EnvelopeSchema.safeParse(parsed);
+  return result.success
+    ? validGame(
+        migrateV10Game(migrateV9Game(migrateV8Game(result.data.game, definition)), definition),
+        definition
+      )
+    : null;
+};
 
-export const decodeGame = (raw: string): GameState | null => {
+const decodeV7 = (parsed: unknown, definition: GameDefinition): GameState | null => {
+  const result = legacyV7EnvelopeSchema.safeParse(parsed);
+  return result.success ? validGame(migrateV7Game(result.data.game, definition), definition) : null;
+};
+
+const decodeParsedGame = (parsed: unknown, definition: GameDefinition): GameState | null =>
+  decodeCurrent(parsed, definition) ??
+  decodeV11(parsed, definition) ??
+  decodeV10(parsed, definition) ??
+  decodeV9(parsed, definition) ??
+  decodeV8(parsed, definition) ??
+  decodeV7(parsed, definition);
+
+export const decodeGame = (raw: string, definition: GameDefinition): GameState | null => {
   try {
-    return decodeParsedGame(JSON.parse(raw) as unknown);
+    return decodeParsedGame(JSON.parse(raw) as unknown, definition);
   } catch {
     return null;
   }

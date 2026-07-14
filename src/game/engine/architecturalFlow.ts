@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -184,7 +184,7 @@ const allocateGasPlans = (
 export const simulateArchitecturalGas = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastGasFlow = 0;
   const portals = definition.facilityMap.portals.filter(
@@ -301,7 +301,7 @@ const allocateLiquidPlans = (
 export const simulateArchitecturalLiquid = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastLiquidFlow = 0;
   const plans = definition.facilityMap.portals.flatMap((portal) => {
@@ -323,7 +323,7 @@ export const simulateArchitecturalLiquid = (
 export const simulateArchitecturalFlow = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   simulateArchitecturalGas(state, dt, definition);
   simulateArchitecturalLiquid(state, dt, definition);

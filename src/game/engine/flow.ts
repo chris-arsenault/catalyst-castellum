@@ -1,5 +1,5 @@
 import type { GameState } from "../types";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import { simulateArchitecturalFlow } from "./architecturalFlow";
 import { simulateGasConduits } from "./gasFlow";
 import { refillLocalJunctions } from "./junctions";
@@ -11,7 +11,7 @@ export { liquidConduitCrestElevation, liquidConduitFillRatio } from "./liquidFlo
 export const simulateNetworks = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   simulateArchitecturalFlow(state, dt, definition);
   refillLocalJunctions(state, dt, definition);

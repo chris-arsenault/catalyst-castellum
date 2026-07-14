@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -20,8 +20,8 @@ export const MAX_LIQUID_FILL_RATIO = 0.92;
 export const MAX_ROOM_STATIC_PRESSURE = 260;
 export const LIQUID_SLOW_START = 0.15;
 export const PRESSURE_SLOW_START = 1.3;
-export const CATASTROPHIC_PRESSURE_START =
-  DEFAULT_GAME_DEFINITION.environmentHazards.staticPressure.ratioThreshold;
+/** Compatibility threshold for the default content pack; mechanics read the bound definition. */
+export const CATASTROPHIC_PRESSURE_START = 2.2;
 export const AMBIENT_MOLAR_MASS = 28.97;
 
 const MINIMUM_GAS_VOLUME_RATIO = 1 - MAX_LIQUID_FILL_RATIO;
@@ -72,56 +72,37 @@ export const mixedTemperature = (
   return (existingTemperature * existingAmount + incomingTemperature * incomingAmount) / total;
 };
 
-export const roomUsableVolume = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number =>
+export const roomUsableVolume = (room: RoomState, definition: GameDefinition): number =>
   Math.max(
     minimumGasVolume(room, definition),
     definition.facility.roomVolume(room.id) - roomEquipmentVolume(room, definition)
   );
 
-export const gasCapacity = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number =>
+export const gasCapacity = (room: RoomState, definition: GameDefinition): number =>
   Math.max(
     minimumGasVolume(room, definition),
     roomUsableVolume(room, definition) - liquidTotal(room)
   );
 
-export const gasZoneCapacity = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => gasCapacity(room, definition) / 2;
+export const gasZoneCapacity = (room: RoomState, definition: GameDefinition): number =>
+  gasCapacity(room, definition) / 2;
 
-export const roomStaticPressure = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number =>
+export const roomStaticPressure = (room: RoomState, definition: GameDefinition): number =>
   (gasTotal(room) / gasCapacity(room, definition)) *
   STANDARD_PRESSURE *
   temperatureRatio(roomGasTemperature(room));
 
-export const roomPressure = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => roomStaticPressure(room, definition) + room.pressurePulse;
+export const roomPressure = (room: RoomState, definition: GameDefinition): number =>
+  roomStaticPressure(room, definition) + room.pressurePulse;
 
-export const roomGasHeadroom = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const roomGasHeadroom = (room: RoomState, definition: GameDefinition): number => {
   const maximumGas =
     (gasCapacity(room, definition) * MAX_ROOM_STATIC_PRESSURE) /
     (STANDARD_PRESSURE * temperatureRatio(roomGasTemperature(room)));
   return Math.max(0, maximumGas - gasTotal(room));
 };
 
-export const roomLiquidHeadroom = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const roomLiquidHeadroom = (room: RoomState, definition: GameDefinition): number => {
   const gasVolumeAtPressureLimit =
     (gasTotal(room) * STANDARD_PRESSURE * temperatureRatio(roomGasTemperature(room))) /
     MAX_ROOM_STATIC_PRESSURE;
@@ -133,15 +114,10 @@ export const roomLiquidHeadroom = (
   return Math.max(0, maximumLiquid - liquidTotal(room));
 };
 
-export const liquidFillRatio = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => liquidTotal(room) / roomUsableVolume(room, definition);
+export const liquidFillRatio = (room: RoomState, definition: GameDefinition): number =>
+  liquidTotal(room) / roomUsableVolume(room, definition);
 
-export const liquidSurfaceElevation = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const liquidSurfaceElevation = (room: RoomState, definition: GameDefinition): number => {
   const effectiveVolume =
     liquidFillRatio(room, definition) * definition.facility.roomVolume(room.id);
   return definition.facility.roomLiquidSurfaceElevation(room.id, effectiveVolume);
@@ -150,10 +126,7 @@ export const liquidSurfaceElevation = (
 export const gasZoneForPort = (portHeight: number): GasZone =>
   portHeight < 0.5 ? "lower" : "upper";
 
-export const pressureMovementMultiplier = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const pressureMovementMultiplier = (room: RoomState, definition: GameDefinition): number => {
   const pressureRatio = roomStaticPressure(room, definition) / STANDARD_PRESSURE;
   const slowdown = clamp((pressureRatio - PRESSURE_SLOW_START) / 1.2, 0, 0.55);
   return 1 - slowdown;
@@ -162,7 +135,7 @@ export const pressureMovementMultiplier = (
 export const liquidMovementMultiplier = (
   room: RoomState,
   flying: boolean,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   if (flying) return 1;
   const maximumFillRatio =
@@ -182,7 +155,7 @@ export const liquidMovementMultiplier = (
 export const roomMovementMultiplier = (
   room: RoomState,
   flying: boolean,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number =>
   Math.max(
     0.2,
@@ -207,10 +180,7 @@ export const liquidPercent = (room: RoomState, liquid: LiquidType): number => {
 export const liquidStrength = (room: RoomState, liquid: LiquidType): number =>
   room.liquid[liquid] * liquidPercent(room, liquid);
 
-export const gasMixtureMolarMass = (
-  gas: GasAmounts,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const gasMixtureMolarMass = (gas: GasAmounts, definition: GameDefinition): number => {
   const total = gasAmountTotal(gas);
   if (total <= 0) return AMBIENT_MOLAR_MASS;
   return (
@@ -224,19 +194,19 @@ export const gasMixtureMolarMass = (
 export const gasRelativeDensity = (
   gas: GasAmounts,
   temperature: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number =>
   gasMixtureMolarMass(gas, definition) / AMBIENT_MOLAR_MASS / temperatureRatio(temperature);
 
 export const roomZoneDensity = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => gasRelativeDensity(room.gas[zone], room.gasTemperature[zone], definition);
 
 export const liquidRelativeDensity = (
   liquid: LiquidAmounts,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   const total = liquidAmountTotal(liquid);
   if (total <= 0) return 1;
@@ -303,7 +273,7 @@ export const roomHazards = (
   floorContact = true,
   needsOxygen = true,
   zone: GasZone = floorContact ? "lower" : "upper",
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): HazardChannels => {
   const hazards = speciesHazards(room, floorContact, needsOxygen, zone, definition);
   hazards.heat +=
@@ -323,10 +293,7 @@ export const roomHazards = (
 const totalHazard = (hazards: HazardChannels): number =>
   hazards.atmosphere + hazards.corrosion + hazards.heat + hazards.pressure + hazards.radiation;
 
-export const roomHazardScore = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const roomHazardScore = (room: RoomState, definition: GameDefinition): number => {
   const lower = totalHazard(roomHazards(room, true, true, "lower", definition));
   const upper = totalHazard(roomHazards(room, false, true, "upper", definition));
   return clamp(Math.max(lower, upper) * 3.5, 0, 100);

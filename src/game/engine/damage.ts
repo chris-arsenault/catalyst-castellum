@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   DAMAGE_SOURCE_IDS,
   type DamageLedger,
@@ -140,7 +140,7 @@ export const applyDamagePackets = (
   state: GameState,
   enemy: EnemyState,
   packets: DamagePacket[],
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): DamageApplication => {
   const healthBefore = enemy.health;
   const resisted = packets.map((packet) => ({

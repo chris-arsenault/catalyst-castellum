@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -89,7 +89,7 @@ const phaseChannel = (
 export const transportRunChannels = (
   state: GameState,
   runId: TransportRunId,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): TransportChannelTelemetry[] =>
   (["gas", "liquid"] as const).flatMap((phase) => {
     const channel = phaseChannel(state, runId, phase, definition);
@@ -100,7 +100,7 @@ export const transportRunMaterialFlow = (
   state: GameState,
   runId: TransportRunId,
   species: SpeciesId,
-  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
+  gameDefinition: GameDefinition
 ): MaterialRunFlow => {
   const phase: TransportPhase = GAS_TYPES.includes(species as GasType) ? "gas" : "liquid";
   const definition = gameDefinition.transportRuns[runId][phase];
@@ -127,7 +127,7 @@ export const transportRunPhaseStatus = (
   state: GameState,
   runId: TransportRunId,
   phase: TransportPhase,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): TransportPhaseStatus => {
   const conduit = phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
   const exists = definition.transportRuns[runId][phase] !== null;

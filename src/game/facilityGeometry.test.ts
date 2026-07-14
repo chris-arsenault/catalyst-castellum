@@ -30,7 +30,7 @@ import {
   type RoomId,
   type TransportPhase,
 } from "./types";
-import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./engine/navigation";
+import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./simulation";
 import {
   clientToWorldPoint,
   initialCamera,

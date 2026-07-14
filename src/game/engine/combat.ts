@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   CombatIncidentTarget,
   EnemyState,
@@ -102,10 +102,7 @@ const burstPacket = (
   },
 });
 
-export const spawnEnemies = (
-  state: GameState,
-  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): void => {
   const wave = roundDefinitionFor(state, gameDefinition).wave;
   while (state.spawnCursor < wave.length) {
     const entry = wave[state.spawnCursor];
@@ -276,7 +273,7 @@ export const resolveEnemyCombat = (
   state: GameState,
   dt: number,
   bursts: HazardBurst[],
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   const builders = bursts.map<IncidentBuilder>((burst) => ({
     burst,
@@ -400,11 +397,7 @@ const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDef
   );
 };
 
-export const moveEnemies = (
-  state: GameState,
-  dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const moveEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
   state.enemies = state.enemies.filter((enemy) => {
     const roomId = enemyRoomId(enemy, definition);
     const room = roomId ? state.rooms[roomId] : null;
@@ -414,11 +407,7 @@ export const moveEnemies = (
   });
 };
 
-export const simulateEnemies = (
-  state: GameState,
-  dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): void => {
+export const simulateEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
   resolveEnemyCombat(state, dt, [], definition);
   moveEnemies(state, dt, definition);
 };

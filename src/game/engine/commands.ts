@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   CommandDecision,
   CommandResult,
@@ -178,7 +178,7 @@ const setSpeed = (source: GameState, speed: 1 | 2): CommandResult => {
 export const executeCommand = (
   source: GameState,
   command: GameCommand,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): CommandResult => {
   const decision = evaluateCommand(source, command, definition);
   if (!decision.allowed) {

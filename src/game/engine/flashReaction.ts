@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   GameState,
   GasZone,
@@ -35,7 +35,7 @@ export interface FlashIgnitionStatus {
 export const hydrogenOxygenFlashStatus = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): FlashIgnitionStatus => {
   const behavior = definition.reactions.hydrogen_oxygen_combustion.behavior;
   if (behavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
@@ -122,7 +122,7 @@ export const simulateHydrogenOxygenFlash = (
   room: RoomState,
   zone: GasZone,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): HazardBurst | null => {
   const reaction = definition.reactions.hydrogen_oxygen_combustion;
   const behavior = reaction.behavior;
@@ -148,7 +148,7 @@ export const simulateHydrogenOxygenFlash = (
       gas[speciesId as keyof typeof gas] += delta;
     },
   };
-  applyReactionExtent(reaction, inventory, reacted, definition);
+  applyReactionExtent(reaction, inventory, reacted);
   room.gasTemperature[zone] = clamp(room.gasTemperature[zone] + heatDelta, 0, 320);
   room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 260);
   room.pressurePulse = clamp(room.pressurePulse + pressureImpulse, 0, 240);

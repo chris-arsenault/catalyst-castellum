@@ -1,4 +1,3 @@
-import type { LevelDefinition } from "./content/campaign";
 import { LEVEL_DEFINITIONS } from "./content/campaign";
 import { REACTION_DEFINITIONS } from "./content/chemistry";
 import { ENEMY_DEFINITIONS } from "./content/enemies";
@@ -17,69 +16,21 @@ import { PROCESS_DEFINITIONS } from "./content/processes";
 import { ROOM_DEFINITIONS, ROOM_ORDER } from "./content/rooms";
 import { ambientGas, SPECIES_DEFINITIONS } from "./content/substances";
 import { TRANSPORT_RUNS } from "./content/transportRuns";
-import { createFacilityModel, type FacilityModel } from "./engine/facilityModel";
-import type {
-  EnemyDefinition,
-  EnemyType,
-  EquipmentDefinition,
-  EquipmentId,
-  FacilityMapDefinition,
-  GasAmounts,
-  GasBufferDefinition,
-  GasBufferId,
-  GasJunctionDefinition,
-  GasSourceDefinition,
-  GasSourceId,
-  LevelId,
-  LiquidBufferDefinition,
-  LiquidBufferId,
-  LiquidJunctionDefinition,
-  LiquidSourceDefinition,
-  LiquidSourceId,
-  ProcessDefinition,
-  ProcessId,
-  ReactionDefinition,
-  ReactionId,
-  RoomDefinition,
-  RoomId,
-  SpeciesDefinition,
-  SpeciesId,
-  TransportRunDefinition,
-  TransportRunId,
-} from "./types";
+import { createFacilityModel } from "./engine/facilityModel";
+import type { GameDefinition, GameDefinitionSource } from "./definitionTypes";
 import { LEVEL_IDS } from "./identifiers";
 
-export interface EnvironmentHazardRules {
-  gasTemperature: { threshold: number; rate: number };
-  staticPressure: { ratioThreshold: number; rate: number };
-}
-
-export interface GameDefinitionSource {
-  readonly id: string;
-  readonly facilityMap: FacilityMapDefinition;
-  readonly roomOrder: readonly RoomId[];
-  readonly rooms: Readonly<Record<RoomId, RoomDefinition>>;
-  readonly levelOrder: readonly LevelId[];
-  readonly species: Readonly<Record<SpeciesId, SpeciesDefinition>>;
-  readonly reactions: Readonly<Record<ReactionId, ReactionDefinition>>;
-  readonly equipment: Readonly<Record<EquipmentId, EquipmentDefinition>>;
-  readonly processes: Readonly<Record<ProcessId, ProcessDefinition>>;
-  readonly enemies: Readonly<Record<EnemyType, EnemyDefinition>>;
-  readonly levels: Readonly<Record<LevelId, LevelDefinition>>;
-  readonly transportRuns: Readonly<Record<TransportRunId, TransportRunDefinition>>;
-  readonly gasSources: Readonly<Record<GasSourceId, GasSourceDefinition>>;
-  readonly liquidSources: Readonly<Record<LiquidSourceId, LiquidSourceDefinition>>;
-  readonly gasBuffers: Readonly<Record<GasBufferId, GasBufferDefinition>>;
-  readonly liquidBuffers: Readonly<Record<LiquidBufferId, LiquidBufferDefinition>>;
-  readonly gasJunctions: Readonly<Record<RoomId, GasJunctionDefinition>>;
-  readonly liquidJunctions: Readonly<Record<RoomId, LiquidJunctionDefinition>>;
-  readonly ambientGas: GasAmounts;
-  readonly environmentHazards: EnvironmentHazardRules;
-}
-
-export interface GameDefinition extends GameDefinitionSource {
-  readonly facility: FacilityModel;
-}
+export type {
+  EnvironmentHazardRules,
+  FacilityLoadout,
+  FacilityModel,
+  GameDefinition,
+  GameDefinitionSource,
+  GasConduitLoadout,
+  LevelDefinition,
+  LiquidConduitLoadout,
+  RoundDefinition,
+} from "./definitionTypes";
 
 const deepFreeze = <Value>(value: Value, seen = new WeakSet<object>()): Value => {
   if (typeof value !== "object" || value === null || seen.has(value)) return value;
@@ -97,6 +48,8 @@ export const deriveGame = (
 ): GameDefinition => {
   const source: GameDefinitionSource = {
     id: base.id,
+    packId: base.packId,
+    contentVersion: base.contentVersion,
     facilityMap: base.facilityMap,
     roomOrder: base.roomOrder,
     rooms: base.rooms,
@@ -123,6 +76,8 @@ export const deriveGame = (
 
 export const DEFAULT_GAME_DEFINITION = defineGame({
   id: "catalyst-castellum",
+  packId: "catalyst-castellum",
+  contentVersion: 1,
   facilityMap: FACILITY_MAP,
   roomOrder: ROOM_ORDER,
   rooms: ROOM_DEFINITIONS,

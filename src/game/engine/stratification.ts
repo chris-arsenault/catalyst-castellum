@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type { GameState, GasZone, RoomState } from "../types";
 import { clamp } from "./math";
 import { gasAmountTotal, gasZoneTotal, kelvin, mixedTemperature, roomZoneDensity } from "./physics";
@@ -96,7 +96,7 @@ const exchangeWallHeat = (room: RoomState, dt: number): void => {
 export const simulateRoomStratification = (
   room: RoomState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   equalizeZonePressure(room, dt);
   overturnUnstableGas(room, dt, definition);
@@ -107,7 +107,7 @@ export const simulateRoomStratification = (
 export const simulateStratification = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const roomId of definition.roomOrder)
     simulateRoomStratification(state.rooms[roomId], dt, definition);

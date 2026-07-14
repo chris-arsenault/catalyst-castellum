@@ -1,4 +1,3 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
 import type { GasZone, LimitingFactor, ReactionDefinition, SpeciesId } from "../types";
 
 export interface MutableReactionInventory {
@@ -11,7 +10,6 @@ export type ReactionLimitCandidate = [factor: LimitingFactor, extent: number];
 export const reactionReactantCandidates = (
   reaction: ReactionDefinition,
   inventory: MutableReactionInventory,
-  _definition: GameDefinition = DEFAULT_GAME_DEFINITION,
   zone: GasZone | null = null
 ): ReactionLimitCandidate[] =>
   reaction.reactants.map((participant) => [
@@ -21,25 +19,21 @@ export const reactionReactantCandidates = (
 
 export const maximumReactionExtent = (
   reaction: ReactionDefinition,
-  inventory: MutableReactionInventory,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  inventory: MutableReactionInventory
 ): number =>
   Math.max(
     0,
-    Math.min(
-      ...reactionReactantCandidates(reaction, inventory, definition).map(([, extent]) => extent)
-    )
+    Math.min(...reactionReactantCandidates(reaction, inventory).map(([, extent]) => extent))
   );
 
 export const applyReactionExtent = (
   reaction: ReactionDefinition,
   inventory: MutableReactionInventory,
-  extent: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  extent: number
 ): void => {
   if (!Number.isFinite(extent) || extent < 0)
     throw new Error(`Invalid extent for ${reaction.id}: ${extent}`);
-  const maximum = maximumReactionExtent(reaction, inventory, definition);
+  const maximum = maximumReactionExtent(reaction, inventory);
   if (extent > maximum + 1e-9)
     throw new Error(`Reaction ${reaction.id} exceeds available reactants (${extent} > ${maximum})`);
   for (const participant of reaction.reactants) {

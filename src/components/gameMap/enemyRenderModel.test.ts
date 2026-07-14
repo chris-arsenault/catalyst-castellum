@@ -1,8 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { emptyDamageLedger } from "../../game/engine/damage";
-import { moveEnemies } from "../../game/engine/combat";
-import { findEnemyPath } from "../../game/engine/navigation";
-import { createScenarioGame } from "../../game/simulation";
+import { createScenarioGame, findEnemyPath, moveEnemies } from "../../game/simulation";
 import type { EnemyState } from "../../game/types";
 import { enemyRenderModel } from "./enemyRenderModel";
 

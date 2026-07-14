@@ -1,12 +1,5 @@
-import {
-  currentRound,
-  emptyGas,
-  emptyLiquid,
-  ENEMY_DEFINITIONS,
-  initialPortalStates,
-  LEVEL_DEFINITIONS,
-  TRANSPORT_RUNS,
-} from "../config";
+import { emptyGas, emptyLiquid } from "../materials";
+import type { GameDefinition } from "../definitionTypes";
 import { addEvent } from "../engine/events";
 import { findEnemyPath } from "../engine/navigation";
 import { createScenarioGame } from "../engine/scenarioState";
@@ -111,15 +104,15 @@ const gasLinesForMigration = (
   return GAS_LINE_MIGRATION[runId];
 };
 
-export const migrateV7Game = (legacy: LegacyV7Game): GameState => {
+export const migrateV7Game = (legacy: LegacyV7Game, definition: GameDefinition): GameState => {
   const levelId = legacy.campaign.levelId;
-  const state = createScenarioGame(levelId, legacy.campaign.completedLevelIds);
+  const state = createScenarioGame(levelId, legacy.campaign.completedLevelIds, definition);
   state.phase = "build";
   state.campaign.roundIndex = Math.min(
     legacy.campaign.roundIndex,
-    LEVEL_DEFINITIONS[levelId].rounds.length - 1
+    definition.levels[levelId].rounds.length - 1
   );
-  const round = currentRound(levelId, state.campaign.roundIndex);
+  const round = definition.levels[levelId].rounds[state.campaign.roundIndex]!;
   state.availability = {
     equipment: [...round.availability.equipment],
     gasRuns: [...round.availability.gasRuns],
@@ -161,7 +154,7 @@ export const migrateV7Game = (legacy: LegacyV7Game): GameState => {
     state.gasConduits[runId].temperature =
       temperatureAmount > 0 ? temperatureMass / temperatureAmount : 22;
     state.gasConduits[runId].installed = Boolean(
-      TRANSPORT_RUNS[runId].gas && legacyRun.gasInstalled
+      definition.transportRuns[runId].gas && legacyRun.gasInstalled
     );
     state.gasConduits[runId].enabled = false;
 
@@ -171,7 +164,7 @@ export const migrateV7Game = (legacy: LegacyV7Game): GameState => {
     }
     state.liquidConduits[runId].liquid = liquid;
     state.liquidConduits[runId].installed = Boolean(
-      TRANSPORT_RUNS[runId].liquid && legacyRun.liquidInstalled
+      definition.transportRuns[runId].liquid && legacyRun.liquidInstalled
     );
     state.liquidConduits[runId].enabled = false;
   }
@@ -181,10 +174,11 @@ export const migrateV7Game = (legacy: LegacyV7Game): GameState => {
 
 const migrateV8Enemy = (
   legacy: LegacyV8Enemy,
-  portalStates: GameState["portalStates"]
+  portalStates: GameState["portalStates"],
+  gameDefinition: GameDefinition
 ): GameState["enemies"][number] => {
-  const definition = ENEMY_DEFINITIONS[legacy.type];
-  const path = findEnemyPath({ flying: definition.flying, portalStates });
+  const definition = gameDefinition.enemies[legacy.type];
+  const path = findEnemyPath({ flying: definition.flying, portalStates }, gameDefinition);
   if (path.length === 0)
     throw new Error(`Cannot migrate ${legacy.type}: Core route is unavailable.`);
   const oldSegments = Math.max(1, legacy.route.length - 1);
@@ -213,9 +207,9 @@ const migrateV8Enemy = (
   };
 };
 
-export const migrateV8Game = (legacy: LegacyV8Game): LegacyV9Game => {
-  const portalStates = initialPortalStates();
-  const enemies = legacy.enemies.map((enemy) => migrateV8Enemy(enemy, portalStates));
+export const migrateV8Game = (legacy: LegacyV8Game, definition: GameDefinition): LegacyV9Game => {
+  const portalStates = definition.facility.initialPortalStates();
+  const enemies = legacy.enemies.map((enemy) => migrateV8Enemy(enemy, portalStates, definition));
   return {
     ...legacy,
     version: 9,
@@ -235,7 +229,8 @@ export const migrateV9Game = (legacy: LegacyV9Game): LegacyV10Game => ({
   })),
 });
 
-export const migrateV10Game = (legacy: LegacyV10Game): GameState => ({
+export const migrateV10Game = (legacy: LegacyV10Game, definition: GameDefinition): GameState => ({
   ...legacy,
-  version: 11,
+  version: 12,
+  pack: { id: definition.packId, contentVersion: definition.contentVersion },
 });

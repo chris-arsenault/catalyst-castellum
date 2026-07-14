@@ -1,5 +1,5 @@
-import { emptyGas } from "../config";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import { emptyGas } from "../materials";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
   TRANSPORT_RUN_IDS,
@@ -51,7 +51,7 @@ const gasLinePressureRatio = (
 export const gasConduitPressure = (
   state: GameState,
   runId: TransportRunId,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => gasLinePressureRatio(state, runId, definition) * STANDARD_PRESSURE;
 
 const destinationHeadroom = (
@@ -242,7 +242,7 @@ const applyPlan = (
 export const simulateGasConduits = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const runId of TRANSPORT_RUN_IDS) clearReadout(state, runId);
   const plans = TRANSPORT_RUN_IDS.flatMap((runId) => {

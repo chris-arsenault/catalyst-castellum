@@ -3,8 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { initialPortalStates, roomAtWorldPoint } from "../../game/config";
 import { emptyDamageLedger, emptyHazardChannels } from "../../game/engine/damage";
-import { findEnemyPath } from "../../game/engine/navigation";
-import { createScenarioGame } from "../../game/simulation";
+import { createScenarioGame, findEnemyPath } from "../../game/simulation";
 import type { EnemyState } from "../../game/types";
 import { EnemyTooltip } from "./EnemyTooltip";
 

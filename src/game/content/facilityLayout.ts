@@ -1,8 +1,7 @@
 import type { FacilityMapDefinition, FacilityPortalDefinition, GridCell } from "../types";
+import { cell, cellKey } from "../spatial";
 
-export const cell = (column: number, elevation: number): GridCell => ({ column, elevation });
-
-export const cellKey = ({ column, elevation }: GridCell): string => `${column}:${elevation}`;
+export { cell, cellKey } from "../spatial";
 
 const horizontalCells = (fromColumn: number, toColumn: number, elevation: number): GridCell[] =>
   Array.from({ length: toColumn - fromColumn + 1 }, (_, index) =>

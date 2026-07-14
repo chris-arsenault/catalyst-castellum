@@ -1,5 +1,5 @@
-import type { LevelDefinition, RoundDefinition } from "./content/campaign";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "./definition";
+import { DEFAULT_GAME_DEFINITION } from "./definition";
+import type { GameDefinition, LevelDefinition, RoundDefinition } from "./definitionTypes";
 import { levelDefinitionFor, roundDefinitionFor } from "./engine/campaign";
 import { evaluateCommand } from "./engine/commandPolicy";
 import { executeCommand } from "./engine/commands";
@@ -7,9 +7,11 @@ import { createInitialGame, createScenarioGame } from "./engine/scenarioState";
 import { stepGame } from "./engine/step";
 import { validateGameState, type StateValidationIssue } from "./engine/stateValidation";
 import type { CommandDecision, CommandResult, GameCommand, GameState, LevelId } from "./types";
+import { createGameQueries, type GameQueries } from "./queries";
 
 export interface GameRuntime {
   readonly definition: GameDefinition;
+  readonly queries: GameQueries;
   createInitial: () => GameState;
   createScenario: (levelId: LevelId, completedLevelIds?: LevelId[]) => GameState;
   evaluate: (state: GameState, command: GameCommand) => CommandDecision;
@@ -23,6 +25,7 @@ export interface GameRuntime {
 export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
   Object.freeze({
     definition,
+    queries: createGameQueries(definition),
     createInitial: () => createInitialGame(definition),
     createScenario: (levelId: LevelId, completedLevelIds: LevelId[] = []) =>
       createScenarioGame(levelId, completedLevelIds, definition),

@@ -1,5 +1,6 @@
-import { emptyGas, emptyLiquid, type FacilityLoadout } from "../config";
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { FacilityLoadout } from "../definitionTypes";
+import { emptyGas, emptyLiquid } from "../materials";
+import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_BUFFER_IDS,
   GAS_SOURCE_IDS,
@@ -192,13 +193,14 @@ const makeProcesses = (): GameState["processes"] =>
 export const createScenarioGame = (
   levelId: LevelId,
   completedLevelIds: LevelId[] = [],
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): GameState => {
   const level = definition.levels[levelId];
   const round = level.rounds[0];
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
   const state: GameState = {
-    version: 11,
+    version: 12,
+    pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {
       levelId,
@@ -261,6 +263,5 @@ export const createScenarioGame = (
   return state;
 };
 
-export const createInitialGame = (
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): GameState => createScenarioGame("flash_point", [], definition);
+export const createInitialGame = (definition: GameDefinition): GameState =>
+  createScenarioGame("flash_point", [], definition);

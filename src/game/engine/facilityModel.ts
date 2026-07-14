@@ -10,50 +10,21 @@ import type {
   RoomId,
   WorldPoint,
 } from "../types";
-import { cell, cellKey } from "../content/facilityLayout";
+import type { FacilityModel } from "../definitionTypes";
+import {
+  cell,
+  cellKey,
+  gridCellToWorldPoint,
+  gridPathToWorldPath,
+  worldPointToGridCell,
+} from "../spatial";
 
 const STANDARD_ROOM_CELL_AREA = 14 * 8;
 const STANDARD_ROOM_VOLUME = 100;
 export const ROOM_VOLUME_PER_CELL = STANDARD_ROOM_VOLUME / STANDARD_ROOM_CELL_AREA;
 
-export interface FacilityModel {
-  readonly map: FacilityMapDefinition;
-  readonly roomGeometry: Record<RoomId, RoomGeometryDefinition>;
-  portalDefinition(portalId: string): FacilityPortalDefinition;
-  initialPortalStates(): Record<string, FacilityPortalState>;
-  inBounds(gridCell: GridCell): boolean;
-  cellDefinition(gridCell: GridCell): FacilityCellDefinition;
-  cells(): readonly FacilityCellDefinition[];
-  cellIsTraversable(
-    gridCell: GridCell,
-    portalStates?: Readonly<Record<string, FacilityPortalState>>
-  ): boolean;
-  cellHasSupport(
-    gridCell: GridCell,
-    portalStates?: Readonly<Record<string, FacilityPortalState>>
-  ): boolean;
-  roomAtmosphericCells(roomId: RoomId): readonly GridCell[];
-  roomCenterWorld(roomId: RoomId): WorldPoint;
-  roomContainsWorldPoint(roomId: RoomId, point: WorldPoint): boolean;
-  roomAtWorldPoint(point: WorldPoint): RoomId | null;
-  ringForRoom(roomId: RoomId): FacilityRing;
-  roomVolume(roomId: RoomId): number;
-  roomLiquidSurfaceElevation(roomId: RoomId, liquidVolume: number): number;
-  roomPortHeight(roomId: RoomId, elevation: number): number;
-}
-
-export const gridCellToWorldPoint = ({ column, elevation }: GridCell): WorldPoint => ({
-  x: column + 0.5,
-  elevation: elevation + 0.5,
-});
-
-export const worldPointToGridCell = ({ x, elevation }: WorldPoint): GridCell => ({
-  column: Math.floor(x),
-  elevation: Math.floor(elevation),
-});
-
-export const gridPathToWorldPath = (path: readonly GridCell[]): WorldPoint[] =>
-  path.map(gridCellToWorldPoint);
+export type { FacilityModel } from "../definitionTypes";
+export { gridCellToWorldPoint, gridPathToWorldPath, worldPointToGridCell } from "../spatial";
 
 const portalTerrain = (definition: FacilityPortalDefinition): FacilityTerrainKind => {
   if (definition.kind === "ladder_shaft") return "ladder";

@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import {
   EQUIPMENT_SOCKET_IDS,
   type EquipmentGradeDefinition,
@@ -17,10 +17,8 @@ export const NATURAL_REACTION_MULTIPLIER = 0.55;
 
 export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket_b: null });
 
-export const roomSocketIds = (
-  roomId: RoomId,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): EquipmentSocketId[] => EQUIPMENT_SOCKET_IDS.slice(0, definition.rooms[roomId].socketCount);
+export const roomSocketIds = (roomId: RoomId, definition: GameDefinition): EquipmentSocketId[] =>
+  EQUIPMENT_SOCKET_IDS.slice(0, definition.rooms[roomId].socketCount);
 
 export const installedEquipment = (room: Pick<RoomState, "equipment">): EquipmentInstance[] =>
   EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
@@ -37,7 +35,7 @@ export const findRoomEquipment = (
 export const findEquipmentInstallation = (
   state: GameState,
   equipmentId: EquipmentId,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): { roomId: RoomId; socketId: EquipmentSocketId; instance: EquipmentInstance } | null => {
   for (const [roomId, room] of Object.entries(state.rooms) as [RoomId, RoomState][]) {
     for (const socketId of roomSocketIds(roomId, definition)) {
@@ -77,18 +75,12 @@ const activeGrade = (
 export const roomEquipmentIsActive = (room: RoomState, equipmentId: EquipmentId): boolean =>
   activeLevel(room, equipmentId) !== null;
 
-export const roomGasMixingRate = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const roomGasMixingRate = (room: RoomState, definition: GameDefinition): number => {
   const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
   return behavior?.kind === "gas_agitator" ? behavior.layerExchangeRate : 0;
 };
 
-export const roomGasReactionMultiplier = (
-  room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => {
+export const roomGasReactionMultiplier = (room: RoomState, definition: GameDefinition): number => {
   const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
   return behavior?.kind === "gas_agitator"
     ? behavior.reactionMultiplier
@@ -97,7 +89,7 @@ export const roomGasReactionMultiplier = (
 
 export const roomContactReactionMultiplier = (
   room: RoomState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => {
   const behavior = activeGrade(room, "wet_contactor", definition)?.behavior;
   return behavior?.kind === "wet_contactor"
@@ -107,7 +99,7 @@ export const roomContactReactionMultiplier = (
 
 export const roomEquipmentVolume = (
   room: Pick<RoomState, "equipment">,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number =>
   installedEquipment(room).reduce(
     (total, instance) =>
@@ -117,7 +109,7 @@ export const roomEquipmentVolume = (
 
 export const equipmentInvestedMatter = (
   instance: EquipmentInstance,
-  gameDefinition: GameDefinition = DEFAULT_GAME_DEFINITION
+  gameDefinition: GameDefinition
 ): number => {
   const equipment = gameDefinition.equipment[instance.equipmentId];
   let total = equipment.buildCost;
@@ -128,7 +120,7 @@ export const equipmentInvestedMatter = (
 
 export const equipmentDismantleRefund = (
   instance: EquipmentInstance,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): number => Math.floor(equipmentInvestedMatter(instance, definition) * 0.75);
 
 const membraneCellBehavior = (level: EquipmentLevel, definition: GameDefinition) => {
@@ -137,14 +129,10 @@ const membraneCellBehavior = (level: EquipmentLevel, definition: GameDefinition)
   return behavior;
 };
 
-export const membraneCellRate = (
-  level: EquipmentLevel,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => membraneCellBehavior(level, definition).processRate;
-export const membraneCellPower = (
-  level: EquipmentLevel,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-): number => membraneCellBehavior(level, definition).powerDraw;
+export const membraneCellRate = (level: EquipmentLevel, definition: GameDefinition): number =>
+  membraneCellBehavior(level, definition).processRate;
+export const membraneCellPower = (level: EquipmentLevel, definition: GameDefinition): number =>
+  membraneCellBehavior(level, definition).powerDraw;
 
 const heatRoom = (room: RoomState, target: number, dt: number): void => {
   const wallStep = clamp(target - room.temperature, 0, 18 * dt);
@@ -158,7 +146,7 @@ const heatRoom = (room: RoomState, target: number, dt: number): void => {
 export const simulateInstalledEquipment = (
   state: GameState,
   dt: number,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ): void => {
   for (const room of Object.values(state.rooms)) {
     const behavior = activeGrade(room, "thermal_coil", definition)?.behavior;

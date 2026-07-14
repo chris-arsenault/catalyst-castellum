@@ -1,4 +1,4 @@
-import { DEFAULT_GAME_DEFINITION, type GameDefinition } from "../definition";
+import type { GameDefinition } from "../definitionTypes";
 import type {
   EquipmentId,
   GameState,
@@ -9,15 +9,10 @@ import type {
   TransportRunId,
 } from "../types";
 
-export const levelDefinitionFor = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-) => definition.levels[state.campaign.levelId];
+export const levelDefinitionFor = (state: GameState, definition: GameDefinition) =>
+  definition.levels[state.campaign.levelId];
 
-export const roundDefinitionFor = (
-  state: GameState,
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
-) => {
+export const roundDefinitionFor = (state: GameState, definition: GameDefinition) => {
   const round = definition.levels[state.campaign.levelId].rounds[state.campaign.roundIndex];
   if (!round) throw new Error(`Invalid round index ${state.campaign.roundIndex}`);
   return round;
@@ -25,7 +20,7 @@ export const roundDefinitionFor = (
 
 export const nextLevelIdFor = (
   levelId: GameState["campaign"]["levelId"],
-  definition: GameDefinition = DEFAULT_GAME_DEFINITION
+  definition: GameDefinition
 ) => definition.levelOrder[definition.levelOrder.indexOf(levelId) + 1] ?? null;
 
 export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailability => ({
