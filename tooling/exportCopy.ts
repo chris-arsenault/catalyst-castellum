@@ -4,7 +4,9 @@ import { EN_LOCALE } from "../src/localization/locales/en";
 const groups = Object.entries(EN_LOCALE.messages).reduce<Record<string, [string, string][]>>(
   (result, [key, value]) => {
     const group = key.split(".")[0] ?? "other";
-    (result[group] ??= []).push([key, value]);
+    const entries = result[group] ?? [];
+    entries.push([key, value]);
+    result[group] = entries;
     return result;
   },
   {}

@@ -1,12 +1,10 @@
 import type { LocaleBundle, LocaleKey } from "./types";
+import { messagePlaceholders } from "./messageTemplate";
 
 export interface LocaleValidationIssue {
   key: string;
   kind: "extra" | "missing" | "placeholder_mismatch";
 }
-
-const placeholders = (message: string): string[] =>
-  [...message.matchAll(/\{([^}]+)\}/g)].map((match) => match[1]!).sort();
 
 export const validateLocale = (
   reference: LocaleBundle,
@@ -18,8 +16,8 @@ export const validateLocale = (
   for (const key of referenceKeys) {
     if (!(key in candidateMessages)) issues.push({ key, kind: "missing" });
     else if (
-      placeholders(reference.messages[key]).join("|") !==
-      placeholders(candidateMessages[key]!).join("|")
+      messagePlaceholders(reference.messages[key]).join("|") !==
+      messagePlaceholders(candidateMessages[key]!).join("|")
     )
       issues.push({ key, kind: "placeholder_mismatch" });
   }

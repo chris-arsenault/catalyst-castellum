@@ -16,12 +16,14 @@ import {
   useSimulationClock,
 } from "./application/hooks";
 import { useGameStore } from "./application/store";
+import { useGamePresentation } from "./application/presentationContext";
 
 const GuidedTutorial = lazy(async () => ({
   default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
 }));
 
 const MapStage = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const selectedRoomId = useGameStore((state) => state.selectedRoomId);
   const selectRoom = useGameStore((state) => state.selectRoom);
@@ -33,8 +35,8 @@ const MapStage = () => {
       {game.paused && (
         <div className="paused-overlay">
           <Pause size={20} />
-          <strong>Simulation paused</strong>
-          <span>Continuous process state is frozen</span>
+          <strong>{translator.text("ui.app.paused.title")}</strong>
+          <span>{translator.text("ui.app.paused.detail")}</span>
         </div>
       )}
     </div>
@@ -70,6 +72,7 @@ const ActiveGame = () => {
 };
 
 export default function App() {
+  const { translator } = useGamePresentation();
   useApplicationInitialization();
   useAudioDirector();
   useSimulationClock();
@@ -77,7 +80,7 @@ export default function App() {
   const activeSlotId = useGameStore((state) => state.activeSlotId);
 
   if (!initialized) {
-    return <div className="save-selection-loading">Reading local operations archive…</div>;
+    return <div className="save-selection-loading">{translator.text("ui.app.loading")}</div>;
   }
   if (!activeSlotId) return <SaveSlotScreen />;
   return <ActiveGame />;

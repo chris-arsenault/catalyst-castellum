@@ -100,6 +100,9 @@ project's TypeScript identity union by design; dynamic third-party mod loading i
 - `presentation/defaultGame.ts` is the single default-pack binding seam. Bound presentation
   services combine a runtime, locale, formatters, event/command renderers, manuals, and cached
   selectors.
+- `GamePresentationProvider` injects that bound service at the React root. Static React copy,
+  accessibility labels, command reasons, event copy, and map label projections consume the same
+  locale instead of importing English defaults.
 - Store construction receives runtime and presentation services. Command notices use the injected
   presenter, and lifecycle/session/UI actions use the injected runtime.
 - High-frequency enemy projection has a definition-bound factory; fixture coverage proves an
@@ -125,35 +128,37 @@ mechanical policy and default content ownership sit behind query/presentation co
 
 - Mechanical definitions retain IDs, formulas, codes, equations, assets, traits, and numerical
   rules. Display names/descriptions are locale entries.
-- English is divided into typed namespaces for UI, commands, entities, levels, events, damage,
-  manual, and presentation readouts.
+- English is divided into typed namespaces for UI, tutorials, commands, entities, levels, events,
+  damage, manual, and presentation readouts under one locale root. Large UI/tutorial catalogs are
+  split by review surface rather than mixed back into components.
 - Translator placeholder types are derived from the English catalog. Locale validation reports
   missing keys, extra keys, and placeholder mismatch; a complete `en-XA` locale proves registration
   without mechanics changes.
 - Number, list, plural, date, duration, percentage, and measurement formatting share one locale
   service.
-- `pnpm copy:export` emits a single context-grouped English review document. `pnpm copy:check`
-  prevents display fields from returning to mechanical content or current-locale prose from
-  returning to engine results.
+- `pnpm copy:export` emits a single context-grouped English review document. `pnpm copy:check` uses
+  the TypeScript AST to prevent display fields from returning to mechanical content,
+  current-locale prose from returning to engine results, raw tutorial prose from entering guide
+  authoring, or literal JSX/accessibility/Pixi copy from entering UI modules.
 - Explicit legacy saved prose, formulas, stable process codes, asset paths, test IDs, and CSS
   classes remain outside translation.
 
-Assessment: the durable copy boundary now covers the language most likely to change with game
-authoring and balance. The active implementation ledger tracks the final migration of tutorial
-narrative and static interface microcopy before declaring the localization phase closed.
+Assessment: strong. The durable copy boundary covers static interface copy, accessibility text,
+tutorial narrative, domain/event/manual copy, and locale-aware formatting. An alternate-locale
+component test proves the binding at the rendered UI boundary.
 
 ## Coupling matrix
 
-| Change | Engine | Authoring | Locale | Presentation/UI | Persistence |
-| --- | --- | --- | --- | --- | --- |
-| New level using existing mechanics | — | module + registry + health plan | level/round keys | — | content version decision |
-| New ordinary reaction | — | balanced definition + strategy config | entity/manual keys | — | content version decision |
-| New exceptional reaction behavior | new named strategy | definition | entity/manual keys | optional reusable view | schema only if state changes |
-| New enemy using an appearance | — | enemy definition + wave | entity/manual keys | — | content version decision |
-| New appearance archetype | — | enemy trait | entity/manual keys | one renderer archetype | — |
-| English copy edit | — | — | locale module | — | — |
-| New locale | — | — | complete bundle | bind at composition | — |
-| New durable state field | construction/clone/validation | optional | optional | projection | schema + migration |
+| Change                             | Engine                        | Authoring                             | Locale             | Presentation/UI        | Persistence                  |
+| ---------------------------------- | ----------------------------- | ------------------------------------- | ------------------ | ---------------------- | ---------------------------- |
+| New level using existing mechanics | —                             | module + registry + health plan       | level/round keys   | —                      | content version decision     |
+| New ordinary reaction              | —                             | balanced definition + strategy config | entity/manual keys | —                      | content version decision     |
+| New exceptional reaction behavior  | new named strategy            | definition                            | entity/manual keys | optional reusable view | schema only if state changes |
+| New enemy using an appearance      | —                             | enemy definition + wave               | entity/manual keys | —                      | content version decision     |
+| New appearance archetype           | —                             | enemy trait                           | entity/manual keys | one renderer archetype | —                            |
+| English copy edit                  | —                             | —                                     | locale module      | —                      | —                            |
+| New locale                         | —                             | —                                     | complete bundle    | bind at composition    | —                            |
+| New durable state field            | construction/clone/validation | optional                              | optional           | projection             | schema + migration           |
 
 `—` means the layer normally remains untouched. New mechanical or visual behavior intentionally
 crosses its corresponding strategy boundary.
@@ -161,7 +166,7 @@ crosses its corresponding strategy boundary.
 ## Enforcement and evidence
 
 - `pnpm architecture:check`: forbidden dependency matrix plus cross-layer cycle detection.
-- `pnpm copy:check`: mechanical/engine copy ownership.
+- `pnpm copy:check`: mechanical/engine/tutorial/JSX copy ownership.
 - `pnpm locales:check`: complete second locale and placeholder parity.
 - Compiler fixtures: invalid enemy references and unbalanced chemistry fail before scenario start.
 - Extension fixtures: ordinary reaction, enemy archetype, and guide registration.
@@ -169,3 +174,6 @@ crosses its corresponding strategy boundary.
 - `make ci`: architecture, copy, performance, lint, formatting, types, coverage, build, deterministic
   campaign health, and Terraform formatting.
 - `pnpm test:e2e`: complete browser behavior.
+
+Final verification on 2026-07-14: `make ci` passed with 213 unit/component tests and all required
+checks; `pnpm test:e2e` passed all 26 Chromium scenarios.

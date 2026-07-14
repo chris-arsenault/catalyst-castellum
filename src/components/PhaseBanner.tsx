@@ -1,13 +1,13 @@
 import { ArrowRight, Info, LockKeyhole, Radio, Timer, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import type { GamePhase, GameState } from "../game/types";
-import { commandDecision as evaluateCommand } from "../presentation/selectors";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { guidedPhaseActionReason } from "../tutorial/guideModel";
-import { commandRejectionCopy } from "../presentation/commandCopy";
-import { levelCopy, roundCopy } from "../presentation/levelCopy";
+import type { LocaleFormatters } from "../localization/formatters";
+import type { Translator } from "../localization/translator";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -22,68 +22,86 @@ interface PhaseHudModel {
   value: string;
 }
 
-const phaseHudModel = (game: GameState): PhaseHudModel => {
-  const level = levelDefinitionFor(game);
-  const levelText = levelCopy(level);
+const integrityValue = (
+  game: GameState,
+  translator: Translator,
+  formatters: LocaleFormatters
+): string =>
+  translator.text("ui.phaseHud.result.value", {
+    integrity: formatters.percent(game.coreIntegrity / 100, 0),
+  });
+
+const phaseHudModel = (
+  game: GameState,
+  translator: Translator,
+  formatters: LocaleFormatters,
+  levelName: string
+): PhaseHudModel => {
   const round = roundDefinitionFor(game);
   if (game.phase === "level_briefing") {
     return {
-      label: "Checkpoint briefing",
-      value: levelText.name,
-      detail: "Review the objective and enter planning.",
+      label: translator.text("ui.phaseHud.briefing.label"),
+      value: levelName,
+      detail: translator.text("ui.phaseHud.briefing.detail"),
       tone: "frozen",
     };
   }
   if (game.phase === "build") {
     return {
-      label: "Planning",
-      value: `Prepare for ${round.wave.length} hostiles`,
-      detail: "Build the defense, then start material flow.",
+      label: translator.text("ui.phaseHud.build.label"),
+      value: translator.text("ui.phaseHud.build.value", { count: round.wave.length }),
+      detail: translator.text("ui.phaseHud.build.detail"),
       tone: "plan",
     };
   }
   if (game.phase === "prime") {
     return {
-      label: "Live prime",
+      label: translator.text("ui.phaseHud.prime.label"),
       value: formatTime(round.primeSeconds - game.phaseTime),
-      detail: "The plant is live. Assault locks the controls.",
+      detail: translator.text("ui.phaseHud.prime.detail"),
       tone: "prime",
     };
   }
   if (game.phase === "assault") {
     const inbound = Math.max(0, round.wave.length - game.spawnCursor);
     return {
-      label: "Autonomous assault",
-      value: `${game.enemies.length} inside · ${inbound} inbound`,
-      detail: `${game.stats.killed} neutralized · ${game.stats.breached} breached`,
+      label: translator.text("ui.phaseHud.assault.label"),
+      value: translator.text("ui.phaseHud.assault.value", {
+        inside: game.enemies.length,
+        inbound,
+      }),
+      detail: translator.text("ui.phaseHud.assault.detail", {
+        killed: game.stats.killed,
+        breached: game.stats.breached,
+      }),
       tone: "assault",
     };
   }
   if (game.phase === "round_result")
     return {
-      label: "Round complete",
-      value: `Core ${Math.round(game.coreIntegrity)}%`,
-      detail: "Round analysis is ready.",
+      label: translator.text("ui.phaseHud.result.label"),
+      value: integrityValue(game, translator, formatters),
+      detail: translator.text("ui.phaseHud.result.detail"),
       tone: "frozen",
     };
   if (game.phase === "level_complete")
     return {
-      label: "Checkpoint secured",
-      value: levelText.name,
-      detail: "The next checkpoint is ready.",
+      label: translator.text("ui.phaseHud.level.label"),
+      value: levelName,
+      detail: translator.text("ui.phaseHud.level.detail"),
       tone: "frozen",
     };
   if (game.phase === "victory")
     return {
-      label: "Campaign complete",
-      value: `Core ${Math.round(game.coreIntegrity)}%`,
-      detail: "The final campaign record is ready.",
+      label: translator.text("ui.phaseHud.victory.label"),
+      value: integrityValue(game, translator, formatters),
+      detail: translator.text("ui.phaseHud.victory.detail"),
       tone: "frozen",
     };
   return {
-    label: "Core lost",
-    value: levelText.name,
-    detail: "Retry restores this checkpoint for a new defense plan.",
+    label: translator.text("ui.phaseHud.defeat.label"),
+    value: levelName,
+    detail: translator.text("ui.phaseHud.defeat.detail"),
     tone: "frozen",
   };
 };
@@ -95,11 +113,12 @@ const PhaseIcon = ({ phase }: { phase: GamePhase }) => {
 };
 
 const PhaseAction = ({ game }: { game: GameState }) => {
+  const { commandCopy, selectors, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
   const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   if (game.phase === "build") {
     const command = { type: "start_prime" } as const;
-    const decision = evaluateCommand(game, command);
+    const decision = selectors.commandDecision(game, command);
     const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
     return (
       <button
@@ -108,16 +127,16 @@ const PhaseAction = ({ game }: { game: GameState }) => {
         data-testid="begin-prime"
         data-tutorial-anchor={TUTORIAL_ANCHORS.beginPrime}
         disabled={!decision.allowed || Boolean(guideReason)}
-        title={guideReason ?? commandRejectionCopy(decision) ?? undefined}
+        title={guideReason ? translator.text(guideReason) : (commandCopy(decision) ?? undefined)}
         onClick={() => dispatch(command)}
       >
-        Start prime <ArrowRight size={16} />
+        {translator.text("ui.phaseHud.startPrime")} <ArrowRight size={16} />
       </button>
     );
   }
   if (game.phase !== "prime") return null;
   const command = { type: "start_assault" } as const;
-  const decision = evaluateCommand(game, command);
+  const decision = selectors.commandDecision(game, command);
   const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
   return (
     <button
@@ -126,18 +145,20 @@ const PhaseAction = ({ game }: { game: GameState }) => {
       data-testid="start-assault"
       data-tutorial-anchor={TUTORIAL_ANCHORS.startAssault}
       disabled={!decision.allowed || Boolean(guideReason)}
-      title={guideReason ?? commandRejectionCopy(decision) ?? undefined}
+      title={guideReason ? translator.text(guideReason) : (commandCopy(decision) ?? undefined)}
       onClick={() => dispatch(command)}
     >
-      Start assault <LockKeyhole size={15} />
+      {translator.text("ui.phaseHud.startAssault")} <LockKeyhole size={15} />
     </button>
   );
 };
 
 const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => void }) => {
+  const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const level = levelDefinitionFor(game);
   const round = roundDefinitionFor(game);
-  const roundText = roundCopy(level, round);
+  const roundText = localizedLevelCopy.round(level, round);
+  const levelText = localizedLevelCopy.level(level);
   return (
     <div className="modal-backdrop round-brief-backdrop">
       <section
@@ -149,32 +170,35 @@ const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => vo
         <button
           type="button"
           className="modal-close"
-          aria-label="Close round brief"
+          aria-label={translator.text("ui.phaseHud.closeBrief")}
           onClick={onClose}
         >
           <X size={18} />
         </button>
         <span className="round-brief-kicker">
-          Level {level.number} · Round {game.campaign.roundIndex + 1}
+          {translator.text("ui.phaseHud.levelRound", {
+            level: level.number,
+            round: game.campaign.roundIndex + 1,
+          })}
         </span>
         <h2 id="round-brief-title">{roundText.title}</h2>
         <p>{roundText.objective}</p>
         <dl>
           <div>
-            <dt>Incoming</dt>
-            <dd>{round.wave.length} hostiles</dd>
+            <dt>{translator.text("ui.phaseHud.incoming")}</dt>
+            <dd>{translator.text("ui.phaseHud.hostiles", { count: round.wave.length })}</dd>
           </div>
           <div>
-            <dt>Prime window</dt>
-            <dd>{round.primeSeconds} seconds</dd>
+            <dt>{translator.text("ui.phaseHud.primeWindow")}</dt>
+            <dd>{formatters.duration(round.primeSeconds)}</dd>
           </div>
           <div>
-            <dt>Current phase</dt>
-            <dd>{phaseHudModel(game).label}</dd>
+            <dt>{translator.text("ui.phaseHud.currentPhase")}</dt>
+            <dd>{phaseHudModel(game, translator, formatters, levelText.name).label}</dd>
           </div>
         </dl>
         <button type="button" className="secondary-action wide" onClick={onClose}>
-          Back to the map
+          {translator.text("ui.phaseHud.back")}
         </button>
       </section>
     </div>
@@ -182,11 +206,17 @@ const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => vo
 };
 
 export const PhaseBanner = () => {
+  const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const [showBrief, setShowBrief] = useState(false);
   const openBrief = useCallback(() => setShowBrief(true), [setShowBrief]);
   const closeBrief = useCallback(() => setShowBrief(false), [setShowBrief]);
-  const model = phaseHudModel(game);
+  const model = phaseHudModel(
+    game,
+    translator,
+    formatters,
+    localizedLevelCopy.level(levelDefinitionFor(game)).name
+  );
   return (
     <>
       <section
@@ -203,7 +233,7 @@ export const PhaseBanner = () => {
           <small>{model.detail}</small>
         </div>
         <button className="round-info-button" type="button" onClick={openBrief}>
-          <Info size={15} /> Round brief
+          <Info size={15} /> {translator.text("ui.phaseHud.roundBrief")}
         </button>
         <PhaseAction game={game} />
       </section>

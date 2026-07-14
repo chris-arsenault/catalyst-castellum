@@ -1,4 +1,4 @@
-import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../config";
+import { ROOM_DEFINITIONS } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
 import type { PlaytestPlan } from "./types";
 import { LEVEL_PLAYTEST_PLANS } from "../content/playtestPlans";

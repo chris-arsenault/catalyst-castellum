@@ -1,60 +1,64 @@
 import { Flame, Gauge, PauseCircle, Play, Wind } from "lucide-react";
 import type { CombatIncident } from "../game/types";
+import { useGamePresentation } from "../application/presentationContext";
 
 interface FirstFlashExplanationProps {
   incident: CombatIncident;
   onClose: () => void;
 }
 
-export const FirstFlashExplanation = ({ incident, onClose }: FirstFlashExplanationProps) => (
-  <div className="modal-backdrop first-flash-backdrop">
-    <section
-      className="first-flash-modal"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="first-flash-title"
-      data-testid="first-flash-explanation"
-    >
-      <span className="first-flash-kicker">
-        <PauseCircle size={14} /> Teaching pause · First OX-1 flash
-      </span>
-      <h2 id="first-flash-title">R-02’s first OX-1 flash</h2>
-      <p>
-        The Core duct delivered hydrogen and oxygen into R-02. The agitator distributed them across
-        both gas layers. One layer met its H₂ concentration, O₂ concentration, stoichiometric batch,
-        agitation, and cooldown gates. Combustion consumes that mixture, creates a brief pressure
-        impulse, and raises the chamber gas temperature.
-      </p>
-      <div className="flash-causal-chain" aria-label="Explosion causal chain">
-        <span>
-          <Wind size={16} />
-          <strong>H₂ + O₂ arrived</strong>
-          <small>Core gas feed</small>
+export const FirstFlashExplanation = ({ incident, onClose }: FirstFlashExplanationProps) => {
+  const { formatters, translator } = useGamePresentation();
+  return (
+    <div className="modal-backdrop first-flash-backdrop">
+      <section
+        className="first-flash-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="first-flash-title"
+        data-testid="first-flash-explanation"
+      >
+        <span className="first-flash-kicker">
+          <PauseCircle size={14} /> {translator.text("tutorial.flash.explanation.kicker")}
         </span>
-        <i>→</i>
-        <span>
-          <Flame size={16} />
-          <strong>OX-1 ignited</strong>
-          <small>{incident.reactionExtent.toFixed(1)} mol-eq reacted</small>
-        </span>
-        <i>→</i>
-        <span>
-          <Gauge size={16} />
-          <strong>Blast + hot gas</strong>
-          <small>
-            {Math.round(incident.pressureImpulse)} kPa impulse · +{Math.round(incident.heatDelta)}{" "}
-            °C gas
-          </small>
-        </span>
-      </div>
-      <p className="first-flash-note">
-        The pressure impulse lands once at ignition. Gas above 48 °C applies continuous thermal
-        damage while a target remains inside that layer. Enemy hover shows its current HP per
-        second.
-      </p>
-      <button type="button" className="primary-action first-flash-resume" onClick={onClose}>
-        <Play size={15} /> Start first assault
-      </button>
-    </section>
-  </div>
-);
+        <h2 id="first-flash-title">{translator.text("tutorial.flash.explanation.title")}</h2>
+        <p>{translator.text("tutorial.flash.explanation.summary")}</p>
+        <div
+          className="flash-causal-chain"
+          aria-label={translator.text("tutorial.flash.explanation.causalChain")}
+        >
+          <span>
+            <Wind size={16} />
+            <strong>{translator.text("tutorial.flash.explanation.reactants")}</strong>
+            <small>{translator.text("tutorial.flash.explanation.feed")}</small>
+          </span>
+          <i>→</i>
+          <span>
+            <Flame size={16} />
+            <strong>{translator.text("tutorial.flash.explanation.ignition")}</strong>
+            <small>
+              {translator.text("tutorial.flash.explanation.extent", {
+                extent: formatters.number(incident.reactionExtent, 1),
+              })}
+            </small>
+          </span>
+          <i>→</i>
+          <span>
+            <Gauge size={16} />
+            <strong>{translator.text("tutorial.flash.explanation.effects")}</strong>
+            <small>
+              {translator.text("tutorial.flash.explanation.effectValues", {
+                pressure: formatters.number(incident.pressureImpulse, 0),
+                heat: formatters.number(incident.heatDelta, 0),
+              })}
+            </small>
+          </span>
+        </div>
+        <p className="first-flash-note">{translator.text("tutorial.flash.explanation.note")}</p>
+        <button type="button" className="primary-action first-flash-resume" onClick={onClose}>
+          <Play size={15} /> {translator.text("tutorial.flash.explanation.startAssault")}
+        </button>
+      </section>
+    </div>
+  );
+};

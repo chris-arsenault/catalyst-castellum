@@ -9,6 +9,7 @@ import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { equipmentRenderModels } from "./equipmentRenderModel";
 import { colorNumber, roomMapRect } from "./mapGeometry";
 import { bufferCopy } from "../../presentation/entityCopy";
+import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 
 export type CellOutletId = GasBufferId | LiquidBufferId;
 
@@ -38,7 +39,10 @@ export interface CellOutletAssemblyModel {
 const clamp = (value: number, minimum: number, maximum: number): number =>
   Math.min(maximum, Math.max(minimum, value));
 
-export const cellOutletAssemblyModel = (game: GameState): CellOutletAssemblyModel | null => {
+export const cellOutletAssemblyModel = (
+  game: GameState,
+  translator: Translator = DEFAULT_TRANSLATOR
+): CellOutletAssemblyModel | null => {
   const installation = equipmentRenderModels(game).find(
     (model) => model.equipmentId === "membrane_cell"
   );
@@ -72,7 +76,9 @@ export const cellOutletAssemblyModel = (game: GameState): CellOutletAssemblyMode
   ];
 
   return {
-    header: `${ROOM_DEFINITIONS[installation.roomId].code} CELL OUTPUTS`,
+    header: translator.text("ui.map.outlet.header", {
+      room: ROOM_DEFINITIONS[installation.roomId].code,
+    }),
     installationX: installation.x,
     installationY: installation.y,
     outlets: definitions.map(({ amount, bufferId, definition, formula, phase }, index) => ({
@@ -82,7 +88,7 @@ export const cellOutletAssemblyModel = (game: GameState): CellOutletAssemblyMode
       capacity: definition.capacity,
       fill: amount / definition.capacity,
       formula,
-      name: bufferCopy(definition).name,
+      name: bufferCopy(definition, translator).name,
       phase,
       roomId: installation.roomId,
       x: centerX + (index - 1) * 34,

@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { Joyride, type Options, type Step, type Styles } from "react-joyride";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
+import type { Translator } from "../localization/translator";
 import type { GameState } from "../game/types";
 import {
   guideCanRun,
@@ -15,6 +17,7 @@ import { FirstFlashExplanation } from "./FirstFlashExplanation";
 import { tutorialAnchorSelector } from "./anchors";
 import { TutorialTaskCard } from "./TutorialTaskCard";
 import { TutorialStageIntro } from "./TutorialStageIntro";
+import { tutorialText } from "./tutorialCopy";
 
 const TASK_SLOT = '[data-tutorial="task-slot"]';
 
@@ -38,13 +41,13 @@ const JOYRIDE_OPTIONS: Partial<Options> = {
   zIndex: 80,
 };
 
-const stepsFor = (guide: GuideDefinition): Step[] =>
+const stepsFor = (guide: GuideDefinition, translator: Translator): Step[] =>
   guide.steps.map((definition) => ({
     id: definition.id,
     target: tutorialAnchorSelector(definition.target),
     placement: "auto",
-    title: definition.title,
-    content: definition.explanation,
+    title: tutorialText(translator, definition.title),
+    content: tutorialText(translator, definition.explanation),
     data: { definition },
     blockTargetInteraction: false,
     floatingOptions: { hideArrow: false },
@@ -142,6 +145,7 @@ const TutorialPresentation = ({
 );
 
 const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const showHelp = useGameStore((state) => state.showHelp);
@@ -149,7 +153,7 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
   const acknowledgedStageIntroIds = useGameStore((state) => state.acknowledgedStageIntroIds);
   const acknowledgeStageIntro = useGameStore((state) => state.acknowledgeStageIntro);
   const stepIndex = guideStepIndexFor(game, guide);
-  const steps = useMemo(() => stepsFor(guide), [guide]);
+  const steps = useMemo(() => stepsFor(guide, translator), [guide, translator]);
   const activeStep = guide.steps[stepIndex] ?? null;
   const dismissed = dismissedGuideIds.includes(guide.dismissalId);
   const showStageIntro = stageIntroShouldShow(guide, game, dismissed, acknowledgedStageIntroIds);

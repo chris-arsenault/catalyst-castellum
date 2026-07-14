@@ -10,16 +10,23 @@ import {
   type GasSourceId,
   type LiquidSourceId,
 } from "../game/types";
-import { commandDecision as evaluateCommand } from "../presentation/selectors";
-import { commandRejectionCopy } from "../presentation/commandCopy";
 import { useGameStore } from "../application/store";
 import { sourceCopy } from "../presentation/entityCopy";
+import { useGamePresentation } from "../application/presentationContext";
+import type { LocaleFormatters } from "../localization/formatters";
+import type { Translator } from "../localization/translator";
 
-const gasComposition = (gas: GasAmounts): string =>
+const gasComposition = (
+  gas: GasAmounts,
+  translator: Translator,
+  formatters: LocaleFormatters
+): string =>
   GAS_TYPES.filter((species) => gas[species] >= 0.005)
     .sort((left, right) => gas[right] - gas[left])
-    .map((species) => `${SPECIES_DEFINITIONS[species].formula} ${gas[species].toFixed(1)}`)
-    .join(" · ") || "Empty";
+    .map(
+      (species) => `${SPECIES_DEFINITIONS[species].formula} ${formatters.number(gas[species], 1)}`
+    )
+    .join(" · ") || translator.text("ui.supplies.empty");
 
 interface SupplyProps {
   accent: string;
@@ -35,13 +42,14 @@ interface SupplyProps {
 }
 
 const Supply = (props: SupplyProps) => {
+  const { commandCopy, formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const command =
     props.sourceKind === "gas"
       ? ({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId } as const)
       : ({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId } as const);
-  const decision = evaluateCommand(game, command);
+  const decision = selectors.commandDecision(game, command);
   const charge = useCallback(() => {
     if (props.sourceKind === "gas") {
       dispatch({ type: "charge_gas_source", sourceId: props.sourceId as GasSourceId });
@@ -57,12 +65,15 @@ const Supply = (props: SupplyProps) => {
       <span className="supply-fill" aria-hidden="true">
         <i style={{ "--supply-fill": `${fill}%` }} />
       </span>
-      <strong data-testid={`source-${props.sourceId}`}>{props.amount.toFixed(0)}</strong>
+      <strong data-testid={`source-${props.sourceId}`}>{formatters.number(props.amount, 0)}</strong>
       <button
         type="button"
         disabled={!decision.allowed}
-        title={commandRejectionCopy(decision) ?? `Restock ${props.formula}`}
-        aria-label={`Restock ${props.name}`}
+        title={
+          commandCopy(decision) ??
+          translator.text("ui.supplies.restockFormula", { formula: props.formula })
+        }
+        aria-label={translator.text("ui.supplies.restock", { name: props.name })}
         onClick={charge}
       >
         <Plus size={13} />
@@ -71,8 +82,12 @@ const Supply = (props: SupplyProps) => {
         <b>{props.name}</b>
         {props.detail}
         <small>
-          {props.amount.toFixed(1)} / {props.capacity} mol-eq · +{props.chargeAmount.toFixed(0)} for{" "}
-          {props.chargeCost} matter
+          {translator.text("ui.supplies.detail", {
+            amount: formatters.measurement(props.amount, "mol-eq", 1),
+            capacity: formatters.measurement(props.capacity, "mol-eq", 1),
+            charge: formatters.number(props.chargeAmount, 0),
+            cost: formatters.number(props.chargeCost, 0),
+          })}
         </small>
       </span>
     </article>
@@ -80,6 +95,7 @@ const Supply = (props: SupplyProps) => {
 };
 
 const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
+  const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const source = GAS_SOURCES[sourceId];
   const gas = game.gasSources[sourceId].gas;
@@ -93,9 +109,9 @@ const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
         0
       )}
       chargeCost={source.chargeCost}
-      detail={gasComposition(gas)}
+      detail={gasComposition(gas, translator, formatters)}
       formula={source.formula}
-      name={sourceCopy(source).name}
+      name={sourceCopy(source, translator).name}
       sourceId={sourceId}
       sourceKind="gas"
     />
@@ -103,6 +119,7 @@ const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
 };
 
 const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
+  const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const source = LIQUID_SOURCES[sourceId];
   const amount = liquidAmountTotal(game.liquidSources[sourceId].liquid);
@@ -113,9 +130,9 @@ const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
       capacity={source.capacity}
       chargeAmount={source.chargeAmount}
       chargeCost={source.chargeCost}
-      detail={`${source.formula} ${amount.toFixed(1)}`}
+      detail={`${source.formula} ${formatters.number(amount, 1)}`}
       formula={source.formula}
-      name={sourceCopy(source).name}
+      name={sourceCopy(source, translator).name}
       sourceId={sourceId}
       sourceKind="liquid"
     />
@@ -123,11 +140,16 @@ const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
 };
 
 export const FeedstockStrip = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   return (
-    <section className="supply-dock" aria-label="Supplies" data-testid="supply-dock">
+    <section
+      className="supply-dock"
+      aria-label={translator.text("ui.supplies.title")}
+      data-testid="supply-dock"
+    >
       <span className="supply-dock-label">
-        <PackageOpen size={14} /> Supplies
+        <PackageOpen size={14} /> {translator.text("ui.supplies.title")}
       </span>
       {GAS_SOURCE_IDS.filter((sourceId) => game.availability.gasSources.includes(sourceId)).map(
         (sourceId) => (

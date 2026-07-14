@@ -1,12 +1,14 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { GuideConceptModel, GuideConceptStage } from "./flashPointConcept";
 
-const concise = (value: number): string => String(Number(value.toFixed(2)));
+const ACID_REACTION = DEFAULT_GAME_DEFINITION.reactions.hydrogen_chlorine_recombination;
+const acidCoefficient = (species: string): number =>
+  [...ACID_REACTION.reactants, ...ACID_REACTION.products].find((entry) => entry.species === species)
+    ?.coefficient ?? 0;
 
 const acidLineStages = (): GuideConceptStage[] => {
   const definition = DEFAULT_GAME_DEFINITION;
-  const reaction = definition.reactions.hydrogen_chlorine_recombination;
-  const behavior = reaction.behavior;
+  const behavior = ACID_REACTION.behavior;
   const feed = definition.transportRuns.cell_furnace.gas;
   const firstReturn = definition.transportRuns.furnace_return.gas;
   const finalReturn = definition.transportRuns.return_final.gas;
@@ -22,55 +24,66 @@ const acidLineStages = (): GuideConceptStage[] => {
   ) {
     throw new Error("Acid Line concept requires CL-2, its equipment, and its gas route");
   }
-  const coefficient = (species: string): number =>
-    [...reaction.reactants, ...reaction.products].find((entry) => entry.species === species)
-      ?.coefficient ?? 0;
   return [
     {
       kind: "feed",
-      title: "Deliver the shared gas batch",
-      metric: `${concise(coefficient("hydrogen"))} H₂ : ${concise(
-        coefficient("chlorine")
-      )} Cl₂ · ${concise(feed.maxFlow)} mol-eq/s`,
-      detail:
-        "The preloaded anode and cathode buffers join at R-05. Its fan carries the shared 1:1 reactant stream through a physical duct into R-02.",
+      title: "tutorial.concept.acid.feed.title",
+      metric: {
+        key: "tutorial.concept.acid.feed.metric",
+        parameters: {
+          hydrogen: acidCoefficient("hydrogen"),
+          chlorine: acidCoefficient("chlorine"),
+          rate: feed.maxFlow,
+        },
+      },
+      detail: "tutorial.concept.acid.feed.detail",
     },
     {
       kind: "heat",
-      title: "Activate and distribute CL-2",
-      metric: `${concise(coil.behavior.targetTemperature)}°C target · ${concise(
-        behavior.activationTemperature
-      )}→${concise(behavior.activationTemperature + behavior.activationRange)}°C activation`,
-      detail: `The Thermal Coil raises both gas layers through the CL-2 activation range. Grade 1 agitation exchanges the layers and applies ${concise(
-        agitator.behavior.reactionMultiplier
-      )}× reaction kinetics.`,
+      title: "tutorial.concept.acid.heat.title",
+      metric: {
+        key: "tutorial.concept.acid.heat.metric",
+        parameters: {
+          target: coil.behavior.targetTemperature,
+          minimum: behavior.activationTemperature,
+          maximum: behavior.activationTemperature + behavior.activationRange,
+        },
+      },
+      detail: {
+        key: "tutorial.concept.acid.heat.detail",
+        parameters: { multiplier: agitator.behavior.reactionMultiplier },
+      },
     },
     {
       kind: "convert",
-      title: "Create hydrogen chloride",
-      metric: `${concise(coefficient("hydrogen"))} H₂ + ${concise(
-        coefficient("chlorine")
-      )} Cl₂ → ${concise(coefficient("hydrogen_chloride"))} HCl`,
-      detail: `Each layer resolves independently. Available 1:1 reactants and temperature activation set the live rate from a ${concise(
-        behavior.maximumRate
-      )} extent/s base.`,
+      title: "tutorial.concept.acid.convert.title",
+      metric: {
+        key: "tutorial.concept.acid.convert.metric",
+        parameters: {
+          hydrogen: acidCoefficient("hydrogen"),
+          chlorine: acidCoefficient("chlorine"),
+          chloride: acidCoefficient("hydrogen_chloride"),
+        },
+      },
+      detail: {
+        key: "tutorial.concept.acid.convert.detail",
+        parameters: { rate: behavior.maximumRate },
+      },
     },
     {
       kind: "route",
-      title: "Build acid residence time",
-      metric: `R-02→R-04 ${concise(firstReturn.maxFlow)} · R-04→R-06 ${concise(
-        finalReturn.maxFlow
-      )} mol-eq/s`,
-      detail:
-        "The two return fans extend the HCl-bearing gas path across three combat rooms. Filled conduit and room inventories preserve corrosive exposure as the wave advances.",
+      title: "tutorial.concept.acid.route.title",
+      metric: {
+        key: "tutorial.concept.acid.route.metric",
+        parameters: { first: firstReturn.maxFlow, final: finalReturn.maxFlow },
+      },
+      detail: "tutorial.concept.acid.route.detail",
     },
   ];
 };
 
 export const ACID_LINE_CONCEPT_MODEL: GuideConceptModel = {
-  principle:
-    "CL-2 is a temperature-activated continuous reaction. Shared H₂/Cl₂ feed supplies equal reactants, R-02 equipment establishes reaction conditions, and the return line carries the HCl product along the hostile route.",
+  principle: "tutorial.concept.acid.principle",
   stages: acidLineStages(),
-  conclusion:
-    "Feed inventory, per-layer temperature, reactant balance, mixing, and downstream residence time shape the acid front. Prime charges the complete line; assault tests its corrosive exposure against armored shells.",
+  conclusion: "tutorial.concept.acid.conclusion",
 };

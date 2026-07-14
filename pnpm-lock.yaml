@@ -35,7 +35,7 @@ importers:
     devDependencies:
       '@ahara/standards':
         specifier: github:chris-arsenault/ahara-standards
-        version: https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/12091699907291d3b1cb1d7e095eca984a18e808
+        version: https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/76c26b664c7e0a41d86b76bd4b6c58ab05c11646
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.7.0)
@@ -111,8 +111,8 @@ importers:
 
 packages:
 
-  '@ahara/standards@https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/12091699907291d3b1cb1d7e095eca984a18e808':
-    resolution: {tarball: https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/12091699907291d3b1cb1d7e095eca984a18e808}
+  '@ahara/standards@https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/76c26b664c7e0a41d86b76bd4b6c58ab05c11646':
+    resolution: {tarball: https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/76c26b664c7e0a41d86b76bd4b6c58ab05c11646}
     version: 0.1.0
 
   '@asamuzakjp/css-color@5.1.11':
@@ -2282,7 +2282,7 @@ packages:
 
 snapshots:
 
-  '@ahara/standards@https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/12091699907291d3b1cb1d7e095eca984a18e808': {}
+  '@ahara/standards@https://codeload.github.com/chris-arsenault/ahara-standards/tar.gz/76c26b664c7e0a41d86b76bd4b6c58ab05c11646': {}
 
   '@asamuzakjp/css-color@5.1.11':
     dependencies:

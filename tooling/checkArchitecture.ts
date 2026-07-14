@@ -30,47 +30,56 @@ export const moduleSpecifiers = (source: string): string[] =>
 
 const isTest = (path: string): boolean => /\.(test|spec)\.tsx?$/.test(path);
 
+interface ImportBoundaryRule {
+  message: string;
+  matches: (path: string, dependency: string) => boolean;
+}
+
+const IMPORT_BOUNDARY_RULES: readonly ImportBoundaryRule[] = [
+  {
+    matches: (path, dependency) =>
+      path.startsWith("src/game/") &&
+      DOMAIN_FORBIDDEN_PACKAGES.some(
+        (name) => dependency === name || dependency.startsWith(`${name}/`)
+      ),
+    message: "domain imports UI/browser package",
+  },
+  {
+    matches: (path, dependency) =>
+      path.startsWith("src/game/") &&
+      /\/(application|components|presentation|tutorial|localization)(\/|$)/.test(dependency),
+    message: "domain imports outward layer",
+  },
+  {
+    matches: (path, dependency) =>
+      /^src\/(application|components|tutorial|audio)\//.test(path) &&
+      /game\/(config|content|engine|persistence|simulation)(\/|$)/.test(dependency),
+    message: "application/UI imports internal game module",
+  },
+  {
+    matches: (path, dependency) =>
+      path.startsWith("src/game/engine/") &&
+      /(\.\.\/)+(config|content|definition)(\/|$)/.test(dependency),
+    message: "engine imports a default definition or authored content",
+  },
+  {
+    matches: (path, dependency) =>
+      path.startsWith("src/localization/") &&
+      /\/(game|application|components|tutorial)(\/|$)/.test(dependency),
+    message: "locale imports runtime layer",
+  },
+  {
+    matches: (path, dependency) =>
+      path.startsWith("src/presentation/") &&
+      path !== "src/presentation/defaultGame.ts" &&
+      /game\/(config|content|engine)(\/|$)/.test(dependency),
+    message: "presentation bypasses the bound runtime/default composition",
+  },
+];
+
 const forbiddenImport = (path: string, dependency: string): string | null => {
-  if (
-    path.startsWith("src/game/") &&
-    DOMAIN_FORBIDDEN_PACKAGES.some(
-      (name) => dependency === name || dependency.startsWith(`${name}/`)
-    )
-  ) {
-    return `domain imports UI/browser package "${dependency}"`;
-  }
-  if (
-    path.startsWith("src/game/") &&
-    /\/(application|components|presentation|tutorial|localization)(\/|$)/.test(dependency)
-  ) {
-    return `domain imports outward layer "${dependency}"`;
-  }
-  if (
-    /^src\/(application|components|tutorial|audio)\//.test(path) &&
-    /game\/(config|content|engine|persistence|simulation)(\/|$)/.test(dependency)
-  ) {
-    return `application/UI imports internal game module "${dependency}"`;
-  }
-  if (
-    path.startsWith("src/game/engine/") &&
-    /(\.\.\/)+(config|content|definition)(\/|$)/.test(dependency)
-  ) {
-    return `engine imports a default definition or authored content "${dependency}"`;
-  }
-  if (
-    path.startsWith("src/localization/") &&
-    /\/(game|application|components|tutorial)(\/|$)/.test(dependency)
-  ) {
-    return `locale imports runtime layer "${dependency}"`;
-  }
-  if (
-    path.startsWith("src/presentation/") &&
-    path !== "src/presentation/defaultGame.ts" &&
-    /game\/(config|content|engine)(\/|$)/.test(dependency)
-  ) {
-    return `presentation bypasses the bound runtime/default composition "${dependency}"`;
-  }
-  return null;
+  const rule = IMPORT_BOUNDARY_RULES.find((candidate) => candidate.matches(path, dependency));
+  return rule ? `${rule.message} "${dependency}"` : null;
 };
 
 const resolveLocalDependency = (

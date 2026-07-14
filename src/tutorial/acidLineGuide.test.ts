@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import { hydrogenChlorineReactionStatus } from "../game/queries";
 import { createScenarioGame, executeCommand, stepGame } from "../game/simulation";
 import type { GameCommand, GameState } from "../game/types";
+import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
+import { tutorialText } from "./tutorialCopy";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -50,7 +52,9 @@ describe("Acid Line guidance", () => {
     expect(guide.id).toContain("hot_mix");
     expect(guide.showStageIntro).toBe(true);
     expect(guide.firstFlashTeachingBreak).toBe(false);
-    expect(guide.story.model?.stages.map((stage) => stage.metric)).toEqual([
+    expect(
+      guide.story.model?.stages.map((stage) => tutorialText(DEFAULT_TRANSLATOR, stage.metric))
+    ).toEqual([
       "1 H₂ : 1 Cl₂ · 1.15 mol-eq/s",
       "68°C target · 38→66°C activation",
       "1 H₂ + 1 Cl₂ → 2 HCl",
@@ -66,7 +70,8 @@ describe("Acid Line guidance", () => {
         TUTORIAL_ANCHORS.furnaceReactionReadout,
       ])
     );
-    expect(guidedPhaseActionReason(game, "start_prime", [])).toContain("Thermal Coil");
+    const reason = guidedPhaseActionReason(game, "start_prime", []);
+    expect(reason && tutorialText(DEFAULT_TRANSLATOR, reason)).toContain("Thermal Coil");
 
     game = installAcidEquipment(game);
     expect(guideStepIndexFor(game, guide)).toBe(2);

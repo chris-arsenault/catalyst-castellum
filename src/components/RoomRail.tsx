@@ -1,19 +1,20 @@
 import { ROOM_DEFINITIONS, ROOM_ORDER, roomRing } from "../presentation/defaultGame";
-import { roomAnalysis } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
 import { roomCopy } from "../presentation/entityCopy";
+import { useGamePresentation } from "../application/presentationContext";
 
 export const RoomRail = () => {
+  const { selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const selectedRoomId = useGameStore((state) => state.selectedRoomId);
   const selectRoom = useGameStore((state) => state.selectRoom);
 
   return (
-    <nav className="room-rail" aria-label="Select a room">
+    <nav className="room-rail" aria-label={translator.text("ui.map.selectRoom")}>
       {ROOM_ORDER.map((roomId) => {
         const definition = ROOM_DEFINITIONS[roomId];
         const ring = roomRing(roomId);
-        const analysis = roomAnalysis(game.rooms[roomId]);
+        const analysis = selectors.roomAnalysis(game.rooms[roomId]);
         return (
           <button
             key={roomId}
@@ -24,7 +25,7 @@ export const RoomRail = () => {
           >
             <span className={`room-status hazard-${analysis.hazardLabel.toLowerCase()}`} />
             <span>{definition.code}</span>
-            <strong>{roomCopy(definition).name}</strong>
+            <strong>{roomCopy(definition, translator).name}</strong>
           </button>
         );
       })}

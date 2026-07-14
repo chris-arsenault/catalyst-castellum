@@ -24,7 +24,7 @@ describe("room map detail", () => {
     expect(tooltip.textContent).toContain("O₂");
     expect(tooltip.textContent).toContain("N₂");
     expect(tooltip.textContent).toContain("Static pressure");
-    expect(tooltip.textContent).toContain("OX-1 pulse+38.0 kPa");
+    expect(tooltip.textContent).toContain("OX-1 pulse+38 kPa");
     expect(tooltip.textContent).toContain("2 open passages");
     expect(tooltip.textContent).toContain("THERMAL");
     expect(tooltip.textContent).toContain("Thermal exposure begins above 48 °C");

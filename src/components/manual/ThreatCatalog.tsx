@@ -2,9 +2,10 @@ import { Bird, Bug, Shield, Snail, Wind } from "lucide-react";
 import { useState } from "react";
 import { ENEMY_DEFINITIONS } from "../../presentation/defaultGame";
 import { ENEMY_TYPES, type EnemyManualIcon, type EnemyType } from "../../game/types";
-import { damageChannelStyle, DAMAGE_CHANNELS } from "../../presentation/damageCopy";
-import { ENEMY_MANUAL_FLAVOR } from "../../presentation/manualContent";
+import { DAMAGE_CHANNELS } from "../../presentation/damageCopy";
 import { enemyCopy } from "../../presentation/entityCopy";
+import { useGamePresentation } from "../../application/presentationContext";
+import type { Translator } from "../../localization/translator";
 
 const ENEMY_ICONS: Record<EnemyManualIcon, typeof Bug> = {
   bug: Bug,
@@ -14,18 +15,18 @@ const ENEMY_ICONS: Record<EnemyManualIcon, typeof Bug> = {
   snail: Snail,
 };
 
-const movement = (enemyType: EnemyType): string => {
+const movement = (enemyType: EnemyType, translator: Translator): string => {
   const definition = ENEMY_DEFINITIONS[enemyType];
-  if (definition.flying) return "Airborne";
-  if (definition.speed >= 0.16) return "Rapid ground";
-  if (definition.speed <= 0.08) return "Armored ground";
-  return "Ground";
+  if (definition.flying) return translator.text("ui.manual.threats.movement.airborne");
+  if (definition.speed >= 0.16) return translator.text("ui.manual.threats.movement.rapid");
+  if (definition.speed <= 0.08) return translator.text("ui.manual.threats.movement.armored");
+  return translator.text("ui.manual.threats.movement.ground");
 };
 
-const responseLabel = (multiplier: number): string => {
-  if (multiplier > 1.05) return "Amplified";
-  if (multiplier < 0.95) return "Reduced";
-  return "Standard";
+const responseLabel = (multiplier: number, translator: Translator): string => {
+  if (multiplier > 1.05) return translator.text("ui.manual.threats.response.amplified");
+  if (multiplier < 0.95) return translator.text("ui.manual.threats.response.reduced");
+  return translator.text("ui.manual.threats.response.standard");
 };
 
 const ThreatIndex = ({
@@ -34,42 +35,46 @@ const ThreatIndex = ({
 }: {
   onSelect: (enemyType: EnemyType) => void;
   selectedType: EnemyType;
-}) => (
-  <aside className="manual-threat-index">
-    <span>Observed forms</span>
-    {ENEMY_TYPES.map((enemyType) => {
-      const EnemyIcon = ENEMY_ICONS[ENEMY_DEFINITIONS[enemyType].presentation.manualIcon];
-      return (
-        <button
-          key={enemyType}
-          type="button"
-          className={selectedType === enemyType ? "selected" : ""}
-          onClick={() => onSelect(enemyType)}
-        >
-          <EnemyIcon size={18} />
-          <span>
-            <strong>{enemyCopy(ENEMY_DEFINITIONS[enemyType]).name}</strong>
-            <small>{movement(enemyType)}</small>
-          </span>
-        </button>
-      );
-    })}
-  </aside>
-);
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <aside className="manual-threat-index">
+      <span>{translator.text("ui.manual.threats.observed")}</span>
+      {ENEMY_TYPES.map((enemyType) => {
+        const EnemyIcon = ENEMY_ICONS[ENEMY_DEFINITIONS[enemyType].presentation.manualIcon];
+        return (
+          <button
+            key={enemyType}
+            type="button"
+            className={selectedType === enemyType ? "selected" : ""}
+            onClick={() => onSelect(enemyType)}
+          >
+            <EnemyIcon size={18} />
+            <span>
+              <strong>{enemyCopy(ENEMY_DEFINITIONS[enemyType], translator).name}</strong>
+              <small>{movement(enemyType, translator)}</small>
+            </span>
+          </button>
+        );
+      })}
+    </aside>
+  );
+};
 
 const ExposureResponses = ({ enemyType }: { enemyType: EnemyType }) => {
+  const { damage, formatters, translator } = useGamePresentation();
   const definition = ENEMY_DEFINITIONS[enemyType];
   return (
     <section className="manual-entry-section">
-      <h3>Exposure response</h3>
+      <h3>{translator.text("ui.manual.threats.exposure")}</h3>
       <div className="manual-threat-multipliers">
         {DAMAGE_CHANNELS.map((channel) => {
           const multiplier = definition.hazardMultipliers[channel];
           return (
-            <div key={channel} style={{ "--channel": damageChannelStyle[channel].color }}>
-              <span>{damageChannelStyle[channel].label}</span>
-              <strong>{multiplier.toFixed(2)}×</strong>
-              <small>{responseLabel(multiplier)}</small>
+            <div key={channel} style={{ "--channel": damage.channelStyle[channel].color }}>
+              <span>{damage.channelStyle[channel].label}</span>
+              <strong>{formatters.number(multiplier, 2)}×</strong>
+              <small>{responseLabel(multiplier, translator)}</small>
             </div>
           );
         })}
@@ -79,9 +84,10 @@ const ExposureResponses = ({ enemyType }: { enemyType: EnemyType }) => {
 };
 
 export const ThreatCatalog = () => {
+  const { formatters, manual, translator } = useGamePresentation();
   const [selectedType, setSelectedType] = useState<EnemyType>(ENEMY_TYPES[0]);
   const definition = ENEMY_DEFINITIONS[selectedType];
-  const copy = enemyCopy(definition);
+  const copy = enemyCopy(definition, translator);
   const Icon = ENEMY_ICONS[definition.presentation.manualIcon];
   return (
     <section className="manual-page manual-threat-page" data-testid="manual-threat-page">
@@ -92,28 +98,32 @@ export const ThreatCatalog = () => {
             <Icon size={42} />
           </div>
           <span>
-            <small>{movement(selectedType)} hostile</small>
+            <small>
+              {translator.text("ui.manual.threats.hostile", {
+                movement: movement(selectedType, translator),
+              })}
+            </small>
             <h2>{copy.name}</h2>
             <p>{copy.description}</p>
           </span>
         </header>
-        <blockquote>{ENEMY_MANUAL_FLAVOR[selectedType]}</blockquote>
+        <blockquote>{manual.enemyFlavor[selectedType]}</blockquote>
         <dl className="manual-threat-stats">
           <div>
-            <dt>Health</dt>
-            <dd>{definition.health}</dd>
+            <dt>{translator.text("ui.manual.threats.health")}</dt>
+            <dd>{formatters.number(definition.health, 0)}</dd>
           </div>
           <div>
-            <dt>Route speed</dt>
-            <dd>{definition.speed.toFixed(3)}</dd>
+            <dt>{translator.text("ui.manual.threats.speed")}</dt>
+            <dd>{formatters.number(definition.speed, 3)}</dd>
           </div>
           <div>
-            <dt>Core impact</dt>
-            <dd>{definition.coreDamage}</dd>
+            <dt>{translator.text("ui.manual.threats.coreImpact")}</dt>
+            <dd>{formatters.number(definition.coreDamage, 0)}</dd>
           </div>
           <div>
-            <dt>Matter yield</dt>
-            <dd>{definition.matterYield}</dd>
+            <dt>{translator.text("ui.manual.threats.matter")}</dt>
+            <dd>{formatters.number(definition.matterYield, 0)}</dd>
           </div>
         </dl>
         <ExposureResponses enemyType={selectedType} />

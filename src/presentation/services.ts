@@ -1,4 +1,3 @@
-import type { CommandResult } from "../game/types";
 import { DEFAULT_GAME_RUNTIME, type GameRuntime } from "../game/runtime";
 import { createLocaleFormatters } from "../localization/formatters";
 import { EN_LOCALE } from "../localization/locales/en";
@@ -21,7 +20,7 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     translator,
     formatters,
     selectors: createPresentationSelectors(runtime, translator),
-    commandCopy: createCommandCopy(translator) as (result: CommandResult) => string | null,
+    commandCopy: createCommandCopy(translator),
     eventCopy: createEventCopy({ definition: runtime.definition, formatters, translator }),
     levelCopy: createLevelCopy(translator),
     manual: createManualContent(translator),

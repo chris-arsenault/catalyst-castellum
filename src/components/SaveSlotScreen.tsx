@@ -1,31 +1,26 @@
 import { Database, FlaskConical, Play, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { SAVE_SLOT_IDS, type SaveSlotId, type SaveSlotRecord } from "../application/saveSlots";
 import { levelDefinitionFor } from "../game/queries";
-import { levelCopy } from "../presentation/levelCopy";
+import type { Translator } from "../localization/translator";
 
 const slotNumber = (slotId: SaveSlotId): string => slotId.slice(-1);
 
-const phaseLabel = (phase: SaveSlotRecord["game"]["phase"]): string =>
-  ({
-    level_briefing: "Briefing",
-    build: "Planning",
-    prime: "Priming",
-    assault: "Assault",
-    round_result: "Round complete",
-    level_complete: "Checkpoint complete",
-    victory: "Campaign complete",
-    defeat: "Core lost",
-  })[phase];
-
-const savedAtLabel = (savedAt: number): string =>
-  new Intl.DateTimeFormat(undefined, {
-    month: "short",
-    day: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(new Date(savedAt));
+const phaseLabel = (phase: SaveSlotRecord["game"]["phase"], translator: Translator): string => {
+  const keys = {
+    level_briefing: "ui.save.phase.briefing",
+    build: "ui.save.phase.planning",
+    prime: "ui.save.phase.prime",
+    assault: "ui.save.phase.assault",
+    round_result: "ui.save.phase.roundComplete",
+    level_complete: "ui.save.phase.checkpointComplete",
+    victory: "ui.save.phase.campaignComplete",
+    defeat: "ui.save.phase.coreLost",
+  } as const;
+  return translator.text(keys[phase]);
+};
 
 type PendingSlotAction = "overwrite" | "delete";
 
@@ -41,49 +36,67 @@ const SlotInlineConfirmation = ({
   slotId: SaveSlotId;
   onCancel: () => void;
   onConfirm: () => void;
-}) => (
-  <div
-    className={`save-slot-inline-confirmation ${action}`}
-    role="group"
-    aria-label={`Confirm ${action} save slot ${number}`}
-    data-testid={`confirmation-${action}-${slotId}`}
-  >
-    <strong>{action === "overwrite" ? "Start over in this slot?" : "Delete this save?"}</strong>
-    <span>
-      {action === "overwrite"
-        ? "Plant, campaign, and tutorial progress will be replaced."
-        : "Deletion clears this local record and frees the slot for a new game."}
-    </span>
-    <div>
-      <button type="button" data-testid={`cancel-${action}-${slotId}`} onClick={onCancel}>
-        Cancel
-      </button>
-      <button
-        className="destructive"
-        type="button"
-        data-testid={`confirm-${action}-${slotId}`}
-        onClick={onConfirm}
-      >
-        {action === "overwrite" ? "Start new game" : "Delete save"}
-      </button>
+}) => {
+  const { translator } = useGamePresentation();
+  const overwrite = action === "overwrite";
+  return (
+    <div
+      className={`save-slot-inline-confirmation ${action}`}
+      role="group"
+      aria-label={translator.text("ui.save.confirm.group", {
+        action: translator.text(
+          overwrite ? "ui.save.confirm.overwrite.action" : "ui.save.confirm.delete.action"
+        ),
+        number,
+      })}
+      data-testid={`confirmation-${action}-${slotId}`}
+    >
+      <strong>
+        {translator.text(
+          overwrite ? "ui.save.confirm.overwrite.title" : "ui.save.confirm.delete.title"
+        )}
+      </strong>
+      <span>
+        {translator.text(
+          overwrite ? "ui.save.confirm.overwrite.detail" : "ui.save.confirm.delete.detail"
+        )}
+      </span>
+      <div>
+        <button type="button" data-testid={`cancel-${action}-${slotId}`} onClick={onCancel}>
+          {translator.text("ui.save.cancel")}
+        </button>
+        <button
+          className="destructive"
+          type="button"
+          data-testid={`confirm-${action}-${slotId}`}
+          onClick={onConfirm}
+        >
+          {translator.text(
+            overwrite ? "ui.save.confirm.overwrite.action" : "ui.save.confirm.delete.action"
+          )}
+        </button>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const EmptySlot = ({ slotId }: { slotId: SaveSlotId }) => {
+  const { translator } = useGamePresentation();
   const selectSaveSlot = useGameStore((state) => state.selectSaveSlot);
   return (
     <article className="save-slot-card empty" data-testid={`save-slot-${slotNumber(slotId)}`}>
       <header>
-        <span>SAVE SLOT {slotNumber(slotId).padStart(2, "0")}</span>
-        <strong>EMPTY</strong>
+        <span>
+          {translator.text("ui.save.slot", { number: slotNumber(slotId).padStart(2, "0") })}
+        </span>
+        <strong>{translator.text("ui.save.available")}</strong>
       </header>
       <div className="save-slot-empty-mark">
         <Plus size={28} />
       </div>
       <div className="save-slot-copy">
-        <h2>New campaign</h2>
-        <p>Initialize a clean plant, campaign, and guided tutorial record in this slot.</p>
+        <h2>{translator.text("ui.save.newCampaign")}</h2>
+        <p>{translator.text("ui.save.newDetail")}</p>
       </div>
       <button
         className="save-slot-primary"
@@ -91,44 +104,52 @@ const EmptySlot = ({ slotId }: { slotId: SaveSlotId }) => {
         data-testid={`new-game-${slotId}`}
         onClick={() => selectSaveSlot(slotId)}
       >
-        Start new game <Play size={16} />
+        {translator.text("ui.save.start")} <Play size={16} />
       </button>
     </article>
   );
 };
 
 const OccupiedSlotSummary = ({ record }: { record: SaveSlotRecord }) => {
+  const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const level = levelDefinitionFor(record.game);
-  const copy = levelCopy(level);
+  const copy = localizedLevelCopy.level(level);
   return (
     <>
       <div className="save-slot-level">
-        <span>LEVEL {String(level.number).padStart(2, "0")}</span>
+        <span>
+          {translator.text("ui.save.level", {
+            number: String(level.number).padStart(2, "0"),
+          })}
+        </span>
         <h2>{copy.name}</h2>
         <p>{copy.lesson}</p>
       </div>
       <dl className="save-slot-telemetry">
         <div>
-          <dt>Round</dt>
+          <dt>{translator.text("ui.save.round")}</dt>
           <dd>
             {record.game.campaign.roundIndex + 1} / {level.rounds.length}
           </dd>
         </div>
         <div>
-          <dt>Plant state</dt>
-          <dd>{phaseLabel(record.game.phase)}</dd>
+          <dt>{translator.text("ui.save.plantState")}</dt>
+          <dd>{phaseLabel(record.game.phase, translator)}</dd>
         </div>
         <div>
-          <dt>Core</dt>
-          <dd>{Math.round(record.game.coreIntegrity)}%</dd>
+          <dt>{translator.text("ui.save.core")}</dt>
+          <dd>{formatters.percent(record.game.coreIntegrity / 100, 0)}</dd>
         </div>
       </dl>
-      <small className="save-slot-updated">Last saved {savedAtLabel(record.savedAt)}</small>
+      <small className="save-slot-updated">
+        {translator.text("ui.save.lastSaved", { date: formatters.date(new Date(record.savedAt)) })}
+      </small>
     </>
   );
 };
 
 const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
+  const { translator } = useGamePresentation();
   const selectSaveSlot = useGameStore((state) => state.selectSaveSlot);
   const startNewGame = useGameStore((state) => state.startNewGame);
   const deleteSaveSlot = useGameStore((state) => state.deleteSaveSlot);
@@ -143,8 +164,8 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
   return (
     <article className="save-slot-card occupied" data-testid={`save-slot-${number}`}>
       <header>
-        <span>SAVE SLOT {number.padStart(2, "0")}</span>
-        <strong>READY</strong>
+        <span>{translator.text("ui.save.slot", { number: number.padStart(2, "0") })}</span>
+        <strong>{translator.text("ui.save.ready")}</strong>
       </header>
       <OccupiedSlotSummary record={record} />
       <button
@@ -153,7 +174,7 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
         data-testid={`load-save-${record.id}`}
         onClick={() => selectSaveSlot(record.id)}
       >
-        Load save <Play size={16} />
+        {translator.text("ui.save.load")} <Play size={16} />
       </button>
       {pendingAction ? (
         <SlotInlineConfirmation
@@ -170,14 +191,14 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
             data-testid={`overwrite-${record.id}`}
             onClick={() => setPendingAction("overwrite")}
           >
-            <RotateCcw size={14} /> New game
+            <RotateCcw size={14} /> {translator.text("ui.save.newGame")}
           </button>
           <button
             type="button"
-            aria-label={`Delete save slot ${number}`}
+            aria-label={translator.text("ui.save.deleteSlot", { number })}
             onClick={() => setPendingAction("delete")}
           >
-            <Trash2 size={14} /> Delete
+            <Trash2 size={14} /> {translator.text("ui.save.delete")}
           </button>
         </div>
       )}
@@ -186,6 +207,7 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
 };
 
 export const SaveSlotScreen = () => {
+  const { translator } = useGamePresentation();
   const saveSlots = useGameStore((state) => state.saveSlots);
   return (
     <main className="save-selection" data-testid="save-selection">
@@ -196,23 +218,20 @@ export const SaveSlotScreen = () => {
             <FlaskConical size={25} />
           </div>
           <div>
-            <span>CATALYST</span>
-            <strong>CASTELLUM</strong>
+            <span>{translator.text("ui.brand.first").toUpperCase()}</span>
+            <strong>{translator.text("ui.brand.second").toUpperCase()}</strong>
           </div>
         </div>
         <div className="save-selection-status">
-          <Database size={15} /> LOCAL OPERATIONS ARCHIVE
+          <Database size={15} /> {translator.text("ui.save.archive")}
         </div>
       </header>
 
       <section className="save-selection-content" aria-labelledby="save-selection-title">
         <div className="save-selection-heading">
-          <span>CAMPAIGN CONTROL</span>
-          <h1 id="save-selection-title">Select a save slot</h1>
-          <p>
-            Each slot owns its plant state and tutorial progress. Loading the page always returns
-            here before a simulation is initialized.
-          </p>
+          <span>{translator.text("ui.save.control")}</span>
+          <h1 id="save-selection-title">{translator.text("ui.save.select")}</h1>
+          <p>{translator.text("ui.save.description")}</p>
         </div>
         <div className="save-slot-grid">
           {SAVE_SLOT_IDS.map((slotId) => {
@@ -227,8 +246,8 @@ export const SaveSlotScreen = () => {
       </section>
 
       <footer className="save-selection-footer">
-        <span>THREE ISOLATED LOCAL RECORDS</span>
-        <span>SELECTING NEW GAME PERFORMS A COMPLETE STATE RESET</span>
+        <span>{translator.text("ui.save.records")}</span>
+        <span>{translator.text("ui.save.resetWarning")}</span>
       </footer>
     </main>
   );

@@ -6,6 +6,7 @@ import {
   type CellOutletId,
   type CellOutletRenderModel,
 } from "./cellOutletRenderModel";
+import { useGamePresentation } from "../../application/presentationContext";
 
 const drawAssembly = (
   graphics: Graphics,
@@ -80,7 +81,8 @@ export const CellOutletLayer = ({
   onHover: (bufferId: CellOutletId | null) => void;
   onSelectRoom: (roomId: RoomId) => void;
 }) => {
-  const model = useMemo(() => cellOutletAssemblyModel(game), [game]);
+  const { translator } = useGamePresentation();
+  const model = useMemo(() => cellOutletAssemblyModel(game, translator), [game, translator]);
   const draw = useCallback(
     (graphics: Graphics) => {
       if (model) drawAssembly(graphics, model);

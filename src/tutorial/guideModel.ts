@@ -4,6 +4,9 @@ import { acidLineGuideFor, acidLinePhaseActionReason } from "./acidLineGuide";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "./anchors";
 import { FLASH_POINT_CONCEPT_MODEL, type GuideConceptModel } from "./flashPointConcept";
 import { makeReagentGuideFor, makeReagentPhaseActionReason } from "./makeReagentGuide";
+import type { TutorialCopyKey } from "./copyTypes";
+
+export type { TutorialCopyKey } from "./copyTypes";
 
 export type { GuideConceptKind } from "./flashPointConcept";
 
@@ -14,42 +17,42 @@ export interface GuideStepDefinition {
   kind: GuideStepKind;
   roomId: RoomId;
   target: TutorialAnchorId;
-  title: string;
-  explanation: string;
-  instruction: string;
-  result: string;
+  title: TutorialCopyKey;
+  explanation: TutorialCopyKey;
+  instruction: TutorialCopyKey;
+  result: TutorialCopyKey;
   completed: (game: GameState) => boolean;
 }
 
 export interface GuideStoryDefinition {
-  kicker: string;
-  title: string;
-  paragraphs: readonly string[];
+  kicker: TutorialCopyKey;
+  title: TutorialCopyKey;
+  paragraphs: readonly TutorialCopyKey[];
   model: GuideConceptModel | null;
 }
 
 export interface GuideTaskDefinition {
   id: string;
-  label: string;
+  label: TutorialCopyKey;
   completed: (game: GameState) => boolean;
 }
 
 export interface GuideDefinition {
   completion: {
-    title: string;
-    explanation: string;
-    instruction: string;
+    title: TutorialCopyKey;
+    explanation: TutorialCopyKey;
+    instruction: TutorialCopyKey;
   };
   id: string;
   dismissalId: string;
   firstFlashTeachingBreak: boolean;
-  label: string;
+  label: TutorialCopyKey;
   showStageIntro: boolean;
   gatesPhaseActions: boolean;
   story: GuideStoryDefinition;
   mission: {
-    title: string;
-    summary: string;
+    title: TutorialCopyKey;
+    summary: TutorialCopyKey;
     tasks: readonly GuideTaskDefinition[];
   };
   steps: GuideStepDefinition[];
@@ -94,48 +97,44 @@ const assaultFlashKilled = (game: GameState): boolean =>
 
 const flashPointGuide: GuideDefinition = {
   completion: {
-    title: "First cycle established",
-    explanation:
-      "R-02 produced an attributed OX-1 combat hit and resolved the opening crawler wave.",
-    instruction: "Continue into Stored Momentum with the chamber’s established state.",
+    title: "tutorial.flash.firstSpark.completion.title",
+    explanation: "tutorial.flash.firstSpark.completion.explanation",
+    instruction: "tutorial.flash.firstSpark.completion.instruction",
   },
   id: "flash_point:first_spark:v5",
   dismissalId: "flash_point:field_guidance:v5",
-  label: "Flash Point field drill",
+  label: "tutorial.flash.firstSpark.label",
   showStageIntro: true,
   gatesPhaseActions: true,
   firstFlashTeachingBreak: true,
   story: {
-    kicker: "First field assignment",
-    title: "Turn R-02 into a combustion trap",
-    paragraphs: [
-      "The outer spiral has lost contact with its sentries. A crawler column is moving along the service route toward the Core, and R-02 sits directly in its path.",
-    ],
+    kicker: "tutorial.flash.firstSpark.story.kicker",
+    title: "tutorial.flash.firstSpark.story.title",
+    paragraphs: ["tutorial.flash.firstSpark.story.paragraph.0"],
     model: FLASH_POINT_CONCEPT_MODEL,
   },
   mission: {
-    title: "Commission the OX-1 cycle",
-    summary:
-      "Build a repeating hydrogen-and-oxygen flash in R-02, then catch the first crawler inside it.",
+    title: "tutorial.flash.firstSpark.mission.title",
+    summary: "tutorial.flash.firstSpark.mission.summary",
     tasks: [
       {
         id: "mix-chamber",
-        label: "Install and run a Gas Agitator in R-02.",
+        label: "tutorial.flash.firstSpark.task.mixChamber",
         completed: (game) => hasFurnaceAgitator(game) && furnaceAgitatorRunning(game),
       },
       {
         id: "feed-reactants",
-        label: "Open the Core → R-02 H₂/O₂ feed.",
+        label: "tutorial.flash.firstSpark.task.feedReactants",
         completed: conduitEnabled,
       },
       {
         id: "prove-ignition",
-        label: "Prime at 2× until R-02 produces an OX-1 flash.",
+        label: "tutorial.flash.firstSpark.task.proveIgnition",
         completed: (game) => Boolean(primeFlashIncident(game)),
       },
       {
         id: "catch-crawler",
-        label: "Start the assault and catch a crawler in the flash.",
+        label: "tutorial.flash.firstSpark.task.catchCrawler",
         completed: assaultFlashKilled,
       },
     ],
@@ -146,11 +145,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceAgitator,
-      title: "Prepare the flash chamber",
-      explanation:
-        "R-02 lies on the crawler route. A Gas Agitator mixes its upper and lower gas layers for ignition.",
-      instruction: "Select R-02, then install a Gas Agitator in either socket.",
-      result: "The Gas Agitator now recirculates R-02’s upper and lower gas layers.",
+      title: "tutorial.flash.firstSpark.step.installAgitator.title",
+      explanation: "tutorial.flash.firstSpark.step.installAgitator.explanation",
+      instruction: "tutorial.flash.firstSpark.step.installAgitator.instruction",
+      result: "tutorial.flash.firstSpark.step.installAgitator.result",
       completed: hasFurnaceAgitator,
     },
     {
@@ -158,10 +156,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceAgitatorToggle,
-      title: "Run the gas agitator",
-      explanation: "Active agitation prepares both gas layers for the OX-1 ignition cycle.",
-      instruction: "Switch the R-02 Gas Agitator ON.",
-      result: "Active agitation now prepares both gas layers for OX-1 ignition.",
+      title: "tutorial.flash.firstSpark.step.runAgitator.title",
+      explanation: "tutorial.flash.firstSpark.step.runAgitator.explanation",
+      instruction: "tutorial.flash.firstSpark.step.runAgitator.instruction",
+      result: "tutorial.flash.firstSpark.step.runAgitator.result",
       completed: furnaceAgitatorRunning,
     },
     {
@@ -169,11 +167,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
-      title: "Open the Core gas feed",
-      explanation:
-        "The Core header holds H₂ and O₂ near their combustion ratio. Its fan drives both gases toward R-02.",
-      instruction: "Switch the Core–R-02 gas fan ON.",
-      result: "The fan is armed with the Core header’s H₂/O₂ mixture.",
+      title: "tutorial.flash.firstSpark.step.startSharedDuct.title",
+      explanation: "tutorial.flash.firstSpark.step.startSharedDuct.explanation",
+      instruction: "tutorial.flash.firstSpark.step.startSharedDuct.instruction",
+      result: "tutorial.flash.firstSpark.step.startSharedDuct.result",
       completed: conduitEnabled,
     },
     {
@@ -181,12 +178,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.beginPrime,
-      title: "Prime the chamber",
-      explanation:
-        "Priming starts material flow. The fan fills the routed duct first, then delivers its H₂/O₂ mixture into R-02.",
-      instruction: "Begin the timed prime.",
-      result:
-        "The plant clock is live. Watch the duct inventory advance and R-02 composition respond.",
+      title: "tutorial.flash.firstSpark.step.beginPrime.title",
+      explanation: "tutorial.flash.firstSpark.step.beginPrime.explanation",
+      instruction: "tutorial.flash.firstSpark.step.beginPrime.instruction",
+      result: "tutorial.flash.firstSpark.step.beginPrime.result",
       completed: (game) => game.phase !== "build",
     },
     {
@@ -194,11 +189,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.simulationSpeed,
-      title: "Advance the clock",
-      explanation:
-        "Transport and reactions unfold over simulation time. The 2× setting advances this priming cycle quickly.",
-      instruction: "Set simulation speed to 2×.",
-      result: "The clock is at 2×. R-02 composition and pressure now advance with the feed.",
+      title: "tutorial.flash.firstSpark.step.accelerateClock.title",
+      explanation: "tutorial.flash.firstSpark.step.accelerateClock.explanation",
+      instruction: "tutorial.flash.firstSpark.step.accelerateClock.instruction",
+      result: "tutorial.flash.firstSpark.step.accelerateClock.result",
       completed: (game) => game.speed === 2,
     },
     {
@@ -206,12 +200,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceIncidents,
-      title: "Read the priming flash",
-      explanation:
-        "At the ignition threshold, OX-1 consumes H₂ and O₂, heats the chamber gas, and creates a short pressure pulse.",
-      instruction: "Wait for the first priming flash, then inspect its incident record.",
-      result:
-        "The first OX-1 flash opens a one-time explanation of its gas feed, ignition threshold, pressure, and heat.",
+      title: "tutorial.flash.firstSpark.step.observePrimeFlash.title",
+      explanation: "tutorial.flash.firstSpark.step.observePrimeFlash.explanation",
+      instruction: "tutorial.flash.firstSpark.step.observePrimeFlash.instruction",
+      result: "tutorial.flash.firstSpark.step.observePrimeFlash.result",
       completed: (game) => Boolean(primeFlashIncident(game)),
     },
     {
@@ -219,12 +211,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.phaseBanner,
-      title: "Cold chamber under assault",
-      explanation:
-        "R-02 entered assault ahead of its OX-1 ignition cycle. Each surviving crawler now advances toward the Core.",
-      instruction:
-        "Track the assault outcome, then use Retry checkpoint to rebuild the ignition cycle.",
-      result: "The priming flash armed R-02 before assault.",
+      title: "tutorial.flash.firstSpark.step.coldAssault.title",
+      explanation: "tutorial.flash.firstSpark.step.coldAssault.explanation",
+      instruction: "tutorial.flash.firstSpark.step.coldAssault.instruction",
+      result: "tutorial.flash.firstSpark.step.coldAssault.result",
       completed: (game) => game.phase !== "assault" || Boolean(primeFlashIncident(game)),
     },
     {
@@ -232,11 +222,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.startAssault,
-      title: "Bring in the first wave",
-      explanation:
-        "Crawlers follow the mapped route through R-02. An OX-1 flash applies pressure impact and thermal damage to targets inside.",
-      instruction: "Start the assault and keep watching R-02.",
-      result: "Crawlers are advancing along the mapped route toward R-02.",
+      title: "tutorial.flash.firstSpark.step.startAssault.title",
+      explanation: "tutorial.flash.firstSpark.step.startAssault.explanation",
+      instruction: "tutorial.flash.firstSpark.step.startAssault.instruction",
+      result: "tutorial.flash.firstSpark.step.startAssault.result",
       completed: (game) => game.phase === "assault" || game.phase === "round_result",
     },
     {
@@ -244,12 +233,10 @@ const flashPointGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceIncidents,
-      title: "Confirm the combat hit",
-      explanation:
-        "After the first hit, the incident log identifies each target, applied pressure and heat damage, and the resulting kills.",
-      instruction: "Wait for an assault OX-1 flash that neutralizes at least one enemy.",
-      result:
-        "Core stock → mixed-gas duct → R-02 accumulation → OX-1 flash → attributed enemy damage. The field drill is complete.",
+      title: "tutorial.flash.firstSpark.step.observeCombatFlash.title",
+      explanation: "tutorial.flash.firstSpark.step.observeCombatFlash.explanation",
+      instruction: "tutorial.flash.firstSpark.step.observeCombatFlash.instruction",
+      result: "tutorial.flash.firstSpark.step.observeCombatFlash.result",
       completed: assaultFlashKilled,
     },
   ],
@@ -257,48 +244,47 @@ const flashPointGuide: GuideDefinition = {
 
 const followupGuide: GuideDefinition = {
   completion: {
-    title: "Flash Point secured",
-    explanation: "The retained OX-1 cycle held through the faster follow-up formation.",
-    instruction: "Continue to Make the Reagent for membrane-cell production.",
+    title: "tutorial.flash.storedMomentum.completion.title",
+    explanation: "tutorial.flash.storedMomentum.completion.explanation",
+    instruction: "tutorial.flash.storedMomentum.completion.instruction",
   },
   id: "flash_point:stored_momentum:v1",
   dismissalId: "flash_point:field_guidance:v5",
-  label: "Stored Momentum field guidance",
+  label: "tutorial.flash.storedMomentum.label",
   showStageIntro: false,
   gatesPhaseActions: false,
   firstFlashTeachingBreak: false,
   story: {
-    kicker: "Second field test",
-    title: "Make the established cycle hold",
+    kicker: "tutorial.flash.storedMomentum.story.kicker",
+    title: "tutorial.flash.storedMomentum.story.title",
     paragraphs: [
-      "R-02 retains its equipment, chamber inventory, and reaction timing from the first wave.",
-      "A faster formation is already entering the spiral. The shorter prime tests your ability to read the chamber and trust the cycle you built.",
+      "tutorial.flash.storedMomentum.story.paragraph.0",
+      "tutorial.flash.storedMomentum.story.paragraph.1",
     ],
     model: null,
   },
   mission: {
-    title: "Hold Stored Momentum",
-    summary:
-      "Read the retained R-02 state, use the ten-second prime, and carry the OX-1 cycle through the faster wave.",
+    title: "tutorial.flash.storedMomentum.mission.title",
+    summary: "tutorial.flash.storedMomentum.mission.summary",
     tasks: [
       {
         id: "confirm-cycle",
-        label: "Confirm the R-02 agitator and Core gas feed are active.",
+        label: "tutorial.flash.storedMomentum.task.confirmCycle",
         completed: (game) => furnaceAgitatorRunning(game) && conduitEnabled(game),
       },
       {
         id: "start-short-prime",
-        label: "Start the ten-second prime when the chamber is ready.",
+        label: "tutorial.flash.storedMomentum.task.startShortPrime",
         completed: (game) => game.phase !== "build",
       },
       {
         id: "read-short-prime",
-        label: "Track R-02 composition and OX-1 timing through prime.",
+        label: "tutorial.flash.storedMomentum.task.readShortPrime",
         completed: (game) => game.phase !== "build" && game.phase !== "prime",
       },
       {
         id: "hold-followup",
-        label: "Hold the faster follow-up wave.",
+        label: "tutorial.flash.storedMomentum.task.holdFollowup",
         completed: (game) => game.phase === "level_complete" || game.phase === "victory",
       },
     ],
@@ -309,12 +295,10 @@ const followupGuide: GuideDefinition = {
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.beginPrime,
-      title: "Read the retained chamber",
-      explanation:
-        "R-02 carries its equipment, gas inventory, temperature, and reaction cooldown into this round. The next prime lasts ten seconds.",
-      instruction:
-        "Inspect R-02’s retained state, confirm the agitator and gas feed, then start prime.",
-      result: "The established OX-1 cycle is running through the shorter prime.",
+      title: "tutorial.flash.storedMomentum.step.prepareFollowup.title",
+      explanation: "tutorial.flash.storedMomentum.step.prepareFollowup.explanation",
+      instruction: "tutorial.flash.storedMomentum.step.prepareFollowup.instruction",
+      result: "tutorial.flash.storedMomentum.step.prepareFollowup.result",
       completed: (game) => game.phase !== "build",
     },
     {
@@ -322,11 +306,10 @@ const followupGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceIncidents,
-      title: "Read the shorter prime",
-      explanation:
-        "Stored gas and chamber temperature shape the next ignition timing. Composition, pressure, and the incident record show the cycle taking form.",
-      instruction: "Track R-02 through the ten-second prime and adjust your timing from its state.",
-      result: "The faster wave is entering the established reaction cycle.",
+      title: "tutorial.flash.storedMomentum.step.observeFollowupPrime.title",
+      explanation: "tutorial.flash.storedMomentum.step.observeFollowupPrime.explanation",
+      instruction: "tutorial.flash.storedMomentum.step.observeFollowupPrime.instruction",
+      result: "tutorial.flash.storedMomentum.step.observeFollowupPrime.result",
       completed: (game) => game.phase !== "build" && game.phase !== "prime",
     },
     {
@@ -334,11 +317,10 @@ const followupGuide: GuideDefinition = {
       kind: "observe",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.phaseBanner,
-      title: "Let the cycle work",
-      explanation:
-        "Skimmers compress the timing window. R-02’s map state and incident record show how the retained process meets them.",
-      instruction: "Watch R-02 and its incident record through the follow-up wave.",
-      result: "Flash Point is secured with a repeatable OX-1 cycle.",
+      title: "tutorial.flash.storedMomentum.step.observeFollowupAssault.title",
+      explanation: "tutorial.flash.storedMomentum.step.observeFollowupAssault.explanation",
+      instruction: "tutorial.flash.storedMomentum.step.observeFollowupAssault.instruction",
+      result: "tutorial.flash.storedMomentum.step.observeFollowupAssault.result",
       completed: (game) => game.phase === "level_complete" || game.phase === "victory",
     },
   ],
@@ -361,18 +343,21 @@ const flashPointGuideFor = (game: GameState): GuideDefinition | null => {
 const flashPointPhaseActionReason = (
   game: GameState,
   action: "start_prime" | "start_assault"
-): string | null => {
+): TutorialCopyKey | null => {
   if (action === "start_prime") {
-    if (!furnaceAgitatorRunning(game)) return "Install and run a Gas Agitator in R-02.";
-    if (!conduitEnabled(game)) return "Switch the Core–R-02 gas fan ON.";
+    if (!furnaceAgitatorRunning(game)) return "tutorial.flash.reason.agitator";
+    if (!conduitEnabled(game)) return "tutorial.flash.reason.feed";
     return null;
   }
-  return primeFlashIncident(game) ? null : "Observe R-02’s first OX-1 flash to arm the assault.";
+  return primeFlashIncident(game) ? null : "tutorial.flash.reason.flash";
 };
 
 export interface GuideRegistration {
   guideFor: (game: GameState) => GuideDefinition | null;
-  phaseActionReason?: (game: GameState, action: "start_prime" | "start_assault") => string | null;
+  phaseActionReason?: (
+    game: GameState,
+    action: "start_prime" | "start_assault"
+  ) => TutorialCopyKey | null;
 }
 
 export type GuideRegistry = Partial<Record<GameState["campaign"]["levelId"], GuideRegistration>>;
@@ -400,7 +385,7 @@ export const guidedPhaseActionReason = (
   game: GameState,
   action: "start_prime" | "start_assault",
   dismissedGuideIds: string[]
-): string | null => {
+): TutorialCopyKey | null => {
   const guide = guideDefinitionFor(game);
   if (!guide || dismissedGuideIds.includes(guide.dismissalId)) return null;
   if (!guide.gatesPhaseActions) return null;

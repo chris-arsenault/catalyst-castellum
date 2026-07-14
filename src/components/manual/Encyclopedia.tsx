@@ -5,16 +5,10 @@ import {
   SPECIES_DEFINITIONS,
 } from "../../presentation/defaultGame";
 import { EQUIPMENT_IDS, REACTION_IDS, type EquipmentId, type ReactionId } from "../../game/types";
-import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
-import {
-  EQUIPMENT_CATEGORY_LABELS,
-  EQUIPMENT_MANUAL,
-  REACTION_MANUAL,
-  equipmentForReaction,
-  reactionMechanics,
-} from "../../presentation/manualContent";
+import { equipmentForReaction } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
 import { equipmentCopy, reactionCopy, speciesCopy } from "../../presentation/entityCopy";
+import { useGamePresentation } from "../../application/presentationContext";
 
 export type EncyclopediaKind = "equipment" | "reactions";
 
@@ -25,56 +19,59 @@ const EquipmentEntry = ({
   equipmentId: EquipmentId;
   onOpenReaction: (reactionId: ReactionId) => void;
 }) => {
+  const { equipmentGradeEffect: gradeEffect, manual, translator } = useGamePresentation();
   const definition = EQUIPMENT_DEFINITIONS[equipmentId];
-  const copy = equipmentCopy(definition);
-  const manual = EQUIPMENT_MANUAL[equipmentId];
+  const copy = equipmentCopy(definition, translator);
+  const entry = manual.equipmentManual[equipmentId];
   return (
     <article className="manual-encyclopedia-entry" data-testid={`equipment-entry-${equipmentId}`}>
       <div className="manual-entry-hero">
         <EquipmentImage equipmentId={equipmentId} compact={false} />
         <div>
           <span className="manual-entry-code">
-            {EQUIPMENT_CATEGORY_LABELS[manual.category]} · {manual.designation}
+            {manual.equipmentCategoryLabels[entry.category]} · {entry.designation}
           </span>
           <h2>{copy.name}</h2>
           <p>{copy.description}</p>
         </div>
       </div>
-      <blockquote>{manual.flavor}</blockquote>
+      <blockquote>{entry.flavor}</blockquote>
       <section className="manual-entry-section">
-        <h3>Operational effect</h3>
+        <h3>{translator.text("ui.manual.encyclopedia.effect")}</h3>
         <ul>
-          {manual.operationalNotes.map((note) => (
+          {entry.operationalNotes.map((note) => (
             <li key={note}>{note}</li>
           ))}
         </ul>
       </section>
       <section className="manual-entry-section">
-        <h3>Grade record</h3>
+        <h3>{translator.text("ui.manual.encyclopedia.grades")}</h3>
         <div className="manual-grade-table">
           {definition.grades.map((grade, index) => (
             <div key={grade.level}>
-              <span>Grade {grade.level}</span>
-              <strong>{equipmentGradeEffect(grade)}</strong>
+              <span>{translator.text("ui.manual.encyclopedia.grade", { grade: grade.level })}</span>
+              <strong>{gradeEffect(grade)}</strong>
               <small>
-                {grade.occupiedVolume} volume ·{" "}
-                {index === 0 ? definition.buildCost : definition.upgradeCosts[index - 1]} M
+                {translator.text("ui.manual.encyclopedia.gradeDetail", {
+                  volume: grade.occupiedVolume,
+                  cost: index === 0 ? definition.buildCost : definition.upgradeCosts[index - 1]!,
+                })}
               </small>
             </div>
           ))}
         </div>
       </section>
       <section className="manual-entry-section">
-        <h3>Associated reactions</h3>
+        <h3>{translator.text("ui.manual.encyclopedia.reactions")}</h3>
         <div className="manual-cross-links">
-          {manual.reactionIds.map((reactionId) => {
+          {entry.reactionIds.map((reactionId) => {
             const reaction = REACTION_DEFINITIONS[reactionId];
             return (
               <button key={reactionId} type="button" onClick={() => onOpenReaction(reactionId)}>
                 <FlaskConical size={14} />
                 <span>
                   <small>{reaction.code}</small>
-                  <strong>{reactionCopy(reaction).name}</strong>
+                  <strong>{reactionCopy(reaction, translator).name}</strong>
                 </span>
                 <ArrowRight size={13} />
               </button>
@@ -92,25 +89,58 @@ const SpeciesSide = ({
 }: {
   label: string;
   participants: (typeof REACTION_DEFINITIONS)[ReactionId]["reactants"];
-}) => (
-  <div className="manual-reaction-side">
-    <span>{label}</span>
-    <div>
-      {participants.map((participant) => {
-        const species = SPECIES_DEFINITIONS[participant.species];
-        return (
-          <i key={participant.species} style={{ "--species": species.color }}>
-            <strong>
-              {participant.coefficient > 1 ? participant.coefficient : ""}
-              {species.formula}
-            </strong>
-            <small>{speciesCopy(species).name}</small>
-          </i>
-        );
-      })}
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="manual-reaction-side">
+      <span>{label}</span>
+      <div>
+        {participants.map((participant) => {
+          const species = SPECIES_DEFINITIONS[participant.species];
+          return (
+            <i key={participant.species} style={{ "--species": species.color }}>
+              <strong>
+                {participant.coefficient > 1 ? participant.coefficient : ""}
+                {species.formula}
+              </strong>
+              <small>{speciesCopy(species, translator).name}</small>
+            </i>
+          );
+        })}
+      </div>
     </div>
-  </div>
-);
+  );
+};
+
+const ReactionEquipmentLinks = ({
+  equipmentIds,
+  onOpenEquipment,
+}: {
+  equipmentIds: readonly EquipmentId[];
+  onOpenEquipment: (equipmentId: EquipmentId) => void;
+}) => {
+  const { manual, translator } = useGamePresentation();
+  return (
+    <section className="manual-entry-section">
+      <h3>{translator.text("ui.manual.encyclopedia.equipmentLinks")}</h3>
+      <div className="manual-cross-links">
+        {equipmentIds.map((equipmentId) => {
+          const equipment = EQUIPMENT_DEFINITIONS[equipmentId];
+          return (
+            <button key={equipmentId} type="button" onClick={() => onOpenEquipment(equipmentId)}>
+              <Cog size={14} />
+              <span>
+                <small>{manual.equipmentManual[equipmentId].designation}</small>
+                <strong>{equipmentCopy(equipment, translator).name}</strong>
+              </span>
+              <ArrowRight size={13} />
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+};
 
 const ReactionEntry = ({
   onOpenEquipment,
@@ -119,8 +149,9 @@ const ReactionEntry = ({
   onOpenEquipment: (equipmentId: EquipmentId) => void;
   reactionId: ReactionId;
 }) => {
+  const { manual, reactionMechanics: localizedMechanics, translator } = useGamePresentation();
   const reaction = REACTION_DEFINITIONS[reactionId];
-  const manual = REACTION_MANUAL[reactionId];
+  const entry = manual.reactionManual[reactionId];
   const equipmentIds = equipmentForReaction(reactionId);
   return (
     <article className="manual-encyclopedia-entry" data-testid={`reaction-entry-${reactionId}`}>
@@ -130,48 +161,112 @@ const ReactionEntry = ({
           <span>{reaction.code}</span>
         </div>
         <div>
-          <span className="manual-entry-code">{reaction.kind} process</span>
-          <h2>{reactionCopy(reaction).name}</h2>
+          <span className="manual-entry-code">
+            {translator.text("ui.manual.encyclopedia.process", {
+              kind: translator.text(
+                reaction.kind === "chemical"
+                  ? "ui.manual.encyclopedia.kind.chemical"
+                  : "ui.manual.encyclopedia.kind.physical"
+              ),
+            })}
+          </span>
+          <h2>{reactionCopy(reaction, translator).name}</h2>
           <strong>{reaction.equation}</strong>
         </div>
       </header>
-      <blockquote>{manual.flavor}</blockquote>
+      <blockquote>{entry.flavor}</blockquote>
       <section className="manual-entry-section">
-        <h3>Process inventory</h3>
+        <h3>{translator.text("ui.manual.encyclopedia.inventory")}</h3>
         <div className="manual-reaction-inventory">
-          <SpeciesSide label="Consumes" participants={reaction.reactants} />
+          <SpeciesSide
+            label={translator.text("ui.manual.encyclopedia.consumes")}
+            participants={reaction.reactants}
+          />
           <ArrowRight size={20} />
-          <SpeciesSide label="Produces" participants={reaction.products} />
+          <SpeciesSide
+            label={translator.text("ui.manual.encyclopedia.produces")}
+            participants={reaction.products}
+          />
         </div>
       </section>
       <section className="manual-entry-section">
-        <h3>Operating doctrine</h3>
-        <p>{manual.doctrine}</p>
+        <h3>{translator.text("ui.manual.encyclopedia.doctrine")}</h3>
+        <p>{entry.doctrine}</p>
         <ul>
-          {reactionMechanics(reaction).map((mechanic) => (
+          {localizedMechanics(reaction).map((mechanic) => (
             <li key={mechanic}>{mechanic}</li>
           ))}
         </ul>
       </section>
-      <section className="manual-entry-section">
-        <h3>Equipment links</h3>
-        <div className="manual-cross-links">
-          {equipmentIds.map((equipmentId) => {
-            const equipment = EQUIPMENT_DEFINITIONS[equipmentId];
-            return (
-              <button key={equipmentId} type="button" onClick={() => onOpenEquipment(equipmentId)}>
-                <Cog size={14} />
-                <span>
-                  <small>{EQUIPMENT_MANUAL[equipmentId].designation}</small>
-                  <strong>{equipmentCopy(equipment).name}</strong>
-                </span>
-                <ArrowRight size={13} />
-              </button>
-            );
-          })}
-        </div>
-      </section>
+      <ReactionEquipmentLinks equipmentIds={equipmentIds} onOpenEquipment={onOpenEquipment} />
     </article>
+  );
+};
+
+interface EncyclopediaSelection {
+  kind: EncyclopediaKind;
+  selectedEquipmentId: EquipmentId;
+  selectedReactionId: ReactionId;
+  onSelectEquipment: (equipmentId: EquipmentId) => void;
+  onSelectKind: (kind: EncyclopediaKind) => void;
+  onSelectReaction: (reactionId: ReactionId) => void;
+}
+
+const EncyclopediaIndex = ({
+  kind,
+  selectedEquipmentId,
+  selectedReactionId,
+  onSelectEquipment,
+  onSelectKind,
+  onSelectReaction,
+}: EncyclopediaSelection) => {
+  const { manual, translator } = useGamePresentation();
+  const entries =
+    kind === "equipment"
+      ? EQUIPMENT_IDS.map((equipmentId) => (
+          <button
+            key={equipmentId}
+            type="button"
+            className={selectedEquipmentId === equipmentId ? "selected" : ""}
+            onClick={() => onSelectEquipment(equipmentId)}
+          >
+            <small>
+              {manual.equipmentCategoryLabels[manual.equipmentManual[equipmentId].category]}
+            </small>
+            <strong>{equipmentCopy(EQUIPMENT_DEFINITIONS[equipmentId], translator).name}</strong>
+          </button>
+        ))
+      : REACTION_IDS.map((reactionId) => (
+          <button
+            key={reactionId}
+            type="button"
+            className={selectedReactionId === reactionId ? "selected" : ""}
+            onClick={() => onSelectReaction(reactionId)}
+          >
+            <small>{REACTION_DEFINITIONS[reactionId].code}</small>
+            <strong>{reactionCopy(REACTION_DEFINITIONS[reactionId], translator).name}</strong>
+          </button>
+        ));
+  return (
+    <aside className="manual-index">
+      <div className="manual-index-tabs">
+        <button
+          type="button"
+          className={kind === "equipment" ? "active" : ""}
+          onClick={() => onSelectKind("equipment")}
+        >
+          {translator.text("ui.manual.encyclopedia.equipment")}
+        </button>
+        <button
+          type="button"
+          className={kind === "reactions" ? "active" : ""}
+          onClick={() => onSelectKind("reactions")}
+        >
+          {translator.text("ui.manual.encyclopedia.reactionTab")}
+        </button>
+      </div>
+      <div className="manual-index-list">{entries}</div>
+    </aside>
   );
 };
 
@@ -189,57 +284,27 @@ export const Encyclopedia = ({
   onSelectEquipment: (equipmentId: EquipmentId) => void;
   onSelectKind: (kind: EncyclopediaKind) => void;
   onSelectReaction: (reactionId: ReactionId) => void;
-}) => (
-  <section className="manual-page manual-encyclopedia-page" data-testid="manual-encyclopedia-page">
-    <aside className="manual-index">
-      <div className="manual-index-tabs">
-        <button
-          type="button"
-          className={kind === "equipment" ? "active" : ""}
-          onClick={() => onSelectKind("equipment")}
-        >
-          Equipment
-        </button>
-        <button
-          type="button"
-          className={kind === "reactions" ? "active" : ""}
-          onClick={() => onSelectKind("reactions")}
-        >
-          Reactions
-        </button>
+}) => {
+  return (
+    <section
+      className="manual-page manual-encyclopedia-page"
+      data-testid="manual-encyclopedia-page"
+    >
+      <EncyclopediaIndex
+        kind={kind}
+        selectedEquipmentId={selectedEquipmentId}
+        selectedReactionId={selectedReactionId}
+        onSelectEquipment={onSelectEquipment}
+        onSelectKind={onSelectKind}
+        onSelectReaction={onSelectReaction}
+      />
+      <div className="manual-entry-scroll">
+        {kind === "equipment" ? (
+          <EquipmentEntry equipmentId={selectedEquipmentId} onOpenReaction={onSelectReaction} />
+        ) : (
+          <ReactionEntry reactionId={selectedReactionId} onOpenEquipment={onSelectEquipment} />
+        )}
       </div>
-      <div className="manual-index-list">
-        {kind === "equipment"
-          ? EQUIPMENT_IDS.map((equipmentId) => (
-              <button
-                key={equipmentId}
-                type="button"
-                className={selectedEquipmentId === equipmentId ? "selected" : ""}
-                onClick={() => onSelectEquipment(equipmentId)}
-              >
-                <small>{EQUIPMENT_CATEGORY_LABELS[EQUIPMENT_MANUAL[equipmentId].category]}</small>
-                <strong>{equipmentCopy(EQUIPMENT_DEFINITIONS[equipmentId]).name}</strong>
-              </button>
-            ))
-          : REACTION_IDS.map((reactionId) => (
-              <button
-                key={reactionId}
-                type="button"
-                className={selectedReactionId === reactionId ? "selected" : ""}
-                onClick={() => onSelectReaction(reactionId)}
-              >
-                <small>{REACTION_DEFINITIONS[reactionId].code}</small>
-                <strong>{reactionCopy(REACTION_DEFINITIONS[reactionId]).name}</strong>
-              </button>
-            ))}
-      </div>
-    </aside>
-    <div className="manual-entry-scroll">
-      {kind === "equipment" ? (
-        <EquipmentEntry equipmentId={selectedEquipmentId} onOpenReaction={onSelectReaction} />
-      ) : (
-        <ReactionEntry reactionId={selectedReactionId} onOpenEquipment={onSelectEquipment} />
-      )}
-    </div>
-  </section>
-);
+    </section>
+  );
+};

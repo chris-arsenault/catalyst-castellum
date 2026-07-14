@@ -1,6 +1,8 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
+import { GamePresentationProvider } from "./application/GamePresentationProvider";
+import { DEFAULT_GAME_PRESENTATION } from "./presentation/services";
 import "./styles/base.css";
 import "./styles/save-slots.css";
 import "./styles/topbar.css";
@@ -21,6 +23,8 @@ if (!root) throw new Error("Missing application root.");
 
 createRoot(root).render(
   <StrictMode>
-    <App />
+    <GamePresentationProvider presentation={DEFAULT_GAME_PRESENTATION}>
+      <App />
+    </GamePresentationProvider>
   </StrictMode>
 );

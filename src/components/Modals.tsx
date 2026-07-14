@@ -3,8 +3,7 @@ import { useCallback } from "react";
 import { LEVEL_DEFINITIONS, nextLevelId } from "../presentation/defaultGame";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
-import { roundReportCopy } from "../presentation/roundReportCopy";
-import { levelCopy, roundCopy } from "../presentation/levelCopy";
+import { useGamePresentation } from "../application/presentationContext";
 
 interface ProgressFrameProps {
   actionLabel: string;
@@ -18,6 +17,7 @@ interface ProgressFrameProps {
 }
 
 const ProgressFrame = (props: ProgressFrameProps) => {
+  const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   return (
@@ -39,20 +39,20 @@ const ProgressFrame = (props: ProgressFrameProps) => {
       <p>{props.detail}</p>
       <dl className="progress-dock-stats">
         <div>
-          <dt>Neutralized</dt>
+          <dt>{translator.text("ui.progress.neutralized")}</dt>
           <dd>{game.lastReport?.killed ?? 0}</dd>
         </div>
         <div>
-          <dt>Breaches</dt>
+          <dt>{translator.text("ui.progress.breaches")}</dt>
           <dd>{game.lastReport?.breached ?? 0}</dd>
         </div>
         <div>
-          <dt>Core</dt>
-          <dd>{Math.round(game.coreIntegrity)}%</dd>
+          <dt>{translator.text("ui.progress.core")}</dt>
+          <dd>{formatters.percent(game.coreIntegrity / 100, 0)}</dd>
         </div>
         <div>
-          <dt>Reactions</dt>
-          <dd>{game.lastReport?.reactions.toFixed(1) ?? "0.0"}</dd>
+          <dt>{translator.text("ui.progress.reactions")}</dt>
+          <dd>{formatters.number(game.lastReport?.reactions ?? 0, 1)}</dd>
         </div>
       </dl>
       <div className="progress-dock-next">
@@ -63,7 +63,7 @@ const ProgressFrame = (props: ProgressFrameProps) => {
       </div>
       <footer>
         <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
-          <LogOut size={15} /> Save slots
+          <LogOut size={15} /> {translator.text("ui.topbar.saveSlots")}
         </button>
         <button
           className="enter-button"
@@ -79,46 +79,62 @@ const ProgressFrame = (props: ProgressFrameProps) => {
 };
 
 const RoundProgressModal = () => {
+  const {
+    levelCopy: localizedLevelCopy,
+    roundReportCopy: localizedReport,
+    translator,
+  } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const level = levelDefinitionFor(game);
-  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
+  const report = game.lastReport ? localizedReport(game.lastReport) : null;
   const nextRound = level.rounds[game.campaign.roundIndex + 1];
   const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
   return (
     <ProgressFrame
-      actionLabel="Return to planning"
-      detail={report?.detail ?? "The exact process state remains frozen."}
-      eyebrow="Round analysis"
-      nextDetail={nextRound ? roundCopy(level, nextRound).objective : "Continue the checkpoint."}
-      nextLabel="Next round"
+      actionLabel={translator.text("ui.progress.round.action")}
+      detail={report?.detail ?? translator.text("ui.progress.round.frozen")}
+      eyebrow={translator.text("ui.progress.round.eyebrow")}
+      nextDetail={
+        nextRound
+          ? localizedLevelCopy.round(level, nextRound).objective
+          : translator.text("ui.progress.round.continue")
+      }
+      nextLabel={translator.text("ui.progress.round.next")}
       onAdvance={advance}
       testId="continue-round"
-      title={report?.headline ?? "Round complete"}
+      title={report?.headline ?? translator.text("ui.progress.round.complete")}
     />
   );
 };
 
 const LevelProgressModal = () => {
+  const {
+    levelCopy: localizedLevelCopy,
+    roundReportCopy: localizedReport,
+    translator,
+  } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const level = levelDefinitionFor(game);
-  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
+  const report = game.lastReport ? localizedReport(game.lastReport) : null;
   const nextId = nextLevelId(level.id);
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
-  const levelText = levelCopy(level);
-  const nextLevelText = nextLevel ? levelCopy(nextLevel) : null;
+  const levelText = localizedLevelCopy.level(level);
+  const nextLevelText = nextLevel ? localizedLevelCopy.level(nextLevel) : null;
   const advance = useCallback(() => dispatch({ type: "start_next_level" }), [dispatch]);
   return (
     <ProgressFrame
-      actionLabel={`Continue to ${nextLevelText?.name ?? "campaign"}`}
-      detail={report?.detail ?? "Checkpoint process record secured."}
-      eyebrow="Checkpoint secured"
-      nextDetail={nextLevelText?.briefing ?? "The curriculum is complete."}
-      nextLabel="Next checkpoint"
+      actionLabel={translator.text("ui.progress.level.action", {
+        name: nextLevelText?.name ?? translator.text("ui.progress.level.campaign"),
+      })}
+      detail={report?.detail ?? translator.text("ui.progress.level.securedRecord")}
+      eyebrow={translator.text("ui.progress.level.eyebrow")}
+      nextDetail={nextLevelText?.briefing ?? translator.text("ui.progress.level.curriculum")}
+      nextLabel={translator.text("ui.progress.level.next")}
       onAdvance={advance}
       testId="next-level"
-      title={`${levelText.name} complete`}
+      title={translator.text("ui.progress.level.complete", { name: levelText.name })}
     />
   );
 };
@@ -131,6 +147,7 @@ export const CampaignProgressModal = () => {
 };
 
 export const OutcomeModal = () => {
+  const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const reset = useGameStore((state) => state.reset);
   const dispatch = useGameStore((state) => state.dispatch);
@@ -150,35 +167,42 @@ export const OutcomeModal = () => {
           {victory ? <CheckCircle2 size={42} /> : <Biohazard size={42} />}
         </div>
         <div className="eyebrow">
-          <span /> Base record finalized
+          <span /> {translator.text("ui.outcome.eyebrow")}
         </div>
-        <h2 id="outcome-title">{victory ? "Castellum holds" : "Catalyst core lost"}</h2>
+        <h2 id="outcome-title">
+          {translator.text(victory ? "ui.outcome.victory.title" : "ui.outcome.defeat.title")}
+        </h2>
         <p>
           {victory
-            ? `All five checkpoints and the commissioning exam are complete. The final core retained ${Math.round(game.coreIntegrity)}% integrity.`
-            : `The core fell during ${levelCopy(levelDefinitionFor(game)).name}, round ${game.campaign.roundIndex + 1}. The trace preserves the immediate cause and supports the next attempt.`}
+            ? translator.text("ui.outcome.victory.detail", {
+                integrity: formatters.number(game.coreIntegrity, 0),
+              })
+            : translator.text("ui.outcome.defeat.detail", {
+                level: localizedLevelCopy.level(levelDefinitionFor(game)).name,
+                round: game.campaign.roundIndex + 1,
+              })}
         </p>
         <div className="outcome-stats">
           <div>
-            <span>Levels cleared</span>
+            <span>{translator.text("ui.outcome.levels")}</span>
             <strong>{game.campaign.completedLevelIds.length} / 5</strong>
           </div>
           <div>
-            <span>Core</span>
-            <strong>{Math.round(game.coreIntegrity)}%</strong>
+            <span>{translator.text("ui.outcome.core")}</span>
+            <strong>{formatters.percent(game.coreIntegrity / 100, 0)}</strong>
           </div>
           <div>
-            <span>Final kills</span>
+            <span>{translator.text("ui.outcome.kills")}</span>
             <strong>{game.stats.killed}</strong>
           </div>
           <div>
-            <span>Peak hazard</span>
-            <strong>{Math.round(game.stats.peakHazard)}</strong>
+            <span>{translator.text("ui.outcome.hazard")}</span>
+            <strong>{formatters.number(game.stats.peakHazard, 0)}</strong>
           </div>
         </div>
         <div className="modal-footer-actions">
           <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
-            <LogOut size={15} /> Save slots
+            <LogOut size={15} /> {translator.text("ui.topbar.saveSlots")}
           </button>
           <button
             className="enter-button"
@@ -186,7 +210,8 @@ export const OutcomeModal = () => {
             data-testid={victory ? "new-campaign" : "retry-level"}
             onClick={() => (victory ? reset() : dispatch({ type: "retry_level" }))}
           >
-            <RotateCcw size={17} /> {victory ? "Begin new campaign" : "Retry checkpoint"}
+            <RotateCcw size={17} />{" "}
+            {translator.text(victory ? "ui.outcome.newCampaign" : "ui.outcome.retry")}
           </button>
         </div>
       </div>
@@ -195,6 +220,7 @@ export const OutcomeModal = () => {
 };
 
 export const NoticeToast = () => {
+  const { translator } = useGamePresentation();
   const notice = useGameStore((state) => state.notice);
   const clear = useGameStore((state) => state.clearNotice);
   if (!notice) return null;
@@ -203,7 +229,7 @@ export const NoticeToast = () => {
       className="notice-toast"
       type="button"
       onClick={clear}
-      aria-label={`${notice}. Dismiss`}
+      aria-label={translator.text("ui.notice.dismiss", { notice })}
     >
       <Biohazard size={16} /> <span>{notice}</span> <X size={14} />
     </button>

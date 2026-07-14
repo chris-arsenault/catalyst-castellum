@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { createScenarioGame, executeCommand, stepGame } from "../game/simulation";
 import type { GameCommand, GameState } from "../game/types";
+import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
+import { tutorialText } from "./tutorialCopy";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -37,7 +39,8 @@ describe("Make the Reagent guidance", () => {
     expect(guide.steps.map((step) => step.target)).toContain(
       TUTORIAL_ANCHORS.conduitCoreCellLiquid
     );
-    expect(guidedPhaseActionReason(game, "start_prime", [])).toContain("Membrane Cell");
+    const reason = guidedPhaseActionReason(game, "start_prime", []);
+    expect(reason && tutorialText(DEFAULT_TRANSLATOR, reason)).toContain("Membrane Cell");
 
     game = command(game, {
       type: "install_equipment",

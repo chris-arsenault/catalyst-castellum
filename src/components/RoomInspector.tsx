@@ -2,9 +2,7 @@ import { Activity, Droplets, FlaskConical, Gauge, Info, Thermometer, X } from "l
 import { useCallback, useState } from "react";
 import {
   GAS_COLORS,
-  GAS_LABELS,
   LIQUID_COLORS,
-  LIQUID_LABELS,
   LEVEL_DEFINITIONS,
   REACTION_DEFINITIONS,
   ROOM_DEFINITIONS,
@@ -12,9 +10,8 @@ import {
   roomVolume,
 } from "../presentation/defaultGame";
 import { gasPercent, liquidPercent } from "../game/queries";
-import { limitingFactorCopy } from "../presentation/limitingFactorCopy";
-import { roomAnalysis } from "../presentation/selectors";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { GAS_TYPES, LIQUID_TYPES } from "../game/types";
 import type { GasZone, ReactionId, RoomId, RoomReactionId } from "../game/types";
@@ -23,18 +20,32 @@ import { HydrogenChlorineGate } from "./HydrogenChlorineGate";
 import { OxidizerIgnitionGate } from "./OxidizerIgnitionGate";
 import { ProcessControls } from "./ProcessControls";
 import { reactionCopy, roomCopy, speciesCopy } from "../presentation/entityCopy";
+import type { LocaleFormatters } from "../localization/formatters";
+import type { Translator } from "../localization/translator";
+import type { HazardLabel } from "../presentation/roomCopy";
+import { RecentIncidents } from "./roomInspector/RecentIncidents";
 
-const formatPercent = (value: number): string => {
-  if (value > 0 && value < 0.001) return "<0.1%";
-  if (value < 0.1) return `${(value * 100).toFixed(1)}%`;
-  return `${Math.round(value * 100)}%`;
+const formatPercent = (value: number, formatters: LocaleFormatters): string => {
+  if (value > 0 && value < 0.001) return `<${formatters.percent(0.001, 1)}`;
+  return formatters.percent(value, value < 0.1 ? 1 : 0);
+};
+
+const localizedHazard = (hazard: HazardLabel, translator: Translator): string => {
+  const keys = {
+    CLEAR: "ui.room.hazard.clear",
+    LOW: "ui.room.hazard.low",
+    HOSTILE: "ui.room.hazard.hostile",
+    LETHAL: "ui.room.hazard.lethal",
+  } as const;
+  return translator.text(keys[hazard]);
 };
 
 const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
+  const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = roomAnalysis(room);
+  const analysis = selectors.roomAnalysis(room);
   const isLower = zone === "lower";
   const total = isLower ? analysis.lowerGasTotal : analysis.upperGasTotal;
   const density = isLower ? analysis.lowerGasDensity : analysis.upperGasDensity;
@@ -42,18 +53,24 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
   return (
     <div className={`gas-layer gas-layer-${zone}`}>
       <div className="composition-heading">
-        <span>{isLower ? "↓ Lower · ground sample" : "↑ Upper · flying sample"}</span>
+        <span>{translator.text(isLower ? "ui.room.lowerSample" : "ui.room.upperSample")}</span>
         <strong>
-          {total.toFixed(1)} mol-eq · {temperature.toFixed(0)}°C · ρ{density.toFixed(2)}
+          {formatters.measurement(total, "mol-eq", 1)} ·{" "}
+          {formatters.measurement(temperature, "°C", 0)} · ρ{formatters.number(density, 2)}
         </strong>
       </div>
-      <div className="stacked-bar" aria-label={`${zone} gas composition`}>
+      <div
+        className="stacked-bar"
+        aria-label={translator.text("ui.room.gasComposition", {
+          zone: translator.text(zone === "upper" ? "ui.gate.upperLayer" : "ui.gate.lowerLayer"),
+        })}
+      >
         {GAS_TYPES.map((gas) => {
           const amount = gasPercent(room, gas, zone);
           return amount > 0.002 ? (
             <span
               key={gas}
-              title={`${speciesCopy(SPECIES_DEFINITIONS[gas]).name} ${formatPercent(amount)}`}
+              title={`${speciesCopy(SPECIES_DEFINITIONS[gas], translator).name} ${formatPercent(amount, formatters)}`}
               style={{
                 "--segment-width": `${amount * 100}%`,
                 "--segment-color": GAS_COLORS[gas],
@@ -72,8 +89,8 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
               data-testid={`gas-${zone}-${gas}`}
             >
               <span className="color-dot" style={{ "--dot-color": GAS_COLORS[gas] }} />
-              <span>{GAS_LABELS[gas]}</span>
-              <strong>{formatPercent(amount)}</strong>
+              <span>{speciesCopy(SPECIES_DEFINITIONS[gas], translator).name}</span>
+              <strong>{formatPercent(amount, formatters)}</strong>
             </div>
           );
         })}
@@ -83,17 +100,22 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
 };
 
 const GasComposition = () => {
+  const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = roomAnalysis(game.rooms[roomId]);
+  const analysis = selectors.roomAnalysis(game.rooms[roomId]);
   return (
     <div className="composition-group gas-layers">
       <div className="atmosphere-summary">
-        <span>Shared room pressure</span>
+        <span>{translator.text("ui.room.sharedPressure")}</span>
         <strong>
-          {Math.round(analysis.pressure)} kPa
+          {formatters.measurement(analysis.pressure, "kPa", 0)}
           {analysis.pressurePulse > 1 && (
-            <small> · +{Math.round(analysis.pressurePulse)} shock</small>
+            <small>
+              {translator.text("ui.room.shock", {
+                pressure: formatters.number(analysis.pressurePulse, 0),
+              })}
+            </small>
           )}
         </strong>
       </div>
@@ -104,27 +126,35 @@ const GasComposition = () => {
 };
 
 const LiquidComposition = () => {
+  const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = roomAnalysis(room);
+  const analysis = selectors.roomAnalysis(room);
   const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
   const presentLiquids = LIQUID_TYPES.filter((liquid) => room.liquid[liquid] > 0.05);
   return (
     <div className="composition-group liquid-group">
       <div className="composition-heading">
-        <span>Liquid inventory</span>
-        <strong>{formatPercent(fill)} fill</strong>
+        <span>{translator.text("ui.room.liquidInventory")}</span>
+        <strong>
+          {translator.text("ui.room.fill", { percent: formatPercent(fill, formatters) })}
+        </strong>
       </div>
-      <div className="stacked-bar liquid-bar" aria-label="Liquid composition">
-        {analysis.liquidTotal <= 0.1 && <span className="empty-liquid">DRY</span>}
+      <div
+        className="stacked-bar liquid-bar"
+        aria-label={translator.text("ui.room.liquidComposition")}
+      >
+        {analysis.liquidTotal <= 0.1 && (
+          <span className="empty-liquid">{translator.text("ui.room.dry")}</span>
+        )}
         {analysis.liquidTotal > 0.1 &&
           presentLiquids.map((liquid) => {
             const amount = liquidPercent(room, liquid);
             return (
               <span
                 key={liquid}
-                title={`${LIQUID_LABELS[liquid]} ${formatPercent(amount)}`}
+                title={`${speciesCopy(SPECIES_DEFINITIONS[liquid], translator).name} ${formatPercent(amount, formatters)}`}
                 style={{
                   "--segment-width": `${amount * 100}%`,
                   "--segment-color": LIQUID_COLORS[liquid],
@@ -138,8 +168,8 @@ const LiquidComposition = () => {
           {presentLiquids.map((liquid) => (
             <div key={liquid}>
               <span className="color-dot" style={{ "--dot-color": LIQUID_COLORS[liquid] }} />
-              <span>{LIQUID_LABELS[liquid]}</span>
-              <strong>{formatPercent(liquidPercent(room, liquid))}</strong>
+              <span>{speciesCopy(SPECIES_DEFINITIONS[liquid], translator).name}</span>
+              <strong>{formatPercent(liquidPercent(room, liquid), formatters)}</strong>
             </div>
           ))}
         </div>
@@ -148,48 +178,60 @@ const LiquidComposition = () => {
   );
 };
 
-const Composition = () => (
-  <section className="inspector-section composition-section">
-    <div className="section-title-row">
-      <h3>Room composition</h3>
-      <span>LIVE SAMPLE</span>
-    </div>
-    <GasComposition />
-    <LiquidComposition />
-  </section>
-);
+const Composition = () => {
+  const { translator } = useGamePresentation();
+  return (
+    <section className="inspector-section composition-section">
+      <div className="section-title-row">
+        <h3>{translator.text("ui.room.composition")}</h3>
+        <span>{translator.text("ui.room.liveSample")}</span>
+      </div>
+      <GasComposition />
+      <LiquidComposition />
+    </section>
+  );
+};
 
 const RoomMetrics = () => {
+  const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
-  const analysis = roomAnalysis(room);
+  const analysis = selectors.roomAnalysis(room);
   const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
 
   return (
-    <section className="metric-grid" aria-label="Room metrics">
+    <section className="metric-grid" aria-label={translator.text("ui.room.metrics")}>
       <div>
         <Gauge size={15} />
-        <span>Pressure</span>
-        <strong title={`Static ${Math.round(analysis.staticPressure)} kPa`}>
-          {Math.round(analysis.pressure)}
-          <small> kPa</small>
+        <span>{translator.text("ui.room.pressure")}</span>
+        <strong
+          title={translator.text("ui.room.staticPressure", {
+            pressure: formatters.measurement(analysis.staticPressure, "kPa", 0),
+          })}
+        >
+          {formatters.number(analysis.pressure, 0)}
+          <small>{translator.text("ui.room.pressureUnit")}</small>
         </strong>
       </div>
       <div>
         <Thermometer size={15} />
-        <span>Temperature</span>
+        <span>{translator.text("ui.room.temperature")}</span>
         <strong>
-          {Math.round(analysis.upperGasTemperature)}°
-          <small> / {Math.round(analysis.lowerGasTemperature)}°C</small>
+          {formatters.number(analysis.upperGasTemperature, 0)}°
+          <small>
+            {translator.text("ui.room.lowerTemperature", {
+              temperature: formatters.number(analysis.lowerGasTemperature, 0),
+            })}
+          </small>
         </strong>
       </div>
       <div>
         <Droplets size={15} />
-        <span>Liquid</span>
+        <span>{translator.text("ui.room.liquid")}</span>
         <strong>
-          {Math.round(fill * 100)}
-          <small>%</small>
+          {formatters.number(fill * 100, 0)}
+          <small>{translator.text("ui.room.percentUnit")}</small>
         </strong>
       </div>
     </section>
@@ -197,19 +239,20 @@ const RoomMetrics = () => {
 };
 
 const EffectsPanel = () => {
+  const { selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = roomAnalysis(game.rooms[roomId]);
+  const analysis = selectors.roomAnalysis(game.rooms[roomId]);
 
   return (
     <section className="effects-panel">
       <div className="section-title-row">
-        <h3>Current exposure effect</h3>
+        <h3>{translator.text("ui.room.exposure")}</h3>
         <Activity size={15} />
       </div>
       <ul>
         {analysis.effects.map((effect) => (
-          <li key={effect} className={effect.startsWith("Enemy exposure below") ? "neutral" : ""}>
+          <li key={effect} className={analysis.hazard < 0.1 ? "neutral" : ""}>
             <span /> {effect}
           </li>
         ))}
@@ -226,6 +269,7 @@ const ReactionGate = ({ reactionId, roomId }: { reactionId: ReactionId; roomId: 
 };
 
 const ReactionPanel = () => {
+  const { formatters, limitingFactorCopy: factorCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
@@ -249,14 +293,14 @@ const ReactionPanel = () => {
       }
     >
       <div className="section-title-row">
-        <h3>Measured room chemistry</h3>
+        <h3>{translator.text("ui.room.chemistry")}</h3>
         <FlaskConical size={15} />
       </div>
       {featured.map((reactionId) => (
         <ReactionGate key={reactionId} reactionId={reactionId} roomId={roomId} />
       ))}
       {activeReactionIds.length === 0 ? (
-        <p className="no-reaction">Reaction rate idle in this sample.</p>
+        <p className="no-reaction">{translator.text("ui.room.reactionIdle")}</p>
       ) : (
         <div className="reaction-rate-list">
           {activeReactionIds.map((reactionId) => {
@@ -265,9 +309,13 @@ const ReactionPanel = () => {
             return (
               <div key={reactionId}>
                 <span>{reaction.code}</span>
-                <strong>{reactionCopy(reaction).name}</strong>
-                <em>{reading.lastRate.toFixed(2)} mol-eq/s</em>
-                <small>limiting: {limitingFactorCopy(reading.limitingFactor)}</small>
+                <strong>{reactionCopy(reaction, translator).name}</strong>
+                <em>{formatters.measurement(reading.lastRate, "mol-eq/s", 2)}</em>
+                <small>
+                  {translator.text("ui.room.limiting", {
+                    factor: factorCopy(reading.limitingFactor),
+                  })}
+                </small>
               </div>
             );
           })}
@@ -275,56 +323,15 @@ const ReactionPanel = () => {
       )}
       {room.combustionCount > 0 && (
         <p className="flash-counter">
-          OX-1 batch flashes recorded <strong>{room.combustionCount}</strong>
+          {translator.text("ui.room.flashCount", { count: room.combustionCount })}
         </p>
       )}
     </section>
   );
 };
 
-const RecentIncidents = () => {
-  const game = useGameStore((state) => state.game);
-  const roomId = useGameStore((state) => state.selectedRoomId);
-  const incidents = game.incidents.filter((incident) => incident.roomId === roomId).slice(0, 1);
-  return (
-    <section
-      className="effects-panel recent-incidents"
-      data-testid={`recent-incidents-${roomId}`}
-      data-tutorial-anchor={roomId === "furnace" ? TUTORIAL_ANCHORS.furnaceIncidents : undefined}
-    >
-      <div className="section-title-row">
-        <h3>Recent incidents</h3>
-        <Activity size={15} />
-      </div>
-      {incidents.length === 0 ? (
-        <p className="no-reaction">Incident log clear for this chamber.</p>
-      ) : (
-        <div className="recent-incident-list">
-          {incidents.map((incident) => {
-            const killed = incident.targets.filter((target) => target.killed).length;
-            return (
-              <article key={incident.id}>
-                <strong>
-                  OX-1 #{incident.id} · {incident.targets.length} hit · {killed} killed
-                </strong>
-                <span>
-                  {Math.round(incident.pressureImpulse)} kPa impulse ·{` `}
-                  {Math.round(incident.damageByChannel.pressure)} pressure +{` `}
-                  {Math.round(incident.damageByChannel.heat)} heat damage
-                </span>
-                <small>
-                  {incident.phase.toUpperCase()} · recorded at {incident.elapsed.toFixed(1)}s
-                </small>
-              </article>
-            );
-          })}
-        </div>
-      )}
-    </section>
-  );
-};
-
 const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
+  const { translator } = useGamePresentation();
   const roomId = useGameStore((state) => state.selectedRoomId);
   const definition = ROOM_DEFINITIONS[roomId];
   return (
@@ -337,20 +344,20 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
       >
         <header>
           <div>
-            <span>{definition.code} · Room details</span>
-            <h2 id="room-details-title">{roomCopy(definition).name}</h2>
+            <span>{translator.text("ui.room.details.kicker", { code: definition.code })}</span>
+            <h2 id="room-details-title">{roomCopy(definition, translator).name}</h2>
           </div>
           <button
             type="button"
             className="modal-close"
-            aria-label="Close room details"
+            aria-label={translator.text("ui.room.details.close")}
             onClick={onClose}
           >
             <X size={18} />
           </button>
         </header>
         <div className="room-details-scroll">
-          <p className="room-details-blurb">{roomCopy(definition).description}</p>
+          <p className="room-details-blurb">{roomCopy(definition, translator).description}</p>
           <Composition />
           <EffectsPanel />
           <ReactionPanel />
@@ -358,7 +365,7 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
         </div>
         <footer>
           <button type="button" className="secondary-action wide" onClick={onClose}>
-            Back to the map
+            {translator.text("ui.room.details.back")}
           </button>
         </footer>
       </section>
@@ -367,10 +374,11 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
 };
 
 export const RoomInspector = () => {
+  const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const definition = ROOM_DEFINITIONS[roomId];
-  const analysis = roomAnalysis(game.rooms[roomId]);
+  const analysis = selectors.roomAnalysis(game.rooms[roomId]);
   const [showDetails, setShowDetails] = useState(false);
   const closeDetails = useCallback(() => setShowDetails(false), [setShowDetails]);
 
@@ -379,18 +387,18 @@ export const RoomInspector = () => {
       <div className="inspector-header">
         <div className="inspector-room-code">
           <span>{definition.code}</span>
-          <em>Selected room</em>
+          <em>{translator.text("ui.room.selected")}</em>
         </div>
         <div
           className={`hazard-badge hazard-${analysis.hazardLabel.toLowerCase()}`}
           data-testid="hazard-rating"
         >
-          <span>{analysis.hazardLabel}</span>
-          <strong>{Math.round(analysis.hazard)}</strong>
+          <span>{localizedHazard(analysis.hazardLabel, translator)}</span>
+          <strong>{formatters.number(analysis.hazard, 0)}</strong>
         </div>
-        <h2 data-testid="room-name">{roomCopy(definition).name}</h2>
+        <h2 data-testid="room-name">{roomCopy(definition, translator).name}</h2>
         <button className="room-details-button" type="button" onClick={() => setShowDetails(true)}>
-          <Info size={14} /> Room details
+          <Info size={14} /> {translator.text("ui.room.details.open")}
         </button>
       </div>
 

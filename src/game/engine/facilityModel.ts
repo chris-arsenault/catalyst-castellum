@@ -11,13 +11,7 @@ import type {
   WorldPoint,
 } from "../types";
 import type { FacilityModel } from "../definitionTypes";
-import {
-  cell,
-  cellKey,
-  gridCellToWorldPoint,
-  gridPathToWorldPath,
-  worldPointToGridCell,
-} from "../spatial";
+import { cell, cellKey, worldPointToGridCell } from "../spatial";
 
 const STANDARD_ROOM_CELL_AREA = 14 * 8;
 const STANDARD_ROOM_VOLUME = 100;

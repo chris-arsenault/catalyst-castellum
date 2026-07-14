@@ -3,31 +3,35 @@ import { useState } from "react";
 import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import type { GameState } from "../game/types";
-import { levelCopy, roundCopy } from "../presentation/levelCopy";
 import { guideDefinitionFor } from "../tutorial/guideModel";
+import type { Translator } from "../localization/translator";
 
-const BriefingGraphic = () => (
-  <div className="briefing-graphic" aria-hidden="true">
-    <div className="graphic-grid" />
-    <div className="graphic-pipe pipe-one" />
-    <div className="graphic-pipe pipe-two" />
-    <div className="graphic-chamber chamber-one">
-      <Biohazard />
+const BriefingGraphic = () => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="briefing-graphic" aria-hidden="true">
+      <div className="graphic-grid" />
+      <div className="graphic-pipe pipe-one" />
+      <div className="graphic-pipe pipe-two" />
+      <div className="graphic-chamber chamber-one">
+        <Biohazard />
+      </div>
+      <div className="graphic-chamber chamber-two">
+        <Droplets />
+      </div>
+      <div className="graphic-core">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div className="graphic-enemy enemy-one" />
+      <div className="graphic-enemy enemy-two" />
+      <div className="graphic-label">{translator.text("ui.briefing.graphic")}</div>
     </div>
-    <div className="graphic-chamber chamber-two">
-      <Droplets />
-    </div>
-    <div className="graphic-core">
-      <span />
-      <span />
-      <span />
-    </div>
-    <div className="graphic-enemy enemy-one" />
-    <div className="graphic-enemy enemy-two" />
-    <div className="graphic-label">FLOW DEFENSE ARRAY // CASTELLUM-01</div>
-  </div>
-);
+  );
+};
 
 const BriefingObjective = ({
   game,
@@ -36,15 +40,22 @@ const BriefingObjective = ({
   game: GameState;
   tutorialSkipped: boolean;
 }) => {
+  const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const round = roundDefinitionFor(game);
   const level = levelDefinitionFor(game);
   const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
   const nextRoom = ROOM_DEFINITIONS[nextLevel.focusRoomId];
-  let detail = `${roundCopy(level, round).objective} You have ${round.primeSeconds} seconds of live priming before the configuration locks automatically.`;
-  let label = "Round 1 objective";
+  let detail = translator.text("ui.briefing.objective", {
+    objective: localizedLevelCopy.round(level, round).objective,
+    duration: formatters.duration(round.primeSeconds),
+  });
+  let label = translator.text("ui.briefing.roundObjective");
   if (tutorialSkipped) {
-    detail = `${levelCopy(nextLevel).name} begins immediately in frozen planning at ${nextRoom.code}.`;
-    label = "Starting at Lesson 02";
+    detail = translator.text("ui.briefing.skipDetail", {
+      level: localizedLevelCopy.level(nextLevel).name,
+      room: nextRoom.code,
+    });
+    label = translator.text("ui.briefing.startingLesson");
   }
   return (
     <div className="briefing-objective">
@@ -63,48 +74,63 @@ const TutorialStartChoice = ({
 }: {
   enabled: boolean;
   onChange: (enabled: boolean) => void;
-}) => (
-  <div className="tutorial-start-choice">
-    <input
-      id="tutorial-enabled"
-      type="checkbox"
-      checked={enabled}
-      data-testid="tutorial-enabled"
-      aria-describedby="tutorial-choice-detail"
-      onChange={(event) => onChange(event.currentTarget.checked)}
-    />
-    <label htmlFor="tutorial-enabled">
-      <strong>Play Flash Point field drill</strong>
-      <small id="tutorial-choice-detail">
-        Clear the checkbox to begin with Lesson 02 · Make the Reagent.
-      </small>
-    </label>
-  </div>
-);
-
-const actionLabel = (offersOpeningDrill: boolean, tutorialEnabled: boolean): string => {
-  if (!offersOpeningDrill) return "Begin checkpoint";
-  return tutorialEnabled ? "Begin field drill" : "Begin lesson 2";
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="tutorial-start-choice">
+      <input
+        id="tutorial-enabled"
+        type="checkbox"
+        checked={enabled}
+        data-testid="tutorial-enabled"
+        aria-describedby="tutorial-choice-detail"
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+      <label htmlFor="tutorial-enabled">
+        <strong>{translator.text("ui.briefing.tutorial.title")}</strong>
+        <small id="tutorial-choice-detail">{translator.text("ui.briefing.tutorial.detail")}</small>
+      </label>
+    </div>
+  );
 };
 
-const hint = (game: GameState, offersOpeningDrill: boolean, tutorialEnabled: boolean): string => {
+const actionLabel = (
+  offersOpeningDrill: boolean,
+  tutorialEnabled: boolean,
+  translator: Translator
+): string => {
+  if (!offersOpeningDrill) return translator.text("ui.briefing.beginCheckpoint");
+  return translator.text(tutorialEnabled ? "ui.briefing.beginDrill" : "ui.briefing.beginLesson");
+};
+
+const hint = (
+  game: GameState,
+  offersOpeningDrill: boolean,
+  tutorialEnabled: boolean,
+  translator: Translator,
+  lesson: string
+): string => {
   const level = levelDefinitionFor(game);
-  const copy = levelCopy(level);
   if (!offersOpeningDrill)
-    return `Start at ${ROOM_DEFINITIONS[level.focusRoomId].code}. ${copy.lesson}`;
-  if (!tutorialEnabled)
-    return "Lesson 02 opens in frozen planning at R-05. Restart the campaign to replay Flash Point.";
-  return `Enter the checkpoint to receive the field assignment at ${ROOM_DEFINITIONS[level.focusRoomId].code}.`;
+    return translator.text("ui.briefing.hint.checkpoint", {
+      room: ROOM_DEFINITIONS[level.focusRoomId].code,
+      lesson,
+    });
+  if (!tutorialEnabled) return translator.text("ui.briefing.hint.lesson");
+  return translator.text("ui.briefing.hint.drill", {
+    room: ROOM_DEFINITIONS[level.focusRoomId].code,
+  });
 };
 
 const BriefingContent = ({ game }: { game: GameState }) => {
+  const { levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
   const dismissTutorialGuide = useGameStore((state) => state.dismissTutorialGuide);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const level = levelDefinitionFor(game);
-  const copy = levelCopy(level);
+  const copy = localizedLevelCopy.level(level);
   const guide = guideDefinitionFor(game);
   const offersOpeningDrill = game.campaign.levelId === "flash_point" && Boolean(guide);
   const tutorialSkipped = offersOpeningDrill && !tutorialEnabled;
@@ -132,7 +158,12 @@ const BriefingContent = ({ game }: { game: GameState }) => {
             <span /> {copy.kicker}
           </div>
           <h1 id="briefing-title">
-            <span>Checkpoint {String(level.number).padStart(2, "0")}</span> {copy.name}
+            <span>
+              {translator.text("ui.briefing.checkpoint", {
+                number: String(level.number).padStart(2, "0"),
+              })}
+            </span>{" "}
+            {copy.name}
           </h1>
           <p className="briefing-lede">{copy.briefing}</p>
           <BriefingObjective game={game} tutorialSkipped={tutorialSkipped} />
@@ -146,7 +177,7 @@ const BriefingContent = ({ game }: { game: GameState }) => {
               data-testid="briefing-main-menu"
               onClick={returnToMainMenu}
             >
-              <ArrowLeft size={16} /> Save slots
+              <ArrowLeft size={16} /> {translator.text("ui.topbar.saveSlots")}
             </button>
             <button
               className="enter-button"
@@ -154,10 +185,13 @@ const BriefingContent = ({ game }: { game: GameState }) => {
               data-testid="enter-control-room"
               onClick={begin}
             >
-              {actionLabel(offersOpeningDrill, tutorialEnabled)} <ArrowRight size={18} />
+              {actionLabel(offersOpeningDrill, tutorialEnabled, translator)}{" "}
+              <ArrowRight size={18} />
             </button>
           </div>
-          <small className="briefing-hint">{hint(game, offersOpeningDrill, tutorialEnabled)}</small>
+          <small className="briefing-hint">
+            {hint(game, offersOpeningDrill, tutorialEnabled, translator, copy.lesson)}
+          </small>
         </div>
       </div>
     </div>

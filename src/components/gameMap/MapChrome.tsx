@@ -17,6 +17,7 @@ import { EnemyTooltip } from "./EnemyTooltip";
 import { CellOutletTooltip } from "./CellOutletTooltip";
 import type { CellOutletId } from "./cellOutletRenderModel";
 import { speciesCopy } from "../../presentation/entityCopy";
+import { useGamePresentation } from "../../application/presentationContext";
 
 // HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
@@ -25,37 +26,40 @@ interface MaterialFlowControlProps {
   onSelectSpecies: (species: SpeciesId | null) => void;
 }
 
-const MaterialFlowControl = ({ selectedSpecies, onSelectSpecies }: MaterialFlowControlProps) => (
-  <label className="material-flow-control">
-    <span>Material flow</span>
-    <select
-      aria-label="Material flow overlay"
-      data-testid="material-flow-overlay"
-      value={selectedSpecies ?? ""}
-      onChange={(event) =>
-        onSelectSpecies(event.target.value === "" ? null : (event.target.value as SpeciesId))
-      }
-    >
-      <option value="">Overlay off</option>
-      <optgroup label="Gas">
-        {GAS_TYPES.map((species) => (
-          <option key={species} value={species}>
-            {SPECIES_DEFINITIONS[species].formula} ·{" "}
-            {speciesCopy(SPECIES_DEFINITIONS[species]).name}
-          </option>
-        ))}
-      </optgroup>
-      <optgroup label="Liquid">
-        {LIQUID_TYPES.map((species) => (
-          <option key={species} value={species}>
-            {SPECIES_DEFINITIONS[species].formula} ·{" "}
-            {speciesCopy(SPECIES_DEFINITIONS[species]).name}
-          </option>
-        ))}
-      </optgroup>
-    </select>
-  </label>
-);
+const MaterialFlowControl = ({ selectedSpecies, onSelectSpecies }: MaterialFlowControlProps) => {
+  const { translator } = useGamePresentation();
+  return (
+    <label className="material-flow-control">
+      <span>{translator.text("ui.map.materialFlow")}</span>
+      <select
+        aria-label={translator.text("ui.map.materialOverlay")}
+        data-testid="material-flow-overlay"
+        value={selectedSpecies ?? ""}
+        onChange={(event) =>
+          onSelectSpecies(event.target.value === "" ? null : (event.target.value as SpeciesId))
+        }
+      >
+        <option value="">{translator.text("ui.map.overlayOff")}</option>
+        <optgroup label={translator.text("ui.map.gas")}>
+          {GAS_TYPES.map((species) => (
+            <option key={species} value={species}>
+              {SPECIES_DEFINITIONS[species].formula} ·{" "}
+              {speciesCopy(SPECIES_DEFINITIONS[species], translator).name}
+            </option>
+          ))}
+        </optgroup>
+        <optgroup label={translator.text("ui.map.liquid")}>
+          {LIQUID_TYPES.map((species) => (
+            <option key={species} value={species}>
+              {SPECIES_DEFINITIONS[species].formula} ·{" "}
+              {speciesCopy(SPECIES_DEFINITIONS[species], translator).name}
+            </option>
+          ))}
+        </optgroup>
+      </select>
+    </label>
+  );
+};
 
 interface CameraControlsProps {
   zoom: number;
@@ -63,23 +67,34 @@ interface CameraControlsProps {
   onZoom: (factor: number) => void;
 }
 
-const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => (
-  <div className="map-camera-controls" aria-label="Map camera controls">
-    <span>
-      <Move size={13} /> drag · wheel
-    </span>
-    <button type="button" aria-label="Zoom out" onClick={() => onZoom(1 / 1.2)}>
-      <Minus size={14} />
-    </button>
-    <strong>{Math.round((zoom / FIT_ZOOM) * 100)}%</strong>
-    <button type="button" aria-label="Zoom in" onClick={() => onZoom(1.2)}>
-      <Plus size={14} />
-    </button>
-    <button type="button" aria-label="Fit facility" onClick={onReset}>
-      <Maximize2 size={14} />
-    </button>
-  </div>
-);
+const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => {
+  const { formatters, translator } = useGamePresentation();
+  return (
+    <div className="map-camera-controls" aria-label={translator.text("ui.map.camera")}>
+      <span>
+        <Move size={13} /> {translator.text("ui.map.camera.hint")}
+      </span>
+      <button
+        type="button"
+        aria-label={translator.text("ui.map.camera.zoomOut")}
+        onClick={() => onZoom(1 / 1.2)}
+      >
+        <Minus size={14} />
+      </button>
+      <strong>{formatters.percent(zoom / FIT_ZOOM, 0)}</strong>
+      <button
+        type="button"
+        aria-label={translator.text("ui.map.camera.zoomIn")}
+        onClick={() => onZoom(1.2)}
+      >
+        <Plus size={14} />
+      </button>
+      <button type="button" aria-label={translator.text("ui.map.camera.fit")} onClick={onReset}>
+        <Maximize2 size={14} />
+      </button>
+    </div>
+  );
+};
 
 interface MapChromeProps {
   game: GameState;
@@ -107,53 +122,58 @@ export const MapChrome = ({
   onZoom,
   selectedSpecies,
   zoom,
-}: MapChromeProps) => (
-  <div
-    className="map-chrome"
-    onPointerDown={(event) => event.stopPropagation()}
-    onWheel={(event) => event.stopPropagation()}
-  >
-    <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
-    <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
-    <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
-    <CellOutletTooltip
-      game={game}
-      bufferId={hoveredEnemyId === null ? hoveredCellOutletId : null}
-    />
-    <EquipmentTooltip
-      game={game}
-      equipment={hoveredEnemyId === null && hoveredCellOutletId === null ? hoveredEquipment : null}
-    />
-    <TransportTooltip
-      game={game}
-      runId={
-        hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
-          ? null
-          : hoveredRunId
-      }
-      selectedSpecies={selectedSpecies}
-    />
-    <RoomTooltip
-      game={game}
-      roomId={
-        hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
-          ? null
-          : hoveredRoomId
-      }
-    />
-    <div className="map-material-legend" aria-label="Map materials and damage legend">
-      <span>
-        <i className="upper-gas" /> upper gas
-      </span>
-      <span>
-        <i className="lower-gas" /> lower gas
-      </span>
-      <span>
-        <i className="liquid" /> liquid
-      </span>
-      <span>
-        <i className="damage" /> typed damage
-      </span>
+}: MapChromeProps) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div
+      className="map-chrome"
+      onPointerDown={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
+    >
+      <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
+      <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
+      <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
+      <CellOutletTooltip
+        game={game}
+        bufferId={hoveredEnemyId === null ? hoveredCellOutletId : null}
+      />
+      <EquipmentTooltip
+        game={game}
+        equipment={
+          hoveredEnemyId === null && hoveredCellOutletId === null ? hoveredEquipment : null
+        }
+      />
+      <TransportTooltip
+        game={game}
+        runId={
+          hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
+            ? null
+            : hoveredRunId
+        }
+        selectedSpecies={selectedSpecies}
+      />
+      <RoomTooltip
+        game={game}
+        roomId={
+          hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
+            ? null
+            : hoveredRoomId
+        }
+      />
+      <div className="map-material-legend" aria-label={translator.text("ui.map.legend")}>
+        <span>
+          <i className="upper-gas" /> {translator.text("ui.map.legend.upperGas")}
+        </span>
+        <span>
+          <i className="lower-gas" /> {translator.text("ui.map.legend.lowerGas")}
+        </span>
+        <span>
+          <i className="liquid" /> {translator.text("ui.map.legend.liquid")}
+        </span>
+        <span>
+          <i className="damage" /> {translator.text("ui.map.legend.damage")}
+        </span>
+      </div>
     </div>
-  </div>
-);
+  );
+};

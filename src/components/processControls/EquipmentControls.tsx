@@ -1,9 +1,9 @@
 import { ChevronRight, Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
 import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
-import { commandDecision as evaluateCommand } from "../../presentation/selectors";
-import { commandRejectionCopy } from "../../presentation/commandCopy";
 import { useGameStore } from "../../application/store";
+import { useGamePresentation } from "../../application/presentationContext";
+import type { Translator } from "../../localization/translator";
 import {
   type EquipmentInstance,
   type EquipmentId,
@@ -15,8 +15,8 @@ import { BinaryControl } from "./ActuatorControls";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 import { equipmentCopy } from "../../presentation/entityCopy";
 
-const socketLabel = (socketId: EquipmentSocketId): string =>
-  socketId === "socket_a" ? "SOCKET A" : "SOCKET B";
+const socketLabel = (socketId: EquipmentSocketId, translator: Translator): string =>
+  translator.text(socketId === "socket_a" ? "ui.process.socket.a" : "ui.process.socket.b");
 
 const equipmentToggleTutorialAnchor = (
   roomId: RoomId,
@@ -42,6 +42,21 @@ const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnc
   return null;
 };
 
+const equipmentActionCommands = (
+  instance: EquipmentInstance,
+  roomId: RoomId,
+  socketId: EquipmentSocketId
+) => ({
+  toggle: {
+    type: "toggle_equipment",
+    roomId,
+    socketId,
+    enabled: !instance.enabled,
+  } as const,
+  upgrade: { type: "upgrade_equipment", roomId, socketId } as const,
+  dismantle: { type: "dismantle_equipment", roomId, socketId } as const,
+});
+
 const EmptyEquipmentSocket = ({
   roomId,
   socketId,
@@ -49,6 +64,7 @@ const EmptyEquipmentSocket = ({
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const openEquipmentBuild = useGameStore((state) => state.openEquipmentBuild);
   return (
@@ -64,9 +80,9 @@ const EmptyEquipmentSocket = ({
           <Plus size={17} />
         </i>
         <span>
-          <small>{socketLabel(socketId)}</small>
-          <strong>Install equipment</strong>
-          <em>Open build catalog</em>
+          <small>{socketLabel(socketId, translator)}</small>
+          <strong>{translator.text("ui.process.install")}</strong>
+          <em>{translator.text("ui.process.openCatalog")}</em>
         </span>
         <ChevronRight size={16} />
       </button>
@@ -83,20 +99,14 @@ const EquipmentActions = ({
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
+  const { commandCopy, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  const toggleCommand = {
-    type: "toggle_equipment",
-    roomId,
-    socketId,
-    enabled: !instance.enabled,
-  } as const;
-  const upgradeCommand = { type: "upgrade_equipment", roomId, socketId } as const;
-  const dismantleCommand = { type: "dismantle_equipment", roomId, socketId } as const;
-  const toggleDecision = evaluateCommand(game, toggleCommand);
-  const upgradeDecision = evaluateCommand(game, upgradeCommand);
-  const dismantleDecision = evaluateCommand(game, dismantleCommand);
+  const commands = equipmentActionCommands(instance, roomId, socketId);
+  const toggleDecision = selectors.commandDecision(game, commands.toggle);
+  const upgradeDecision = selectors.commandDecision(game, commands.upgrade);
+  const dismantleDecision = selectors.commandDecision(game, commands.dismantle);
   const toggle = useCallback(
     () =>
       dispatch({
@@ -115,14 +125,17 @@ const EquipmentActions = ({
     () => dispatch({ type: "dismantle_equipment", roomId, socketId }),
     [dispatch, roomId, socketId]
   );
-  const upgradeLabel = instance.level >= 3 ? "MAX" : `UPGRADE · ${upgradeDecision.cost} M`;
+  const upgradeLabel =
+    instance.level >= 3
+      ? translator.text("ui.process.max")
+      : translator.text("ui.process.upgrade", { cost: upgradeDecision.cost });
   return (
     <div className="equipment-actions">
       <BinaryControl
         active={instance.enabled}
-        activeLabel="ON"
+        activeLabel={translator.text("ui.process.on")}
         disabled={!toggleDecision.allowed}
-        inactiveLabel="OFF"
+        inactiveLabel={translator.text("ui.process.off")}
         testId={`equipment-toggle-${roomId}-${socketId}`}
         tutorialAnchor={equipmentToggleTutorialAnchor(roomId, instance.equipmentId)}
         onClick={toggle}
@@ -130,7 +143,7 @@ const EquipmentActions = ({
       <button
         type="button"
         disabled={!upgradeDecision.allowed}
-        title={commandRejectionCopy(upgradeDecision) ?? undefined}
+        title={commandCopy(upgradeDecision) ?? undefined}
         data-testid={`equipment-upgrade-${roomId}-${socketId}`}
         onClick={upgrade}
       >
@@ -139,8 +152,10 @@ const EquipmentActions = ({
       <button
         type="button"
         disabled={!dismantleDecision.allowed}
-        title={commandRejectionCopy(dismantleDecision) ?? undefined}
-        aria-label={`Dismantle ${equipmentCopy(definition).name}`}
+        title={commandCopy(dismantleDecision) ?? undefined}
+        aria-label={translator.text("ui.process.dismantle", {
+          name: equipmentCopy(definition, translator).name,
+        })}
         onClick={dismantle}
       >
         <Trash2 size={13} /> +{dismantleDecision.refund} M
@@ -158,6 +173,7 @@ const InstalledEquipmentSocket = ({
   roomId: RoomId;
   socketId: EquipmentSocketId;
 }) => {
+  const { translator } = useGamePresentation();
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
   return (
     <article
@@ -165,11 +181,14 @@ const InstalledEquipmentSocket = ({
       style={{ "--equipment-accent": definition.accent }}
     >
       <header>
-        <span>{socketLabel(socketId)}</span>
+        <span>{socketLabel(socketId, translator)}</span>
         <strong>
-          {equipmentCopy(definition).name} · Grade {instance.level}
+          {translator.text("ui.process.grade", {
+            name: equipmentCopy(definition, translator).name,
+            grade: instance.level,
+          })}
         </strong>
-        <em>{instance.enabled ? "RUNNING" : "OFFLINE"}</em>
+        <em>{translator.text(instance.enabled ? "ui.process.running" : "ui.process.offline")}</em>
       </header>
       <EquipmentActions instance={instance} roomId={roomId} socketId={socketId} />
     </article>

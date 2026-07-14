@@ -1,11 +1,4 @@
-import type {
-  GasAmounts,
-  GasType,
-  LiquidAmounts,
-  LiquidType,
-  SpeciesDefinition,
-  SpeciesId,
-} from "../types";
+import type { GasAmounts, GasType, LiquidType, SpeciesDefinition, SpeciesId } from "../types";
 
 export const MAX_CYCLES = 3;
 export const AMBIENT_TEMPERATURE = 22;

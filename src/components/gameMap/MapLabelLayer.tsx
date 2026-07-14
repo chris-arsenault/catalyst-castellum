@@ -3,6 +3,7 @@ import type { Graphics } from "pixi.js";
 import { ROOM_DEFINITIONS, facilityRingForRoom } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { layoutMapLabels, type MapLabelPlacement } from "./labelLayout";
+import { useGamePresentation } from "../../application/presentationContext";
 
 const labelAccent = (roomId: RoomId): number => {
   if (ROOM_DEFINITIONS[roomId].structure === "core") return 0xd2b85f;
@@ -53,7 +54,11 @@ export const MapLabelLayer = ({
   game: GameState;
   selectedRoomId: RoomId;
 }) => {
-  const labels = useMemo(() => layoutMapLabels(selectedRoomId, game), [game, selectedRoomId]);
+  const { translator } = useGamePresentation();
+  const labels = useMemo(
+    () => layoutMapLabels(selectedRoomId, game, translator),
+    [game, selectedRoomId, translator]
+  );
   const draw = useCallback((graphics: Graphics) => drawLabels(graphics, labels), [labels]);
   return (
     <pixiContainer eventMode="none">

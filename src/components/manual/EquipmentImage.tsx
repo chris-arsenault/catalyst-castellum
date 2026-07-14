@@ -1,7 +1,7 @@
 import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
 import type { EquipmentId } from "../../game/types";
-import { EQUIPMENT_MANUAL } from "../../presentation/manualContent";
 import { equipmentCopy } from "../../presentation/entityCopy";
+import { useGamePresentation } from "../../application/presentationContext";
 
 export const EquipmentImage = ({
   equipmentId,
@@ -10,6 +10,7 @@ export const EquipmentImage = ({
   equipmentId: EquipmentId;
   compact: boolean;
 }) => {
+  const { manual, translator } = useGamePresentation();
   const definition = EQUIPMENT_DEFINITIONS[equipmentId];
   return (
     <figure
@@ -17,8 +18,10 @@ export const EquipmentImage = ({
       style={{ "--manual-accent": definition.accent }}
     >
       <img
-        src={EQUIPMENT_MANUAL[equipmentId].image}
-        alt={`${equipmentCopy(definition).name} field plate`}
+        src={manual.equipmentManual[equipmentId].image}
+        alt={translator.text("ui.manual.fieldPlate", {
+          name: equipmentCopy(definition, translator).name,
+        })}
       />
     </figure>
   );

@@ -26,19 +26,21 @@ locale bundle -> typed translator/formatters -> presentation services -> applica
 - `src/game/queries.ts` is the read-only application query facade. UI code may not import engine
   internals or the broad test-support `simulation.ts` barrel.
 - `src/localization/**` owns typed locale bundles, placeholder validation, formatters, and English
-  copy for commands, entities, levels, events, manual content, and presentation readouts.
+  copy for static UI, accessibility text, tutorials, commands, entities, levels, events, manual
+  content, and presentation readouts.
 - `src/presentation/**` binds a runtime and locale into event/command copy, catalogs, formatters,
   and memoized view models. `defaultGame.ts` is the single default-pack composition seam.
-- `src/application/**` receives runtime and presentation services as dependencies and composes
-  game-session/UI slices, startup, persistence scheduling, selection, help, notices, and tutorial
-  progress.
+- `src/application/**` receives runtime and presentation services as dependencies, injects the
+  selected presentation through `GamePresentationProvider`, and composes game-session/UI slices,
+  startup, persistence scheduling, selection, help, notices, and tutorial progress.
 - `src/components/**` and `src/tutorial/**` render and dispatch; they do not author simulation
   policy.
 
 `pnpm architecture:check` enforces the dependency direction, forbids default content/engine imports
-from application/UI code, and detects cross-layer module cycles. `pnpm copy:check` rejects display
-fields in mechanical content and current-locale prose in the engine. `pnpm locales:check` checks
-locale completeness and placeholder parity.
+from application/UI code, and detects cross-layer module cycles. `pnpm copy:check` uses the
+TypeScript AST to reject display fields in mechanical content, current-locale prose in the engine,
+raw tutorial authoring copy, and literal UI/accessibility copy. `pnpm locales:check` checks locale
+completeness and placeholder parity.
 
 ## Settled decisions
 
@@ -175,7 +177,9 @@ decisions are cached per immutable snapshot/reference.
 
 1. Author state conditions with the typed condition evaluator.
 2. Register one provider in `GUIDE_REGISTRATIONS`; renderer and phase-action dispatch stay generic.
-3. Add a specialized reaction gate only for a new reaction behavior. Levels select featured
+3. Add typed tutorial keys under `src/localization/locales/en/` for story, mission, task, step,
+   completion, and phase-gate copy.
+4. Add a specialized reaction gate only for a new reaction behavior. Levels select featured
    reactions as authored data.
 
 ### Copy or locale

@@ -1,19 +1,20 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
+import type { TutorialCopy, TutorialCopyKey } from "./copyTypes";
 
 export type GuideConceptKind =
   "feed" | "accumulate" | "mix" | "ignite" | "convert" | "separate" | "relieve" | "heat" | "route";
 
 export interface GuideConceptStage {
   kind: GuideConceptKind;
-  title: string;
-  metric: string;
-  detail: string;
+  title: TutorialCopyKey;
+  metric: TutorialCopy;
+  detail: TutorialCopy;
 }
 
 export interface GuideConceptModel {
-  principle: string;
+  principle: TutorialCopyKey;
   stages: readonly GuideConceptStage[];
-  conclusion: string;
+  conclusion: TutorialCopyKey;
 }
 
 interface FlashPointConceptValues {
@@ -32,8 +33,6 @@ interface FlashPointConceptValues {
   requiredHydrogen: number;
   requiredOxygen: number;
 }
-
-const conciseNumber = (value: number): string => String(Number(value.toFixed(2)));
 
 const flashPointConceptValues = (): FlashPointConceptValues => {
   const reaction = DEFAULT_GAME_DEFINITION.reactions.hydrogen_oxygen_combustion;
@@ -87,54 +86,65 @@ const flashPointConceptValues = (): FlashPointConceptValues => {
 const conceptStages = (values: FlashPointConceptValues): GuideConceptStage[] => [
   {
     kind: "feed",
-    title: "Deliver reaction mass",
-    metric: `${conciseNumber(values.hydrogenCoefficient)} H₂ : ${conciseNumber(
-      values.oxygenCoefficient
-    )} O₂ · up to ${conciseNumber(values.maximumFeedRate)} mol-eq/s`,
-    detail:
-      "The physical duct fills first. Once charged, its fan delivers the light starter mixture through R-02’s upper port.",
+    title: "tutorial.concept.flash.feed.title",
+    metric: {
+      key: "tutorial.concept.flash.feed.metric",
+      parameters: {
+        hydrogen: values.hydrogenCoefficient,
+        oxygen: values.oxygenCoefficient,
+        rate: values.maximumFeedRate,
+      },
+    },
+    detail: "tutorial.concept.flash.feed.detail",
   },
   {
     kind: "accumulate",
-    title: "Build chamber inventory",
-    metric: `${values.openPassages} open passages · pressure/density outflow`,
-    detail:
-      "Near ambient pressure, the openings exchange little net gas. Feed initially exceeds escape, so H₂/O₂ inventory and static pressure rise; growing overpressure strengthens outward flow.",
+    title: "tutorial.concept.flash.accumulate.title",
+    metric: {
+      key: "tutorial.concept.flash.accumulate.metric",
+      parameters: { passages: values.openPassages },
+    },
+    detail: "tutorial.concept.flash.accumulate.detail",
   },
   {
     kind: "mix",
-    title: "Distribute both layers",
-    metric: `${conciseNumber(values.mixtureDensity)}× air density · ${conciseNumber(
-      values.layerExchangeRate
-    )} layer exchange`,
-    detail: `The light feed favors the upper layer. Grade 1 agitation swaps gas packets between layers and applies ${conciseNumber(
-      values.reactionMultiplier
-    )}× OX-1 kinetics, preparing both layers for ignition.`,
+    title: "tutorial.concept.flash.mix.title",
+    metric: {
+      key: "tutorial.concept.flash.mix.metric",
+      parameters: { density: values.mixtureDensity, exchange: values.layerExchangeRate },
+    },
+    detail: {
+      key: "tutorial.concept.flash.mix.detail",
+      parameters: { multiplier: values.reactionMultiplier },
+    },
   },
   {
     kind: "ignite",
-    title: "Cross the ignition gate",
-    metric: `H₂ ≥ ${conciseNumber(values.minimumHydrogenPercent)}% · O₂ ≥ ${conciseNumber(
-      values.minimumOxygenPercent
-    )}% · ${conciseNumber(values.requiredHydrogen)} H₂ + ${conciseNumber(
-      values.requiredOxygen
-    )} O₂`,
-    detail: `Each layer is evaluated independently. A ready layer consumes the 2:1 mixture, creates steam, adds ${conciseNumber(
-      values.pressurePulseBase
-    )} + ${conciseNumber(
-      values.pressurePulsePerExtent
-    )} × extent kPa of transient pressure, and raises gas temperature by ${conciseNumber(
-      values.gasHeatPerExtent
-    )} °C × extent.`,
+    title: "tutorial.concept.flash.ignite.title",
+    metric: {
+      key: "tutorial.concept.flash.ignite.metric",
+      parameters: {
+        hydrogenPercent: values.minimumHydrogenPercent,
+        oxygenPercent: values.minimumOxygenPercent,
+        hydrogen: values.requiredHydrogen,
+        oxygen: values.requiredOxygen,
+      },
+    },
+    detail: {
+      key: "tutorial.concept.flash.ignite.detail",
+      parameters: {
+        base: values.pressurePulseBase,
+        perExtent: values.pressurePulsePerExtent,
+        heat: values.gasHeatPerExtent,
+      },
+    },
   },
 ];
 
 const conceptValues = flashPointConceptValues();
 
 export const FLASH_POINT_CONCEPT_MODEL: GuideConceptModel = {
-  principle:
-    "Every simulation step resolves conserved gas inventory, density-driven stratification, pressure-driven exchange through open passages, and separate upper/lower reaction conditions. OX-1 emerges when one layer crosses every ignition threshold.",
+  principle: "tutorial.concept.flash.principle",
   stages: conceptStages(conceptValues),
-  conclusion:
-    "The fan controls reaction mass. The room openings set state-dependent leakage. The agitator controls vertical distribution and reaction readiness. Pressure measures retained gas and becomes a damage output; the ignition gate uses composition, batch, agitation, and cooldown. Prime supplies transport time; assault tests whether a crawler occupies R-02 when the next threshold crossing produces a flash.",
+  conclusion: "tutorial.concept.flash.conclusion",
 };

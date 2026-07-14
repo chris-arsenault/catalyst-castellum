@@ -1,10 +1,14 @@
 import { Check } from "lucide-react";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { hydrogenChlorineReactionStatus } from "../game/queries";
 import type { RoomId } from "../game/types";
+import type { LocaleFormatters } from "../localization/formatters";
 
-const formatAmount = (value: number): string =>
-  value > 0 && value < 0.01 ? "<0.01 mol-eq" : `${value.toFixed(2)} mol-eq`;
+const formatAmount = (value: number, formatters: LocaleFormatters): string =>
+  value > 0 && value < 0.01
+    ? `<${formatters.measurement(0.01, "mol-eq", 2)}`
+    : formatters.measurement(value, "mol-eq", 2);
 
 const ReactionCondition = ({
   label,
@@ -23,6 +27,7 @@ const ReactionCondition = ({
 );
 
 export const HydrogenChlorineGate = ({ roomId }: { roomId: RoomId }) => {
+  const { formatters, translator } = useGamePresentation();
   const room = useGameStore((state) => state.game.rooms[roomId]);
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenChlorineReactionStatus(room, zone)
@@ -32,56 +37,61 @@ export const HydrogenChlorineGate = ({ roomId }: { roomId: RoomId }) => {
     <section className="ignition-gate acid-reaction-gate" data-testid="cl2-reaction-gate">
       <header>
         <div>
-          <span>CL-2 reaction gate</span>
-          <p>Each gas layer combines equal H₂ and Cl₂ above its activation temperature.</p>
+          <span>{translator.text("ui.gate.acid.title")}</span>
+          <p>{translator.text("ui.gate.acid.detail")}</p>
         </div>
         <strong className={reactionReady ? "ready" : "charging"}>
-          {reactionReady ? "REACTION READY" : "CONDITIONING"}
+          {translator.text(reactionReady ? "ui.gate.acid.ready" : "ui.gate.acid.charging")}
         </strong>
       </header>
       <div className="ignition-layer-list">
         {statuses.map((status) => (
           <article key={status.zone} data-testid={`cl2-reaction-${status.zone}`}>
             <div className="ignition-layer-heading">
-              <strong>{status.zone === "upper" ? "Upper layer" : "Lower layer"}</strong>
-              <span>{status.ready ? "ACTIVE" : "BUILDING"}</span>
+              <strong>
+                {translator.text(
+                  status.zone === "upper" ? "ui.gate.upperLayer" : "ui.gate.lowerLayer"
+                )}
+              </strong>
+              <span>
+                {translator.text(status.ready ? "ui.gate.acid.active" : "ui.gate.building")}
+              </span>
             </div>
             <div className="ignition-condition-grid">
               <ReactionCondition
-                label="Heat"
+                label={translator.text("ui.gate.heat")}
                 ready={status.temperatureReady}
-                value={`${status.temperature.toFixed(0)}°C / >${status.activationTemperature}°C`}
+                value={`${formatters.number(status.temperature, 0)}°C / >${formatters.number(status.activationTemperature, 0)}°C`}
               />
               <ReactionCondition
                 label="H₂"
                 ready={status.hydrogenReady}
-                value={formatAmount(status.hydrogenAmount)}
+                value={formatAmount(status.hydrogenAmount, formatters)}
               />
               <ReactionCondition
                 label="Cl₂"
                 ready={status.chlorineReady}
-                value={formatAmount(status.chlorineAmount)}
+                value={formatAmount(status.chlorineAmount, formatters)}
               />
               <ReactionCondition
-                label="Batch"
+                label={translator.text("ui.gate.batch")}
                 ready={status.availableExtent > 0}
-                value={formatAmount(status.availableExtent)}
+                value={formatAmount(status.availableExtent, formatters)}
               />
               <ReactionCondition
-                label="Rate"
+                label={translator.text("ui.gate.rate")}
                 ready={status.temperatureReady}
-                value={`${Math.round(status.activation * 100)}% · ${status.reactionMultiplier.toFixed(
-                  1
-                )}×`}
+                value={`${formatters.percent(status.activation, 0)} · ${formatters.number(status.reactionMultiplier, 1)}×`}
               />
             </div>
           </article>
         ))}
       </div>
       <footer>
-        CL-2 activation rises from {statuses[0]!.activationTemperature}°C to full rate at{" "}
-        {statuses[0]!.fullActivationTemperature}°C. The Thermal Coil supplies heat, the Gas Agitator
-        distributes both layers and multiplies kinetics, and each 1:1 batch creates two parts HCl.
+        {translator.text("ui.gate.acid.footer", {
+          minimum: formatters.number(statuses[0]!.activationTemperature, 0),
+          maximum: formatters.number(statuses[0]!.fullActivationTemperature, 0),
+        })}
       </footer>
     </section>
   );

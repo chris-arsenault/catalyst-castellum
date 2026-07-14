@@ -1,6 +1,7 @@
 import { ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
 import { cellOutletAssemblyModel, type CellOutletId } from "./cellOutletRenderModel";
+import { useGamePresentation } from "../../application/presentationContext";
 
 export const CellOutletTooltip = ({
   bufferId,
@@ -9,8 +10,9 @@ export const CellOutletTooltip = ({
   bufferId: CellOutletId | null;
   game: GameState;
 }) => {
+  const { formatters, translator } = useGamePresentation();
   if (!bufferId) return null;
-  const assembly = cellOutletAssemblyModel(game);
+  const assembly = cellOutletAssemblyModel(game, translator);
   const outlet = assembly?.outlets.find((candidate) => candidate.bufferId === bufferId);
   if (!assembly || !outlet) return null;
   const room = ROOM_DEFINITIONS[assembly.roomId];
@@ -21,25 +23,30 @@ export const CellOutletTooltip = ({
           {outlet.formula}
         </span>
         <strong>{outlet.name}</strong>
-        <em>{outlet.phase.toUpperCase()}</em>
+        <em>
+          {translator.text(
+            outlet.phase === "gas" ? "ui.map.outlet.phase.gas" : "ui.map.outlet.phase.liquid"
+          )}
+        </em>
       </header>
       <dl>
         <div>
-          <dt>Cell room</dt>
+          <dt>{translator.text("ui.map.outlet.room")}</dt>
           <dd>{room.code}</dd>
         </div>
         <div>
-          <dt>Inventory</dt>
+          <dt>{translator.text("ui.map.outlet.inventory")}</dt>
           <dd>
-            {outlet.amount.toFixed(1)} / {outlet.capacity.toFixed(0)} mol
+            {formatters.measurement(outlet.amount, "mol", 1)} /{" "}
+            {formatters.measurement(outlet.capacity, "mol", 0)}
           </dd>
         </div>
         <div>
-          <dt>Connection</dt>
-          <dd>{room.code} process junction</dd>
+          <dt>{translator.text("ui.map.outlet.connection")}</dt>
+          <dd>{translator.text("ui.map.outlet.junction", { room: room.code })}</dd>
         </div>
       </dl>
-      <small>Membrane-cell product buffer</small>
+      <small>{translator.text("ui.map.outlet.footer")}</small>
     </aside>
   );
 };

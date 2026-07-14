@@ -84,6 +84,58 @@ const zoneEffects = (
   return effects;
 };
 
+const liquidEffects = (
+  room: RoomState,
+  queries: Pick<GameQueries, "liquidStrength">,
+  translator: Translator
+): string[] => {
+  const effects: string[] = [];
+  if (queries.liquidStrength(room, "sodium_hydroxide") >= 4)
+    effects.push(translator.text("presentation.room.naoh"));
+  if (queries.liquidStrength(room, "hydrochloric_acid") >= 4)
+    effects.push(translator.text("presentation.room.acid"));
+  if (queries.liquidStrength(room, "sodium_hypochlorite") >= 7)
+    effects.push(translator.text("presentation.room.hypochlorite"));
+  return effects;
+};
+
+const movementEffects = (
+  room: RoomState,
+  queries: Pick<
+    GameQueries,
+    "liquidMovementMultiplier" | "pressureMovementMultiplier" | "roomHazards"
+  >,
+  translator: Translator
+): string[] => {
+  const effects: string[] = [];
+  const liquidMovement = queries.liquidMovementMultiplier(room, false);
+  const pressureMovement = queries.pressureMovementMultiplier(room);
+  if (liquidMovement < 0.99)
+    effects.push(
+      translator.text("presentation.room.liquid_drag", {
+        percent: Math.round((1 - liquidMovement) * 100),
+      })
+    );
+  if (pressureMovement < 0.99)
+    effects.push(
+      translator.text("presentation.room.pressure_drag", {
+        percent: Math.round((1 - pressureMovement) * 100),
+      })
+    );
+  const pressureHazard = queries.roomHazards(room, true, true, "lower").pressure;
+  if (pressureHazard > 0.01)
+    effects.push(
+      translator.text("presentation.room.pressure_hazard", { rate: pressureHazard.toFixed(1) })
+    );
+  if (room.pressurePulse > 1)
+    effects.push(
+      translator.text("presentation.room.pressure_pulse", {
+        pressure: Math.round(room.pressurePulse),
+      })
+    );
+  return effects;
+};
+
 export const roomEffects = (
   room: RoomState,
   definition: GameDefinition = DEFAULT_GAME_DEFINITION,
@@ -100,38 +152,9 @@ export const roomEffects = (
   const effects = [
     ...zoneEffects(room, "lower", definition, q, translator),
     ...zoneEffects(room, "upper", definition, q, translator),
+    ...liquidEffects(room, q, translator),
+    ...movementEffects(room, q, translator),
   ];
-  if (q.liquidStrength(room, "sodium_hydroxide") >= 4)
-    effects.push(translator.text("presentation.room.naoh"));
-  if (q.liquidStrength(room, "hydrochloric_acid") >= 4)
-    effects.push(translator.text("presentation.room.acid"));
-  if (q.liquidStrength(room, "sodium_hypochlorite") >= 7)
-    effects.push(translator.text("presentation.room.hypochlorite"));
-  const liquidMovement = q.liquidMovementMultiplier(room, false);
-  const pressureMovement = q.pressureMovementMultiplier(room);
-  if (liquidMovement < 0.99)
-    effects.push(
-      translator.text("presentation.room.liquid_drag", {
-        percent: Math.round((1 - liquidMovement) * 100),
-      })
-    );
-  if (pressureMovement < 0.99)
-    effects.push(
-      translator.text("presentation.room.pressure_drag", {
-        percent: Math.round((1 - pressureMovement) * 100),
-      })
-    );
-  const pressureHazard = q.roomHazards(room, true, true, "lower").pressure;
-  if (pressureHazard > 0.01)
-    effects.push(
-      translator.text("presentation.room.pressure_hazard", { rate: pressureHazard.toFixed(1) })
-    );
-  if (room.pressurePulse > 1)
-    effects.push(
-      translator.text("presentation.room.pressure_pulse", {
-        pressure: Math.round(room.pressurePulse),
-      })
-    );
   return effects.length > 0 ? effects : [translator.text("presentation.room.safe")];
 };
 

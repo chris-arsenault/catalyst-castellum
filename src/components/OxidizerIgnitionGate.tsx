@@ -1,12 +1,13 @@
 import { Check } from "lucide-react";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { hydrogenOxygenFlashStatus } from "../game/queries";
 import type { RoomId } from "../game/types";
+import type { LocaleFormatters } from "../localization/formatters";
 
-const formatPercent = (value: number): string => {
-  if (value > 0 && value < 0.001) return "<0.1%";
-  if (value < 0.1) return `${(value * 100).toFixed(1)}%`;
-  return `${Math.round(value * 100)}%`;
+const formatPercent = (value: number, formatters: LocaleFormatters): string => {
+  if (value > 0 && value < 0.001) return `<${formatters.percent(0.001, 1)}`;
+  return formatters.percent(value, value < 0.1 ? 1 : 0);
 };
 
 const IgnitionCondition = ({
@@ -25,7 +26,55 @@ const IgnitionCondition = ({
   </span>
 );
 
+const IgnitionLayer = ({ status }: { status: ReturnType<typeof hydrogenOxygenFlashStatus> }) => {
+  const { formatters, translator } = useGamePresentation();
+  return (
+    <article data-testid={`ox1-ignition-${status.zone}`}>
+      <div className="ignition-layer-heading">
+        <strong>
+          {translator.text(status.zone === "upper" ? "ui.gate.upperLayer" : "ui.gate.lowerLayer")}
+        </strong>
+        <span>{translator.text(status.ready ? "ui.gate.ready" : "ui.gate.building")}</span>
+      </div>
+      <div className="ignition-condition-grid">
+        <IgnitionCondition
+          label={translator.text("ui.gate.mix")}
+          ready={status.agitationReady}
+          value={translator.text(
+            status.agitationReady ? "ui.gate.running" : "ui.gate.agitatorRequired"
+          )}
+        />
+        <IgnitionCondition
+          label="H₂"
+          ready={status.hydrogenReady}
+          value={`${formatPercent(status.hydrogenFraction, formatters)} / ${formatPercent(status.minimumHydrogenFraction, formatters)}`}
+        />
+        <IgnitionCondition
+          label="O₂"
+          ready={status.oxygenReady}
+          value={`${formatPercent(status.oxygenFraction, formatters)} / ${formatPercent(status.minimumOxygenFraction, formatters)}`}
+        />
+        <IgnitionCondition
+          label={translator.text("ui.gate.batch")}
+          ready={status.batchReady}
+          value={`${formatters.number(status.availableExtent, 2)} / ${formatters.number(status.requiredExtent, 2)}`}
+        />
+        <IgnitionCondition
+          label={translator.text("ui.gate.cycle")}
+          ready={status.cooldownReady}
+          value={
+            status.cooldownReady
+              ? translator.text("ui.gate.ready")
+              : formatters.duration(Number(status.cooldownSeconds.toFixed(1)))
+          }
+        />
+      </div>
+    </article>
+  );
+};
+
 export const OxidizerIgnitionGate = ({ roomId }: { roomId: RoomId }) => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const room = game.rooms[roomId];
   const statuses = (["upper", "lower"] as const).map((zone) =>
@@ -36,62 +85,19 @@ export const OxidizerIgnitionGate = ({ roomId }: { roomId: RoomId }) => {
     <section className="ignition-gate" data-testid="ox1-ignition-gate">
       <header>
         <div>
-          <span>OX-1 ignition gate</span>
-          <p>
-            Each gas layer qualifies through composition, combustible batch, agitation, and cycle
-            cooldown.
-          </p>
+          <span>{translator.text("ui.gate.ox.title")}</span>
+          <p>{translator.text("ui.gate.ox.detail")}</p>
         </div>
         <strong className={ignitionReady ? "ready" : "charging"}>
-          {ignitionReady ? "IGNITION READY" : "CHARGING"}
+          {translator.text(ignitionReady ? "ui.gate.ox.ready" : "ui.gate.ox.charging")}
         </strong>
       </header>
       <div className="ignition-layer-list">
         {statuses.map((status) => (
-          <article key={status.zone} data-testid={`ox1-ignition-${status.zone}`}>
-            <div className="ignition-layer-heading">
-              <strong>{status.zone === "upper" ? "Upper layer" : "Lower layer"}</strong>
-              <span>{status.ready ? "READY" : "BUILDING"}</span>
-            </div>
-            <div className="ignition-condition-grid">
-              <IgnitionCondition
-                label="Mix"
-                ready={status.agitationReady}
-                value={status.agitationReady ? "Running" : "Agitator required"}
-              />
-              <IgnitionCondition
-                label="H₂"
-                ready={status.hydrogenReady}
-                value={`${formatPercent(status.hydrogenFraction)} / ${formatPercent(
-                  status.minimumHydrogenFraction
-                )}`}
-              />
-              <IgnitionCondition
-                label="O₂"
-                ready={status.oxygenReady}
-                value={`${formatPercent(status.oxygenFraction)} / ${formatPercent(
-                  status.minimumOxygenFraction
-                )}`}
-              />
-              <IgnitionCondition
-                label="Batch"
-                ready={status.batchReady}
-                value={`${status.availableExtent.toFixed(2)} / ${status.requiredExtent.toFixed(2)}`}
-              />
-              <IgnitionCondition
-                label="Cycle"
-                ready={status.cooldownReady}
-                value={status.cooldownReady ? "Ready" : `${status.cooldownSeconds.toFixed(1)}s`}
-              />
-            </div>
-          </article>
+          <IgnitionLayer key={status.zone} status={status} />
         ))}
       </div>
-      <footer>
-        Static pressure follows retained inventory, gas temperature, and free volume.
-        Pressure-driven passage outflow grows with the chamber-to-neighbor difference. Each flash
-        adds a decaying shock pulse.
-      </footer>
+      <footer>{translator.text("ui.gate.ox.footer")}</footer>
     </section>
   );
 };

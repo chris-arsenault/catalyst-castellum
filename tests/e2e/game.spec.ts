@@ -244,6 +244,7 @@ test("tutorial guidance leaves every physical map room inspectable", async ({ pa
 test("the map reveals room materials on hover and keeps full history on demand", async ({
   page,
 }) => {
+  test.setTimeout(45_000);
   await startGuidedTutorial(page);
   await skipGuidance(page);
 

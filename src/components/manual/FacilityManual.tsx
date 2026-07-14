@@ -1,16 +1,17 @@
 import { LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useGameStore } from "../../application/store";
+import { useGamePresentation } from "../../application/presentationContext";
 import type { ManualSection } from "../../application/storeTypes";
 import { LEVEL_DEFINITIONS } from "../../presentation/defaultGame";
 import type { EquipmentId, ReactionId } from "../../game/types";
 import { guideDefinitionFor } from "../../tutorial/guideModel";
-import { levelCopy } from "../../presentation/levelCopy";
 import { BuildCatalog } from "./BuildCatalog";
 import { Encyclopedia, type EncyclopediaKind } from "./Encyclopedia";
 import { ManualNav } from "./ManualNav";
 import { OperationsManual } from "./OperationsManual";
 import { ThreatCatalog } from "./ThreatCatalog";
+import { tutorialText } from "../../tutorial/tutorialCopy";
 
 const ManualPage = ({
   encyclopediaKind,
@@ -54,28 +55,29 @@ const ManualPage = ({
 };
 
 const ManualShellHeader = () => {
+  const { levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const buildTarget = useGameStore((state) => state.equipmentBuildTarget);
   const closeManual = useGameStore((state) => state.closeManual);
   const level = LEVEL_DEFINITIONS[game.campaign.levelId];
-  const copy = levelCopy(level);
+  const copy = localizedLevelCopy.level(level);
   return (
     <header className="manual-shell-header">
       <div className="manual-title-block">
-        <span>Castellum works archive · field copy</span>
-        <h1 id="facility-manual-title">Facility Manual</h1>
+        <span>{translator.text("ui.manual.archive")}</span>
+        <h1 id="facility-manual-title">{translator.text("ui.manual.title")}</h1>
       </div>
       <div className="manual-record-context">
-        <small>Current record</small>
+        <small>{translator.text("ui.manual.currentRecord")}</small>
         <strong>
           {level.number.toString().padStart(2, "0")} · {copy.name}
         </strong>
-        {buildTarget && <em>Construction target attached</em>}
+        {buildTarget && <em>{translator.text("ui.manual.buildTarget")}</em>}
       </div>
       <button
         className="modal-close manual-close"
         type="button"
-        aria-label="Close facility manual"
+        aria-label={translator.text("ui.manual.close")}
         onClick={closeManual}
       >
         <X size={18} />
@@ -85,6 +87,7 @@ const ManualShellHeader = () => {
 };
 
 const ManualShellFooter = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const closeManual = useGameStore((state) => state.closeManual);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
@@ -95,15 +98,18 @@ const ManualShellFooter = () => {
       <div>
         {guide && (
           <button type="button" data-testid="replay-guided-lesson" onClick={restartTutorialGuide}>
-            <RotateCcw size={14} /> Replay {guide.label}
+            <RotateCcw size={14} />{" "}
+            {translator.text("ui.manual.replay", {
+              guide: tutorialText(translator, guide.label),
+            })}
           </button>
         )}
       </div>
       <button type="button" onClick={returnToMainMenu}>
-        <LogOut size={14} /> Save slots
+        <LogOut size={14} /> {translator.text("ui.topbar.saveSlots")}
       </button>
       <button type="button" className="manual-return-button" onClick={closeManual}>
-        Return to controls
+        {translator.text("ui.manual.returnControls")}
       </button>
     </footer>
   );

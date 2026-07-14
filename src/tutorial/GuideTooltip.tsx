@@ -1,6 +1,8 @@
 import { Eye, MousePointerClick } from "lucide-react";
 import type { TooltipRenderProps } from "react-joyride";
 import type { GuideStepDefinition } from "./guideModel";
+import { useGamePresentation } from "../application/presentationContext";
+import { tutorialText } from "./tutorialCopy";
 
 interface GuideStepData {
   definition: GuideStepDefinition;
@@ -14,6 +16,7 @@ const StepIcon = ({ kind }: Pick<GuideStepDefinition, "kind">) =>
  * complete objective list live together in TutorialTaskCard.
  */
 export const GuideTooltip = ({ step, tooltipProps }: TooltipRenderProps) => {
+  const { translator } = useGamePresentation();
   const { definition } = step.data as GuideStepData;
 
   return (
@@ -26,7 +29,7 @@ export const GuideTooltip = ({ step, tooltipProps }: TooltipRenderProps) => {
       aria-live="polite"
     >
       <StepIcon kind={definition.kind} />
-      <span>{definition.instruction}</span>
+      <span>{tutorialText(translator, definition.instruction)}</span>
     </div>
   );
 };

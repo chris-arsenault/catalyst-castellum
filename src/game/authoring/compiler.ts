@@ -64,11 +64,7 @@ const validateAvailability = (
     ["liquidSources", availability.liquidSources, source.liquidSources],
   ] as const;
   for (const [field, ids, catalog] of checks) {
-    if (new Set(ids).size !== ids.length)
-      push(issues, `${path}.${field}`, "Identifiers must be unique.");
-    for (const id of ids) {
-      if (!(id in catalog)) push(issues, `${path}.${field}`, `Unknown authored ID ${id}.`);
-    }
+    validateAvailableIds(ids, catalog, `${path}.${field}`, issues);
   }
   for (const runId of availability.gasRuns) {
     if (!source.transportRuns[runId]?.gas)
@@ -77,6 +73,18 @@ const validateAvailability = (
   for (const runId of availability.liquidRuns) {
     if (!source.transportRuns[runId]?.liquid)
       push(issues, `${path}.liquidRuns`, `${runId} has no liquid phase.`);
+  }
+};
+
+const validateAvailableIds = (
+  ids: readonly string[],
+  catalog: object,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  if (new Set(ids).size !== ids.length) push(issues, path, "Identifiers must be unique.");
+  for (const id of ids) {
+    if (!(id in catalog)) push(issues, path, `Unknown authored ID ${id}.`);
   }
 };
 
@@ -90,7 +98,7 @@ const validateRound = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  if (!(round.primeSeconds >= 0))
+  if (round.primeSeconds < 0)
     push(issues, `${path}.primeSeconds`, "Prime time must be nonnegative.");
   if (round.wave.length === 0)
     push(issues, `${path}.wave`, "A round must contain at least one wave entry.");
@@ -116,6 +124,17 @@ const validateLevel = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
+  validateLevelDefinition(source, level, path, issues);
+  validateEquipmentLoadout(source, level, path, issues);
+  validateConduitLoadout(source, level, path, issues);
+};
+
+const validateLevelDefinition = (
+  source: GamePackSource,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
   if (!(level.focusRoomId in source.rooms))
     push(issues, `${path}.focusRoomId`, `Unknown room ${level.focusRoomId}.`);
   for (const reactionId of level.featuredReactionIds) {
@@ -130,6 +149,14 @@ const validateLevel = (
   level.rounds.forEach((round, index) =>
     validateRound(source, round, level.rounds[index - 1], `${path}.rounds.${index}`, issues)
   );
+};
+
+const validateEquipmentLoadout = (
+  source: GamePackSource,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
   for (const [roomId, equipment] of Object.entries(level.loadout.equipment)) {
     if (!(roomId in source.rooms))
       push(issues, `${path}.loadout.equipment`, `Unknown room ${roomId}.`);
@@ -138,6 +165,14 @@ const validateLevel = (
         push(issues, `${path}.loadout.equipment`, `Unknown equipment ${instance.equipmentId}.`);
     }
   }
+};
+
+const validateConduitLoadout = (
+  source: GamePackSource,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
   const conduitLoadouts = [
     ["gasConduits", level.loadout.gasConduits, "gas"],
     ["liquidConduits", level.loadout.liquidConduits, "liquid"],
@@ -168,33 +203,70 @@ const reactionElementTotals = (
   return totals;
 };
 
+type ReactionParticipants =
+  GamePackSource["reactions"][keyof GamePackSource["reactions"]]["reactants"];
+
+const validateReactionSide = (
+  source: GamePackSource,
+  participants: ReactionParticipants,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  if (participants.length === 0) push(issues, path, "Reaction side must contain participants.");
+  for (const participant of participants) {
+    if (!(participant.species in source.species))
+      push(issues, path, `Unknown species ${participant.species}.`);
+    if (participant.coefficient <= 0) push(issues, path, "Coefficients must be positive.");
+  }
+};
+
+const validateReactionBalance = (
+  source: GamePackSource,
+  reaction: GamePackSource["reactions"][keyof GamePackSource["reactions"]],
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const reactants = reactionElementTotals(source, reaction.reactants);
+  const products = reactionElementTotals(source, reaction.products);
+  for (const element of new Set([...Object.keys(reactants), ...Object.keys(products)])) {
+    if (Math.abs((reactants[element] ?? 0) - (products[element] ?? 0)) > 1e-8)
+      push(issues, path, `Element ${element} is unbalanced.`);
+  }
+};
+
 const validateReactions = (source: GamePackSource, issues: AuthoringIssue[]): void => {
   for (const [reactionId, reaction] of Object.entries(source.reactions)) {
     validateIdentity(issues, `reactions.${reactionId}.id`, reactionId, reaction.id);
-    for (const [side, participants] of [
-      ["reactants", reaction.reactants],
-      ["products", reaction.products],
-    ] as const) {
-      if (participants.length === 0)
-        push(issues, `reactions.${reactionId}.${side}`, "Reaction side must contain participants.");
-      for (const participant of participants) {
-        if (!(participant.species in source.species))
-          push(
-            issues,
-            `reactions.${reactionId}.${side}`,
-            `Unknown species ${participant.species}.`
-          );
-        if (!(participant.coefficient > 0))
-          push(issues, `reactions.${reactionId}.${side}`, "Coefficients must be positive.");
-      }
-    }
-    const reactants = reactionElementTotals(source, reaction.reactants);
-    const products = reactionElementTotals(source, reaction.products);
-    for (const element of new Set([...Object.keys(reactants), ...Object.keys(products)])) {
-      if (Math.abs((reactants[element] ?? 0) - (products[element] ?? 0)) > 1e-8)
-        push(issues, `reactions.${reactionId}`, `Element ${element} is unbalanced.`);
-    }
+    validateReactionSide(source, reaction.reactants, `reactions.${reactionId}.reactants`, issues);
+    validateReactionSide(source, reaction.products, `reactions.${reactionId}.products`, issues);
+    validateReactionBalance(source, reaction, `reactions.${reactionId}`, issues);
   }
+};
+
+type AuthoredTransportPhase = NonNullable<
+  GamePackSource["transportRuns"][keyof GamePackSource["transportRuns"]][TransportPhase]
+>;
+
+const validateRouteBlueprint = (
+  facility: ReturnType<typeof createFacilityModel>,
+  definition: AuthoredTransportPhase,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  if (definition.blueprint.length < 2) push(issues, path, "A route requires at least two cells.");
+  definition.blueprint.forEach((cell, index) => {
+    if (!facility.inBounds(cell))
+      push(issues, `${path}.${index}`, "Route cell is outside the facility.");
+    const previous = definition.blueprint[index - 1];
+    if (previous && !cellIsAdjacent(previous, cell))
+      push(issues, `${path}.${index}`, "Route cells must be orthogonally adjacent.");
+  });
+  const start = definition.blueprint[0];
+  if (start && facility.cellDefinition(start).roomId !== definition.direction[0])
+    push(issues, path, "Route start is outside its source room.");
+  const end = definition.blueprint.at(-1);
+  if (end && facility.cellDefinition(end).roomId !== definition.direction[1])
+    push(issues, path, "Route end is outside its destination room.");
 };
 
 const validateRoutes = (source: GamePackSource, issues: AuthoringIssue[]): void => {
@@ -205,52 +277,33 @@ const validateRoutes = (source: GamePackSource, issues: AuthoringIssue[]): void 
       const definition = run[phase];
       if (!definition) continue;
       const path = `transportRuns.${runId}.${phase}.blueprint`;
-      if (definition.blueprint.length < 2)
-        push(issues, path, "A route requires at least two cells.");
-      definition.blueprint.forEach((cell, index) => {
-        if (!facility.inBounds(cell))
-          push(issues, `${path}.${index}`, "Route cell is outside the facility.");
-        const previous = definition.blueprint[index - 1];
-        if (previous && !cellIsAdjacent(previous, cell))
-          push(issues, `${path}.${index}`, "Route cells must be orthogonally adjacent.");
-      });
-      if (
-        definition.blueprint[0] &&
-        facility.cellDefinition(definition.blueprint[0]).roomId !== definition.direction[0]
-      )
-        push(issues, path, "Route start is outside its source room.");
-      if (
-        definition.blueprint.at(-1) &&
-        facility.cellDefinition(definition.blueprint.at(-1)!).roomId !== definition.direction[1]
-      )
-        push(issues, path, "Route end is outside its destination room.");
+      validateRouteBlueprint(facility, definition, path, issues);
     }
   }
 };
 
-export const validateGamePack = (source: GamePackSource): readonly AuthoringIssue[] => {
-  const issues: AuthoringIssue[] = [];
-  if (source.packId.trim().length === 0) push(issues, "packId", "Pack ID must be non-empty.");
-  if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
-    push(issues, "contentVersion", "Content version must be a positive integer.");
+const validateLevelOrder = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  const orderedLevels = new Set<string>(source.levelOrder);
   if (source.levelOrder.length === 0)
     push(issues, "levelOrder", "A pack must contain at least one level.");
   if (new Set(source.levelOrder).size !== source.levelOrder.length)
     push(issues, "levelOrder", "Level order must contain unique IDs.");
   for (const levelId of source.levelOrder) {
     const level = source.levels[levelId];
-    if (!level) push(issues, "levelOrder", `Unknown level ${levelId}.`);
-    else {
-      validateIdentity(issues, `levels.${levelId}.id`, levelId, level.id);
-      validateLevel(source, level, `levels.${levelId}`, issues);
+    if (!level) {
+      push(issues, "levelOrder", `Unknown level ${levelId}.`);
+      continue;
     }
+    validateIdentity(issues, `levels.${levelId}.id`, levelId, level.id);
+    validateLevel(source, level, `levels.${levelId}`, issues);
   }
   for (const levelId of Object.keys(source.levels)) {
-    if (!source.levelOrder.some((orderedId) => orderedId === levelId))
+    if (!orderedLevels.has(levelId))
       push(issues, `levels.${levelId}`, "Level is missing from levelOrder.");
   }
-  validateReactions(source, issues);
-  validateRoutes(source, issues);
+};
+
+const validateProcesses = (source: GamePackSource, issues: AuthoringIssue[]): void => {
   for (const [processId, process] of Object.entries(source.processes)) {
     validateIdentity(issues, `processes.${processId}.id`, processId, process.id);
     if (!(process.reactionId in source.reactions))
@@ -262,6 +315,17 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
         `Unknown equipment ${process.equipmentId}.`
       );
   }
+};
+
+export const validateGamePack = (source: GamePackSource): readonly AuthoringIssue[] => {
+  const issues: AuthoringIssue[] = [];
+  if (source.packId.trim().length === 0) push(issues, "packId", "Pack ID must be non-empty.");
+  if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
+    push(issues, "contentVersion", "Content version must be a positive integer.");
+  validateLevelOrder(source, issues);
+  validateReactions(source, issues);
+  validateRoutes(source, issues);
+  validateProcesses(source, issues);
   return issues;
 };
 

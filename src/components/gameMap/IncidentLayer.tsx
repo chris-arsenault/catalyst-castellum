@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
 import type { GameState } from "../../game/types";
+import { useGamePresentation } from "../../application/presentationContext";
 import {
   INCIDENT_VISIBLE_SECONDS,
   incidentMapAggregates,
@@ -28,8 +29,12 @@ const drawIncident = (graphics: Graphics, incident: IncidentAggregate): void => 
 };
 
 const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
+  const { formatters, translator } = useGamePresentation();
   const draw = useCallback((graphics: Graphics) => drawIncident(graphics, incident), [incident]);
-  const title = incident.count > 1 ? `OX-1 FLASH ×${incident.count}` : "OX-1 FLASH";
+  const title =
+    incident.count > 1
+      ? translator.text("ui.map.incident.flashes", { count: incident.count })
+      : translator.text("ui.map.incident.flash");
   return (
     <pixiContainer x={incident.x} y={incident.y} eventMode="none">
       <pixiGraphics draw={draw} eventMode="none" />
@@ -47,7 +52,11 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
         }}
       />
       <pixiText
-        text={`−${Math.round(incident.pressureDamage)} PRESSURE · −${Math.round(incident.heatDamage)} HEAT · KILL ×${incident.kills}`}
+        text={translator.text("ui.map.incident.damage", {
+          pressure: formatters.number(incident.pressureDamage, 0),
+          heat: formatters.number(incident.heatDamage, 0),
+          kills: incident.kills,
+        })}
         y={-incident.height / 2 - 43}
         anchor={{ x: 0.5, y: 0 }}
         eventMode="none"

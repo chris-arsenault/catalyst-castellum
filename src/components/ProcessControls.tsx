@@ -2,18 +2,21 @@ import { Activity, ArrowDownToLine, Beaker, LockKeyhole } from "lucide-react";
 import { TRANSPORT_RUNS } from "../presentation/defaultGame";
 import { roomSocketIds, transportPhaseAvailable } from "../game/queries";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import { TRANSPORT_RUN_IDS } from "../game/types";
+import type { Translator } from "../localization/translator";
 import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
 import { TransportRunPanel } from "./processControls/TransportControls";
 
-const phaseLabel = (phase: string): string => {
-  if (phase === "build") return "PLANNING";
-  if (phase === "prime") return "LIVE";
-  return "LOCKED";
+const localizedPhaseLabel = (phase: string, translator: Translator): string => {
+  if (phase === "build") return translator.text("ui.process.phase.planning");
+  if (phase === "prime") return translator.text("ui.process.phase.live");
+  return translator.text("ui.process.phase.locked");
 };
 
 export const ProcessControls = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = game.rooms[roomId];
@@ -28,18 +31,19 @@ export const ProcessControls = () => {
   const hasCell = Object.values(room.equipment).some(
     (instance) => instance?.equipmentId === "membrane_cell"
   );
+  const phaseLabel = localizedPhaseLabel(game.phase, translator);
   return (
     <section className="inspector-section process-controls">
       <div className="section-title-row">
-        <h3>Room actions</h3>
+        <h3>{translator.text("ui.process.title")}</h3>
         <span>
-          {locked && <LockKeyhole size={12} />} {phaseLabel(game.phase)}
+          {locked && <LockKeyhole size={12} />} {phaseLabel}
         </span>
       </div>
       {socketIds.length > 0 ? (
         <>
           <div className="control-kind-heading">
-            <Beaker size={14} /> Build
+            <Beaker size={14} /> {translator.text("ui.process.build")}
           </div>
           <div className="equipment-socket-list">
             {socketIds.map((socketId) => (
@@ -51,7 +55,7 @@ export const ProcessControls = () => {
       {hasCell && <OutletBuffers />}
       {runs.length > 0 && (
         <div className="control-kind-heading">
-          <Activity size={14} /> Connections
+          <Activity size={14} /> {translator.text("ui.process.connections")}
         </div>
       )}
       <div className="transport-run-list">
@@ -62,7 +66,7 @@ export const ProcessControls = () => {
       {runs.length === 0 && socketIds.length === 0 && (
         <div className="passive-room-note">
           <ArrowDownToLine size={18} />
-          <p>This room responds through facility-wide systems.</p>
+          <p>{translator.text("ui.process.passive")}</p>
         </div>
       )}
     </section>

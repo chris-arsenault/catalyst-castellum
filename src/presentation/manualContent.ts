@@ -19,6 +19,35 @@ const text = (
   parameters: Record<string, string | number> = {}
 ): string => translator.text(key as LocaleKey, parameters as never);
 
+const createReactionManual = (
+  translator: Translator
+): Record<ReactionId, { doctrine: string; flavor: string }> =>
+  Object.fromEntries(
+    [
+      "chlor_alkali_electrolysis",
+      "hydrogen_oxygen_combustion",
+      "hydrogen_chlorine_recombination",
+      "hydrogen_chloride_absorption",
+      "acid_neutralization",
+      "hypochlorite_formation",
+      "acid_chlorine_release",
+    ].map((reactionId) => [
+      reactionId,
+      {
+        doctrine: text(translator, `manual.reactions.${reactionId}.doctrine`),
+        flavor: text(translator, `manual.reactions.${reactionId}.flavor`),
+      },
+    ])
+  ) as Record<ReactionId, { doctrine: string; flavor: string }>;
+
+const createEnemyFlavor = (translator: Translator): Record<EnemyType, string> =>
+  Object.fromEntries(
+    ["crawler", "skimmer", "floater", "shell", "bellows"].map((enemyType) => [
+      enemyType,
+      text(translator, `manual.enemies.${enemyType}.flavor`),
+    ])
+  ) as Record<EnemyType, string>;
+
 export const createManualContent = (translator: Translator) => {
   const equipmentCategoryLabels: Record<EquipmentCategory, string> = {
     atmosphere: translator.text("manual.categories.atmosphere"),
@@ -73,29 +102,8 @@ export const createManualContent = (translator: Translator) => {
       reactionIds: ["chlor_alkali_electrolysis"],
     },
   };
-  const reactionManual = Object.fromEntries(
-    [
-      "chlor_alkali_electrolysis",
-      "hydrogen_oxygen_combustion",
-      "hydrogen_chlorine_recombination",
-      "hydrogen_chloride_absorption",
-      "acid_neutralization",
-      "hypochlorite_formation",
-      "acid_chlorine_release",
-    ].map((reactionId) => [
-      reactionId,
-      {
-        doctrine: text(translator, `manual.reactions.${reactionId}.doctrine`),
-        flavor: text(translator, `manual.reactions.${reactionId}.flavor`),
-      },
-    ])
-  ) as Record<ReactionId, { doctrine: string; flavor: string }>;
-  const enemyFlavor = Object.fromEntries(
-    ["crawler", "skimmer", "floater", "shell", "bellows"].map((enemyType) => [
-      enemyType,
-      text(translator, `manual.enemies.${enemyType}.flavor`),
-    ])
-  ) as Record<EnemyType, string>;
+  const reactionManual = createReactionManual(translator);
+  const enemyFlavor = createEnemyFlavor(translator);
   return { equipmentCategoryLabels, equipmentManual, reactionManual, enemyFlavor };
 };
 

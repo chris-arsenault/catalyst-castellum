@@ -1,27 +1,34 @@
 import { FACILITY_MAP, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 import type { FacilityPortalDefinition, GameState, RoomId } from "../game/types";
+import type { Translator } from "../localization/translator";
 
-const portalKindLabel = (kind: FacilityPortalDefinition["kind"]): string =>
+const portalKindLabel = (kind: FacilityPortalDefinition["kind"], translator: Translator): string =>
   ({
-    passage: "Open passage",
-    ladder_shaft: "Open ladder shaft",
-    floor_hole: "Floor opening",
-    door: "Door",
-    trapdoor: "Trapdoor",
-    core_door: "Sealed Core door",
+    passage: translator.text("ui.architecture.kind.passage"),
+    ladder_shaft: translator.text("ui.architecture.kind.ladder"),
+    floor_hole: translator.text("ui.architecture.kind.floor"),
+    door: translator.text("ui.architecture.kind.door"),
+    trapdoor: translator.text("ui.architecture.kind.trapdoor"),
+    core_door: translator.text("ui.architecture.kind.coreDoor"),
   })[kind];
 
-const portalStateLabel = (state: GameState["portalStates"][string]): string => {
-  if (state.sealed) return "SEALED";
-  return state.open ? "OPEN" : "CLOSED";
+const portalStateLabel = (
+  state: GameState["portalStates"][string],
+  translator: Translator
+): string => {
+  if (state.sealed) return translator.text("ui.architecture.state.sealed");
+  return state.open
+    ? translator.text("ui.architecture.state.open")
+    : translator.text("ui.architecture.state.closed");
 };
 
 interface ArchitecturalConnectionModel {
   gasFlow: number;
   liquidFlow: number;
   otherRoomId: RoomId;
-  stateLabel: string;
+  state: GameState["portalStates"][string];
 }
 
 const architecturalConnectionModel = (
@@ -38,7 +45,7 @@ const architecturalConnectionModel = (
     gasFlow: state.lastGasFlow * flowSignForRoom,
     liquidFlow: state.lastLiquidFlow * flowSignForRoom,
     otherRoomId,
-    stateLabel: portalStateLabel(state),
+    state,
   };
 };
 
@@ -51,24 +58,34 @@ const ArchitecturalConnection = ({
   portal: FacilityPortalDefinition;
   roomId: RoomId;
 }) => {
+  const { formatters, translator } = useGamePresentation();
   const model = architecturalConnectionModel(game, roomId, portal);
-  const gasDirection = model.gasFlow >= 0 ? "out" : "in";
-  const liquidDirection = model.liquidFlow >= 0 ? "out" : "in";
+  const gasDirection = translator.text(
+    model.gasFlow >= 0 ? "ui.architecture.direction.out" : "ui.architecture.direction.in"
+  );
+  const liquidDirection = translator.text(
+    model.liquidFlow >= 0 ? "ui.architecture.direction.out" : "ui.architecture.direction.in"
+  );
   return (
     <article data-portal-id={portal.id}>
-      <strong>{portalKindLabel(portal.kind)}</strong>
+      <strong>{portalKindLabel(portal.kind, translator)}</strong>
       <span>
-        {ROOM_DEFINITIONS[model.otherRoomId].code} · {model.stateLabel}
+        {ROOM_DEFINITIONS[model.otherRoomId].code} · {portalStateLabel(model.state, translator)}
       </span>
       <small>
-        Gas {gasDirection} {Math.abs(model.gasFlow).toFixed(2)} · liquid {liquidDirection}{" "}
-        {Math.abs(model.liquidFlow).toFixed(2)} mol-eq/s
+        {translator.text("ui.architecture.flow", {
+          gasDirection,
+          gasFlow: formatters.measurement(Math.abs(model.gasFlow), "mol-eq/s", 2),
+          liquidDirection,
+          liquidFlow: formatters.measurement(Math.abs(model.liquidFlow), "mol-eq/s", 2),
+        })}
       </small>
     </article>
   );
 };
 
 export const ArchitecturalConnections = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const portals = FACILITY_MAP.portals.filter((portal) => portal.rooms.includes(roomId));
@@ -79,8 +96,8 @@ export const ArchitecturalConnections = () => {
       data-testid="architectural-connections"
     >
       <div className="section-title-row">
-        <h3>Architectural openings</h3>
-        <span>NATURAL FLOW</span>
+        <h3>{translator.text("ui.architecture.title")}</h3>
+        <span>{translator.text("ui.architecture.kicker")}</span>
       </div>
       <div className="architectural-connection-list">
         {portals.map((portal) => (

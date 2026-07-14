@@ -1,4 +1,7 @@
 export const EVENT_MESSAGES = {
+  "events.common.facility": "facility",
+  "events.zone.upper": "upper",
+  "events.zone.lower": "lower",
   "events.damage.atmospheric_exposure": "atmospheric exposure",
   "events.damage.surface_corrosion": "surface corrosion",
   "events.damage.thermal_exposure": "thermal exposure",
@@ -9,6 +12,8 @@ export const EVENT_MESSAGES = {
   "events.damage.fallback": "environmental exposure",
   "events.round.contained.title": "Containment held",
   "events.round.breached.title": "{breaches} {breachLabel} recorded",
+  "events.round.breach.one": "breach",
+  "events.round.breach.other": "breaches",
   "events.round.contained.detail":
     "{killed} hostiles yielded {matterHarvested} matter. Every process inventory remains in place. The simulation is frozen at its exact ending state.",
   "events.round.breached.detail":
@@ -64,6 +69,8 @@ export const EVENT_MESSAGES = {
     "Configuration is locked until every hostile is neutralized or breaches the core.",
   "events.round_advanced.title": "Round {round}: {title}",
   "events.round_advanced.detail": "{detail} New availability is now visible in the control room.",
+  "events.round_advanced.fallback.title": "New round",
+  "events.round_advanced.fallback.detail": "New conditions apply.",
   "events.defeat.title": "Catalyst core lost",
   "events.defeat.detail":
     "The core fell during {level}, round {round}. The original facility state is ready for another attempt.",

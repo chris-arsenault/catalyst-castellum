@@ -2,8 +2,8 @@ import { ChevronRight, ScrollText, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../presentation/defaultGame";
 import type { GameEvent } from "../game/types";
-import { eventCopy } from "../presentation/eventCopy";
 import { useGameStore } from "../application/store";
+import { useGamePresentation } from "../application/presentationContext";
 
 const EventEntry = ({
   entry,
@@ -12,6 +12,7 @@ const EventEntry = ({
   entry: GameEvent;
   onChoose: (entry: GameEvent) => void;
 }) => {
+  const { eventCopy } = useGamePresentation();
   const copy = eventCopy(entry);
   return (
     <button
@@ -38,6 +39,7 @@ const EventEntry = ({
 };
 
 export const EventLog = () => {
+  const { eventCopy, translator } = useGamePresentation();
   const events = useGameStore((state) => state.game.events);
   const selectRoom = useGameStore((state) => state.selectRoom);
   const [open, setOpen] = useState(false);
@@ -56,13 +58,13 @@ export const EventLog = () => {
         className="battle-feed"
         type="button"
         data-testid="battle-feed"
-        aria-label="Open battle log"
+        aria-label={translator.text("ui.eventLog.open")}
         onClick={() => setOpen(true)}
       >
         <span>
-          <ScrollText size={14} /> Recent
+          <ScrollText size={14} /> {translator.text("ui.eventLog.recent")}
         </span>
-        <strong>{latest ? eventCopy(latest).title : "Event log ready"}</strong>
+        <strong>{latest ? eventCopy(latest).title : translator.text("ui.eventLog.ready")}</strong>
         <ChevronRight size={14} />
       </button>
       {open && (
@@ -75,12 +77,12 @@ export const EventLog = () => {
           >
             <header className="event-log-header">
               <span id="event-log-title">
-                <ScrollText size={15} /> Battle log
+                <ScrollText size={15} /> {translator.text("ui.eventLog.title")}
               </span>
               <button
                 type="button"
                 className="modal-close"
-                aria-label="Close battle log"
+                aria-label={translator.text("ui.eventLog.close")}
                 onClick={close}
               >
                 <X size={18} />
@@ -88,7 +90,7 @@ export const EventLog = () => {
             </header>
             <div className="event-row-list">
               {events.length === 0 ? (
-                <p className="empty-event-log">Events will appear as the round unfolds.</p>
+                <p className="empty-event-log">{translator.text("ui.eventLog.empty")}</p>
               ) : (
                 events
                   .slice(0, 20)

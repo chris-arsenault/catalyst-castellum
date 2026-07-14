@@ -4,12 +4,9 @@ import {
   equipmentGrade,
 } from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
-import { equipmentGradeEffect } from "../../presentation/equipmentCopy";
 import type { EquipmentHover } from "./EquipmentLayer";
 import { equipmentCopy } from "../../presentation/entityCopy";
-
-const socketLabel = (socketId: EquipmentHover["socketId"]): string =>
-  socketId === "socket_a" ? "Socket A" : "Socket B";
+import { useGamePresentation } from "../../application/presentationContext";
 
 export const EquipmentTooltip = ({
   equipment,
@@ -18,6 +15,7 @@ export const EquipmentTooltip = ({
   equipment: EquipmentHover | null;
   game: GameState;
 }) => {
+  const { equipmentGradeEffect, translator } = useGamePresentation();
   if (!equipment) return null;
   const instance = game.rooms[equipment.roomId].equipment[equipment.socketId];
   if (!instance) return null;
@@ -27,24 +25,34 @@ export const EquipmentTooltip = ({
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="equipment-map-tooltip">
       <header>
         <span style={{ color: definition.accent }}>{room.code}</span>
-        <strong>{equipmentCopy(definition).name}</strong>
-        <em>{instance.enabled ? "ACTIVE" : "STANDBY"}</em>
+        <strong>{equipmentCopy(definition, translator).name}</strong>
+        <em>
+          {translator.text(
+            instance.enabled ? "ui.map.equipment.active" : "ui.map.equipment.standby"
+          )}
+        </em>
       </header>
       <dl>
         <div>
-          <dt>Mount</dt>
-          <dd>{socketLabel(equipment.socketId)}</dd>
+          <dt>{translator.text("ui.map.equipment.mount")}</dt>
+          <dd>
+            {translator.text(
+              equipment.socketId === "socket_a"
+                ? "ui.manual.build.socketA"
+                : "ui.manual.build.socketB"
+            )}
+          </dd>
         </div>
         <div>
-          <dt>Grade</dt>
+          <dt>{translator.text("ui.map.equipment.grade")}</dt>
           <dd>{instance.level}</dd>
         </div>
         <div>
-          <dt>Effect</dt>
+          <dt>{translator.text("ui.map.equipment.effect")}</dt>
           <dd>{equipmentGradeEffect(equipmentGrade(instance.equipmentId, instance.level))}</dd>
         </div>
       </dl>
-      <small>Click to select {room.code}</small>
+      <small>{translator.text("ui.map.room.select", { room: room.code })}</small>
     </aside>
   );
 };

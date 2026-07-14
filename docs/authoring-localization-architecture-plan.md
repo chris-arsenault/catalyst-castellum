@@ -1,6 +1,6 @@
 # Authoring, engine, UI, and localization implementation plan
 
-Status: active implementation ledger
+Status: complete (2026-07-14)
 
 Progress:
 
@@ -8,13 +8,12 @@ Progress:
 - Phase 2: complete (compiler, immutable packs, V12 identity, modular levels, health-plan split)
 - Phase 3: complete (reaction strategies, dynamic telemetry, enemy archetypes, guide registry and
   typed conditions, authored featured-reaction gates)
-- Phase 4: in progress (typed locale, formatters, command/event payloads, entities, levels, events,
-  manual and presentation copy, validation/export complete; remaining static UI and tutorial prose
-  migration is the active work)
-- Phase 5: in progress (bound presentation/application composition and forbidden component imports
-  complete; remaining raw component projections move behind presentation models with the copy pass)
-- Phase 6: in progress (architecture/copy/locale checks and extension fixtures complete;
-  documentation and final CI/browser verification remain)
+- Phase 4: complete (typed locale, shared formatters, semantic command/event payloads, static UI,
+  accessibility labels, tutorial narrative, manual, entities, levels, events, validation, and export)
+- Phase 5: complete (runtime-and-locale-bound presentation composition, React context injection,
+  cached selectors, localized projections, and forbidden internal component imports)
+- Phase 6: complete (architecture/copy/locale enforcement, extension fixtures, documentation,
+  `make ci`, and all 26 Playwright scenarios)
 
 This plan turns the 2026-07 architecture review into an enforceable repository design. It is the
 durable source of truth for the migration and must be updated as implementation discoveries change
@@ -118,6 +117,17 @@ Acceptance:
 8. Add locale validation and a copy export command that emits the English catalog grouped by player
    context for review.
 
+Implemented details:
+
+- `GamePresentationProvider` injects one runtime/locale presentation at the React composition root;
+  a pseudo-locale component test proves static UI can change locale without component edits.
+- Tutorial definitions store typed `tutorial.*` keys or typed parameter objects. Renderers resolve
+  them at the UI boundary, so guide logic remains locale-neutral.
+- English UI and tutorial catalogs are split by review surface under one locale root, keeping files
+  below the repository size standard while preserving one typed catalog.
+- The copy ownership checker parses TypeScript/TSX and rejects prose in engine/content display
+  fields, tutorial authoring values, JSX text, accessibility attributes, tooltips, and Pixi text.
+
 Acceptance:
 
 - Normal English copy edits touch locale files only.
@@ -133,6 +143,13 @@ Acceptance:
 4. Make application composition inject runtime and presentation services.
 5. Restrict components to application hooks, presentation models, UI-local state, and semantic
    command dispatch.
+
+Implemented details:
+
+- Commands, room analysis, event copy, level copy, entity labels, manual content, map labels, and
+  locale formatters are consumed through the injected presentation service.
+- High-frequency map geometry remains a pure definition-bound projection; localized map text is
+  supplied as an explicit translator dependency.
 
 Acceptance:
 
@@ -153,6 +170,12 @@ Acceptance:
 - `make ci` and `pnpm test:e2e` pass.
 - The architecture checker fails representative forbidden-import and cycle fixtures.
 - The worktree contains no temporary compatibility exception without a documented removal reason.
+
+Final evidence:
+
+- `make ci`: 213 unit/component tests passed with coverage, plus architecture, copy, performance,
+  lint, formatting, typecheck, production build, campaign health, and Terraform formatting.
+- `pnpm test:e2e`: 26 Chromium scenarios passed.
 
 ## Implementation notes
 

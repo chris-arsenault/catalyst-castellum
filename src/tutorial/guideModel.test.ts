@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { emptyHazardChannels } from "../game/engine/damage";
 import { createScenarioGame, executeCommand } from "../game/simulation";
 import type { CombatIncident, GameCommand, GameState } from "../game/types";
+import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import {
   assaultFlashIncident,
   guidedPhaseActionReason,
@@ -10,6 +11,7 @@ import {
 } from "./guideModel";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, GuideRegistry } from "./guideModel";
+import { tutorialText } from "./tutorialCopy";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -71,14 +73,20 @@ describe("Flash Point guide definition", () => {
     const guide = guideDefinitionFor(game);
     if (!guide) throw new Error("Flash Point guide missing");
 
-    expect(guide.story.title).toBe("Turn R-02 into a combustion trap");
-    expect(guide.story.model?.stages.map((stage) => stage.metric)).toEqual([
+    expect(tutorialText(DEFAULT_TRANSLATOR, guide.story.title)).toBe(
+      "Turn R-02 into a combustion trap"
+    );
+    expect(
+      guide.story.model?.stages.map((stage) => tutorialText(DEFAULT_TRANSLATOR, stage.metric))
+    ).toEqual([
       "2 H₂ : 1 O₂ · up to 2.2 mol-eq/s",
       "2 open passages · pressure/density outflow",
       "0.42× air density · 1.5 layer exchange",
       "H₂ ≥ 5% · O₂ ≥ 8% · 2 H₂ + 1 O₂",
     ]);
-    expect(guide.story.model?.conclusion).toContain("Prime supplies transport time");
+    expect(tutorialText(DEFAULT_TRANSLATOR, guide.story.model!.conclusion)).toContain(
+      "Prime supplies transport time"
+    );
     expect(guide.mission.tasks.map((task) => task.id)).toEqual([
       "mix-chamber",
       "feed-reactants",
@@ -98,15 +106,28 @@ describe("guide registration extension", () => {
   it("registers another guided level without renderer dispatch changes", () => {
     const game = command(createScenarioGame("stored_chlorine"), { type: "begin_level" });
     const fixture: GuideDefinition = {
-      completion: { title: "Complete", explanation: "Complete", instruction: "Continue" },
+      completion: {
+        title: "tutorial.common.lessonComplete",
+        explanation: "tutorial.common.lessonComplete",
+        instruction: "tutorial.common.doNow",
+      },
       id: "fixture-guide",
       dismissalId: "fixture-guide",
       firstFlashTeachingBreak: false,
-      label: "Fixture",
+      label: "tutorial.common.tasks",
       showStageIntro: false,
       gatesPhaseActions: false,
-      story: { kicker: "Fixture", title: "Fixture", paragraphs: [], model: null },
-      mission: { title: "Fixture", summary: "Fixture", tasks: [] },
+      story: {
+        kicker: "tutorial.common.tasks",
+        title: "tutorial.common.tasks",
+        paragraphs: [],
+        model: null,
+      },
+      mission: {
+        title: "tutorial.common.tasks",
+        summary: "tutorial.common.tasks",
+        tasks: [],
+      },
       steps: [],
     };
     const registry: GuideRegistry = {
@@ -147,7 +168,10 @@ describe("Flash Point guided flow", () => {
       enabled: false,
     });
     expect(guideStepIndexFor(game, guide)).toBe(1);
-    expect(guidedPhaseActionReason(game, "start_prime", [])).toContain("run a Gas Agitator");
+    const agitatorReason = guidedPhaseActionReason(game, "start_prime", []);
+    expect(agitatorReason && tutorialText(DEFAULT_TRANSLATOR, agitatorReason)).toContain(
+      "run a Gas Agitator"
+    );
     game = command(game, {
       type: "toggle_equipment",
       roomId: "furnace",
@@ -188,11 +212,15 @@ describe("Flash Point cold assault guidance", () => {
     let game = command(createScenarioGame("flash_point"), { type: "begin_level" });
     const guide = guideDefinitionFor(game);
     if (!guide) throw new Error("Flash Point guide missing");
-    expect(guidedPhaseActionReason(game, "start_prime", [])).toContain("Gas Agitator");
+    const primeReason = guidedPhaseActionReason(game, "start_prime", []);
+    expect(primeReason && tutorialText(DEFAULT_TRANSLATOR, primeReason)).toContain("Gas Agitator");
     expect(guidedPhaseActionReason(game, "start_prime", [guide.dismissalId])).toBeNull();
 
     game = command(game, { type: "start_prime" });
-    expect(guidedPhaseActionReason(game, "start_assault", [])).toContain("first OX-1 flash");
+    const assaultReason = guidedPhaseActionReason(game, "start_assault", []);
+    expect(assaultReason && tutorialText(DEFAULT_TRANSLATOR, assaultReason)).toContain(
+      "first OX-1 flash"
+    );
     game = command(game, { type: "start_assault" });
     expect(guide.steps[guideStepIndexFor(game, guide)]?.id).toBe("cold-assault");
   });

@@ -14,6 +14,7 @@ import {
   type MapRect,
 } from "./mapGeometry";
 import { roomCopy } from "../../presentation/entityCopy";
+import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 
 const EDGE_PADDING = 8;
 const LABEL_PADDING_X = 8;
@@ -145,7 +146,11 @@ const labelPriority = (roomId: RoomId, selectedRoomId: RoomId): number => {
   return 50 - roomMapRect(roomId).width / 100;
 };
 
-export const layoutMapLabels = (selectedRoomId: RoomId, game?: GameState): MapLabelPlacement[] => {
+export const layoutMapLabels = (
+  selectedRoomId: RoomId,
+  game?: GameState,
+  translator: Translator = DEFAULT_TRANSLATOR
+): MapLabelPlacement[] => {
   const obstacles = [
     ...roomObstacles(),
     ...structureObstacles(),
@@ -159,7 +164,10 @@ export const layoutMapLabels = (selectedRoomId: RoomId, game?: GameState): MapLa
   );
   for (const roomId of ordered) {
     const definition = ROOM_DEFINITIONS[roomId];
-    const textOptions = [`${definition.code} · ${roomCopy(definition).name}`, definition.code];
+    const textOptions = [
+      `${definition.code} · ${roomCopy(definition, translator).name}`,
+      definition.code,
+    ];
     let accepted: MapLabelPlacement | null = null;
     for (const text of textOptions) {
       for (const fontSize of [17, 14, 12]) {
