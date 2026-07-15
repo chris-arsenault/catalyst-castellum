@@ -14,6 +14,7 @@ import type {
   LiquidTapDefinition,
   ProcessLineConnection,
   ProcessLineKind,
+  WorldMap,
 } from "./map";
 import { isProcessLine } from "./map";
 
@@ -66,52 +67,48 @@ export const definitionRoom = (definition: GameDefinition, roomId: string): Room
  */
 export type ProcessLineView = ProcessLineConnection;
 
+/** Anything carrying a WorldMap — GameState during play, GameDefinition at creation. */
+export interface MapCarrier {
+  readonly map: WorldMap;
+}
+
 const lineKindFor = (phase: TransportPhase): ProcessLineKind =>
   phase === "gas" ? "gas_line" : "liquid_line";
 
 /** Tolerant lookup for command validation: unknown ids are null, not errors. */
 export const maybeLineDefinition = (
-  definition: GameDefinition,
+  carrier: MapCarrier,
   id: string,
   phase: TransportPhase
 ): ProcessLineView | null => {
-  const connection = definition.map.connections[id];
+  const connection = carrier.map.connections[id];
   if (!connection || !isProcessLine(connection)) return null;
   return connection.kind === lineKindFor(phase) ? connection : null;
 };
 
 /** Loud on unknown connection ids; null when the connection is not a line of this phase. */
-export const gasLineDefinition = (
-  definition: GameDefinition,
-  id: string
-): ProcessLineView | null => {
-  instance(definition.map.connections, id, "connection");
-  return maybeLineDefinition(definition, id, "gas");
+export const gasLineDefinition = (carrier: MapCarrier, id: string): ProcessLineView | null => {
+  instance(carrier.map.connections, id, "connection");
+  return maybeLineDefinition(carrier, id, "gas");
 };
 
-export const liquidLineDefinition = (
-  definition: GameDefinition,
-  id: string
-): ProcessLineView | null => {
-  instance(definition.map.connections, id, "connection");
-  return maybeLineDefinition(definition, id, "liquid");
+export const liquidLineDefinition = (carrier: MapCarrier, id: string): ProcessLineView | null => {
+  instance(carrier.map.connections, id, "connection");
+  return maybeLineDefinition(carrier, id, "liquid");
 };
 
-const lineIdCache = new WeakMap<GameDefinition, Record<ProcessLineKind, readonly string[]>>();
+const lineIdCache = new WeakMap<WorldMap, Record<ProcessLineKind, readonly string[]>>();
 
-/** Canonical per-kind line ids in authored map order — iteration order is behavior. */
-export const processLineIds = (
-  definition: GameDefinition,
-  kind: ProcessLineKind
-): readonly string[] => {
-  let cached = lineIdCache.get(definition);
+/** Canonical per-kind line ids in map order — iteration order is behavior. */
+export const processLineIds = (carrier: MapCarrier, kind: ProcessLineKind): readonly string[] => {
+  let cached = lineIdCache.get(carrier.map);
   if (!cached) {
     const ids = (wanted: ProcessLineKind): readonly string[] =>
-      Object.values(definition.map.connections)
+      Object.values(carrier.map.connections)
         .filter((connection) => connection.kind === wanted)
         .map((connection) => connection.id);
     cached = { gas_line: ids("gas_line"), liquid_line: ids("liquid_line") };
-    lineIdCache.set(definition, cached);
+    lineIdCache.set(carrier.map, cached);
   }
   return cached[kind];
 };

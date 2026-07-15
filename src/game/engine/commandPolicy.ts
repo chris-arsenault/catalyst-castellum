@@ -20,7 +20,8 @@ import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
 import { conduitState, gasConduitState, liquidConduitState, roomState } from "../world/instances";
-import { isProcessLine } from "../world/map";
+import { isProcessLine, processLineId } from "../world/map";
+import { plannedLineConnection } from "../world/mapEdits";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -148,34 +149,53 @@ const evaluateSetConduit = (
   return allow();
 };
 
-const lineFor = (gameDefinition: GameDefinition, connectionId: ConnectionId) => {
-  const connection = gameDefinition.map.connections[connectionId];
+const lineFor = (state: GameState, connectionId: ConnectionId) => {
+  const connection = state.map.connections[connectionId];
   return connection && isProcessLine(connection) ? connection : null;
 };
 
-const evaluateBuildTransport = (
+/** The pair's line as a build would see it: stored map data, or the planned mint. */
+export const buildableLineFor = (
   state: GameState,
-  command: Extract<GameCommand, { type: "build_transport" }>,
+  command: Extract<GameCommand, { type: "build_connection" }>,
+  gameDefinition: GameDefinition
+) => {
+  const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
+  return (
+    lineFor(state, connectionId) ??
+    plannedLineConnection(
+      gameDefinition,
+      state.map,
+      command.kind,
+      command.fromRoomId,
+      command.toRoomId
+    )
+  );
+};
+
+const evaluateBuildConnection = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "build_connection" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
-  const line = lineFor(gameDefinition, command.connectionId);
+  const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
+  if (!connectionAvailable(state, connectionId)) return reject("unavailable");
+  const line = buildableLineFor(state, command, gameDefinition);
   if (!line) return reject("route_unavailable");
-  if (conduitState(state, command.connectionId).installed)
+  if (connectionId in state.map.connections && conduitState(state, connectionId).installed)
     return reject("already_installed", { cost: line.buildCost });
   if (state.matter < line.buildCost) return reject("insufficient_matter", { cost: line.buildCost });
   return allow({ cost: line.buildCost });
 };
 
-const evaluateDismantleTransport = (
+const evaluateDismantleConnection = (
   state: GameState,
-  command: Extract<GameCommand, { type: "dismantle_transport" }>,
-  gameDefinition: GameDefinition
+  command: Extract<GameCommand, { type: "dismantle_connection" }>
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
-  const line = lineFor(gameDefinition, command.connectionId);
+  const line = lineFor(state, command.connectionId);
   if (!line) return reject("route_unavailable");
   if (!conduitState(state, command.connectionId).installed) return reject("not_installed");
   const amount =
@@ -257,10 +277,10 @@ export const evaluateCommand = (
       return evaluateDismantleEquipment(state, command, definition);
     case "set_conduit":
       return evaluateSetConduit(state, command);
-    case "build_transport":
-      return evaluateBuildTransport(state, command, definition);
-    case "dismantle_transport":
-      return evaluateDismantleTransport(state, command, definition);
+    case "build_connection":
+      return evaluateBuildConnection(state, command, definition);
+    case "dismantle_connection":
+      return evaluateDismantleConnection(state, command);
     case "charge_gas_source":
       return evaluateGasCharge(state, command, definition);
     case "charge_liquid_source":

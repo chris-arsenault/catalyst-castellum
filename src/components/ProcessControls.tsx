@@ -24,7 +24,7 @@ export const ProcessControls = () => {
   const socketIds = roomSocketIds(roomId);
   const connectedRuns = game.world.connections.filter(
     (runId) =>
-      connectionRoomPair(runId).includes(roomId) &&
+      connectionRoomPair(game, runId).includes(roomId) &&
       (transportPhaseAvailable(game, runId, "gas") ||
         transportPhaseAvailable(game, runId, "liquid"))
   );

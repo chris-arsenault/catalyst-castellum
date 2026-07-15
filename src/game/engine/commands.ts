@@ -23,8 +23,8 @@ import {
   startNextLevelCommand,
 } from "./campaignCommands";
 import {
-  buildTransportCommand,
-  dismantleTransportCommand,
+  buildConnectionCommand,
+  dismantleConnectionCommand,
   setConduitCommand,
 } from "./transportCommands";
 import { roomState } from "../world/instances";
@@ -196,10 +196,10 @@ export const executeCommand = (
       return upgradeEquipment(source, command, decision);
     case "dismantle_equipment":
       return dismantleEquipment(source, command, decision);
-    case "build_transport":
-      return buildTransportCommand(source, command, decision);
-    case "dismantle_transport":
-      return dismantleTransportCommand(source, command, decision);
+    case "build_connection":
+      return buildConnectionCommand(source, command, decision, definition);
+    case "dismantle_connection":
+      return dismantleConnectionCommand(source, command, decision);
     case "charge_gas_source":
       return gasCharge(source, command.sourceId, decision, definition);
     case "charge_liquid_source":

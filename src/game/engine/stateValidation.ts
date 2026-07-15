@@ -169,7 +169,7 @@ const validateRoute = (
   issues: StateValidationIssue[],
   gameDefinition: GameDefinition
 ): void => {
-  const definition = maybeLineDefinition(gameDefinition, runId, phase);
+  const definition = maybeLineDefinition(state, runId, phase);
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const path = `${phase}Conduits.${runId}`;
@@ -200,10 +200,10 @@ const validateTopology = (
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {
-  for (const runId of processLineIds(definition, "gas_line")) {
+  for (const runId of processLineIds(state, "gas_line")) {
     validateRoute(state, runId, "gas", issues, definition);
   }
-  for (const runId of processLineIds(definition, "liquid_line")) {
+  for (const runId of processLineIds(state, "liquid_line")) {
     validateRoute(state, runId, "liquid", issues, definition);
   }
   for (const roomId of definition.roomOrder) {
@@ -216,7 +216,7 @@ const validateTopology = (
       );
     }
   }
-  const expectedPortals = architecturalConnections(definition.map).map(({ id }) => id);
+  const expectedPortals = architecturalConnections(state.map).map(({ id }) => id);
   if (!sameIdentifiers(Object.keys(state.portalStates), expectedPortals)) {
     issue(
       issues,
@@ -319,8 +319,8 @@ const validateWorldCatalogs = (
     ["rooms", state.world.rooms, state.rooms],
     ["gasJunctions", state.world.rooms, state.gasJunctions],
     ["liquidJunctions", state.world.rooms, state.liquidJunctions],
-    ["gasConduits", processLineIds(definition, "gas_line"), state.gasConduits],
-    ["liquidConduits", processLineIds(definition, "liquid_line"), state.liquidConduits],
+    ["gasConduits", processLineIds(state, "gas_line"), state.gasConduits],
+    ["liquidConduits", processLineIds(state, "liquid_line"), state.liquidConduits],
   ];
   for (const [field, catalog, record] of expectations) {
     if (!sameIdentifiers(Object.keys(record), catalog)) {
@@ -340,7 +340,7 @@ const validateWorldCatalogs = (
       "World room catalog does not match the pack."
     );
   }
-  if (!sameIdentifiers([...state.world.connections], Object.keys(definition.map.connections))) {
+  if (!sameIdentifiers([...state.world.connections], Object.keys(state.map.connections))) {
     issue(
       issues,
       "world_catalog_mismatch",

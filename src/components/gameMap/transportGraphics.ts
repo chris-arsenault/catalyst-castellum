@@ -308,7 +308,7 @@ const phaseRouteCells = (
   runId: ConnectionId,
   phase: TransportPhase
 ): readonly GridCell[] | null => {
-  const definition = lineDefinition(runId, phase);
+  const definition = lineDefinition(state, runId, phase);
   const available =
     phase === "gas"
       ? state.availability.gasLines.includes(runId)

@@ -61,7 +61,7 @@ const destinationHeadroom = (
   runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = gasLineDefinition(gameDefinition, runId);
+  const definition = gasLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "gas_vent") return Number.POSITIVE_INFINITY;
   return roomGasHeadroom(roomState(state, definition.direction[1]), gameDefinition);
 };
@@ -71,7 +71,7 @@ const destinationPressureRatio = (
   runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = gasLineDefinition(gameDefinition, runId);
+  const definition = gasLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "gas_vent") return 0;
   return (
     roomPressure(roomState(state, definition.direction[1]), gameDefinition) / STANDARD_PRESSURE
@@ -92,7 +92,7 @@ const desiredThroughput = (
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = gasLineDefinition(gameDefinition, runId);
+  const definition = gasLineDefinition(state, runId);
   if (!definition) return 0;
   const from = conduitEndpoint(state, runId, "gas", "from");
   const to = conduitEndpoint(state, runId, "gas", "to");
@@ -117,7 +117,7 @@ const initialPlan = (
   dt: number,
   gameDefinition: GameDefinition
 ): GasPlan | null => {
-  const definition = gasLineDefinition(gameDefinition, runId);
+  const definition = gasLineDefinition(state, runId);
   const conduit = gasConduitState(state, runId);
   if (!definition || !conduit.installed || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
@@ -149,7 +149,7 @@ const deliverGas = (
   packetTemperature: number,
   gameDefinition: GameDefinition
 ): void => {
-  const definition = gasLineDefinition(gameDefinition, runId);
+  const definition = gasLineDefinition(state, runId);
   if (!definition) return;
   if (definition.destinationKind === "gas_vent") {
     addGas(state.gasVent, packet);
@@ -249,7 +249,7 @@ export const simulateGasConduits = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  const lineIds = processLineIds(definition, "gas_line");
+  const lineIds = processLineIds(state, "gas_line");
   for (const runId of lineIds) clearReadout(state, runId);
   const plans = lineIds.flatMap((runId) => {
     const plan = initialPlan(state, runId, dt, definition);
@@ -257,7 +257,7 @@ export const simulateGasConduits = (
   });
 
   allocateTransportPlans(
-    plans.filter((plan) => gasLineDefinition(definition, plan.runId)?.destinationKind === "room"),
+    plans.filter((plan) => gasLineDefinition(state, plan.runId)?.destinationKind === "room"),
     "destinationRoomId",
     "outgoingRequest",
     "outgoingAmount",

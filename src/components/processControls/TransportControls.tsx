@@ -18,7 +18,7 @@ const phaseModel = (
   runId: ConnectionId,
   phase: TransportPhase
 ): PhaseModel | null => {
-  const definition = lineDefinition(runId, phase);
+  const definition = lineDefinition(game, runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const installed =
     phase === "gas"
@@ -37,11 +37,11 @@ const DismantleAction = ({ phase, runId }: { phase: TransportPhase; runId: Conne
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const decision = selectors.commandDecision(game, {
-    type: "dismantle_transport",
+    type: "dismantle_connection",
     connectionId: runId,
   });
   const dismantle = useCallback(
-    () => dispatch({ type: "dismantle_transport", connectionId: runId }),
+    () => dispatch({ type: "dismantle_connection", connectionId: runId }),
     [dispatch, runId]
   );
   return (
@@ -90,7 +90,8 @@ const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: C
 
 export const TransportRunPanel = ({ runId }: { runId: ConnectionId }) => {
   const { translator } = useGamePresentation();
-  const [leftRoom, rightRoom] = connectionRoomPair(runId);
+  const game = useGameStore((state) => state.game);
+  const [leftRoom, rightRoom] = connectionRoomPair(game, runId);
   return (
     <article className="transport-run-control" data-testid={`pipe-run-${runId}`}>
       <div className="transport-run-heading">

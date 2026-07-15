@@ -15,7 +15,7 @@ export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow =>
   const species = emptyGasRates();
   let rate = 0;
   for (const runId of game.world.connections) {
-    const definition = lineDefinition(runId, "gas");
+    const definition = lineDefinition(game, runId, "gas");
     if (!definition || definition.direction[1] !== roomId) continue;
     const conduit = gasConduitState(game, runId);
     if (conduit.flowCause !== "fan") continue;
@@ -27,7 +27,7 @@ export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow =>
 
 export const roomLiquidInflowRate = (game: GameState, roomId: RoomId): number =>
   game.world.connections.reduce((total: number, runId: string) => {
-    const definition = lineDefinition(runId, "liquid");
+    const definition = lineDefinition(game, runId, "liquid");
     if (!definition || definition.direction[1] !== roomId) return total;
     const conduit = liquidConduitState(game, runId);
     return conduit.flowCause === "pump" ? total + Math.abs(conduit.lastFlow) : total;

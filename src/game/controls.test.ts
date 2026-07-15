@@ -28,13 +28,15 @@ describe("simple conduit controls", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
     gasConduitState(state, "gas:furnace__gallery").installed = false;
     const built = executeCommand(state, {
-      type: "build_transport",
-      connectionId: "gas:furnace__gallery",
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "furnace",
+      toRoomId: "gallery",
     });
     expect(built.accepted).toBe(true);
     expect(gasConduitState(built.state, "gas:furnace__gallery").installed).toBe(true);
     const dismantled = executeCommand(built.state, {
-      type: "dismantle_transport",
+      type: "dismantle_connection",
       connectionId: "gas:furnace__gallery",
     });
     expect(dismantled.accepted).toBe(true);
@@ -44,7 +46,7 @@ describe("simple conduit controls", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
     gasConduitState(state, "gas:furnace__lower_intake").gas.hydrogen = 1;
     const result = executeCommand(state, {
-      type: "dismantle_transport",
+      type: "dismantle_connection",
       connectionId: "gas:furnace__lower_intake",
     });
     expect(result.accepted).toBe(false);

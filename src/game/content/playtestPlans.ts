@@ -16,7 +16,7 @@ export const LEVEL_PLAYTEST_PLANS: Record<LevelId, LevelPlaytestPlan> = {
         equipmentId: "gas_agitator",
       },
       { type: "set_conduit", connectionId: "gas:core__furnace", enabled: true },
-      { type: "build_transport", connectionId: "gas:core__gallery" },
+      { type: "build_connection", kind: "gas_line", fromRoomId: "core", toRoomId: "gallery" },
       { type: "set_conduit", connectionId: "gas:core__gallery", enabled: true },
       {
         type: "install_equipment",

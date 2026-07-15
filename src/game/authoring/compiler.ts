@@ -5,7 +5,7 @@ import type {
   RoundDefinition,
 } from "../definitionTypes";
 import type { ScenarioAvailability, SpeciesId } from "../types";
-import { isProcessLine } from "../world/map";
+import { isProcessLine, parseProcessLineId } from "../world/map";
 import { validateWorldMap } from "../world/mapValidation";
 
 export interface AuthoringIssue {
@@ -56,22 +56,44 @@ const validateAvailability = (
 ): void => {
   const checks = [
     ["equipment", availability.equipment, source.equipment],
-    ["gasLines", availability.gasLines, source.map.connections],
-    ["liquidLines", availability.liquidLines, source.map.connections],
     ["gasSources", availability.gasSources, source.gasSources],
     ["liquidSources", availability.liquidSources, source.liquidSources],
   ] as const;
   for (const [field, ids, catalog] of checks) {
     validateAvailableIds(ids, catalog, `${path}.${field}`, issues);
   }
+  // Line availability authorizes a room pair; the pair need not be authored on the
+  // map — an unauthored available pair is exactly what the player may route (M3).
   for (const [field, kind] of [
     ["gasLines", "gas_line"],
     ["liquidLines", "liquid_line"],
   ] as const) {
-    for (const id of availability[field]) {
-      if (source.map.connections[id] && source.map.connections[id].kind !== kind)
-        push(issues, `${path}.${field}`, `${id} is not a ${kind}.`);
-    }
+    const ids = availability[field];
+    if (new Set(ids).size !== ids.length)
+      push(issues, `${path}.${field}`, "Identifiers must be unique.");
+    for (const id of ids) validateAvailableLine(source, id, kind, `${path}.${field}`, issues);
+  }
+};
+
+const validateAvailableLine = (
+  source: GamePackSource,
+  id: string,
+  kind: "gas_line" | "liquid_line",
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const authored = source.map.connections[id];
+  if (authored) {
+    if (authored.kind !== kind) push(issues, path, `${id} is not a ${kind}.`);
+    return;
+  }
+  const parsed = parseProcessLineId(id);
+  if (!parsed || parsed.kind !== kind) {
+    push(issues, path, `Unknown authored ID ${id}.`);
+    return;
+  }
+  for (const roomId of parsed.rooms) {
+    if (!(roomId in source.rooms)) push(issues, path, `${id} references unknown room ${roomId}.`);
   }
 };
 

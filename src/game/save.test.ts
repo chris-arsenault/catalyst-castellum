@@ -76,7 +76,7 @@ describe("v12 persistence", () => {
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the v11 save to decode.");
-    expect(decoded.version).toBe(12);
+    expect(decoded.version).toBe(13);
     expect(gasConduitState(decoded, "gas:core__furnace").route).toEqual(
       gasConduitState(game, "gas:core__furnace").route
     );
@@ -116,7 +116,7 @@ describe("legacy compatibility decoding", () => {
     legacyProcess.limitingReactant = "legacy process feed";
     const decoded = decodeGame(JSON.stringify(envelope));
 
-    expect(decoded?.version).toBe(12);
+    expect(decoded?.version).toBe(13);
     expect(decoded?.campaign.levelId).toBe("make_the_reagent");
     expect(
       roomState(decoded!, "furnace").reactions.hydrogen_oxygen_combustion.limitingFactor
@@ -268,7 +268,7 @@ describe("v8 spatial migration", () => {
 
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the v8 save to migrate.");
-    expect(decoded.version).toBe(12);
+    expect(decoded.version).toBe(13);
     expect(decoded.enemies[0]?.routeId).toBe("entry_to_core");
     expect(decoded.enemies[0]?.path.length).toBeGreaterThan(1);
     expect(decoded.portalStates.switchyard_to_furnace_shaft?.open).toBe(true);

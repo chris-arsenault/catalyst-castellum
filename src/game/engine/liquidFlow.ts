@@ -41,7 +41,7 @@ const destinationHeadroom = (
   runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = liquidLineDefinition(gameDefinition, runId);
+  const definition = liquidLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "liquid_recovery") {
     return Number.POSITIVE_INFINITY;
   }
@@ -54,7 +54,7 @@ const desiredThroughput = (
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = liquidLineDefinition(gameDefinition, runId);
+  const definition = liquidLineDefinition(state, runId);
   if (!definition) return 0;
   const source = conduitEndpoint(state, runId, "liquid", "from");
   const destination = conduitEndpoint(state, runId, "liquid", "to");
@@ -81,7 +81,7 @@ const initialPlan = (
   dt: number,
   gameDefinition: GameDefinition
 ): LiquidPlan | null => {
-  const definition = liquidLineDefinition(gameDefinition, runId);
+  const definition = liquidLineDefinition(state, runId);
   const conduit = liquidConduitState(state, runId);
   if (!definition || !conduit.installed || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
@@ -111,7 +111,7 @@ const deliverLiquid = (
   packet: LiquidAmounts,
   gameDefinition: GameDefinition
 ): void => {
-  const definition = liquidLineDefinition(gameDefinition, runId);
+  const definition = liquidLineDefinition(state, runId);
   if (!definition) return;
   if (definition.destinationKind === "liquid_recovery") {
     addLiquid(state.liquidDrain, packet);
@@ -193,16 +193,14 @@ export const simulateLiquidConduits = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  const lineIds = processLineIds(definition, "liquid_line");
+  const lineIds = processLineIds(state, "liquid_line");
   for (const runId of lineIds) clearReadout(state, runId);
   const plans = lineIds.flatMap((runId) => {
     const plan = initialPlan(state, runId, dt, definition);
     return plan ? [plan] : [];
   });
   allocateTransportPlans(
-    plans.filter(
-      (plan) => liquidLineDefinition(definition, plan.runId)?.destinationKind === "room"
-    ),
+    plans.filter((plan) => liquidLineDefinition(state, plan.runId)?.destinationKind === "room"),
     "destinationRoomId",
     "outgoingRequest",
     "outgoingAmount",

@@ -18,10 +18,12 @@ export const createUiActions = (
   | "acknowledgeStageIntro"
   | "clearNotice"
   | "setPipeMode"
+  | "setPipePreview"
   | "showNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
-  setPipeMode: (pipeMode) => set({ pipeMode }),
+  setPipeMode: (pipeMode) => set({ pipeMode, pipePreview: null }),
+  setPipePreview: (pipePreview) => set({ pipePreview }),
   showNotice: (notice) => set({ notice }),
   setShowHelp: (showHelp) =>
     set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),

@@ -14,9 +14,19 @@ import type {
 import type { Translator } from "../localization/translator";
 import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
+import { instance, type MapCarrier } from "../game/world/instances";
+import { DEFAULT_GAME_DEFINITION as PACK } from "./defaultGame";
 
 const localized = (translator: Translator, key: string): string =>
   translator.text(key as LocaleKey, {} as never);
+
+const hasLocalized = (translator: Translator, key: string): boolean => {
+  try {
+    return typeof translator.text(key as LocaleKey, {} as never) === "string";
+  } catch {
+    return false;
+  }
+};
 
 export interface NamedEntityCopy {
   name: string;
@@ -87,9 +97,28 @@ export const bufferCopy = (
 });
 
 export const transportCopy = (
+  carrier: MapCarrier,
   connectionId: ConnectionId,
   translator: Translator = DEFAULT_TRANSLATOR
-): DescribedEntityCopy => ({
-  name: localized(translator, `entities.transport.${connectionId}.name`),
-  description: localized(translator, `entities.transport.${connectionId}.description`),
-});
+): DescribedEntityCopy => {
+  if (hasLocalized(translator, `entities.transport.${connectionId}.name`)) {
+    return {
+      name: localized(translator, `entities.transport.${connectionId}.name`),
+      description: localized(translator, `entities.transport.${connectionId}.description`),
+    };
+  }
+  // Player-built lines have no authored copy; name them from their room pair.
+  const connection = instance(carrier.map.connections, connectionId, "connection definition");
+  const keyRoot = connection.kind === "liquid_line" ? "generic.liquid" : "generic.gas";
+  const parameters = {
+    from: instance(PACK.rooms, connection.rooms[0], "room definition").code,
+    to: instance(PACK.rooms, connection.rooms[1], "room definition").code,
+  };
+  return {
+    name: translator.text(`entities.transport.${keyRoot}.name` as LocaleKey, parameters as never),
+    description: translator.text(
+      `entities.transport.${keyRoot}.description` as LocaleKey,
+      parameters as never
+    ),
+  };
+};

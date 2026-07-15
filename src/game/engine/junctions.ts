@@ -73,8 +73,8 @@ const gasJunctionDemanded = (
   roomId: RoomId,
   gameDefinition: GameDefinition
 ): boolean =>
-  processLineIds(gameDefinition, "gas_line").some((runId) => {
-    const definition = gasLineDefinition(gameDefinition, runId);
+  processLineIds(state, "gas_line").some((runId) => {
+    const definition = gasLineDefinition(state, runId);
     if (definition?.direction[0] !== roomId) return false;
     const conduit = gasConduitState(state, runId);
     return conduit.installed && conduit.enabled;
@@ -85,8 +85,8 @@ const liquidJunctionDemanded = (
   roomId: RoomId,
   gameDefinition: GameDefinition
 ): boolean =>
-  processLineIds(gameDefinition, "liquid_line").some((runId) => {
-    const definition = liquidLineDefinition(gameDefinition, runId);
+  processLineIds(state, "liquid_line").some((runId) => {
+    const definition = liquidLineDefinition(state, runId);
     if (definition?.direction[0] !== roomId) return false;
     const conduit = liquidConduitState(state, runId);
     return conduit.installed && conduit.enabled;

@@ -5,6 +5,7 @@ import type { GameState, RoomId, SpeciesId } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
 import { MapChrome } from "./gameMap/MapChrome";
 import { MapScene } from "./gameMap/MapScene";
+import { useGameStore } from "../application/store";
 import { useMapCamera, useMapInteractions } from "./gameMap/useMapCamera";
 import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
 
@@ -43,6 +44,7 @@ export const GameMap = ({
 }: GameMapProps) => {
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
+  const pipePreview = useGameStore((state) => state.pipePreview);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
   const camera = useMapCamera(game.map);
@@ -81,6 +83,7 @@ export const GameMap = ({
         onSelectRoom={onSelectRoom}
         pipeDragSourceRoomId={pipeDragSourceRoomId}
         pipeMode={pipeMode}
+        pipePreview={pipePreview}
         selectedRoomId={selectedRoomId}
         selectedSpecies={selectedSpecies}
       />

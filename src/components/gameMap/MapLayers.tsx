@@ -6,8 +6,34 @@ import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facili
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun } from "./transportGraphics";
 import { connectionRoomPair } from "../../presentation/defaultGame";
+import type { PipePreview } from "../../application/storeTypes";
+import { gridPathToWorldPath } from "../../game/spatial";
+import { mapViewFor } from "./mapGeometry";
 
 export { IncidentLayer } from "./IncidentLayer";
+
+/** The routed proposal for a pending build: visible, cheap, and clearly not built yet. */
+export const GhostRouteLayer = ({ game, preview }: { game: GameState; preview: PipePreview }) => {
+  const draw = useCallback(
+    (graphics: Graphics) => {
+      graphics.clear();
+      const view = mapViewFor(game.map);
+      for (const [index, option] of preview.options.entries()) {
+        const points = view.worldPathToMap(gridPathToWorldPath(option.route));
+        const first = points[0];
+        if (!first) continue;
+        const color = option.kind === "gas_line" ? 0x6ad9b4 : 0x50b7f6;
+        graphics.moveTo(first.x, first.y + index * 3);
+        for (const point of points.slice(1)) graphics.lineTo(point.x, point.y + index * 3);
+        graphics.stroke({ color, width: 2.5, alpha: option.buildable ? 0.55 : 0.22 });
+        const last = points.at(-1);
+        if (last) graphics.circle(last.x, last.y + index * 3, 4).fill({ color, alpha: 0.6 });
+      }
+    },
+    [game.map, preview]
+  );
+  return <pixiGraphics draw={draw} eventMode="none" />;
+};
 
 export const MapBackdrop = ({ game }: { game: GameState }) => {
   const draw = useCallback((graphics: Graphics) => drawBackdrop(graphics, game.map), [game.map]);
@@ -95,7 +121,7 @@ export const TransportNetwork = ({
           hovered={
             hoveredRunId === runId ||
             (pipeDragSourceRoomId !== null &&
-              connectionRoomPair(runId).includes(pipeDragSourceRoomId))
+              connectionRoomPair(game, runId).includes(pipeDragSourceRoomId))
           }
           onHover={onHover}
           runId={runId}

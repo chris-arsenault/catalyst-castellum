@@ -34,7 +34,7 @@ import type {
   WaveEntry,
   WorldPoint,
 } from "./types";
-import type { ArchitecturalConnection, WorldMap } from "./world/map";
+import type { ArchitecturalConnection, LineSpecs, WorldMap } from "./world/map";
 
 export type ScenarioRoomEquipment = Partial<
   Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
@@ -123,6 +123,7 @@ export interface GamePackSource {
   readonly packId: string;
   readonly contentVersion: number;
   readonly map: WorldMap;
+  readonly lineSpecs: LineSpecs;
   readonly roomOrder: readonly RoomId[];
   readonly rooms: Readonly<Record<RoomId, RoomDefinition>>;
   readonly levelOrder: readonly LevelId[];

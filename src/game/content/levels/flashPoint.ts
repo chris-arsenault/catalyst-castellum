@@ -19,6 +19,19 @@ const secondChamberAvailability = availability({
   gasSources: ["starter_gas_header"],
 });
 
+/** The exam opens one unauthored pair: the player may route a brand-new duct. */
+const corridorExamAvailability = availability({
+  equipment: ["gas_agitator"],
+  gasLines: [
+    "gas:core__furnace",
+    "gas:core__switchyard",
+    "gas:core__reservoir",
+    "gas:core__gallery",
+    "gas:reservoir__washlock",
+  ],
+  gasSources: ["starter_gas_header"],
+});
+
 export const FLASH_POINT_LEVEL: LevelDefinition = {
   id: "flash_point",
   number: 1,
@@ -73,7 +86,7 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
         ...enemySequence(5, "floater", 5, 2.8, 2.2),
         ...enemySequence(5, "bellows", 8, 3, 1.7),
       ].sort((left, right) => left.at - right.at),
-      availability: secondChamberAvailability,
+      availability: corridorExamAvailability,
     },
   ],
 };

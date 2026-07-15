@@ -38,6 +38,7 @@ const CLEAN_TUTORIAL_UI = {
   equipmentBuildTarget: null,
   notice: null,
   pipeMode: false,
+  pipePreview: null,
 };
 
 const createLifecycleActions = (

@@ -85,6 +85,10 @@ export const ENTITY_MESSAGES = {
   "entities.buffers.cathode_header.name": "H₂ cathode header",
   "entities.buffers.cell_liquor.name": "NaOH cell-liquor outlet",
 
+  "entities.transport.generic.gas.name": "{from}–{to} gas duct",
+  "entities.transport.generic.gas.description": "A routed gas duct between {from} and {to}.",
+  "entities.transport.generic.liquid.name": "{from}–{to} pipe",
+  "entities.transport.generic.liquid.description": "A routed liquid pipe between {from} and {to}.",
   "entities.transport.gas:core__furnace.name": "Core–R-02 gas duct",
   "entities.transport.gas:core__furnace.description":
     "Feeds the Core starter-header mixture into R-02.",

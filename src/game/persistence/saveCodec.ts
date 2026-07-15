@@ -24,6 +24,7 @@ import {
   ROOM_REACTION_IDS,
   type GameState,
 } from "../types";
+import { validateWorldMap } from "../world/mapValidation";
 import { gameStateIsValid } from "../engine/stateValidation";
 import {
   LEGACY_GAS_LINE_IDS,
@@ -33,7 +34,6 @@ import {
   migrateV8Game,
   migrateV9Game,
 } from "./legacySaveMigrations";
-import { worldCatalogsFor } from "../world/catalogs";
 
 const roomIdSchema = z.string().min(1);
 const phaseSchema = z.enum(GAME_PHASES);
@@ -342,9 +342,81 @@ const packIdentitySchema = z.object({
   id: z.string().min(1),
   contentVersion: z.number().int().min(1),
 });
-const gameSchema = legacyV11GameSchema
-  .omit({ version: true })
-  .extend({ version: z.literal(12), pack: packIdentitySchema });
+
+const mapGridCellSchema = z.object({ column: z.number().int(), elevation: z.number().int() });
+const cellRectSchema = z.object({
+  column: z.number().int(),
+  elevation: z.number().int(),
+  width: z.number().int().min(1),
+  height: z.number().int().min(1),
+});
+const tapSchema = z.object({
+  capacity: z.number(),
+  includeRoomInventory: z.boolean(),
+  roomPortHeight: z.number(),
+  sourceIds: z.array(z.string().min(1)),
+});
+const mapRoomSchema = z.object({
+  id: roomIdSchema,
+  bounds: cellRectSchema,
+  socketCells: z.record(z.string(), mapGridCellSchema),
+  platformCells: z.array(mapGridCellSchema),
+  ladderCells: z.array(mapGridCellSchema),
+  taps: z.object({ gas: tapSchema, liquid: tapSchema }),
+  provenance: z.enum(["site", "hull"]),
+});
+const processLineSchema = z.object({
+  id: z.string().min(1),
+  kind: z.enum(["gas_line", "liquid_line"]),
+  rooms: z.tuple([roomIdSchema, roomIdSchema]),
+  direction: z.tuple([roomIdSchema, roomIdSchema]),
+  destinationKind: z.enum(["room", "gas_vent", "liquid_recovery"]),
+  actuator: z.enum(["fan", "pump", "passive"]),
+  actuatorHead: z.number(),
+  maxFlow: z.number(),
+  volumePerCell: z.number(),
+  buildCost: z.number(),
+  route: z.array(mapGridCellSchema).min(2),
+});
+const architecturalConnectionSchema = z.object({
+  id: z.string().min(1),
+  kind: z.enum(["passage", "ladder_shaft", "floor_hole", "door", "trapdoor", "core_door"]),
+  rooms: z.tuple([roomIdSchema, roomIdSchema]),
+  connectorCells: z.array(mapGridCellSchema).min(1),
+  endpoints: z.tuple([mapGridCellSchema, mapGridCellSchema]),
+  orientation: z.enum(["horizontal", "vertical"]),
+  sillElevation: z.number(),
+  aperture: z.number(),
+  gasConductance: z.number(),
+  liquidConductance: z.number(),
+  liquidMode: z.enum(["spill", "drain", "blocked"]),
+  defaultOpen: z.boolean(),
+  defaultSealed: z.boolean(),
+  sealGroupId: z.string().nullable(),
+  hostRoomId: roomIdSchema,
+});
+const worldMapSchema = z.object({
+  width: z.number().int().min(1),
+  height: z.number().int().min(1),
+  cellSize: z.number().min(1),
+  coreAnchor: mapGridCellSchema,
+  ringRadii: z.object({ inner: z.number(), middle: z.number() }),
+  entryCell: mapGridCellSchema,
+  coreBreachCell: mapGridCellSchema,
+  rooms: z.record(roomIdSchema, mapRoomSchema),
+  connections: z.record(z.string(), z.union([processLineSchema, architecturalConnectionSchema])),
+  utilityNodes: z.record(
+    z.string(),
+    z.object({ cell: mapGridCellSchema, hostRoomId: roomIdSchema })
+  ),
+});
+
+const gameSchema = legacyV11GameSchema.omit({ version: true }).extend({
+  version: z.literal(13),
+  pack: packIdentitySchema,
+  map: worldMapSchema,
+  mapRevision: z.number().int().min(0),
+});
 
 const saveEnvelopeSchema = z.object({
   format: z.literal("catalyst-castellum-save"),
@@ -433,19 +505,24 @@ export const encodeGame = (game: GameState, definition: GameDefinition): string 
   });
 };
 
-/**
- * World catalogs are pack-derived while topology is pack-static, so every decode path
- * rebuilds them from the definition instead of trusting the serialized copy.
- */
+/** Catalogs derive from whichever map the state carries; never trust the serialized copy. */
+const catalogsForMap = (map: GameState["map"]): GameState["world"] => ({
+  rooms: Object.keys(map.rooms),
+  connections: Object.keys(map.connections),
+});
+
+/** v13: the save owns the map (player edits diverge it from the pack). */
 const validGame = (game: GameState, definition: GameDefinition): GameState | null => {
-  const withCatalogs: GameState = {
-    ...game,
-    map: definition.map,
-    mapRevision: 0,
-    world: worldCatalogsFor(definition),
-  };
+  if (validateWorldMap(game.map).length > 0) return null;
+  const packRooms = Object.keys(definition.map.rooms).sort().join("|");
+  if (Object.keys(game.map.rooms).sort().join("|") !== packRooms) return null;
+  const withCatalogs: GameState = { ...game, world: catalogsForMap(game.map) };
   return gameStateIsValid(withCatalogs, definition) ? withCatalogs : null;
 };
+
+/** Legacy saves predate map edits: they run on the pack map. */
+const validLegacyGame = (game: GameState, definition: GameDefinition): GameState | null =>
+  validGame({ ...game, map: definition.map, mapRevision: 0 }, definition);
 
 const decodeCurrent = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = saveEnvelopeSchema.safeParse(parsed);
@@ -455,18 +532,18 @@ const decodeCurrent = (parsed: unknown, definition: GameDefinition): GameState |
     result.data.pack.contentVersion !== definition.contentVersion
   )
     return null;
-  return validGame(result.data.game as GameState, definition);
+  return validGame(result.data.game as unknown as GameState, definition);
 };
 
 const decodeV11 = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = legacyV11EnvelopeSchema.safeParse(parsed);
   if (!result.success) return null;
-  return validGame(
+  return validLegacyGame(
     {
       ...result.data.game,
-      version: 12,
+      version: 13,
       pack: { id: definition.packId, contentVersion: definition.contentVersion },
-    } as GameState,
+    } as unknown as GameState,
     definition
   );
 };
@@ -474,7 +551,7 @@ const decodeV11 = (parsed: unknown, definition: GameDefinition): GameState | nul
 const decodeV10 = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = legacyV10EnvelopeSchema.safeParse(parsed);
   return result.success
-    ? validGame(migrateV10Game(result.data.game, definition), definition)
+    ? validLegacyGame(migrateV10Game(result.data.game, definition), definition)
     : null;
 };
 
@@ -488,7 +565,7 @@ const decodeV9 = (parsed: unknown, definition: GameDefinition): GameState | null
 const decodeV8 = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = legacyV8EnvelopeSchema.safeParse(parsed);
   return result.success
-    ? validGame(
+    ? validLegacyGame(
         migrateV10Game(migrateV9Game(migrateV8Game(result.data.game, definition)), definition),
         definition
       )
@@ -497,7 +574,9 @@ const decodeV8 = (parsed: unknown, definition: GameDefinition): GameState | null
 
 const decodeV7 = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = legacyV7EnvelopeSchema.safeParse(parsed);
-  return result.success ? validGame(migrateV7Game(result.data.game, definition), definition) : null;
+  return result.success
+    ? validLegacyGame(migrateV7Game(result.data.game, definition), definition)
+    : null;
 };
 
 const decodeParsedGame = (parsed: unknown, definition: GameDefinition): GameState | null =>

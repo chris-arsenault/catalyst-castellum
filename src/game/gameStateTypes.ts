@@ -1,4 +1,4 @@
-import type { WorldMap } from "./world/map";
+import type { ProcessLineKind, WorldMap } from "./world/map";
 import type {
   DamageSourceId,
   EnemyState,
@@ -169,7 +169,7 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 12;
+  version: 13;
   pack: {
     id: string;
     contentVersion: number;
@@ -262,8 +262,8 @@ export type GameCommand =
   | { type: "toggle_equipment"; roomId: RoomId; socketId: EquipmentSocketId; enabled: boolean }
   | { type: "upgrade_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
   | { type: "dismantle_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
-  | { type: "build_transport"; connectionId: ConnectionId }
-  | { type: "dismantle_transport"; connectionId: ConnectionId }
+  | { type: "build_connection"; kind: ProcessLineKind; fromRoomId: RoomId; toRoomId: RoomId }
+  | { type: "dismantle_connection"; connectionId: ConnectionId }
   | { type: "charge_gas_source"; sourceId: GasSourceId }
   | { type: "charge_liquid_source"; sourceId: LiquidSourceId }
   | { type: "start_prime" }

@@ -129,7 +129,7 @@ const PhaseSection = ({
   runId: ConnectionId;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  const definition = lineDefinition(runId, phase);
+  const definition = lineDefinition(game, runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const conduit = phaseConduit(game, runId, phase);
   const amount = phaseAmount(game, runId, phase);
@@ -147,7 +147,7 @@ const PhaseSection = ({
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>
-          <strong>{transportCopy(runId, translator).name}</strong>
+          <strong>{transportCopy(game, runId, translator).name}</strong>
           <small>
             {roomDefinition(definition.direction[0]).code} →{" "}
             {roomDefinition(definition.direction[1]).code} ·{" "}
@@ -197,7 +197,7 @@ export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTool
   const { translator } = useGamePresentation();
   if (!runId) return null;
   const channels = transportRunChannels(game, runId);
-  const [fromRoom, toRoom] = connectionRoomPair(runId);
+  const [fromRoom, toRoom] = connectionRoomPair(game, runId);
   return (
     <aside className="transport-tooltip" data-testid="transport-tooltip">
       <header>

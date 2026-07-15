@@ -21,11 +21,11 @@ describe("map-derived facility geometry", () => {
     expect(facilityModelFor(clone)).toBe(facilityModelFor(state));
   });
 
-  it("restores the pack map and revision on decode until save v13 owns the map", () => {
+  it("round-trips the state's own map through the save (v13)", () => {
     const state = freshGame();
     const decoded = decodeGame(encodeGame(state, DEFAULT_GAME_DEFINITION), DEFAULT_GAME_DEFINITION);
     expect(decoded).not.toBeNull();
-    expect(decoded?.map).toBe(DEFAULT_GAME_DEFINITION.map);
+    expect(decoded?.map).toEqual(DEFAULT_GAME_DEFINITION.map);
     expect(decoded?.mapRevision).toBe(0);
   });
 });

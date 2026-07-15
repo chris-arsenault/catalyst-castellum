@@ -53,9 +53,10 @@ test("pipe mode dims the plant and drag-connecting rooms reports the routed stat
   await page.mouse.down();
   await page.mouse.move(furnace.x, furnace.y, { steps: 8 });
   await page.mouse.up();
-  await expect(page.getByTestId("notice-toast")).toContainText(
-    "Every route between CORE and R-02 is already built."
-  );
+  await expect(page.getByTestId("pipe-preview")).toContainText("CORE ⇄ R-02");
+  await expect(page.getByTestId("pipe-preview-build-gas_line")).toBeDisabled();
+  await page.getByTestId("pipe-preview-cancel").click();
+  await expect(page.getByTestId("pipe-preview")).toHaveCount(0);
 
   await page.getByTestId("pipe-board-close").click();
   await expect(page.getByTestId("game-map")).toHaveAttribute("data-pipe-mode", "false");
@@ -89,6 +90,7 @@ test("the first lesson exposes its route and complete equipment catalog", async 
 test("planning uses the same equipment and physical-conduit construction rules", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   await startGuidedTutorial(page);
   await skipGuidance(page);
   await page.getByTestId("pipe-mode-toggle").click();
@@ -101,9 +103,67 @@ test("planning uses the same equipment and physical-conduit construction rules",
   await page.mouse.down();
   await page.mouse.move(furnace.x, furnace.y, { steps: 8 });
   await page.mouse.up();
+  await expect(page.getByTestId("pipe-preview")).toBeVisible();
+  await page.getByTestId("pipe-preview-build-gas_line").click();
   await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toBeVisible();
   await page.getByTestId("pipe-board-close").click();
 
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await expect(page.getByText(/Gas agitator · Grade 1/)).toBeVisible();
+});
+
+test("an unauthored pair routes through preview and confirm at the corridor exam", async ({
+  page,
+}) => {
+  test.setTimeout(60_000);
+  const { DEFAULT_GAME_DEFINITION } = await import("../../src/game/config");
+  const { createScenarioGame } = await import("../../src/game/simulation");
+  const { encodeGame } = await import("../../src/game/persistence/saveCodec");
+  const state = createScenarioGame("flash_point");
+  const exam = DEFAULT_GAME_DEFINITION.levels.flash_point.rounds.at(-1);
+  if (!exam) throw new Error("flash_point has no rounds");
+  state.phase = "build";
+  state.matter = 200;
+  state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.flash_point.rounds.length - 1;
+  state.availability = {
+    equipment: [...exam.availability.equipment],
+    gasLines: [...exam.availability.gasLines],
+    liquidLines: [...exam.availability.liquidLines],
+    gasSources: [...exam.availability.gasSources],
+    liquidSources: [...exam.availability.liquidSources],
+  };
+  const encoded = encodeGame(state, DEFAULT_GAME_DEFINITION);
+  await page.addInitScript(
+    ({ save }) => {
+      window.localStorage.setItem(
+        "catalyst-castellum:save:slot-1:v1",
+        JSON.stringify({
+          version: 1,
+          savedAt: Date.now(),
+          game: save,
+          dismissedGuideIds: ["flash_point_ox1"],
+        })
+      );
+    },
+    { save: encoded }
+  );
+  await page.goto("/");
+  await page.getByTestId("load-save-slot-1").click();
+  await page.getByTestId("game-map").waitFor({ state: "visible" });
+
+  await page.getByTestId("pipe-mode-toggle").click();
+  const reservoir = await roomClientPoint(page, "reservoir");
+  const washlock = await roomClientPoint(page, "washlock");
+  await page.mouse.move(reservoir.x, reservoir.y);
+  await page.mouse.down();
+  await page.mouse.move(washlock.x, washlock.y, { steps: 8 });
+  await page.mouse.up();
+
+  await expect(page.getByTestId("pipe-preview")).toContainText("R-03 ⇄ R-06");
+  const buildGas = page.getByTestId("pipe-preview-build-gas_line");
+  await expect(buildGas).toBeEnabled();
+  await buildGas.click();
+  await expect(page.getByTestId("pipe-preview")).toHaveCount(0);
+  await expect(page.getByTestId("conduit-panel-gas:reservoir__washlock")).toBeVisible();
+  await expect(page.getByTestId("conduit-control-gas:reservoir__washlock")).toBeVisible();
 });

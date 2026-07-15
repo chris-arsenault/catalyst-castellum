@@ -114,6 +114,18 @@ export interface WorldMap {
   utilityNodes: Partial<Record<FacilityUtilityNodeId, MapUtilityNode>>;
 }
 
+/** Parameters for player-built lines of a kind; cost scales with routed length. */
+export interface LineSpec {
+  actuator: "fan" | "pump" | "passive";
+  actuatorHead: number;
+  maxFlow: number;
+  volumePerCell: number;
+  baseCost: number;
+  costPerCell: number;
+}
+
+export type LineSpecs = Record<ProcessLineKind, LineSpec>;
+
 export const isProcessLine = (connection: MapConnection): connection is ProcessLineConnection =>
   connection.kind === "gas_line" || connection.kind === "liquid_line";
 
@@ -131,4 +143,18 @@ export const architecturalConnections = (map: WorldMap): ArchitecturalConnection
 export const processLineId = (kind: ProcessLineKind, a: RoomId, b: RoomId): ConnectionId => {
   const [first, second] = a <= b ? [a, b] : [b, a];
   return `${kind === "gas_line" ? "gas" : "liquid"}:${first}__${second}`;
+};
+
+/** Inverse of processLineId; null when the id is not a canonical pair id. */
+export const parseProcessLineId = (
+  id: ConnectionId
+): { kind: ProcessLineKind; rooms: readonly [RoomId, RoomId] } | null => {
+  const match = /^(gas|liquid):([^_]+(?:_[^_]+)*)__(.+)$/.exec(id);
+  if (!match) return null;
+  const [, prefix, first, second] = match;
+  if (!prefix || !first || !second) return null;
+  return {
+    kind: prefix === "gas" ? "gas_line" : "liquid_line",
+    rooms: [first, second],
+  };
 };

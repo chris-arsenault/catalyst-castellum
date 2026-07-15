@@ -23,7 +23,12 @@ export {
 } from "../game/config";
 
 import { DEFAULT_GAME_DEFINITION as PACK } from "../game/config";
-import { instance, maybeLineDefinition, type ProcessLineView } from "../game/world/instances";
+import {
+  instance,
+  maybeLineDefinition,
+  type MapCarrier,
+  type ProcessLineView,
+} from "../game/world/instances";
 import type { RoomDefinition, RoomId, TransportPhase } from "../game/types";
 import type { MapConnection } from "../game/world/map";
 
@@ -31,12 +36,15 @@ import type { MapConnection } from "../game/world/map";
 export const roomDefinition = (roomId: string): RoomDefinition =>
   instance(PACK.rooms, roomId, "room definition");
 
-export const connectionDefinition = (id: string): MapConnection =>
-  instance(PACK.map.connections, id, "connection definition");
+export const connectionDefinition = (carrier: MapCarrier, id: string): MapConnection =>
+  instance(carrier.map.connections, id, "connection definition");
 
 /** Per-phase process-line view (ADR-0005); null when the pair has no line of this phase. */
-export const lineDefinition = (id: string, phase: TransportPhase): ProcessLineView | null =>
-  maybeLineDefinition(PACK, id, phase);
+export const lineDefinition = (
+  carrier: MapCarrier,
+  id: string,
+  phase: TransportPhase
+): ProcessLineView | null => maybeLineDefinition(carrier, id, phase);
 
-export const connectionRoomPair = (id: string): readonly [RoomId, RoomId] =>
-  connectionDefinition(id).rooms;
+export const connectionRoomPair = (carrier: MapCarrier, id: string): readonly [RoomId, RoomId] =>
+  connectionDefinition(carrier, id).rooms;

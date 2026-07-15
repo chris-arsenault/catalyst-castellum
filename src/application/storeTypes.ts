@@ -1,5 +1,14 @@
+import type { ProcessLineKind } from "../game/world/map";
 import type { StoreApi } from "zustand";
-import type { EquipmentSocketId, GameCommand, GameState, RoomId } from "../game/types";
+import type {
+  CommandRejectionCode,
+  ConnectionId,
+  EquipmentSocketId,
+  GameCommand,
+  GameState,
+  GridCell,
+  RoomId,
+} from "../game/types";
 import type { SaveSlotCatalog, SaveSlotId } from "./saveSlots";
 import type { GameRuntime } from "../game/runtime";
 import type { GamePresentation } from "../presentation/services";
@@ -29,6 +38,22 @@ export interface EquipmentBuildTarget {
   socketId: EquipmentSocketId;
 }
 
+/** A drag's routed proposal: nothing is built until the player confirms an option. */
+export interface PipePreviewOption {
+  kind: ProcessLineKind;
+  connectionId: ConnectionId;
+  route: readonly GridCell[];
+  cost: number;
+  buildable: boolean;
+  reason: CommandRejectionCode | null;
+}
+
+export interface PipePreview {
+  fromRoomId: RoomId;
+  toRoomId: RoomId;
+  options: PipePreviewOption[];
+}
+
 export interface UiSlice {
   selectedRoomId: RoomId;
   acknowledgedStageIntroIds: string[];
@@ -39,9 +64,11 @@ export interface UiSlice {
   dismissedGuideIds: string[];
   tutorialSessionRevision: number;
   pipeMode: boolean;
+  pipePreview: PipePreview | null;
   acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
+  setPipePreview: (preview: PipePreview | null) => void;
   showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;

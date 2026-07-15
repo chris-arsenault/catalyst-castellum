@@ -2,6 +2,8 @@ import { Application, extend } from "@pixi/react";
 import { Container, Graphics, Text } from "pixi.js";
 import { ROOM_ORDER } from "../../presentation/defaultGame";
 import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
+import type { PipePreview } from "../../application/storeTypes";
+import { GhostRouteLayer } from "./MapLayers";
 import { EnemyNode } from "./EnemyNode";
 import { DamageNumberLayer } from "./DamageNumberLayer";
 import { EquipmentLayer, type EquipmentHover } from "./EquipmentLayer";
@@ -35,6 +37,7 @@ export interface MapSceneProps {
   onSelectRoom: (roomId: RoomId) => void;
   pipeDragSourceRoomId: RoomId | null;
   pipeMode: boolean;
+  pipePreview: PipePreview | null;
   selectedRoomId: RoomId;
   selectedSpecies: SpeciesId | null;
 }
@@ -53,6 +56,7 @@ export const MapScene = ({
   onSelectRoom,
   pipeDragSourceRoomId,
   pipeMode,
+  pipePreview,
   selectedRoomId,
   selectedSpecies,
 }: MapSceneProps) => (
@@ -88,6 +92,7 @@ export const MapScene = ({
         <FacilityCorridors game={game} />
         <FacilityDoors game={game} />
       </pixiContainer>
+      {pipePreview && <GhostRouteLayer game={game} preview={pipePreview} />}
       <TransportNetwork
         game={game}
         hoveredRunId={hoveredRunId}

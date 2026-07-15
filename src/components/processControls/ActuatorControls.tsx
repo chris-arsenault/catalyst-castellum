@@ -269,7 +269,8 @@ export const ConduitActuator = ({
   phase: TransportPhase;
   runId: ConnectionId;
 }) => {
-  const definition = lineDefinition(runId, phase);
+  const game = useGameStore((state) => state.game);
+  const definition = lineDefinition(game, runId, phase);
   if (!definition) return null;
   return <InstalledConduitActuator definition={definition} phase={phase} runId={runId} />;
 };
@@ -305,7 +306,7 @@ const InstalledConduitActuator = ({
   return (
     <div className={`actuator-row ${conduit.blocked ? "blocked" : ""}`}>
       <div className="actuator-copy">
-        <strong>{transportCopy(runId, translator).name}</strong>
+        <strong>{transportCopy(game, runId, translator).name}</strong>
         <small>
           {translator.text("ui.process.conduitSummary", {
             from,

@@ -213,12 +213,12 @@ The main game: randomized maps, no tutorial.
 
 ### Decisions needing your input
 
-| Where | Decision you own                                                                    |
-| ----- | ----------------------------------------------------------------------------------- |
-| M3    | Route presentation: pure auto-routing vs preview-and-confirm before a build commits |
-| M5    | v1 module catalog: sizes, socket counts, costs of launch room modules               |
-| M5    | Run shape v1: tutorial run length; fixed-length vs endless main-game runs           |
-| M7    | Chunk vocabulary v1: site archetypes and feedstock spread for the first generator   |
+| Where | Decision you own                                                                                                                          |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| M3    | DECIDED (2026-07-15): preview-and-confirm — drag shows the ghost route with its length-scaled cost; the build commits on explicit confirm |
+| M5    | v1 module catalog: sizes, socket counts, costs of launch room modules                                                                     |
+| M5    | Run shape v1: tutorial run length; fixed-length vs endless main-game runs                                                                 |
+| M7    | Chunk vocabulary v1: site archetypes and feedstock spread for the first generator                                                         |
 
 This plan is the single source of truth for the walking-castellum work. Execute a phase
 by running `plan-phase` on it to expand milestone items into steps.

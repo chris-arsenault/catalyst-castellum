@@ -11,7 +11,6 @@ import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
-import { connectionAvailable } from "./game/queries";
 import { type RoomId } from "./game/types";
 import {
   useApplicationInitialization,
@@ -20,9 +19,8 @@ import {
 } from "./application/hooks";
 import { useGameStore } from "./application/store";
 import { useGamePresentation } from "./application/presentationContext";
-import { conduitState } from "./game/world/instances";
 import { roomDefinition } from "./presentation/defaultGame";
-import { processLineId } from "./game/world/map";
+import { planPipePreview } from "./presentation/pipePlanning";
 
 const GuidedTutorial = lazy(async () => ({
   default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
@@ -35,32 +33,24 @@ const MapStage = () => {
   const selectRoom = useGameStore((state) => state.selectRoom);
   const pipeMode = useGameStore((state) => state.pipeMode);
   const setPipeMode = useGameStore((state) => state.setPipeMode);
-  const dispatch = useGameStore((state) => state.dispatch);
   const showNotice = useGameStore((state) => state.showNotice);
+  const setPipePreview = useGameStore((state) => state.setPipePreview);
   const togglePipeMode = useCallback(() => setPipeMode(!pipeMode), [pipeMode, setPipeMode]);
   const connectRooms = useCallback(
     (from: RoomId, to: RoomId) => {
-      const candidates = (["gas_line", "liquid_line"] as const)
-        .map((kind) => processLineId(kind, from, to))
-        .filter((id) => game.world.connections.includes(id));
-      const buildable = candidates.filter(
-        (id) => connectionAvailable(game, id) && !conduitState(game, id).installed
-      );
-      if (buildable.length === 0) {
-        const parameters = {
-          from: roomDefinition(from).code,
-          to: roomDefinition(to).code,
-        };
+      const preview = planPipePreview(game, from, to);
+      if (!preview) {
         showNotice(
-          candidates.length > 0
-            ? translator.text("ui.pipes.alreadyRouted", parameters)
-            : translator.text("ui.pipes.noRoute", parameters)
+          translator.text("ui.pipes.noRoute", {
+            from: roomDefinition(from).code,
+            to: roomDefinition(to).code,
+          })
         );
         return;
       }
-      for (const connectionId of buildable) dispatch({ type: "build_transport", connectionId });
+      setPipePreview(preview);
     },
-    [dispatch, game, showNotice, translator]
+    [game, setPipePreview, showNotice, translator]
   );
   return (
     <div className="map-stage-wrap">
