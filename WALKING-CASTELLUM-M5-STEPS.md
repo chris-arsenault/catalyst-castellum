@@ -73,3 +73,25 @@ Shape decisions taken from the plan and ADRs (no new user decisions):
    - UI: graft mode on the pipe-board pattern (hardpoint markers, module panel,
      snap placement, preview-confirm like pipes).
    - Verify: unit + e2e for the graft flow; `make ci` green; full e2e green.
+
+---
+
+## Execution outcome (2026-07-15)
+
+M5 shipped: room identity on the Map (step 1); the open module catalog with the
+archetype trio and hardpoint data + invariants (steps 2-3); graft_module /
+dismantle_module map-edit commands with deterministic placement and ids (step 3); run
+outcome and travel/dock phases (step 4); the graft-mode UI on the pipe-board
+preview-confirm pattern (step 6); and the run-loop carryover proof — a graft grafted on
+one site travels, docks, and arrives on the next site with its contents through the real
+start_next_level/dock_at_site commands (step 6). The authored producer now strips the
+incoming hull's rooms from a site before embedding, so the empty-hull tutorial stays
+byte-identical while a real hull docks cleanly.
+
+**Deferred to M6:** the `SiteDefinition`-replaces-`LevelDefinition` rename (step 5) and
+the salvage economy. The run loop already works through the authored producer over
+LevelDefinitions, and M6 re-authors the tutorial as sites — the natural home for the
+rename. The shipped Flash Point tutorial has no seed hull, so grafting is unreachable
+there until M6 gives it one (the seed-hull shape is the M6 user decision); the loop and
+graft carryover are proven now on a seeded-hull save and in the harness, exactly as M4
+proved hull carryover.
