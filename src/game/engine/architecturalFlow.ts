@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import { architecturalConnections } from "../world/map";
 import type { GameDefinition } from "../definitionTypes";
 import {
@@ -58,7 +59,10 @@ const gasZoneForEndpoint = (
 ): GasZone => {
   const roomId = portal.rooms[endpointIndex] as string;
   return gasZoneForPort(
-    definition.facility.roomPortHeight(roomId, portal.endpoints[endpointIndex].elevation)
+    facilityModelForMap(definition.map).roomPortHeight(
+      roomId,
+      portal.endpoints[endpointIndex].elevation
+    )
   );
 };
 

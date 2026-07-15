@@ -67,7 +67,7 @@ export const MapScene = ({
   >
     <pixiContainer x={camera.x} y={camera.y} scale={camera.zoom}>
       <pixiContainer alpha={pipeMode ? 0.32 : 1}>
-        <MapBackdrop />
+        <MapBackdrop game={game} />
       </pixiContainer>
       <pixiContainer alpha={pipeMode ? 0.55 : 1}>
         {ROOM_ORDER.map((roomId) => (
@@ -85,7 +85,7 @@ export const MapScene = ({
         ))}
       </pixiContainer>
       <pixiContainer alpha={pipeMode ? 0.3 : 1}>
-        <FacilityCorridors />
+        <FacilityCorridors game={game} />
         <FacilityDoors game={game} />
       </pixiContainer>
       <TransportNetwork
@@ -103,7 +103,7 @@ export const MapScene = ({
         <MapLabelLayer game={game} selectedRoomId={selectedRoomId} />
         <IncidentLayer game={game} />
         {game.enemies.map((enemy) => (
-          <EnemyNode key={enemy.id} enemy={enemy} onHover={onHoverEnemy} />
+          <EnemyNode key={enemy.id} enemy={enemy} map={game.map} onHover={onHoverEnemy} />
         ))}
         <DamageNumberLayer game={game} />
       </pixiContainer>

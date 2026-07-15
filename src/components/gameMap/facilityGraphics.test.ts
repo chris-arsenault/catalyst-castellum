@@ -2,6 +2,7 @@ import { Graphics } from "pixi.js";
 import { describe, expect, it, vi } from "vitest";
 import { facilityCells, initialPortalStates } from "../../game/config";
 import { drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
+import { WORLD_MAP } from "../../game/content/worldMap";
 
 describe("facility architecture rendering", () => {
   it("draws canonical shell, platform, ladder, and opening geometry", () => {
@@ -15,7 +16,7 @@ describe("facility architecture rendering", () => {
     const platforms = cells.filter(({ terrain }) => terrain === "platform").length;
     const ladders = cells.filter(({ terrain }) => terrain === "ladder").length;
 
-    drawFacilityCorridors(graphics);
+    drawFacilityCorridors(graphics, WORLD_MAP);
 
     expect(clear).toHaveBeenCalledOnce();
     expect(rect.mock.calls.length).toBeGreaterThanOrEqual(coreShells + platforms);
@@ -30,7 +31,7 @@ describe("facility architecture rendering", () => {
     const moveTo = vi.spyOn(graphics, "moveTo");
     const stroke = vi.spyOn(graphics, "stroke");
 
-    drawFacilityDoors(graphics, initialPortalStates());
+    drawFacilityDoors(graphics, WORLD_MAP, initialPortalStates());
 
     expect(clear).toHaveBeenCalledOnce();
     expect(roundRect).toHaveBeenCalledTimes(2);

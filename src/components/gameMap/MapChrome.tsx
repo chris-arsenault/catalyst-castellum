@@ -10,7 +10,7 @@ import {
   type ConnectionId,
 } from "../../game/types";
 import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
-import { FIT_ZOOM } from "./mapGeometry";
+import { mapViewFor } from "./mapGeometry";
 import { TransportTooltip } from "./TransportTooltip";
 import { RoomTooltip } from "./RoomTooltip";
 import { EquipmentTooltip } from "./EquipmentTooltip";
@@ -64,12 +64,13 @@ const MaterialFlowControl = ({ selectedSpecies, onSelectSpecies }: MaterialFlowC
 };
 
 interface CameraControlsProps {
+  fitZoom: number;
   zoom: number;
   onReset: () => void;
   onZoom: (factor: number) => void;
 }
 
-const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => {
+const CameraControls = ({ fitZoom, zoom, onReset, onZoom }: CameraControlsProps) => {
   const { formatters, translator } = useGamePresentation();
   return (
     <div className="map-camera-controls" aria-label={translator.text("ui.map.camera")}>
@@ -83,7 +84,7 @@ const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => {
       >
         <Minus size={14} />
       </button>
-      <strong>{formatters.percent(zoom / FIT_ZOOM, 0)}</strong>
+      <strong>{formatters.percent(zoom / fitZoom, 0)}</strong>
       <button
         type="button"
         aria-label={translator.text("ui.map.camera.zoomIn")}
@@ -222,7 +223,12 @@ export const MapChrome = ({
           {translator.text("ui.map.pipes.hint")}
         </p>
       )}
-      <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
+      <CameraControls
+        fitZoom={mapViewFor(game.map).fitZoom}
+        zoom={zoom}
+        onReset={onResetCamera}
+        onZoom={onZoom}
+      />
       <MapTooltips
         game={game}
         hoveredCellOutletId={hoveredCellOutletId}

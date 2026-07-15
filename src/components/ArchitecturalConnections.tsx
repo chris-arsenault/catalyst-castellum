@@ -1,5 +1,4 @@
 import { architecturalConnections } from "../game/world/map";
-import { FACILITY_MAP } from "../presentation/defaultGame";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { FacilityPortalDefinition, GameState, RoomId } from "../game/types";
@@ -90,7 +89,7 @@ export const ArchitecturalConnections = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const portals = architecturalConnections(FACILITY_MAP).filter((portal) =>
+  const portals = architecturalConnections(game.map).filter((portal) =>
     portal.rooms.includes(roomId)
   );
   if (portals.length === 0) return null;

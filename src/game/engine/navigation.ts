@@ -1,6 +1,6 @@
 import { cell, cellKey } from "../spatial";
-import { architecturalConnections } from "../world/map";
-import type { GameDefinition } from "../definitionTypes";
+import { architecturalConnections, type WorldMap } from "../world/map";
+import { facilityModelForMap } from "../world/derivedModel";
 import type { EnemyLocomotionMode, EnemyPathStep, FacilityPortalState, GridCell } from "../types";
 
 interface NavigationNeighbor {
@@ -18,17 +18,17 @@ const canEnterCell = (
   target: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
   allowCoreBreach: boolean,
-  definition: GameDefinition
+  map: WorldMap
 ): boolean =>
-  definition.facility.cellIsTraversable(target, portalStates) ||
-  (allowCoreBreach && sameCell(target, definition.map.coreBreachCell));
+  facilityModelForMap(map).cellIsTraversable(target, portalStates) ||
+  (allowCoreBreach && sameCell(target, map.coreBreachCell));
 
 const connectorMode = (
   target: GridCell,
   fallback: EnemyLocomotionMode,
-  definition: GameDefinition
+  map: WorldMap
 ): EnemyLocomotionMode => {
-  const terrain = definition.facility.cellDefinition(target).terrain;
+  const terrain = facilityModelForMap(map).cellDefinition(target).terrain;
   if (terrain === "door") return "door";
   return fallback;
 };
@@ -37,16 +37,16 @@ const flyingNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
   allowCoreBreach: boolean,
-  definition: GameDefinition
+  map: WorldMap
 ): NavigationNeighbor[] =>
   CARDINAL_DIRECTIONS.flatMap((direction) => {
     const target = cell(current.column + direction.column, current.elevation + direction.elevation);
-    if (!canEnterCell(target, portalStates, allowCoreBreach, definition)) return [];
+    if (!canEnterCell(target, portalStates, allowCoreBreach, map)) return [];
     return [
       {
         cell: target,
-        mode: connectorMode(target, "flying", definition),
-        portalId: definition.facility.cellDefinition(target).portalId,
+        mode: connectorMode(target, "flying", map),
+        portalId: facilityModelForMap(map).cellDefinition(target).portalId,
       },
     ];
   });
@@ -54,15 +54,15 @@ const flyingNeighbors = (
 const fallingNeighbor = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  definition: GameDefinition
+  map: WorldMap
 ): NavigationNeighbor[] => {
   const below = cell(current.column, current.elevation - 1);
-  if (!definition.facility.cellIsTraversable(below, portalStates)) return [];
+  if (!facilityModelForMap(map).cellIsTraversable(below, portalStates)) return [];
   return [
     {
       cell: below,
       mode: "falling",
-      portalId: definition.facility.cellDefinition(below).portalId,
+      portalId: facilityModelForMap(map).cellDefinition(below).portalId,
     },
   ];
 };
@@ -71,19 +71,19 @@ const horizontalNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
   allowCoreBreach: boolean,
-  definition: GameDefinition
+  map: WorldMap
 ): NavigationNeighbor[] =>
   [-1, 1].flatMap((direction) => {
     const target = cell(current.column + direction, current.elevation);
-    if (!canEnterCell(target, portalStates, allowCoreBreach, definition)) return [];
-    const targetTerrain = definition.facility.cellDefinition(target).terrain;
+    if (!canEnterCell(target, portalStates, allowCoreBreach, map)) return [];
+    const targetTerrain = facilityModelForMap(map).cellDefinition(target).terrain;
     const targetSupported =
-      targetTerrain === "ladder" || definition.facility.cellHasSupport(target, portalStates);
+      targetTerrain === "ladder" || facilityModelForMap(map).cellHasSupport(target, portalStates);
     return [
       {
         cell: target,
-        mode: targetSupported ? connectorMode(target, "walking", definition) : "falling",
-        portalId: definition.facility.cellDefinition(target).portalId,
+        mode: targetSupported ? connectorMode(target, "walking", map) : "falling",
+        portalId: facilityModelForMap(map).cellDefinition(target).portalId,
       },
     ];
   });
@@ -91,17 +91,17 @@ const horizontalNeighbors = (
 const ladderNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  definition: GameDefinition
+  map: WorldMap
 ): NavigationNeighbor[] =>
   [-1, 1].flatMap((direction) => {
     const target = cell(current.column, current.elevation + direction);
-    if (!definition.facility.cellIsTraversable(target, portalStates)) return [];
-    if (definition.facility.cellDefinition(target).terrain !== "ladder") return [];
+    if (!facilityModelForMap(map).cellIsTraversable(target, portalStates)) return [];
+    if (facilityModelForMap(map).cellDefinition(target).terrain !== "ladder") return [];
     return [
       {
         cell: target,
         mode: "climbing",
-        portalId: definition.facility.cellDefinition(target).portalId,
+        portalId: facilityModelForMap(map).cellDefinition(target).portalId,
       },
     ];
   });
@@ -110,15 +110,15 @@ const groundNeighbors = (
   current: GridCell,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
   allowCoreBreach: boolean,
-  definition: GameDefinition
+  map: WorldMap
 ): NavigationNeighbor[] => {
-  const cellDefinition = definition.facility.cellDefinition(current);
+  const cellDefinition = facilityModelForMap(map).cellDefinition(current);
   const onLadder = cellDefinition.terrain === "ladder";
-  const supported = onLadder || definition.facility.cellHasSupport(current, portalStates);
-  if (!supported) return fallingNeighbor(current, portalStates, definition);
+  const supported = onLadder || facilityModelForMap(map).cellHasSupport(current, portalStates);
+  if (!supported) return fallingNeighbor(current, portalStates, map);
   return [
-    ...horizontalNeighbors(current, portalStates, allowCoreBreach, definition),
-    ...(onLadder ? ladderNeighbors(current, portalStates, definition) : []),
+    ...horizontalNeighbors(current, portalStates, allowCoreBreach, map),
+    ...(onLadder ? ladderNeighbors(current, portalStates, map) : []),
   ];
 };
 
@@ -157,11 +157,9 @@ export interface EnemyPathTransitionOptions {
   step: EnemyPathStep;
 }
 
-const openTopologyPortalStates = (
-  definition: GameDefinition
-): Record<string, FacilityPortalState> =>
+const openTopologyPortalStates = (map: WorldMap): Record<string, FacilityPortalState> =>
   Object.fromEntries(
-    architecturalConnections(definition.map).map((portal) => [
+    architecturalConnections(map).map((portal) => [
       portal.id,
       { open: true, sealed: false, lastGasFlow: 0, lastLiquidFlow: 0 },
     ])
@@ -170,13 +168,13 @@ const openTopologyPortalStates = (
 /** Validate persisted locomotion with the same neighbor policy used by live pathfinding. */
 export const enemyPathTransitionIsLegal = (
   { flying, previous, step }: EnemyPathTransitionOptions,
-  definition: GameDefinition
+  map: WorldMap
 ): boolean => {
-  const portalStates = openTopologyPortalStates(definition);
-  const allowCoreBreach = sameCell(step.cell, definition.map.coreBreachCell);
+  const portalStates = openTopologyPortalStates(map);
+  const allowCoreBreach = sameCell(step.cell, map.coreBreachCell);
   const neighbors = flying
-    ? flyingNeighbors(previous.cell, portalStates, allowCoreBreach, definition)
-    : groundNeighbors(previous.cell, portalStates, allowCoreBreach, definition);
+    ? flyingNeighbors(previous.cell, portalStates, allowCoreBreach, map)
+    : groundNeighbors(previous.cell, portalStates, allowCoreBreach, map);
   return neighbors.some(
     (neighbor) =>
       sameCell(neighbor.cell, step.cell) &&
@@ -192,11 +190,11 @@ interface EnemyPathSearchOptions extends EnemyPathOptions {
 
 const searchEnemyPath = (
   { flying, portalStates, start, goal }: EnemyPathSearchOptions,
-  definition: GameDefinition
+  map: WorldMap
 ): EnemyPathStep[] => {
-  const allowCoreBreach = sameCell(goal, definition.map.coreBreachCell);
-  if (!definition.facility.cellIsTraversable(start, portalStates)) return [];
-  if (!canEnterCell(goal, portalStates, allowCoreBreach, definition)) return [];
+  const allowCoreBreach = sameCell(goal, map.coreBreachCell);
+  if (!facilityModelForMap(map).cellIsTraversable(start, portalStates)) return [];
+  if (!canEnterCell(goal, portalStates, allowCoreBreach, map)) return [];
   const queue: GridCell[] = [{ ...start }];
   const visited = new Set([cellKey(start)]);
   const previous = new Map<string, { from: string; node: SearchNode }>();
@@ -205,8 +203,8 @@ const searchEnemyPath = (
     const current = queue[cursor] as GridCell;
     if (sameCell(current, goal)) return reconstructPath(start, goal, previous);
     const neighbors = flying
-      ? flyingNeighbors(current, portalStates, allowCoreBreach, definition)
-      : groundNeighbors(current, portalStates, allowCoreBreach, definition);
+      ? flyingNeighbors(current, portalStates, allowCoreBreach, map)
+      : groundNeighbors(current, portalStates, allowCoreBreach, map);
     for (const neighbor of neighbors) {
       const key = cellKey(neighbor.cell);
       if (visited.has(key)) continue;
@@ -222,23 +220,20 @@ const searchEnemyPath = (
 };
 
 /** Deterministic breadth-first navigation over real facility cells and movement rules. */
-export const findEnemyPath = (
-  options: EnemyPathOptions,
-  definition: GameDefinition
-): EnemyPathStep[] =>
+export const findEnemyPath = (options: EnemyPathOptions, map: WorldMap): EnemyPathStep[] =>
   searchEnemyPath(
     {
       ...options,
-      start: definition.map.entryCell,
-      goal: definition.map.coreBreachCell,
+      start: map.entryCell,
+      goal: map.coreBreachCell,
     },
-    definition
+    map
   );
 
 export const findEnemyPathBetween = (
   options: EnemyPathSearchOptions,
-  definition: GameDefinition
-): EnemyPathStep[] => searchEnemyPath(options, definition);
+  map: WorldMap
+): EnemyPathStep[] => searchEnemyPath(options, map);
 
 export const pathMovementModes = (path: readonly EnemyPathStep[]): EnemyLocomotionMode[] =>
   path.reduce<EnemyLocomotionMode[]>((modes, step) => {

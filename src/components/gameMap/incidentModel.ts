@@ -1,5 +1,6 @@
 import type { CombatIncident, GameState, RoomId } from "../../game/types";
-import { roomMapRect } from "./mapGeometry";
+import { mapViewFor } from "./mapGeometry";
+import type { WorldMap } from "../../game/world/map";
 
 export const INCIDENT_VISIBLE_SECONDS = 5;
 
@@ -27,7 +28,10 @@ const recentCombustionIncidents = (game: IncidentTimeline): CombatIncident[] =>
       game.elapsed - incident.elapsed <= INCIDENT_VISIBLE_SECONDS
   );
 
-export const incidentMapAggregates = (game: IncidentTimeline): IncidentAggregate[] => {
+export const incidentMapAggregates = (
+  game: IncidentTimeline,
+  map: WorldMap
+): IncidentAggregate[] => {
   const grouped = new Map<RoomId, CombatIncident[]>();
   for (const incident of recentCombustionIncidents(game)) {
     const incidents = grouped.get(incident.roomId) ?? [];
@@ -35,7 +39,7 @@ export const incidentMapAggregates = (game: IncidentTimeline): IncidentAggregate
     grouped.set(incident.roomId, incidents);
   }
   return [...grouped.entries()].map(([roomId, incidents]) => {
-    const room = roomMapRect(roomId);
+    const room = mapViewFor(map).roomMapRect(roomId);
     const latestElapsed = Math.max(...incidents.map((incident) => incident.elapsed));
     return {
       age: game.elapsed - latestElapsed,

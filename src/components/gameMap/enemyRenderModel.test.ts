@@ -1,3 +1,4 @@
+import { WORLD_MAP } from "../../game/content/worldMap";
 import { describe, expect, it } from "vitest";
 import { emptyDamageLedger } from "../../game/engine/damage";
 import { createScenarioGame, findEnemyPath, moveEnemies } from "../../game/simulation";
@@ -29,11 +30,11 @@ describe("enemy render projection", () => {
       lastDamage: null,
     };
     game.enemies = [enemy];
-    const before = enemyRenderModel(enemy);
+    const before = enemyRenderModel(enemy, WORLD_MAP);
 
     moveEnemies(game, 0.05);
 
-    const after = enemyRenderModel(enemy);
+    const after = enemyRenderModel(enemy, WORLD_MAP);
     expect(after.mode).toBe("climbing");
     expect(after.position.y).toBeLessThan(before.position.y);
     expect(after.position.x).toBeCloseTo(before.position.x, 8);
@@ -72,7 +73,7 @@ describe("enemy render projection", () => {
       lastDamage: null,
     };
 
-    const model = createEnemyRenderModel(definition)(enemy);
+    const model = createEnemyRenderModel(definition)(enemy, WORLD_MAP);
     expect(model.appearance).toBe("shell");
     expect(model.color).toBe(0x123456);
   });

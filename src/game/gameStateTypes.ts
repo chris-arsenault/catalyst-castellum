@@ -1,3 +1,4 @@
+import type { WorldMap } from "./world/map";
 import type {
   DamageSourceId,
   EnemyState,
@@ -173,6 +174,13 @@ export interface GameState {
     id: string;
     contentVersion: number;
   };
+  /**
+   * The world the simulation runs on (ADR-0001). Frozen until a map edit replaces the
+   * object and bumps the revision; derived geometry is cached per map object. Rebuilt
+   * from the pack on decode until save v13 (plan M4) serializes it.
+   */
+  map: WorldMap;
+  mapRevision: number;
   world: WorldCatalogs;
   phase: GamePhase;
   campaign: CampaignProgress;

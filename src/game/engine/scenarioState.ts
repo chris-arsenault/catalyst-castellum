@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import type { FacilityLoadout } from "../definitionTypes";
 import { emptyGas, emptyLiquid } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
@@ -51,7 +52,8 @@ const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefiniti
     loadout.initialTemperatures[id] ?? definitionRoom(definition, id).ambientTemperature;
   const usableVolume = Math.max(
     8,
-    definition.facility.roomVolume(id) - roomEquipmentVolume({ equipment }, definition)
+    facilityModelForMap(definition.map).roomVolume(id) -
+      roomEquipmentVolume({ equipment }, definition)
   );
   // A newly excavated room starts at the same ambient pressure even when its authored
   // temperature or usable geometry differs. Gas inventory therefore scales with both
@@ -224,6 +226,8 @@ export const createScenarioGame = (
       checkpointLevelId: levelId,
       completedLevelIds: [...completedLevelIds],
     },
+    map: definition.map,
+    mapRevision: 0,
     world: worldCatalogsFor(definition),
     availability: {
       equipment: [...round.availability.equipment],
@@ -243,7 +247,7 @@ export const createScenarioGame = (
     liquidJunctions: makeLiquidJunctions(definition),
     gasConduits: makeGasConduits(level.loadout, definition),
     liquidConduits: makeLiquidConduits(level.loadout, definition),
-    portalStates: definition.facility.initialPortalStates(),
+    portalStates: facilityModelForMap(definition.map).initialPortalStates(),
     processes: makeProcesses(),
     gasVent: emptyGas(),
     liquidDrain: emptyLiquid(),

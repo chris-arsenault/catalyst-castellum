@@ -1,3 +1,4 @@
+import { WORLD_MAP } from "./content/worldMap";
 import { describe, expect, it } from "vitest";
 import {
   ROOM_REACTION_IDS,
@@ -96,6 +97,8 @@ const stateFor = (furnace: RoomState, enemies: EnemyState[] = []): GameState =>
   ({
     version: 11,
     phase: "assault",
+    map: WORLD_MAP,
+    mapRevision: 0,
     campaign: {
       levelId: "flash_point",
       levelIndex: 0,

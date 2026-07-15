@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
 import type { EnemyDefinition, EnemyPathStep, EnemyState, GameState, GridCell } from "../types";
 import { enemyPathTransitionIsLegal } from "./navigation";
@@ -26,11 +27,11 @@ const validatePathStep = (
   definition: GameDefinition,
   issues: StateValidationIssue[]
 ): void => {
-  if (!definition.facility.inBounds(step.cell)) {
+  if (!facilityModelForMap(definition.map).inBounds(step.cell)) {
     navigationIssue(issues, `${stepPath}.cell`, "Enemy path leaves the facility bounds.");
     return;
   }
-  const cell = definition.facility.cellDefinition(step.cell);
+  const cell = facilityModelForMap(definition.map).cellDefinition(step.cell);
   if (["solid", "platform", "core_shell"].includes(cell.terrain))
     navigationIssue(issues, `${stepPath}.cell`, "Enemy path occupies non-navigable terrain.");
   if (step.portalId !== cell.portalId)
@@ -41,7 +42,7 @@ const validatePathStep = (
   }
   if (
     previous &&
-    !enemyPathTransitionIsLegal({ flying: enemyDefinition.flying, previous, step }, definition)
+    !enemyPathTransitionIsLegal({ flying: enemyDefinition.flying, previous, step }, definition.map)
   )
     navigationIssue(issues, stepPath, "Enemy path violates locomotion rules.");
 };

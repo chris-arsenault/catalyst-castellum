@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { WORLD_MAP } from "../../game/content/worldMap";
 import type { CombatIncident, HazardChannels, RoomId } from "../../game/types";
 import { INCIDENT_VISIBLE_SECONDS, incidentMapAggregates } from "./incidentModel";
 
@@ -44,15 +45,18 @@ const incident = (
 
 describe("incident map aggregation", () => {
   it("coalesces readable room feedback for five simulation seconds", () => {
-    const aggregates = incidentMapAggregates({
-      elapsed: 14,
-      incidents: [
-        incident(1, 12, 17, true),
-        incident(2, 10, 9, false),
-        incident(3, 14 - INCIDENT_VISIBLE_SECONDS - 0.1, 40, true),
-        incident(4, 13, 5, false, "reservoir"),
-      ],
-    });
+    const aggregates = incidentMapAggregates(
+      {
+        elapsed: 14,
+        incidents: [
+          incident(1, 12, 17, true),
+          incident(2, 10, 9, false),
+          incident(3, 14 - INCIDENT_VISIBLE_SECONDS - 0.1, 40, true),
+          incident(4, 13, 5, false, "reservoir"),
+        ],
+      },
+      WORLD_MAP
+    );
 
     expect(aggregates).toHaveLength(2);
     expect(aggregates.find(({ roomId }) => roomId === "furnace")).toMatchObject({

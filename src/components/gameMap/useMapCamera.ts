@@ -1,14 +1,8 @@
 import { useCallback, useRef, useState, type PointerEvent, type WheelEvent } from "react";
-import {
-  FIT_ZOOM,
-  VIEWPORT_HEIGHT,
-  VIEWPORT_WIDTH,
-  WORLD_MAP_HEIGHT,
-  WORLD_MAP_WIDTH,
-  initialCamera,
-} from "./mapGeometry";
+import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH, mapViewFor } from "./mapGeometry";
 
-import type { CameraTransform } from "./mapGeometry";
+import type { CameraTransform, MapView } from "./mapGeometry";
+import type { WorldMap } from "../../game/world/map";
 
 export const MAP_DRAG_THRESHOLD_CSS_PIXELS = 6;
 
@@ -26,11 +20,35 @@ const clampAxis = (offset: number, viewport: number, world: number): number => {
   return Math.min(0, Math.max(viewport - world, offset));
 };
 
-const clampCamera = (camera: CameraTransform): CameraTransform => ({
+const clampCamera = (view: MapView, camera: CameraTransform): CameraTransform => ({
   ...camera,
-  x: clampAxis(camera.x, VIEWPORT_WIDTH, WORLD_MAP_WIDTH * camera.zoom),
-  y: clampAxis(camera.y, VIEWPORT_HEIGHT, WORLD_MAP_HEIGHT * camera.zoom),
+  x: clampAxis(camera.x, VIEWPORT_WIDTH, view.mapWidth * camera.zoom),
+  y: clampAxis(camera.y, VIEWPORT_HEIGHT, view.mapHeight * camera.zoom),
 });
+
+const panDelta = (
+  currentGesture: PointerGesture | null,
+  event: PointerEvent<HTMLDivElement>
+): { dx: number; dy: number } | null => {
+  if (!currentGesture || currentGesture.pointerId !== event.pointerId) return null;
+  if (!currentGesture.dragging) {
+    const distance = Math.hypot(
+      event.clientX - currentGesture.originX,
+      event.clientY - currentGesture.originY
+    );
+    if (distance < MAP_DRAG_THRESHOLD_CSS_PIXELS) return null;
+    currentGesture.dragging = true;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+  event.preventDefault();
+  const bounds = event.currentTarget.getBoundingClientRect();
+  const scale = VIEWPORT_WIDTH / bounds.width;
+  const dx = (event.clientX - currentGesture.lastX) * scale;
+  const dy = (event.clientY - currentGesture.lastY) * scale;
+  currentGesture.lastX = event.clientX;
+  currentGesture.lastY = event.clientY;
+  return { dx, dy };
+};
 
 type MapCamera = ReturnType<typeof useMapCamera>;
 
@@ -69,24 +87,28 @@ export const useMapInteractions = (
   };
 };
 
-export const useMapCamera = () => {
-  const [camera, setCamera] = useState<CameraTransform>(initialCamera);
+export const useMapCamera = (map: WorldMap) => {
+  const view = mapViewFor(map);
+  const [camera, setCamera] = useState<CameraTransform>(view.initialCamera);
   const gesture = useRef<PointerGesture | null>(null);
 
-  const zoomBy = useCallback((factor: number) => {
-    setCamera((current) => {
-      const zoom = Math.min(1.35, Math.max(FIT_ZOOM, current.zoom * factor));
-      const worldCenterX = (VIEWPORT_WIDTH / 2 - current.x) / current.zoom;
-      const worldCenterY = (VIEWPORT_HEIGHT / 2 - current.y) / current.zoom;
-      return clampCamera({
-        zoom,
-        x: VIEWPORT_WIDTH / 2 - worldCenterX * zoom,
-        y: VIEWPORT_HEIGHT / 2 - worldCenterY * zoom,
+  const zoomBy = useCallback(
+    (factor: number) => {
+      setCamera((current) => {
+        const zoom = Math.min(1.35, Math.max(view.fitZoom, current.zoom * factor));
+        const worldCenterX = (VIEWPORT_WIDTH / 2 - current.x) / current.zoom;
+        const worldCenterY = (VIEWPORT_HEIGHT / 2 - current.y) / current.zoom;
+        return clampCamera(view, {
+          zoom,
+          x: VIEWPORT_WIDTH / 2 - worldCenterX * zoom,
+          y: VIEWPORT_HEIGHT / 2 - worldCenterY * zoom,
+        });
       });
-    });
-  }, []);
+    },
+    [view]
+  );
 
-  const resetCamera = useCallback(() => setCamera(initialCamera()), []);
+  const resetCamera = useCallback(() => setCamera(view.initialCamera()), [view]);
   const handleWheel = useCallback(
     (event: WheelEvent<HTMLDivElement>) => {
       event.preventDefault();
@@ -104,27 +126,16 @@ export const useMapCamera = () => {
       dragging: false,
     };
   }, []);
-  const handlePointerMove = useCallback((event: PointerEvent<HTMLDivElement>) => {
-    const currentGesture = gesture.current;
-    if (!currentGesture || currentGesture.pointerId !== event.pointerId) return;
-    if (!currentGesture.dragging) {
-      const distance = Math.hypot(
-        event.clientX - currentGesture.originX,
-        event.clientY - currentGesture.originY
+  const handlePointerMove = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      const pan = panDelta(gesture.current, event);
+      if (!pan) return;
+      setCamera((current) =>
+        clampCamera(view, { ...current, x: current.x + pan.dx, y: current.y + pan.dy })
       );
-      if (distance < MAP_DRAG_THRESHOLD_CSS_PIXELS) return;
-      currentGesture.dragging = true;
-      event.currentTarget.setPointerCapture(event.pointerId);
-    }
-    event.preventDefault();
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const scale = VIEWPORT_WIDTH / bounds.width;
-    const dx = (event.clientX - currentGesture.lastX) * scale;
-    const dy = (event.clientY - currentGesture.lastY) * scale;
-    currentGesture.lastX = event.clientX;
-    currentGesture.lastY = event.clientY;
-    setCamera((current) => clampCamera({ ...current, x: current.x + dx, y: current.y + dy }));
-  }, []);
+    },
+    [view]
+  );
   const handlePointerUp = useCallback((event: PointerEvent<HTMLDivElement>) => {
     if (gesture.current?.pointerId === event.pointerId) gesture.current = null;
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {

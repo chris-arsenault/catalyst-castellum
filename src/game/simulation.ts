@@ -60,12 +60,16 @@ export const simulateHydrogenOxygenFlash = bindDefinition(
   flashReaction.simulateHydrogenOxygenFlash
 );
 export const applyDamagePackets = bindDefinition(damage.applyDamagePackets);
-export const enemyRoomId = bindDefinition(combat.enemyRoomId);
+export const enemyRoomId = (enemy: Parameters<typeof combat.enemyRoomId>[0]) =>
+  combat.enemyRoomId(enemy, DEFAULT_GAME_DEFINITION.map);
 export const moveEnemies = bindDefinition(combat.moveEnemies);
 export const resolveEnemyCombat = bindDefinition(combat.resolveEnemyCombat);
 export const spawnEnemies = bindDefinition(combat.spawnEnemies);
-export const findEnemyPath = bindDefinition(navigation.findEnemyPath);
-export const findEnemyPathBetween = bindDefinition(navigation.findEnemyPathBetween);
+export const findEnemyPath = (options: Parameters<typeof navigation.findEnemyPath>[0]) =>
+  navigation.findEnemyPath(options, DEFAULT_GAME_DEFINITION.map);
+export const findEnemyPathBetween = (
+  options: Parameters<typeof navigation.findEnemyPathBetween>[0]
+) => navigation.findEnemyPathBetween(options, DEFAULT_GAME_DEFINITION.map);
 export const pathMovementModes = navigation.pathMovementModes;
 export const simulateRoomStratification = bindDefinition(stratification.simulateRoomStratification);
 export const simulateStratification = bindDefinition(stratification.simulateStratification);

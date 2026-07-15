@@ -1,5 +1,5 @@
 import type { Graphics } from "pixi.js";
-import { GAS_SOURCES, LIQUID_SOURCES, utilityNodeWorldPoint } from "../../presentation/defaultGame";
+import { GAS_SOURCES, LIQUID_SOURCES } from "../../presentation/defaultGame";
 import {
   GAS_SOURCE_IDS,
   LIQUID_SOURCE_IDS,
@@ -7,15 +7,20 @@ import {
   type WorldPoint,
 } from "../../game/types";
 import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
-import { colorNumber, worldToMapPoint } from "./mapGeometry";
+import { colorNumber, mapViewFor } from "./mapGeometry";
+import type { MapView } from "./mapGeometry";
+import { gridCellToWorldPoint } from "../../game/spatial";
+import { instance } from "../../game/world/instances";
+import type { FacilityUtilityNodeId } from "../../game/types";
 
 const drawTank = (
   graphics: Graphics,
+  view: MapView,
   worldPoint: WorldPoint,
   color: number,
   fill: number
 ): void => {
-  const point = worldToMapPoint(worldPoint);
+  const point = view.worldToMapPoint(worldPoint);
   graphics
     .roundRect(point.x - 11, point.y - 20, 22, 40, 9)
     .fill({ color: 0x09110f })
@@ -31,12 +36,13 @@ const drawTank = (
 
 const drawTerminal = (
   graphics: Graphics,
+  view: MapView,
   worldPoint: WorldPoint,
   color: number,
   fill: number,
   pointsUp: boolean
 ): void => {
-  const point = worldToMapPoint(worldPoint);
+  const point = view.worldToMapPoint(worldPoint);
   graphics
     .roundRect(point.x - 10, point.y - 10, 20, 20, 6)
     .fill({ color: 0x09120f })
@@ -50,27 +56,32 @@ const drawTerminal = (
 };
 
 export const drawProcessNodes = (graphics: Graphics, state: GameState): void => {
+  const view = mapViewFor(state.map);
+  const nodeWorldPoint = (nodeId: FacilityUtilityNodeId): WorldPoint =>
+    gridCellToWorldPoint(instance(state.map.utilityNodes, nodeId, "utility node").cell);
   graphics.clear();
   for (const sourceId of GAS_SOURCE_IDS) {
     const definition = GAS_SOURCES[sourceId];
     const fill = gasAmountTotal(state.gasSources[sourceId].gas) / definition.capacity;
-    drawTank(graphics, utilityNodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
+    drawTank(graphics, view, nodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
   }
   for (const sourceId of LIQUID_SOURCE_IDS) {
     const definition = LIQUID_SOURCES[sourceId];
     const fill = liquidAmountTotal(state.liquidSources[sourceId].liquid) / definition.capacity;
-    drawTank(graphics, utilityNodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
+    drawTank(graphics, view, nodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
   }
   drawTerminal(
     graphics,
-    utilityNodeWorldPoint("gas_vent"),
+    view,
+    nodeWorldPoint("gas_vent"),
     0x69c5cd,
     Math.min(1, gasAmountTotal(state.gasVent) / 80),
     true
   );
   drawTerminal(
     graphics,
-    utilityNodeWorldPoint("liquid_drain"),
+    view,
+    nodeWorldPoint("liquid_drain"),
     0x548ada,
     Math.min(1, liquidAmountTotal(state.liquidDrain) / 80),
     false

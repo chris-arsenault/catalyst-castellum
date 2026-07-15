@@ -6,7 +6,7 @@ import {
   dominantDamageChannel,
   formatDamageAmount,
 } from "../../presentation/damageCopy";
-import { worldToMapPoint } from "./mapGeometry";
+import { mapViewFor } from "./mapGeometry";
 
 const VISIBLE_SECONDS = 1.35;
 
@@ -29,7 +29,7 @@ export const DamageNumberLayer = ({ game }: { game: GameState }) => (
         if (amount < 0.05) return [];
         const channel = dominantDamageChannel(target.damageByChannel);
         const style = damageChannelStyle[channel];
-        const position = worldToMapPoint(target.worldPosition);
+        const position = mapViewFor(game.map).worldToMapPoint(target.worldPosition);
         return [
           <pixiContainer
             key={`${incident.id}-${target.enemyId}`}

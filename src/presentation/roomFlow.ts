@@ -1,5 +1,4 @@
 import { architecturalConnections } from "../game/world/map";
-import { FACILITY_MAP } from "./defaultGame";
 import { GAS_TYPES, type GameState, type GasAmounts, type RoomId } from "../game/types";
 import { gasConduitState, liquidConduitState } from "../game/world/instances";
 import { lineDefinition } from "./defaultGame";
@@ -35,7 +34,7 @@ export const roomLiquidInflowRate = (game: GameState, roomId: RoomId): number =>
   }, 0);
 
 export const activeRoomGasPortals = (game: GameState, roomId: RoomId) =>
-  architecturalConnections(FACILITY_MAP).filter((portal) => {
+  architecturalConnections(game.map).filter((portal) => {
     const state = game.portalStates[portal.id];
     return (
       portal.rooms.includes(roomId) &&

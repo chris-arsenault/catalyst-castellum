@@ -1,4 +1,5 @@
-import { ROOM_ORDER, roomRing } from "../presentation/defaultGame";
+import { ROOM_ORDER } from "../presentation/defaultGame";
+import { facilityModelForMap } from "../game/world/derivedModel";
 import { useGameStore } from "../application/store";
 import { roomCopy } from "../presentation/entityCopy";
 import { useGamePresentation } from "../application/presentationContext";
@@ -15,7 +16,7 @@ export const RoomRail = () => {
     <nav className="room-rail" aria-label={translator.text("ui.map.selectRoom")}>
       {ROOM_ORDER.map((roomId) => {
         const definition = roomDefinition(roomId);
-        const ring = roomRing(roomId);
+        const ring = facilityModelForMap(game.map).ringForRoom(roomId);
         const analysis = selectors.roomAnalysis(roomState(game, roomId));
         return (
           <button

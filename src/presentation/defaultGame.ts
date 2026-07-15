@@ -4,7 +4,6 @@ export {
   DEFAULT_GAME_DEFINITION,
   ENEMY_DEFINITIONS,
   EQUIPMENT_DEFINITIONS,
-  FACILITY_MAP,
   GAS_BUFFERS,
   GAS_COLORS,
   GAS_LABELS,
@@ -20,16 +19,7 @@ export {
   ROOM_ORDER,
   SPECIES_DEFINITIONS,
   equipmentGrade,
-  facilityCells,
-  facilityRingForRoom,
-  gridCellToWorldPoint,
-  gridCellsToWorldPath,
   nextLevelId,
-  roomAtmosphericCells,
-  roomCenterWorld,
-  roomRing,
-  roomVolume,
-  utilityNodeWorldPoint,
 } from "../game/config";
 
 import { DEFAULT_GAME_DEFINITION as PACK } from "../game/config";

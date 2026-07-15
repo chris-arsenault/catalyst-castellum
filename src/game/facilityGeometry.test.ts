@@ -27,13 +27,7 @@ import {
   type RoomId,
 } from "./types";
 import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./simulation";
-import {
-  clientToWorldPoint,
-  initialCamera,
-  mapToWorldPoint,
-  worldToClientPoint,
-  worldToMapPoint,
-} from "../components/gameMap/mapGeometry";
+import { mapViewFor } from "../components/gameMap/mapGeometry";
 import { instance } from "./world/instances";
 import { architecturalConnections, isProcessLine } from "./world/map";
 
@@ -322,11 +316,19 @@ describe("dedicated routes and transforms", () => {
 
   it("round-trips world, map, camera, and client coordinates", () => {
     const world = roomCenterWorld("lower_intake");
-    const map = worldToMapPoint(world);
-    expect(mapToWorldPoint(map)).toEqual(world);
+    const map = mapViewFor(FACILITY_MAP).worldToMapPoint(world);
+    expect(mapViewFor(FACILITY_MAP).mapToWorldPoint(map)).toEqual(world);
     const bounds = { x: 13, y: 327, width: 1012, height: 506 };
-    const client = worldToClientPoint(world, initialCamera(), bounds);
-    const restored = clientToWorldPoint(client, initialCamera(), bounds);
+    const client = mapViewFor(FACILITY_MAP).worldToClientPoint(
+      world,
+      mapViewFor(FACILITY_MAP).initialCamera(),
+      bounds
+    );
+    const restored = mapViewFor(FACILITY_MAP).clientToWorldPoint(
+      client,
+      mapViewFor(FACILITY_MAP).initialCamera(),
+      bounds
+    );
     expect(restored.x).toBeCloseTo(world.x);
     expect(restored.elevation).toBeCloseTo(world.elevation);
   });

@@ -7,7 +7,7 @@ import {
 } from "../../game/types";
 import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { equipmentRenderModels } from "./equipmentRenderModel";
-import { colorNumber, roomMapRect } from "./mapGeometry";
+import { colorNumber, mapViewFor } from "./mapGeometry";
 import { bufferCopy } from "../../presentation/entityCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 import { roomDefinition } from "../../presentation/defaultGame";
@@ -49,7 +49,7 @@ export const cellOutletAssemblyModel = (
   );
   if (!installation) return null;
 
-  const room = roomMapRect(installation.roomId);
+  const room = mapViewFor(game.map).roomMapRect(installation.roomId);
   const centerX = clamp(installation.x, room.left + 45, room.left + room.width - 45);
   const rowY = clamp(installation.y - 54, room.top + 31, room.top + room.height - 39);
   const definitions = [

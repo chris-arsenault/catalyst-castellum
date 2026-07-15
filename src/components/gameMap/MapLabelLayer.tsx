@@ -1,27 +1,33 @@
 import { useCallback, useMemo } from "react";
 import type { Graphics } from "pixi.js";
-import { facilityRingForRoom } from "../../presentation/defaultGame";
+import { facilityModelForMap } from "../../game/world/derivedModel";
+import type { WorldMap } from "../../game/world/map";
 import type { GameState, RoomId } from "../../game/types";
 import { layoutMapLabels, type MapLabelPlacement } from "./labelLayout";
 import { useGamePresentation } from "../../application/presentationContext";
 import { roomDefinition } from "../../presentation/defaultGame";
 
-const labelAccent = (roomId: RoomId): number => {
+const labelAccent = (map: WorldMap, roomId: RoomId): number => {
   if (roomDefinition(roomId).structure === "core") return 0xd2b85f;
-  if (facilityRingForRoom(roomId) === "inner") return 0xc49d64;
-  if (facilityRingForRoom(roomId) === "middle") return 0x629db3;
+  const ring = facilityModelForMap(map).ringForRoom(roomId);
+  if (ring === "inner") return 0xc49d64;
+  if (ring === "middle") return 0x629db3;
   return 0x54a891;
 };
 
-const labelTextColor = (roomId: RoomId, selected: boolean): string => {
+const labelTextColor = (map: WorldMap, roomId: RoomId, selected: boolean): string => {
   if (selected) return "#f4f5d1";
-  return `#${labelAccent(roomId).toString(16).padStart(6, "0")}`;
+  return `#${labelAccent(map, roomId).toString(16).padStart(6, "0")}`;
 };
 
-const drawLabels = (graphics: Graphics, labels: readonly MapLabelPlacement[]): void => {
+const drawLabels = (
+  graphics: Graphics,
+  map: WorldMap,
+  labels: readonly MapLabelPlacement[]
+): void => {
   graphics.clear();
   for (const label of labels) {
-    const accent = labelAccent(label.roomId);
+    const accent = labelAccent(map, label.roomId);
     const cut = 6;
     graphics
       .poly([
@@ -57,10 +63,13 @@ export const MapLabelLayer = ({
 }) => {
   const { translator } = useGamePresentation();
   const labels = useMemo(
-    () => layoutMapLabels(selectedRoomId, game, translator),
+    () => layoutMapLabels(game.map, selectedRoomId, game, translator),
     [game, selectedRoomId, translator]
   );
-  const draw = useCallback((graphics: Graphics) => drawLabels(graphics, labels), [labels]);
+  const draw = useCallback(
+    (graphics: Graphics) => drawLabels(graphics, game.map, labels),
+    [game.map, labels]
+  );
   return (
     <pixiContainer eventMode="none">
       <pixiGraphics draw={draw} eventMode="none" />
@@ -76,7 +85,7 @@ export const MapLabelLayer = ({
             fontFamily: "IBM Plex Sans, ui-sans-serif, sans-serif",
             fontSize: label.fontSize,
             fontWeight: label.selected ? "600" : "500",
-            fill: labelTextColor(label.roomId, label.selected),
+            fill: labelTextColor(game.map, label.roomId, label.selected),
             letterSpacing: 0.1,
           }}
         />

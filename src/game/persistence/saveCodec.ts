@@ -438,7 +438,12 @@ export const encodeGame = (game: GameState, definition: GameDefinition): string 
  * rebuilds them from the definition instead of trusting the serialized copy.
  */
 const validGame = (game: GameState, definition: GameDefinition): GameState | null => {
-  const withCatalogs: GameState = { ...game, world: worldCatalogsFor(definition) };
+  const withCatalogs: GameState = {
+    ...game,
+    map: definition.map,
+    mapRevision: 0,
+    world: worldCatalogsFor(definition),
+  };
   return gameStateIsValid(withCatalogs, definition) ? withCatalogs : null;
 };
 

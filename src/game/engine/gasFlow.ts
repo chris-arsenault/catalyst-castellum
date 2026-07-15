@@ -1,3 +1,4 @@
+import { facilityModelFor } from "../world/derivedModel";
 import { emptyGas } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
 import {
@@ -156,7 +157,7 @@ const deliverGas = (
   }
   const roomId = definition.direction[1];
   const endpoint = conduitEndpoint(state, runId, "gas", "to");
-  const zone = gasZoneForPort(gameDefinition.facility.roomPortHeight(roomId, endpoint.elevation));
+  const zone = gasZoneForPort(facilityModelFor(state).roomPortHeight(roomId, endpoint.elevation));
   const target = roomState(state, roomId).gas[zone];
   const existing = totalGas(target);
   addGas(target, packet);

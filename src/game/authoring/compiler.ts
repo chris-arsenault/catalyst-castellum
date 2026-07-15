@@ -5,7 +5,6 @@ import type {
   RoundDefinition,
 } from "../definitionTypes";
 import type { ScenarioAvailability, SpeciesId } from "../types";
-import { createFacilityModel } from "../engine/facilityModel";
 import { isProcessLine } from "../world/map";
 import { validateWorldMap } from "../world/mapValidation";
 
@@ -333,5 +332,5 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
 export const compileGamePack = (source: GamePackSource): GameDefinition => {
   const issues = validateGamePack(source);
   if (issues.length > 0) throw new GamePackCompilationError(issues);
-  return deepFreeze({ ...source, facility: createFacilityModel(source.map) });
+  return deepFreeze({ ...source });
 };

@@ -1,7 +1,8 @@
+import { WORLD_MAP } from "../../game/content/worldMap";
 import { describe, expect, it } from "vitest";
 import { FACILITY_MAP } from "../../game/config";
 import { createScenarioGame } from "../../game/simulation";
-import { gridCellMapRect } from "./mapGeometry";
+import { mapViewFor } from "./mapGeometry";
 import { equipmentRenderModels } from "./equipmentRenderModel";
 import { roomState } from "../../game/world/instances";
 import { instance } from "../../game/world/instances";
@@ -16,7 +17,7 @@ describe("equipment map projection", () => {
     };
     const socket = instance(FACILITY_MAP.rooms, "furnace", "map room").socketCells.socket_b;
     if (!socket) throw new Error("R-02 socket B is absent from the facility map.");
-    const rect = gridCellMapRect(socket);
+    const rect = mapViewFor(WORLD_MAP).gridCellMapRect(socket);
 
     const marker = equipmentRenderModels(game).find(
       (entry) => entry.roomId === "furnace" && entry.socketId === "socket_b"

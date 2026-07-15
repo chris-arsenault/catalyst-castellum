@@ -140,9 +140,9 @@ export interface GamePackSource {
   readonly environmentHazards: EnvironmentHazardRules;
 }
 
-export interface GameDefinition extends GameDefinitionSource {
-  readonly facility: FacilityModel;
-}
+/** Compiled pack contract; geometry derives on demand via world/derivedModel (plan M2). */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type GameDefinition = GameDefinitionSource;
 
 /** @deprecated Use GamePackSource for authored input. */
 export type GameDefinitionSource = GamePackSource;

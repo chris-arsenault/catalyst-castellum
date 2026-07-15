@@ -1,8 +1,5 @@
-import {
-  DEFAULT_GAME_DEFINITION,
-  SPECIES_DEFINITIONS,
-  roomVolume,
-} from "../../presentation/defaultGame";
+import { facilityModelForMap } from "../../game/world/derivedModel";
+import { DEFAULT_GAME_DEFINITION, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import { roomHazards, STANDARD_PRESSURE } from "../../game/queries";
 import {
   GAS_TYPES,
@@ -139,14 +136,16 @@ const RoomReadout = ({
   gasInflow,
   room,
   roomId,
+  volume,
 }: {
   analysis: RoomViewModel;
   gasInflow: RoomGasInflow;
   room: RoomState;
   roomId: RoomId;
+  volume: number;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  const liquidFill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
+  const liquidFill = Math.min(1, analysis.liquidTotal / volume);
   return (
     <dl className="room-detail-readout">
       <div>
@@ -235,7 +234,13 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
       </header>
       <GasComposition gas={room.gas.upper} zone="upper" temperature={room.gasTemperature.upper} />
       <GasComposition gas={room.gas.lower} zone="lower" temperature={room.gasTemperature.lower} />
-      <RoomReadout analysis={analysis} gasInflow={gasInflow} room={room} roomId={roomId} />
+      <RoomReadout
+        analysis={analysis}
+        gasInflow={gasInflow}
+        room={room}
+        roomId={roomId}
+        volume={facilityModelForMap(game.map).roomVolume(roomId)}
+      />
       <div className="room-pressure-explanation">{pressureExplanation}</div>
       <RoomExposure lowerHazards={lowerHazards} upperHazards={upperHazards} />
       <small>{translator.text("ui.map.room.select", { room: definition.code })}</small>

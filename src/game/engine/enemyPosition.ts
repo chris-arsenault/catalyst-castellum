@@ -1,6 +1,7 @@
 import { gridCellToWorldPoint } from "../spatial";
-import type { GameDefinition } from "../definitionTypes";
 import type { EnemyState, GasZone, RoomId, WorldPoint } from "../types";
+import { facilityModelForMap } from "../world/derivedModel";
+import type { WorldMap } from "../world/map";
 import { instance } from "../world/instances";
 
 export const enemyWorldPosition = (enemy: EnemyState): WorldPoint => {
@@ -15,13 +16,13 @@ export const enemyWorldPosition = (enemy: EnemyState): WorldPoint => {
   };
 };
 
-export const enemyRoomId = (enemy: EnemyState, definition: GameDefinition): RoomId | null =>
-  definition.facility.roomAtWorldPoint(enemyWorldPosition(enemy));
+export const enemyRoomId = (enemy: EnemyState, map: WorldMap): RoomId | null =>
+  facilityModelForMap(map).roomAtWorldPoint(enemyWorldPosition(enemy));
 
-export const enemyGasZone = (enemy: EnemyState, definition: GameDefinition): GasZone => {
-  const roomId = enemyRoomId(enemy, definition);
+export const enemyGasZone = (enemy: EnemyState, map: WorldMap): GasZone => {
+  const roomId = enemyRoomId(enemy, map);
   if (!roomId) return "lower";
-  const bounds = instance(definition.map.rooms, roomId, "map room").bounds;
+  const bounds = instance(map.rooms, roomId, "map room").bounds;
   const relativeElevation =
     (enemyWorldPosition(enemy).elevation - bounds.elevation) / bounds.height;
   return relativeElevation >= 0.5 ? "upper" : "lower";

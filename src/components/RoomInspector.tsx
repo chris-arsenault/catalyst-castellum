@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../game/world/derivedModel";
 import { Activity, Droplets, FlaskConical, Gauge, Info, Thermometer, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import {
@@ -6,7 +7,6 @@ import {
   LEVEL_DEFINITIONS,
   REACTION_DEFINITIONS,
   SPECIES_DEFINITIONS,
-  roomVolume,
 } from "../presentation/defaultGame";
 import { gasPercent, liquidPercent } from "../game/queries";
 import { useGameStore } from "../application/store";
@@ -132,7 +132,7 @@ const LiquidComposition = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = roomState(game, roomId);
   const analysis = selectors.roomAnalysis(room);
-  const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
+  const fill = Math.min(1, analysis.liquidTotal / facilityModelForMap(game.map).roomVolume(roomId));
   const presentLiquids = LIQUID_TYPES.filter((liquid) => room.liquid[liquid] > 0.05);
   return (
     <div className="composition-group liquid-group">
@@ -199,7 +199,7 @@ const RoomMetrics = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const room = roomState(game, roomId);
   const analysis = selectors.roomAnalysis(room);
-  const fill = Math.min(1, analysis.liquidTotal / roomVolume(roomId));
+  const fill = Math.min(1, analysis.liquidTotal / facilityModelForMap(game.map).roomVolume(roomId));
 
   return (
     <section className="metric-grid" aria-label={translator.text("ui.room.metrics")}>

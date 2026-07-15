@@ -1,17 +1,20 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
 import type { EnemyState } from "../../game/types";
+import type { WorldMap } from "../../game/world/map";
 import { drawEnemy } from "./enemyGraphics";
 import { enemyRenderModel } from "./enemyRenderModel";
 
 export const EnemyNode = ({
   enemy,
+  map,
   onHover,
 }: {
   enemy: EnemyState;
+  map: WorldMap;
   onHover: (enemyId: number | null) => void;
 }) => {
-  const model = enemyRenderModel(enemy);
+  const model = enemyRenderModel(enemy, map);
   const draw = useCallback(
     (graphics: Graphics) =>
       drawEnemy(graphics, model.appearance, model.color, model.health, model.mode),

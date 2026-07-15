@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
@@ -28,10 +29,10 @@ const MINIMUM_GAS_VOLUME_RATIO = 1 - MAX_LIQUID_FILL_RATIO;
 const ABSOLUTE_ZERO_OFFSET = 273.15;
 
 const minimumGasVolume = (room: RoomState, definition: GameDefinition): number =>
-  definition.facility.roomVolume(room.id) * MINIMUM_GAS_VOLUME_RATIO;
+  facilityModelForMap(definition.map).roomVolume(room.id) * MINIMUM_GAS_VOLUME_RATIO;
 
 const maximumLiquidFill = (room: RoomState, definition: GameDefinition): number =>
-  definition.facility.roomVolume(room.id) * MAX_LIQUID_FILL_RATIO;
+  facilityModelForMap(definition.map).roomVolume(room.id) * MAX_LIQUID_FILL_RATIO;
 
 export const kelvin = (temperature: number): number => temperature + ABSOLUTE_ZERO_OFFSET;
 
@@ -75,7 +76,7 @@ export const mixedTemperature = (
 export const roomUsableVolume = (room: RoomState, definition: GameDefinition): number =>
   Math.max(
     minimumGasVolume(room, definition),
-    definition.facility.roomVolume(room.id) - roomEquipmentVolume(room, definition)
+    facilityModelForMap(definition.map).roomVolume(room.id) - roomEquipmentVolume(room, definition)
   );
 
 export const gasCapacity = (room: RoomState, definition: GameDefinition): number =>
@@ -119,8 +120,8 @@ export const liquidFillRatio = (room: RoomState, definition: GameDefinition): nu
 
 export const liquidSurfaceElevation = (room: RoomState, definition: GameDefinition): number => {
   const effectiveVolume =
-    liquidFillRatio(room, definition) * definition.facility.roomVolume(room.id);
-  return definition.facility.roomLiquidSurfaceElevation(room.id, effectiveVolume);
+    liquidFillRatio(room, definition) * facilityModelForMap(definition.map).roomVolume(room.id);
+  return facilityModelForMap(definition.map).roomLiquidSurfaceElevation(room.id, effectiveVolume);
 };
 
 export const gasZoneForPort = (portHeight: number): GasZone =>

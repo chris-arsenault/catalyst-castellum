@@ -2,7 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
 import { isProcessLine } from "../../src/game/world/map";
 import type { WorldPoint } from "../../src/game/types";
-import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
+import { mapViewFor, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
+import { WORLD_MAP } from "../../src/game/content/worldMap";
 import { installEquipment } from "./tutorialAssertions";
 import { instance } from "../../src/game/world/instances";
 
@@ -20,7 +21,7 @@ const mapCamera = async (page: Page): Promise<CameraTransform> => {
 const worldClientPoint = async (page: Page, worldPoint: WorldPoint) => {
   const bounds = await page.locator("canvas").boundingBox();
   if (!bounds) throw new Error("Pixi canvas did not produce a bounding box");
-  return worldToClientPoint(worldPoint, await mapCamera(page), bounds);
+  return mapViewFor(WORLD_MAP).worldToClientPoint(worldPoint, await mapCamera(page), bounds);
 };
 
 const startGuidedTutorial = async (page: Page): Promise<void> => {

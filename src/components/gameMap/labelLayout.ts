@@ -1,13 +1,9 @@
-import { FACILITY_MAP, ROOM_ORDER, facilityCells } from "../../presentation/defaultGame";
+import { ROOM_ORDER } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
+import { facilityModelForMap } from "../../game/world/derivedModel";
+import type { WorldMap } from "../../game/world/map";
 import { cellOutletAssemblyModel } from "./cellOutletRenderModel";
-import {
-  WORLD_MAP_HEIGHT,
-  WORLD_MAP_WIDTH,
-  gridCellMapRect,
-  roomMapRect,
-  type MapRect,
-} from "./mapGeometry";
+import { mapViewFor, type MapRect, type MapView } from "./mapGeometry";
 import { roomCopy } from "../../presentation/entityCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 import { roomDefinition } from "../../presentation/defaultGame";
@@ -39,19 +35,24 @@ const intersects = (left: MapRect, right: MapRect): boolean =>
   left.top < right.top + right.height &&
   left.top + left.height > right.top;
 
-const withinMap = (rect: MapRect): boolean =>
+const withinMap = (view: MapView, rect: MapRect): boolean =>
   rect.left >= EDGE_PADDING &&
   rect.top >= EDGE_PADDING &&
-  rect.left + rect.width <= WORLD_MAP_WIDTH - EDGE_PADDING &&
-  rect.top + rect.height <= WORLD_MAP_HEIGHT - EDGE_PADDING;
+  rect.left + rect.width <= view.mapWidth - EDGE_PADDING &&
+  rect.top + rect.height <= view.mapHeight - EDGE_PADDING;
 
 const estimateLabelSize = (text: string, fontSize: number): Pick<MapRect, "height" | "width"> => ({
   width: Math.ceil(text.length * fontSize * 0.61 + LABEL_PADDING_X * 2),
   height: Math.ceil(fontSize * LABEL_HEIGHT_SCALE),
 });
 
-const candidatesFor = (roomId: RoomId, width: number, height: number): Candidate[] => {
-  const room = roomMapRect(roomId);
+const candidatesFor = (
+  view: MapView,
+  roomId: RoomId,
+  width: number,
+  height: number
+): Candidate[] => {
+  const room = view.roomMapRect(roomId);
   const centerX = room.left + room.width / 2;
   const centerY = room.top + room.height / 2;
   return [
@@ -70,20 +71,21 @@ const candidatesFor = (roomId: RoomId, width: number, height: number): Candidate
   ];
 };
 
-const structureObstacles = (): TaggedObstacle[] =>
-  facilityCells()
+const structureObstacles = (map: WorldMap, view: MapView): TaggedObstacle[] =>
+  facilityModelForMap(map)
+    .cells()
     .filter(({ terrain }) => terrain === "platform" || terrain === "ladder")
-    .map(({ cell }) => ({ ...gridCellMapRect(cell), labelMayOverlapForRoomId: null }));
+    .map(({ cell }) => ({ ...view.gridCellMapRect(cell), labelMayOverlapForRoomId: null }));
 
-const roomObstacles = (): TaggedObstacle[] =>
+const roomObstacles = (view: MapView): TaggedObstacle[] =>
   ROOM_ORDER.map((roomId) => ({
-    ...roomMapRect(roomId),
+    ...view.roomMapRect(roomId),
     labelMayOverlapForRoomId: roomId,
   }));
 
-const utilityNodeObstacles = (): TaggedObstacle[] =>
-  Object.values(FACILITY_MAP.utilityNodes).map(({ cell }) => {
-    const rect = gridCellMapRect(cell);
+const utilityNodeObstacles = (map: WorldMap, view: MapView): TaggedObstacle[] =>
+  Object.values(map.utilityNodes).map(({ cell }) => {
+    const rect = view.gridCellMapRect(cell);
     return {
       left: rect.left - 16,
       top: rect.top - 24,
@@ -93,11 +95,11 @@ const utilityNodeObstacles = (): TaggedObstacle[] =>
     };
   });
 
-const equipmentSocketObstacles = (): TaggedObstacle[] =>
-  Object.values(FACILITY_MAP.rooms).flatMap(({ socketCells }) =>
+const equipmentSocketObstacles = (map: WorldMap, view: MapView): TaggedObstacle[] =>
+  Object.values(map.rooms).flatMap(({ socketCells }) =>
     Object.values(socketCells).flatMap((cell) => {
       if (!cell) return [];
-      const rect = gridCellMapRect(cell);
+      const rect = view.gridCellMapRect(cell);
       return [
         {
           left: rect.left - 15,
@@ -123,40 +125,44 @@ const cellOutletObstacles = (game?: GameState): TaggedObstacle[] => {
 };
 
 const placementIsFree = (
+  view: MapView,
   rect: MapRect,
   roomId: RoomId,
   allowOwnRoom: boolean,
   obstacles: readonly TaggedObstacle[],
   placed: readonly MapLabelPlacement[]
 ): boolean =>
-  withinMap(rect) &&
+  withinMap(view, rect) &&
   !placed.some((label) => intersects(rect, label)) &&
   !obstacles.some(
     (obstacle) =>
       intersects(rect, obstacle) && !(allowOwnRoom && obstacle.labelMayOverlapForRoomId === roomId)
   );
 
-const labelPriority = (roomId: RoomId, selectedRoomId: RoomId): number => {
+const labelPriority = (view: MapView, roomId: RoomId, selectedRoomId: RoomId): number => {
   if (roomId === selectedRoomId) return 100;
   if (roomId === "core") return 90;
-  return 50 - roomMapRect(roomId).width / 100;
+  return 50 - view.roomMapRect(roomId).width / 100;
 };
 
 export const layoutMapLabels = (
+  map: WorldMap,
   selectedRoomId: RoomId,
   game?: GameState,
   translator: Translator = DEFAULT_TRANSLATOR
 ): MapLabelPlacement[] => {
+  const view = mapViewFor(map);
   const obstacles = [
-    ...roomObstacles(),
-    ...structureObstacles(),
-    ...utilityNodeObstacles(),
-    ...equipmentSocketObstacles(),
+    ...roomObstacles(view),
+    ...structureObstacles(map, view),
+    ...utilityNodeObstacles(map, view),
+    ...equipmentSocketObstacles(map, view),
     ...cellOutletObstacles(game),
   ];
   const placed: MapLabelPlacement[] = [];
   const ordered = [...ROOM_ORDER].sort(
-    (left, right) => labelPriority(right, selectedRoomId) - labelPriority(left, selectedRoomId)
+    (left, right) =>
+      labelPriority(view, right, selectedRoomId) - labelPriority(view, left, selectedRoomId)
   );
   for (const roomId of ordered) {
     const definition = roomDefinition(roomId);
@@ -168,8 +174,9 @@ export const layoutMapLabels = (
     for (const text of textOptions) {
       for (const fontSize of [17, 14, 12]) {
         const size = estimateLabelSize(text, fontSize);
-        const candidate = candidatesFor(roomId, size.width, size.height).find((position) =>
+        const candidate = candidatesFor(view, roomId, size.width, size.height).find((position) =>
           placementIsFree(
+            view,
             { left: position.left, top: position.top, ...size },
             roomId,
             position.allowOwnRoom,

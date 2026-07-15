@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
 import type {
   CombatIncidentTarget,
@@ -27,6 +28,7 @@ import { findEnemyPath, findEnemyPathBetween } from "./navigation";
 import { liquidSurfaceElevation } from "./physics";
 import { roomHazards, roomMovementMultiplier } from "./roomState";
 import { enemyGasZone, enemyRoomId, enemyWorldPosition } from "./enemyPosition";
+import type { WorldMap } from "../world/map";
 import { ENEMY_WORLD_SPEED_SCALE, LOCOMOTION_SPEED } from "./enemyMovementRules";
 import { roomState } from "../world/instances";
 
@@ -41,6 +43,7 @@ const environmentalDamagePackets = (
   room: RoomState,
   enemy: EnemyState,
   dt: number,
+  map: WorldMap,
   gameDefinition: GameDefinition
 ): DamagePacket[] => {
   const definition = gameDefinition.enemies[enemy.type];
@@ -54,7 +57,7 @@ const environmentalDamagePackets = (
     room,
     floorContact,
     definition.needsOxygen,
-    enemyGasZone(enemy, gameDefinition),
+    enemyGasZone(enemy, map),
     gameDefinition
   );
   return [
@@ -90,16 +93,13 @@ const burstPacket = (
   burst: HazardBurst,
   index: number,
   enemy: EnemyState,
-  definition: GameDefinition
+  map: WorldMap
 ): DamagePacket => ({
   key: `burst:${index}`,
   sourceId: burst.sourceId,
   channels: {
     ...burst.channels,
-    heat:
-      burst.zone === null || burst.zone === enemyGasZone(enemy, definition)
-        ? burst.channels.heat
-        : 0,
+    heat: burst.zone === null || burst.zone === enemyGasZone(enemy, map) ? burst.channels.heat : 0,
   },
 });
 
@@ -111,7 +111,7 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
     const definition = gameDefinition.enemies[entry.type];
     const path = findEnemyPath(
       { flying: definition.flying, portalStates: state.portalStates },
-      gameDefinition
+      state.map
     );
     if (path.length === 0) throw new Error(`No cell route reaches Core for ${entry.type}.`);
     const health = definition.health * entry.healthScale;
@@ -234,15 +234,17 @@ const resolveCombatForEnemy = (
   definition: GameDefinition
 ): boolean => {
   const position = enemyWorldPosition(enemy);
-  const roomId = enemyRoomId(enemy, definition);
+  const roomId = enemyRoomId(enemy, state.map);
   enemy.spawnAge += dt;
   const matchingBurstIndices = bursts.flatMap((burst, index) =>
     roomId !== null && burst.roomId === roomId ? [index] : []
   );
   const packets = [
-    ...(roomId ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, definition) : []),
+    ...(roomId
+      ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, state.map, definition)
+      : []),
     ...matchingBurstIndices.map((index) =>
-      burstPacket(bursts[index] as HazardBurst, index, enemy, definition)
+      burstPacket(bursts[index] as HazardBurst, index, enemy, state.map)
     ),
   ];
   const application = applyDamagePackets(state, enemy, packets, definition);
@@ -297,9 +299,9 @@ const repathEnemy = (state: GameState, enemy: EnemyState, definition: GameDefini
       flying: enemyDefinition.flying,
       portalStates: state.portalStates,
       start: current.cell,
-      goal: definition.map.coreBreachCell,
+      goal: state.map.coreBreachCell,
     },
-    definition
+    state.map
   );
   if (path.length === 0) return false;
   enemy.path = path;
@@ -317,8 +319,9 @@ const isClosedCoreThresholdStep = (
   step.cell.column === definition.map.coreBreachCell.column &&
   step.cell.elevation === definition.map.coreBreachCell.elevation &&
   step.portalId !== null &&
-  step.portalId === definition.facility.cellDefinition(definition.map.coreBreachCell).portalId &&
-  definition.facility.cellDefinition(step.cell).terrain === "door";
+  step.portalId ===
+    facilityModelForMap(definition.map).cellDefinition(definition.map.coreBreachCell).portalId &&
+  facilityModelForMap(definition.map).cellDefinition(step.cell).terrain === "door";
 
 const nextEnemySegment = (
   state: GameState,
@@ -329,7 +332,7 @@ const nextEnemySegment = (
   let next = enemy.path[enemy.pathIndex + 1];
   if (!current || !next) return null;
   if (
-    definition.facility.cellIsTraversable(next.cell, state.portalStates) ||
+    facilityModelForMap(definition.map).cellIsTraversable(next.cell, state.portalStates) ||
     isClosedCoreThresholdStep(next, definition)
   )
     return [current, next];
@@ -400,7 +403,7 @@ const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDef
 
 export const moveEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
   state.enemies = state.enemies.filter((enemy) => {
-    const roomId = enemyRoomId(enemy, definition);
+    const roomId = enemyRoomId(enemy, state.map);
     const room = roomId ? roomState(state, roomId) : null;
     if (!moveEnemy(state, enemy, room, dt, definition)) return true;
     breachCore(state, enemy, definition);

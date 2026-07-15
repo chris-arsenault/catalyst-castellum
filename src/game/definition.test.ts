@@ -23,8 +23,8 @@ describe("explicit game definitions", () => {
     const variant = createScenarioGame("flash_point", [], alternate);
     expect(roomState(original, "furnace").temperature).toBe(22);
     expect(roomState(variant, "furnace").temperature).toBe(60);
-    expect(DEFAULT_GAME_DEFINITION.facility.map.width).toBe(76);
-    expect(alternate.facility.map.width).toBe(80);
+    expect(DEFAULT_GAME_DEFINITION.map.width).toBe(76);
+    expect(alternate.map.width).toBe(80);
 
     const variantBuild = executeCommand(variant, { type: "begin_level" }, alternate).state;
     const variantPrime = executeCommand(variantBuild, { type: "start_prime" }, alternate).state;

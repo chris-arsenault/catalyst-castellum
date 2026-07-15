@@ -1,5 +1,6 @@
 import { DEFAULT_GAME_DEFINITION } from "./definition";
 import type { GameDefinition } from "./definitionTypes";
+import type { EnemyState } from "./types";
 import * as campaign from "./engine/campaign";
 import * as enemyPosition from "./engine/enemyPosition";
 import * as equipment from "./engine/equipment";
@@ -30,8 +31,8 @@ const bindDefinition =
 /** Definition-bound, read-only engine queries for application and presentation code. */
 export const createGameQueries = (definition: GameDefinition) =>
   Object.freeze({
-    enemyGasZone: bindDefinition(enemyPosition.enemyGasZone, definition),
-    enemyRoomId: bindDefinition(enemyPosition.enemyRoomId, definition),
+    enemyGasZone: (enemy: EnemyState) => enemyPosition.enemyGasZone(enemy, definition.map),
+    enemyRoomId: (enemy: EnemyState) => enemyPosition.enemyRoomId(enemy, definition.map),
     enemyWorldPosition: enemyPosition.enemyWorldPosition,
     levelDefinitionFor: bindDefinition(campaign.levelDefinitionFor, definition),
     roundDefinitionFor: bindDefinition(campaign.roundDefinitionFor, definition),

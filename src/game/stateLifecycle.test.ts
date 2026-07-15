@@ -10,6 +10,9 @@ const deepFreeze = <Value>(value: Value): Value => {
 };
 
 const expectNoSharedObjects = (source: unknown, clone: unknown, path = "game"): void => {
+  // The map is immutable between edits and deliberately shared so the derived
+  // geometry cache holds across clones (plan M2); an edit replaces the object.
+  if (path === "game.map") return;
   if (!isObject(source) || !isObject(clone)) return;
   expect(clone, `${path} shares an object with its source`).not.toBe(source);
   if (Array.isArray(source) && Array.isArray(clone)) {

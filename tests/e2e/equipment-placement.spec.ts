@@ -1,7 +1,8 @@
 import { expect, test, type Page } from "@playwright/test";
 import { roomCenterWorld } from "../../src/game/config";
 import type { RoomId } from "../../src/game/types";
-import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
+import { mapViewFor, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
+import { WORLD_MAP } from "../../src/game/content/worldMap";
 
 const mapCamera = async (page: Page): Promise<CameraTransform> => {
   const map = page.getByTestId("game-map");
@@ -17,7 +18,11 @@ const mapCamera = async (page: Page): Promise<CameraTransform> => {
 const clickMapRoom = async (page: Page, roomId: RoomId): Promise<void> => {
   const bounds = await page.locator("canvas").boundingBox();
   if (!bounds) throw new Error("Pixi canvas did not produce a bounding box");
-  const point = worldToClientPoint(roomCenterWorld(roomId), await mapCamera(page), bounds);
+  const point = mapViewFor(WORLD_MAP).worldToClientPoint(
+    roomCenterWorld(roomId),
+    await mapCamera(page),
+    bounds
+  );
   await page.mouse.click(point.x, point.y);
 };
 

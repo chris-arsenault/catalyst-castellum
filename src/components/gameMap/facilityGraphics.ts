@@ -1,54 +1,52 @@
 import { architecturalConnections } from "../../game/world/map";
-import type { ArchitecturalConnection } from "../../game/world/map";
+import type { ArchitecturalConnection, WorldMap } from "../../game/world/map";
 import type { Graphics } from "pixi.js";
-import { FACILITY_MAP, facilityCells } from "../../presentation/defaultGame";
+import { facilityModelForMap } from "../../game/world/derivedModel";
 import type { FacilityPortalState, GridCell } from "../../game/types";
 import {
-  WORLD_GROUND_Y,
-  WORLD_MAP_HEIGHT,
-  WORLD_MAP_WIDTH,
   WORLD_MARGIN_X,
   WORLD_MARGIN_Y,
-  WORLD_PIXELS_PER_UNIT,
-  gridCellMapRect,
+  mapViewFor,
+  type MapRect,
+  type MapView,
 } from "./mapGeometry";
 
 type FacilityPortal = ArchitecturalConnection;
 
-const drawGeologicalStrata = (graphics: Graphics): void => {
-  for (let elevation = 7; elevation < FACILITY_MAP.height; elevation += 10) {
-    const y = WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT;
+const drawGeologicalStrata = (graphics: Graphics, map: WorldMap, view: MapView): void => {
+  for (let elevation = 7; elevation < map.height; elevation += 10) {
+    const y = view.groundY - elevation * view.pixelsPerUnit;
     graphics
       .moveTo(WORLD_MARGIN_X, y)
       .bezierCurveTo(
-        WORLD_MAP_WIDTH * 0.27,
+        view.mapWidth * 0.27,
         y - 18,
-        WORLD_MAP_WIDTH * 0.7,
+        view.mapWidth * 0.7,
         y + 24,
-        WORLD_MAP_WIDTH - WORLD_MARGIN_X,
+        view.mapWidth - WORLD_MARGIN_X,
         y - 7
       )
       .stroke({ color: 0x527466, width: 1, alpha: 0.12 });
     graphics
       .moveTo(WORLD_MARGIN_X, y + 5)
       .bezierCurveTo(
-        WORLD_MAP_WIDTH * 0.27,
+        view.mapWidth * 0.27,
         y - 13,
-        WORLD_MAP_WIDTH * 0.7,
+        view.mapWidth * 0.7,
         y + 29,
-        WORLD_MAP_WIDTH - WORLD_MARGIN_X,
+        view.mapWidth - WORLD_MARGIN_X,
         y - 2
       )
       .stroke({ color: 0x020605, width: 3, alpha: 0.16 });
   }
 };
 
-const drawRockTexture = (graphics: Graphics): void => {
+const drawRockTexture = (graphics: Graphics, map: WorldMap, view: MapView): void => {
   // Deterministic marks keep the terrain legible without making rendering stateful.
-  for (let column = 5; column < FACILITY_MAP.width; column += 12) {
-    for (let elevation = 6; elevation < FACILITY_MAP.height; elevation += 12) {
-      const x = WORLD_MARGIN_X + (column + ((elevation / 8) % 2) * 1.7) * WORLD_PIXELS_PER_UNIT;
-      const y = WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT;
+  for (let column = 5; column < map.width; column += 12) {
+    for (let elevation = 6; elevation < map.height; elevation += 12) {
+      const x = WORLD_MARGIN_X + (column + ((elevation / 8) % 2) * 1.7) * view.pixelsPerUnit;
+      const y = view.groundY - elevation * view.pixelsPerUnit;
       graphics
         .moveTo(x - 6, y + 3)
         .lineTo(x, y - 2)
@@ -58,61 +56,62 @@ const drawRockTexture = (graphics: Graphics): void => {
   }
 };
 
-export const drawBackdrop = (graphics: Graphics): void => {
+export const drawBackdrop = (graphics: Graphics, map: WorldMap): void => {
+  const view = mapViewFor(map);
   graphics.clear();
-  graphics.rect(0, 0, WORLD_MAP_WIDTH, WORLD_MAP_HEIGHT).fill({ color: 0x040806 });
+  graphics.rect(0, 0, view.mapWidth, view.mapHeight).fill({ color: 0x040806 });
   graphics
     .rect(
       WORLD_MARGIN_X,
       WORLD_MARGIN_Y,
-      FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
-      FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
+      map.width * view.pixelsPerUnit,
+      map.height * view.pixelsPerUnit
     )
     .fill({ color: 0x0a1310 });
-  const core = gridCellMapRect(FACILITY_MAP.coreAnchor);
+  const core = view.gridCellMapRect(map.coreAnchor);
   const coreX = core.left + core.width / 2;
   const coreY = core.top + core.height / 2;
   graphics.circle(coreX, coreY, 320).fill({ color: 0xb89b56, alpha: 0.018 });
   graphics.circle(coreX, coreY, 220).fill({ color: 0xb89b56, alpha: 0.025 });
   graphics.circle(coreX, coreY, 130).fill({ color: 0xd2b85f, alpha: 0.03 });
-  graphics.circle(WORLD_MARGIN_X + 210, WORLD_GROUND_Y - 210, 250).fill({
+  graphics.circle(WORLD_MARGIN_X + 210, view.groundY - 210, 250).fill({
     color: 0x4b9f8b,
     alpha: 0.018,
   });
-  for (let column = 0; column <= FACILITY_MAP.width; column += 4) {
-    const x = WORLD_MARGIN_X + column * WORLD_PIXELS_PER_UNIT;
+  for (let column = 0; column <= map.width; column += 4) {
+    const x = WORLD_MARGIN_X + column * view.pixelsPerUnit;
     graphics
       .moveTo(x, WORLD_MARGIN_Y)
-      .lineTo(x, WORLD_GROUND_Y)
+      .lineTo(x, view.groundY)
       .stroke({ color: 0x89a397, width: 1, alpha: column % 12 === 0 ? 0.055 : 0.025 });
   }
-  for (let elevation = 0; elevation <= FACILITY_MAP.height; elevation += 4) {
-    const y = WORLD_GROUND_Y - elevation * WORLD_PIXELS_PER_UNIT;
+  for (let elevation = 0; elevation <= map.height; elevation += 4) {
+    const y = view.groundY - elevation * view.pixelsPerUnit;
     graphics
       .moveTo(WORLD_MARGIN_X, y)
-      .lineTo(WORLD_MAP_WIDTH - WORLD_MARGIN_X, y)
+      .lineTo(view.mapWidth - WORLD_MARGIN_X, y)
       .stroke({ color: 0x89a397, width: 1, alpha: elevation % 12 === 0 ? 0.055 : 0.025 });
   }
-  drawGeologicalStrata(graphics);
-  drawRockTexture(graphics);
+  drawGeologicalStrata(graphics, map, view);
+  drawRockTexture(graphics, map, view);
   graphics
     .rect(
       WORLD_MARGIN_X,
       WORLD_MARGIN_Y,
-      FACILITY_MAP.width * WORLD_PIXELS_PER_UNIT,
-      FACILITY_MAP.height * WORLD_PIXELS_PER_UNIT
+      map.width * view.pixelsPerUnit,
+      map.height * view.pixelsPerUnit
     )
     .stroke({ color: 0x46685a, width: 1, alpha: 0.5 });
   graphics
-    .moveTo(WORLD_MARGIN_X, WORLD_GROUND_Y)
-    .lineTo(WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_GROUND_Y)
+    .moveTo(WORLD_MARGIN_X, view.groundY)
+    .lineTo(view.mapWidth - WORLD_MARGIN_X, view.groundY)
     .stroke({ color: 0x98ad9f, width: 1.5, alpha: 0.42 });
   const corner = 28;
   for (const [x, y, dx, dy, color] of [
     [WORLD_MARGIN_X, WORLD_MARGIN_Y, 1, 1, 0x54a891],
-    [WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_MARGIN_Y, -1, 1, 0x629db3],
-    [WORLD_MARGIN_X, WORLD_GROUND_Y, 1, -1, 0x54a891],
-    [WORLD_MAP_WIDTH - WORLD_MARGIN_X, WORLD_GROUND_Y, -1, -1, 0xd2b85f],
+    [view.mapWidth - WORLD_MARGIN_X, WORLD_MARGIN_Y, -1, 1, 0x629db3],
+    [WORLD_MARGIN_X, view.groundY, 1, -1, 0x54a891],
+    [view.mapWidth - WORLD_MARGIN_X, view.groundY, -1, -1, 0xd2b85f],
   ] as const) {
     graphics
       .moveTo(x, y + dy * corner)
@@ -122,8 +121,8 @@ export const drawBackdrop = (graphics: Graphics): void => {
   }
 };
 
-const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
-  const rect = gridCellMapRect(gridCell);
+const drawLadderCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
+  const rect = view.gridCellMapRect(gridCell);
   const leftRail = rect.left + rect.width * 0.25;
   const rightRail = rect.left + rect.width * 0.75;
   graphics
@@ -149,8 +148,8 @@ const drawLadderCell = (graphics: Graphics, gridCell: GridCell): void => {
   }
 };
 
-const drawPlatformCell = (graphics: Graphics, gridCell: GridCell): void => {
-  const rect = gridCellMapRect(gridCell);
+const drawPlatformCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
+  const rect = view.gridCellMapRect(gridCell);
   graphics
     .rect(rect.left + 2, rect.top + 3, rect.width, rect.height)
     .fill({ color: 0x020504, alpha: 0.42 });
@@ -178,8 +177,8 @@ const drawPlatformCell = (graphics: Graphics, gridCell: GridCell): void => {
     .stroke({ color: 0x16251f, width: 1, alpha: 0.56 });
 };
 
-const drawCoreShellCell = (graphics: Graphics, gridCell: GridCell): void => {
-  const rect = gridCellMapRect(gridCell);
+const drawCoreShellCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
+  const rect = view.gridCellMapRect(gridCell);
   graphics
     .rect(rect.left, rect.top, rect.width, rect.height)
     .fill({ color: 0x2b3025, alpha: 0.94 })
@@ -192,14 +191,15 @@ const drawCoreShellCell = (graphics: Graphics, gridCell: GridCell): void => {
 
 const drawPortalFlowArrow = (
   graphics: Graphics,
+  view: MapView,
   portal: FacilityPortal,
   flow: number,
   color: number,
   offset: number
 ): void => {
   if (Math.abs(flow) < 0.001) return;
-  const fromRect = gridCellMapRect(flow > 0 ? portal.endpoints[0] : portal.endpoints[1]);
-  const toRect = gridCellMapRect(flow > 0 ? portal.endpoints[1] : portal.endpoints[0]);
+  const fromRect = view.gridCellMapRect(flow > 0 ? portal.endpoints[0] : portal.endpoints[1]);
+  const toRect = view.gridCellMapRect(flow > 0 ? portal.endpoints[1] : portal.endpoints[0]);
   const from = { x: fromRect.left + fromRect.width / 2, y: fromRect.top + fromRect.height / 2 };
   const to = { x: toRect.left + toRect.width / 2, y: toRect.top + toRect.height / 2 };
   const length = Math.hypot(to.x - from.x, to.y - from.y);
@@ -237,30 +237,32 @@ const drawPortalFlowArrow = (
 
 const drawPortalFlows = (
   graphics: Graphics,
+  view: MapView,
   portal: FacilityPortal,
   portalState: FacilityPortalState | undefined
 ): void => {
   if (!portalState || portalState.sealed || !portalState.open) return;
-  drawPortalFlowArrow(graphics, portal, portalState.lastGasFlow, 0x6ad9b4, -3);
-  drawPortalFlowArrow(graphics, portal, portalState.lastLiquidFlow, 0x50b7f6, 3);
+  drawPortalFlowArrow(graphics, view, portal, portalState.lastGasFlow, 0x6ad9b4, -3);
+  drawPortalFlowArrow(graphics, view, portal, portalState.lastLiquidFlow, 0x50b7f6, 3);
 };
 
 const portalOpen = (portal: FacilityPortal, state: FacilityPortalState | undefined): boolean =>
   state?.open ?? portal.defaultOpen;
 
-const openDoorX = (door: GridCell, rect: ReturnType<typeof gridCellMapRect>): number => {
+const openDoorX = (door: GridCell, rect: MapRect): number => {
   if (door.column % 2 === 0) return rect.left + 2;
   return rect.left + rect.width - 5;
 };
 
 const drawDoorPortal = (
   graphics: Graphics,
+  view: MapView,
   portal: FacilityPortal,
   state: FacilityPortalState | undefined
 ): void => {
   const open = portalOpen(portal, state);
   for (const door of portal.connectorCells) {
-    const rect = gridCellMapRect(door);
+    const rect = view.gridCellMapRect(door);
     const width = open ? 3 : rect.width - 4;
     const x = open ? openDoorX(door, rect) : rect.left + 2;
     graphics
@@ -270,8 +272,13 @@ const drawDoorPortal = (
   }
 };
 
-const drawTrapdoorCell = (graphics: Graphics, trapdoor: GridCell, open: boolean): void => {
-  const rect = gridCellMapRect(trapdoor);
+const drawTrapdoorCell = (
+  graphics: Graphics,
+  view: MapView,
+  trapdoor: GridCell,
+  open: boolean
+): void => {
+  const rect = view.gridCellMapRect(trapdoor);
   if (open) {
     graphics
       .moveTo(rect.left, rect.top)
@@ -289,60 +296,63 @@ const drawTrapdoorCell = (graphics: Graphics, trapdoor: GridCell, open: boolean)
 
 const drawTrapdoorPortal = (
   graphics: Graphics,
+  view: MapView,
   portal: FacilityPortal,
   state: FacilityPortalState | undefined
 ): void => {
   const open = portalOpen(portal, state);
-  for (const trapdoor of portal.connectorCells) drawTrapdoorCell(graphics, trapdoor, open);
+  for (const trapdoor of portal.connectorCells) drawTrapdoorCell(graphics, view, trapdoor, open);
 };
 
 export const drawFacilityDoors = (
   graphics: Graphics,
+  map: WorldMap,
   portalStates: Readonly<Record<string, FacilityPortalState>>
 ): void => {
+  const view = mapViewFor(map);
   graphics.clear();
-  for (const portal of architecturalConnections(FACILITY_MAP)) {
+  for (const portal of architecturalConnections(map)) {
     const state = portalStates[portal.id];
     if (portal.kind === "door" || portal.kind === "core_door") {
-      drawDoorPortal(graphics, portal, state);
+      drawDoorPortal(graphics, view, portal, state);
     }
     if (portal.kind === "trapdoor") {
-      drawTrapdoorPortal(graphics, portal, state);
+      drawTrapdoorPortal(graphics, view, portal, state);
     }
-    drawPortalFlows(graphics, portal, state);
+    drawPortalFlows(graphics, view, portal, state);
   }
 };
 
-const drawPortalCut = (graphics: Graphics, gridCell: GridCell): void => {
-  const rect = gridCellMapRect(gridCell);
+const drawPortalCut = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
+  const rect = view.gridCellMapRect(gridCell);
   graphics
     .rect(rect.left - 0.6, rect.top - 0.6, rect.width + 1.2, rect.height + 1.2)
     .stroke({ color: 0x607b6f, width: 1, alpha: 0.22 });
 };
 
-const drawPortalCuts = (graphics: Graphics): void => {
-  for (const portal of architecturalConnections(FACILITY_MAP)) {
-    for (const connector of portal.connectorCells) drawPortalCut(graphics, connector);
+const drawPortalCuts = (graphics: Graphics, map: WorldMap, view: MapView): void => {
+  for (const portal of architecturalConnections(map)) {
+    for (const connector of portal.connectorCells) drawPortalCut(graphics, view, connector);
   }
 };
 
-const drawTerrainStructures = (graphics: Graphics): void => {
-  for (const definition of facilityCells()) {
-    if (definition.terrain === "core_shell") drawCoreShellCell(graphics, definition.cell);
+const drawTerrainStructures = (graphics: Graphics, map: WorldMap, view: MapView): void => {
+  for (const definition of facilityModelForMap(map).cells()) {
+    if (definition.terrain === "core_shell") drawCoreShellCell(graphics, view, definition.cell);
   }
-  for (const definition of facilityCells()) {
-    if (definition.terrain === "platform") drawPlatformCell(graphics, definition.cell);
+  for (const definition of facilityModelForMap(map).cells()) {
+    if (definition.terrain === "platform") drawPlatformCell(graphics, view, definition.cell);
   }
-  for (const definition of facilityCells()) {
-    if (definition.terrain === "ladder") drawLadderCell(graphics, definition.cell);
+  for (const definition of facilityModelForMap(map).cells()) {
+    if (definition.terrain === "ladder") drawLadderCell(graphics, view, definition.cell);
   }
 };
 
-const drawPassageFrames = (graphics: Graphics): void => {
-  for (const portal of architecturalConnections(FACILITY_MAP)) {
+const drawPassageFrames = (graphics: Graphics, map: WorldMap, view: MapView): void => {
+  for (const portal of architecturalConnections(map)) {
     if (portal.kind !== "passage" && portal.kind !== "floor_hole") continue;
     for (const connector of portal.connectorCells) {
-      const rect = gridCellMapRect(connector);
+      const rect = view.gridCellMapRect(connector);
       graphics
         .rect(rect.left, rect.top, rect.width, rect.height)
         .stroke({ color: 0x607b6f, width: 1, alpha: 0.28 });
@@ -350,9 +360,10 @@ const drawPassageFrames = (graphics: Graphics): void => {
   }
 };
 
-export const drawFacilityCorridors = (graphics: Graphics): void => {
+export const drawFacilityCorridors = (graphics: Graphics, map: WorldMap): void => {
+  const view = mapViewFor(map);
   graphics.clear();
-  drawPortalCuts(graphics);
-  drawTerrainStructures(graphics);
-  drawPassageFrames(graphics);
+  drawPortalCuts(graphics, map, view);
+  drawTerrainStructures(graphics, map, view);
+  drawPassageFrames(graphics, map, view);
 };

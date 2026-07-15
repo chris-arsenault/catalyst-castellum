@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import { emptyGas, emptyLiquid } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
 import { addEvent } from "../engine/events";
@@ -203,7 +204,7 @@ const migrateV8Enemy = (
   gameDefinition: GameDefinition
 ): GameState["enemies"][number] => {
   const definition = gameDefinition.enemies[legacy.type];
-  const path = findEnemyPath({ flying: definition.flying, portalStates }, gameDefinition);
+  const path = findEnemyPath({ flying: definition.flying, portalStates }, gameDefinition.map);
   if (path.length === 0)
     throw new Error(`Cannot migrate ${legacy.type}: Core route is unavailable.`);
   const oldSegments = Math.max(1, legacy.route.length - 1);
@@ -233,7 +234,7 @@ const migrateV8Enemy = (
 };
 
 export const migrateV8Game = (legacy: LegacyV8Game, definition: GameDefinition): LegacyV9Game => {
-  const portalStates = definition.facility.initialPortalStates();
+  const portalStates = facilityModelForMap(definition.map).initialPortalStates();
   const enemies = legacy.enemies.map((enemy) => migrateV8Enemy(enemy, portalStates, definition));
   return {
     ...legacy,

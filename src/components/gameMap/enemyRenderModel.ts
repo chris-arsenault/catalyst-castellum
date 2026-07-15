@@ -6,7 +6,8 @@ import type {
   EnemyState,
   Point,
 } from "../../game/types";
-import { colorNumber, worldToMapPoint } from "./mapGeometry";
+import { colorNumber, mapViewFor } from "./mapGeometry";
+import type { WorldMap } from "../../game/world/map";
 import type { GameDefinition } from "../../game/definitionTypes";
 
 export interface EnemyRenderModel {
@@ -21,13 +22,13 @@ export interface EnemyRenderModel {
 /** Pure, pack-bound projection from persisted simulation state to the map renderer. */
 export const createEnemyRenderModel =
   (definition: Pick<GameDefinition, "enemies">) =>
-  (enemy: EnemyState): EnemyRenderModel => ({
+  (enemy: EnemyState, map: WorldMap): EnemyRenderModel => ({
     color: colorNumber(definition.enemies[enemy.type].color),
     appearance: definition.enemies[enemy.type].presentation.appearance,
     facing: enemy.facing,
     health: enemy.health / enemy.maxHealth,
     mode: enemy.mode,
-    position: worldToMapPoint(enemyWorldPosition(enemy)),
+    position: mapViewFor(map).worldToMapPoint(enemyWorldPosition(enemy)),
   });
 
 export const enemyRenderModel = createEnemyRenderModel({ enemies: ENEMY_DEFINITIONS });

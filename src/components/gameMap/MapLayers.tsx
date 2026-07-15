@@ -9,20 +9,23 @@ import { connectionRoomPair } from "../../presentation/defaultGame";
 
 export { IncidentLayer } from "./IncidentLayer";
 
-export const MapBackdrop = () => {
-  const draw = useCallback((graphics: Graphics) => drawBackdrop(graphics), []);
+export const MapBackdrop = ({ game }: { game: GameState }) => {
+  const draw = useCallback((graphics: Graphics) => drawBackdrop(graphics, game.map), [game.map]);
   return <pixiGraphics draw={draw} eventMode="none" />;
 };
 
-export const FacilityCorridors = () => {
-  const draw = useCallback((graphics: Graphics) => drawFacilityCorridors(graphics), []);
+export const FacilityCorridors = ({ game }: { game: GameState }) => {
+  const draw = useCallback(
+    (graphics: Graphics) => drawFacilityCorridors(graphics, game.map),
+    [game.map]
+  );
   return <pixiGraphics draw={draw} eventMode="none" />;
 };
 
 export const FacilityDoors = ({ game }: { game: GameState }) => {
   const draw = useCallback(
-    (graphics: Graphics) => drawFacilityDoors(graphics, game.portalStates),
-    [game.portalStates]
+    (graphics: Graphics) => drawFacilityDoors(graphics, game.map, game.portalStates),
+    [game.map, game.portalStates]
   );
   return <pixiGraphics draw={draw} eventMode="none" />;
 };

@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
 import { enemyRoomId } from "../../game/queries";
 import type { GameState, RoomId } from "../../game/types";
-import { roomMapRect } from "./mapGeometry";
+import { mapViewFor } from "./mapGeometry";
 import { drawRoom } from "./roomGraphics";
 import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
@@ -28,7 +28,7 @@ export const RoomNode = ({
   onPipeDragEnd,
   pipeMode,
 }: RoomNodeProps) => {
-  const geometry = roomMapRect(roomId);
+  const geometry = mapViewFor(game.map).roomMapRect(roomId);
   const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy) === roomId).length;
   const model = roomRenderModel(game, roomId, selected, occupied);
   const hitArea = roomHitArea(model);

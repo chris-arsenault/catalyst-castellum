@@ -1,5 +1,6 @@
 import type { Graphics } from "pixi.js";
-import { SPECIES_DEFINITIONS, gridCellsToWorldPath } from "../../presentation/defaultGame";
+import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
+import { gridPathToWorldPath as gridCellsToWorldPath } from "../../game/spatial";
 import {
   transportRunMaterialFlow,
   transportRunPhaseStatus,
@@ -16,7 +17,7 @@ import {
   type TransportPhase,
   type ConnectionId,
 } from "../../game/types";
-import { colorNumber, worldPathToMap } from "./mapGeometry";
+import { colorNumber, mapViewFor } from "./mapGeometry";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
 import { lineDefinition } from "../../presentation/defaultGame";
 
@@ -359,8 +360,9 @@ export const drawTransportRun = (
   const liquidCells = phaseRouteCells(state, runId, "liquid");
   const hasGas = gasCells !== null;
   const hasLiquid = liquidCells !== null;
-  const gasPath = worldPathToMap(gridCellsToWorldPath(gasCells ?? []));
-  const liquidPath = worldPathToMap(gridCellsToWorldPath(liquidCells ?? []));
+  const view = mapViewFor(state.map);
+  const gasPath = view.worldPathToMap(gridCellsToWorldPath(gasCells ?? []));
+  const liquidPath = view.worldPathToMap(gridCellsToWorldPath(liquidCells ?? []));
   const laneOffsets = coincidentLaneOffsets(gasCells, liquidCells);
   if (hasGas) {
     drawPhaseLane(graphics, {

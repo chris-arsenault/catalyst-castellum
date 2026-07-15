@@ -1,4 +1,4 @@
-import { EQUIPMENT_DEFINITIONS, FACILITY_MAP, ROOM_ORDER } from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS, ROOM_ORDER } from "../../presentation/defaultGame";
 import {
   EQUIPMENT_SOCKET_IDS,
   type EquipmentId,
@@ -7,7 +7,7 @@ import {
   type GameState,
   type RoomId,
 } from "../../game/types";
-import { colorNumber, gridCellMapRect } from "./mapGeometry";
+import { colorNumber, mapViewFor } from "./mapGeometry";
 import { instance as worldInstance, roomState } from "../../game/world/instances";
 
 export const EQUIPMENT_MAP_CODES: Record<EquipmentId, string> = {
@@ -33,9 +33,9 @@ export const equipmentRenderModels = (game: GameState): EquipmentRenderModel[] =
   ROOM_ORDER.flatMap((roomId) =>
     EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
       const instance = roomState(game, roomId).equipment[socketId];
-      const cell = worldInstance(FACILITY_MAP.rooms, roomId, "map room").socketCells[socketId];
+      const cell = worldInstance(game.map.rooms, roomId, "map room").socketCells[socketId];
       if (!instance || !cell) return [];
-      const rect = gridCellMapRect(cell);
+      const rect = mapViewFor(game.map).gridCellMapRect(cell);
       return [
         {
           accent: colorNumber(EQUIPMENT_DEFINITIONS[instance.equipmentId].accent),

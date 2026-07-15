@@ -1,3 +1,4 @@
+import { facilityModelForMap } from "../world/derivedModel";
 import { architecturalConnections } from "../world/map";
 import type { GameDefinition } from "../definitionTypes";
 import {
@@ -141,7 +142,7 @@ const validateRouteCells = (
   definition: GameDefinition
 ): void => {
   for (const [index, cell] of route.entries()) {
-    if (!definition.facility.inBounds(cell)) {
+    if (!facilityModelForMap(definition.map).inBounds(cell)) {
       issue(
         issues,
         "conduit_route_invalid",

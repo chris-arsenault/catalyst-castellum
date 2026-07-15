@@ -1,6 +1,5 @@
 import { architecturalConnections } from "../game/world/map";
 import { useCallback, useState } from "react";
-import { FACILITY_MAP } from "../presentation/defaultGame";
 import type { CameraTransform } from "./gameMap/mapGeometry";
 import type { GameState, RoomId, SpeciesId } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
@@ -20,8 +19,8 @@ interface GameMapProps {
 
 const mapTelemetry = (game: GameState, camera: CameraTransform, pipeMode: boolean) => ({
   "data-world-model": "cell-platform-v1",
-  "data-grid": `${FACILITY_MAP.width}x${FACILITY_MAP.height}`,
-  "data-portal-count": architecturalConnections(FACILITY_MAP).length,
+  "data-grid": `${game.map.width}x${game.map.height}`,
+  "data-portal-count": architecturalConnections(game.map).length,
   "data-enemy-modes": [...new Set(game.enemies.map((enemy) => enemy.mode))].join(","),
   "data-camera-x": camera.x,
   "data-camera-y": camera.y,
@@ -46,7 +45,7 @@ export const GameMap = ({
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
-  const camera = useMapCamera();
+  const camera = useMapCamera(game.map);
   const completePipeDrag = useCallback(
     (roomId: RoomId) => {
       setPipeDragSourceRoomId((source) => {
