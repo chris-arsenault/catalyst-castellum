@@ -33,15 +33,42 @@ const roomContains = (map: WorldMap, roomId: string, cell: GridCell): boolean =>
   );
 };
 
+const boundsOverlap = (
+  left: WorldMap["rooms"][string],
+  right: WorldMap["rooms"][string]
+): boolean =>
+  left.bounds.column < right.bounds.column + right.bounds.width &&
+  left.bounds.column + left.bounds.width > right.bounds.column &&
+  left.bounds.elevation < right.bounds.elevation + right.bounds.height &&
+  left.bounds.elevation + left.bounds.height > right.bounds.elevation;
+
+const validateRoom = (
+  map: WorldMap,
+  roomId: string,
+  room: WorldMap["rooms"][string],
+  issues: MapIssue[]
+): void => {
+  const path = `rooms.${roomId}`;
+  if (room.id !== roomId)
+    push(issues, `${path}.id`, `Record key ${roomId} differs from declared ID ${room.id}.`);
+  for (const phase of ["gas", "liquid"] as const) {
+    const sourceIds = room.taps[phase].sourceIds;
+    if (new Set(sourceIds).size !== sourceIds.length)
+      push(issues, `${path}.taps.${phase}.sourceIds`, "Tap source ids must be unique.");
+  }
+  for (const hardpoint of room.hardpoints) {
+    if (!roomContains(map, roomId, hardpoint.cell))
+      push(issues, `${path}.hardpoints.${hardpoint.id}`, "Hardpoint cell is outside its room.");
+  }
+};
+
 const validateRooms = (map: WorldMap, issues: MapIssue[]): void => {
-  for (const [roomId, room] of Object.entries(map.rooms)) {
-    const path = `rooms.${roomId}`;
-    if (room.id !== roomId)
-      push(issues, `${path}.id`, `Record key ${roomId} differs from declared ID ${room.id}.`);
-    for (const phase of ["gas", "liquid"] as const) {
-      const sourceIds = room.taps[phase].sourceIds;
-      if (new Set(sourceIds).size !== sourceIds.length)
-        push(issues, `${path}.taps.${phase}.sourceIds`, "Tap source ids must be unique.");
+  const rooms = Object.entries(map.rooms);
+  for (const [roomId, room] of rooms) validateRoom(map, roomId, room, issues);
+  for (let left = 0; left < rooms.length; left += 1) {
+    for (let right = left + 1; right < rooms.length; right += 1) {
+      if (boundsOverlap(rooms[left]![1], rooms[right]![1]))
+        push(issues, `rooms.${rooms[left]![0]}`, `Room bounds overlap ${rooms[right]![0]}.`);
     }
   }
 };

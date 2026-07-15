@@ -9,6 +9,7 @@ import type {
   LiquidSourceId,
 } from "../types";
 import { addEvent, makeStats } from "./events";
+import { dismantleModuleCommand, graftModuleCommand } from "./graftCommands";
 import { roundDefinitionFor } from "./campaign";
 import { cloneGame } from "./roomState";
 import { beginAssault } from "./phases";
@@ -200,6 +201,10 @@ export const executeCommand = (
       return buildConnectionCommand(source, command, decision, definition);
     case "dismantle_connection":
       return dismantleConnectionCommand(source, command, decision);
+    case "graft_module":
+      return graftModuleCommand(source, command, decision, definition);
+    case "dismantle_module":
+      return dismantleModuleCommand(source, command, decision);
     case "charge_gas_source":
       return gasCharge(source, command.sourceId, decision, definition);
     case "charge_liquid_source":

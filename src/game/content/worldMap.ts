@@ -52,6 +52,7 @@ const room = (
   platformCells: [],
   ladderCells: [],
   taps: { gas: gasTap(), liquid: liquidTap() },
+  hardpoints: [],
   provenance: "site",
   ...overrides,
 });

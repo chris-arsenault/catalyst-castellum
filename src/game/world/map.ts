@@ -40,6 +40,14 @@ export interface LiquidTapDefinition {
   sourceIds: readonly LiquidSourceId[];
 }
 
+/** A designated graft attachment on a player-owned room (confirmed hardpoint model). */
+export interface Hardpoint {
+  id: string;
+  /** Boundary cell inside the room the joint connects through. */
+  cell: GridCell;
+  facing: "left" | "right" | "up" | "down";
+}
+
 export interface MapRoom {
   id: RoomId;
   /** Short display code (e.g. "R-02"); grafted rooms mint theirs from the module. */
@@ -54,6 +62,7 @@ export interface MapRoom {
   /** Atmospheric cells inside the room that support climbing. */
   ladderCells: readonly GridCell[];
   taps: { gas: GasTapDefinition; liquid: LiquidTapDefinition };
+  hardpoints: readonly Hardpoint[];
   provenance: RoomProvenance;
 }
 

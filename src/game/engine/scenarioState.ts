@@ -92,6 +92,21 @@ const makeRoom = (
   };
 };
 
+/** A just-grafted room's state: ambient contents, no loadout. */
+export const freshRoomState = (id: RoomId, definition: GameDefinition, map: WorldMap): RoomState =>
+  makeRoom(id, emptyFacilityLoadout(), definition, map);
+
+const emptyFacilityLoadout = (): FacilityLoadout => ({
+  equipment: {},
+  initialTemperatures: {},
+  gasConduits: {},
+  liquidConduits: {},
+  gasSourceGas: {},
+  liquidSourceAmounts: {},
+  gasBuffers: {},
+  liquidBuffers: {},
+});
+
 const makeRooms = (
   loadout: FacilityLoadout,
   definition: GameDefinition,

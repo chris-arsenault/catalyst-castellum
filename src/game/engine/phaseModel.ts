@@ -24,6 +24,8 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
       "set_conduit",
       "build_connection",
       "dismantle_connection",
+      "graft_module",
+      "dismantle_module",
       "charge_gas_source",
       "charge_liquid_source",
       "start_prime",

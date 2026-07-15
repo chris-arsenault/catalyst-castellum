@@ -4,6 +4,7 @@ import { ENEMY_DEFINITIONS } from "./content/enemies";
 import { EQUIPMENT_DEFINITIONS } from "./content/equipment";
 import { WORLD_MAP } from "./content/worldMap";
 import { LINE_SPECS } from "./content/lineSpecs";
+import { MODULE_TEMPLATES } from "./content/modules";
 import { ENVIRONMENT_HAZARD_RULES } from "./content/hazards";
 import { GAS_BUFFERS, GAS_SOURCES, LIQUID_BUFFERS, LIQUID_SOURCES } from "./content/supplies";
 import { PROCESS_DEFINITIONS } from "./content/processes";
@@ -36,6 +37,7 @@ export const deriveGame = (
     contentVersion: base.contentVersion,
     map: base.map,
     lineSpecs: base.lineSpecs,
+    modules: base.modules,
     levelOrder: base.levelOrder,
     species: base.species,
     reactions: base.reactions,
@@ -60,6 +62,7 @@ export const DEFAULT_GAME_DEFINITION = defineGame({
   contentVersion: 3,
   map: WORLD_MAP,
   lineSpecs: LINE_SPECS,
+  modules: MODULE_TEMPLATES,
   levelOrder: LEVEL_IDS,
   species: SPECIES_DEFINITIONS,
   reactions: REACTION_DEFINITIONS,

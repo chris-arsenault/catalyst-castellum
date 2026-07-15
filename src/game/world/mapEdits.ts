@@ -4,6 +4,7 @@ import { routeConnection } from "./autoRouter";
 import type {
   LineSpec,
   MapConnection,
+  MapRoom,
   ProcessLineConnection,
   ProcessLineKind,
   WorldMap,
@@ -58,6 +59,39 @@ export const plannedLineConnection = (
   if (!plans.has(key))
     plans.set(key, mintLineConnection(definition, map, kind, fromRoomId, toRoomId));
   return plans.get(key) ?? null;
+};
+
+const validated = (edited: WorldMap, operation: string): WorldMap => {
+  const issues = validateWorldMap(edited);
+  if (issues.length > 0) {
+    const detail = issues.map(({ path, message }) => path + ": " + message).join("; ");
+    throw new Error(`${operation} rejected: ${detail}`);
+  }
+  return Object.freeze(edited);
+};
+
+/** A graft adds one hull room and its joint in a single validated edit. */
+export const withGraft = (map: WorldMap, room: MapRoom, joint: MapConnection): WorldMap => {
+  if (room.id in map.rooms) throw new Error(`Graft room ${room.id} already exists on the map.`);
+  if (joint.id in map.connections)
+    throw new Error(`Graft joint ${joint.id} already exists on the map.`);
+  return validated(
+    {
+      ...map,
+      rooms: { ...map.rooms, [room.id]: room },
+      connections: { ...map.connections, [joint.id]: joint },
+    },
+    "Graft"
+  );
+};
+
+export const withoutGraft = (map: WorldMap, roomId: string, jointId: string): WorldMap => {
+  const rooms = { ...map.rooms };
+  const connections = { ...map.connections };
+  if (!(roomId in rooms)) throw new Error(`Unknown graft room instance: ${roomId}`);
+  delete rooms[roomId];
+  delete connections[jointId];
+  return validated({ ...map, rooms, connections }, "Graft removal");
 };
 
 /** Route and parameterize a new player line; null when no legal route exists. */

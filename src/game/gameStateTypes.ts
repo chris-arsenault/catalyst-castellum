@@ -266,6 +266,8 @@ export type GameCommand =
   | { type: "dismantle_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
   | { type: "build_connection"; kind: ProcessLineKind; fromRoomId: RoomId; toRoomId: RoomId }
   | { type: "dismantle_connection"; connectionId: ConnectionId }
+  | { type: "graft_module"; hostRoomId: RoomId; hardpointId: string; moduleId: string }
+  | { type: "dismantle_module"; roomId: RoomId }
   | { type: "charge_gas_source"; sourceId: GasSourceId }
   | { type: "charge_liquid_source"; sourceId: LiquidSourceId }
   | { type: "start_prime" }

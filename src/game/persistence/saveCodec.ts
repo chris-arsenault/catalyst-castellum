@@ -367,6 +367,13 @@ const mapRoomSchema = z.object({
   platformCells: z.array(mapGridCellSchema),
   ladderCells: z.array(mapGridCellSchema),
   taps: z.object({ gas: tapSchema, liquid: tapSchema }),
+  hardpoints: z.array(
+    z.object({
+      id: z.string().min(1),
+      cell: mapGridCellSchema,
+      facing: z.enum(["left", "right", "up", "down"]),
+    })
+  ),
   provenance: z.enum(["site", "hull"]),
 });
 const processLineSchema = z.object({

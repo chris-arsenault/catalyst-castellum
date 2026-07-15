@@ -121,29 +121,24 @@ describe("the carried hull persists and translates", () => {
   it("translates hull geometry when the anchor moves", () => {
     const ending = createScenarioGame("flash_point", [], definition);
     const fragment = extractHullFragment(ending);
-    // A site that anchors the hull elsewhere must author its hull-facing connections
-    // against that anchor; this one has none, so any legal offset embeds.
-    const detachedMapB: WorldMap = Object.freeze({
+    // A sparse site with room to dock the hull far from its old coordinates.
+    const sparseSite: WorldMap = Object.freeze({
       ...mapB,
-      width: mapB.width + 6,
-      connections: Object.fromEntries(
-        Object.entries(mapB.connections).filter(([, connection]) =>
-          connection.rooms.every(
-            (roomId) => !HULL_ROOMS.includes(roomId as (typeof HULL_ROOMS)[number])
-          )
-        )
-      ),
+      width: 120,
+      rooms: { core: mapB.rooms.core! },
+      connections: {},
+      utilityNodes: mapB.utilityNodes,
     });
     const site = produceAuthoredSite(
       {
-        map: detachedMapB,
+        map: sparseSite,
         rounds: definition.levels.make_the_reagent.rounds,
-        hullAnchor: { columns: 6, elevations: 0 },
+        hullAnchor: { columns: 70, elevations: 0 },
       },
       fragment
     );
     const shifted = site.map.rooms.furnace;
-    expect(shifted?.bounds.column).toBe(WORLD_MAP.rooms.furnace!.bounds.column + 6);
+    expect(shifted?.bounds.column).toBe(WORLD_MAP.rooms.furnace!.bounds.column + 70);
     expect(site.hull?.gasConduits).toEqual(fragment.gasConduits);
   });
 });

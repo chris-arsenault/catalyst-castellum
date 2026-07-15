@@ -326,6 +326,16 @@ const validateWorldCoverage = (source: GamePackSource, issues: AuthoringIssue[])
   }
 };
 
+const validateModules = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  for (const [moduleId, template] of Object.entries(source.modules)) {
+    validateIdentity(issues, `modules.${moduleId}.id`, moduleId, template.id);
+    if (template.footprint.width < 1 || template.footprint.height < 1)
+      push(issues, `modules.${moduleId}.footprint`, "Module footprint must be positive.");
+    if (template.graftCost < 0)
+      push(issues, `modules.${moduleId}.graftCost`, "Graft cost must be nonnegative.");
+  }
+};
+
 export const validateGamePack = (source: GamePackSource): readonly AuthoringIssue[] => {
   const issues: AuthoringIssue[] = [];
   if (source.packId.trim().length === 0) push(issues, "packId", "Pack ID must be non-empty.");
@@ -335,6 +345,7 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
   validateLevelOrder(source, issues);
   validateReactions(source, issues);
   validateMap(source, issues);
+  validateModules(source, issues);
   validateProcesses(source, issues);
   return issues;
 };

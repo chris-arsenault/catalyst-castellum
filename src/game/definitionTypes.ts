@@ -34,6 +34,7 @@ import type {
   WorldPoint,
 } from "./types";
 import type { ArchitecturalConnection, LineSpecs, WorldMap } from "./world/map";
+import type { ModuleId, ModuleTemplate } from "./world/modules";
 
 export type ScenarioRoomEquipment = Partial<
   Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
@@ -123,6 +124,7 @@ export interface GamePackSource {
   readonly contentVersion: number;
   readonly map: WorldMap;
   readonly lineSpecs: LineSpecs;
+  readonly modules: Readonly<Record<ModuleId, ModuleTemplate>>;
   readonly levelOrder: readonly LevelId[];
   readonly species: Readonly<Record<SpeciesId, SpeciesDefinition>>;
   readonly reactions: Readonly<Record<ReactionId, ReactionDefinition>>;

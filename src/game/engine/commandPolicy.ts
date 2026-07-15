@@ -22,6 +22,7 @@ import { phaseAllowsCommand } from "./phaseModel";
 import { conduitState, gasConduitState, liquidConduitState, roomState } from "../world/instances";
 import { isProcessLine, processLineId } from "../world/map";
 import { plannedLineConnection } from "../world/mapEdits";
+import { graftedJointId, plannedGraft } from "../world/graft";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -189,6 +190,83 @@ const evaluateBuildConnection = (
   return allow({ cost: line.buildCost });
 };
 
+const evaluateGraftModule = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "graft_module" }>,
+  gameDefinition: GameDefinition
+): CommandDecision => {
+  if (state.phase !== "build") return reject("invalid_phase");
+  const plan = plannedGraft(
+    gameDefinition,
+    state.map,
+    command.hostRoomId,
+    command.hardpointId,
+    command.moduleId
+  );
+  if (!plan) return reject("placement");
+  if (state.matter < plan.cost) return reject("insufficient_matter", { cost: plan.cost });
+  return allow({ cost: plan.cost });
+};
+
+/** Rooms always hold atmosphere; only equipment, liquids, and non-ambient gases block. */
+const graftedRoomIsClear = (
+  state: GameState,
+  gameDefinition: GameDefinition,
+  roomId: string
+): boolean => {
+  const room = state.rooms[roomId];
+  if (!room) return false;
+  const hasEquipment = Object.values(room.equipment).some((instance) => instance !== null);
+  const nonAmbientGas = (Object.keys(room.gas.lower) as (keyof typeof room.gas.lower)[])
+    .filter((species) => (gameDefinition.ambientGas[species] ?? 0) <= 0)
+    .reduce((total, species) => total + room.gas.lower[species] + room.gas.upper[species], 0);
+  const liquid = Object.values(room.liquid).reduce((total, amount) => total + amount, 0);
+  return !hasEquipment && nonAmbientGas + liquid < ROOM_CLEAR_EPSILON;
+};
+
+const evaluateDismantleModule = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "dismantle_module" }>,
+  gameDefinition: GameDefinition
+): CommandDecision => {
+  if (state.phase !== "build") return reject("invalid_phase");
+  const room = state.map.rooms[command.roomId];
+  if (!room || !command.roomId.startsWith("graft:")) return reject("placement");
+  const jointId = graftedJointId(...graftRef(command.roomId));
+  const attached = Object.values(state.map.connections).filter(
+    (connection) => connection.rooms.includes(command.roomId) && connection.id !== jointId
+  );
+  if (attached.length > 0) return reject("capacity");
+  if (!graftedRoomIsClear(state, gameDefinition, command.roomId)) return reject("capacity");
+  const moduleId = graftModuleIdFor(state, gameDefinition, command.roomId);
+  const refund = moduleId
+    ? Math.floor((gameDefinition.modules[moduleId]?.graftCost ?? 0) * 0.75)
+    : 0;
+  return allow({ refund });
+};
+
+const ROOM_CLEAR_EPSILON = 0.5;
+
+const graftRef = (roomId: string): [string, string] => {
+  const [, host = "", hardpoint = ""] = roomId.split(":");
+  return [host, hardpoint];
+};
+
+/** Recover the template from the grafted room's shape (code prefix). */
+const graftModuleIdFor = (
+  state: GameState,
+  gameDefinition: GameDefinition,
+  roomId: string
+): string | null => {
+  const room = state.map.rooms[roomId];
+  if (!room) return null;
+  const prefix = room.code.split("-")[0] ?? "";
+  return (
+    Object.values(gameDefinition.modules).find((template) => template.codePrefix === prefix)?.id ??
+    null
+  );
+};
+
 const evaluateDismantleConnection = (
   state: GameState,
   command: Extract<GameCommand, { type: "dismantle_connection" }>
@@ -281,6 +359,10 @@ export const evaluateCommand = (
       return evaluateBuildConnection(state, command, definition);
     case "dismantle_connection":
       return evaluateDismantleConnection(state, command);
+    case "graft_module":
+      return evaluateGraftModule(state, command, definition);
+    case "dismantle_module":
+      return evaluateDismantleModule(state, command, definition);
     case "charge_gas_source":
       return evaluateGasCharge(state, command, definition);
     case "charge_liquid_source":

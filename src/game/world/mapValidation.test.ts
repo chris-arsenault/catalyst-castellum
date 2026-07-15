@@ -17,6 +17,7 @@ const room = (id: string, column: number, elevation: number): MapRoom => ({
     gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
     liquid: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
   },
+  hardpoints: [],
   provenance: "site",
 });
 
