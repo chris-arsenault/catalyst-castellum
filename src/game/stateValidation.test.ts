@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { encodeGame, decodeGame } from "./save";
 import { createScenarioGame, validateGameState } from "./simulation";
 import { DEFAULT_GAME_RUNTIME } from "./runtime";
+import { gasConduitState, roomState } from "./world/instances";
 
 describe("semantic game-state validation", () => {
   it("accepts every authored scenario", () => {
@@ -19,18 +20,18 @@ describe("semantic game-state validation", () => {
 
   it("rejects empty, disconnected, and out-of-bounds conduit routes", () => {
     const empty = createScenarioGame("flash_point");
-    empty.gasConduits.core_furnace.route = [];
+    gasConduitState(empty, "core_furnace").route = [];
     expect(decodeGame(encodeGame(empty))).toBeNull();
 
     const disconnected = createScenarioGame("flash_point");
-    disconnected.gasConduits.core_furnace.route.splice(1, 0, {
+    gasConduitState(disconnected, "core_furnace").route.splice(1, 0, {
       column: 0,
       elevation: 0,
     });
     expect(decodeGame(encodeGame(disconnected))).toBeNull();
 
     const outOfBounds = createScenarioGame("flash_point");
-    outOfBounds.gasConduits.core_furnace.route[0] = { column: -1, elevation: 0 };
+    gasConduitState(outOfBounds, "core_furnace").route[0] = { column: -1, elevation: 0 };
     expect(decodeGame(encodeGame(outOfBounds))).toBeNull();
   });
 
@@ -40,14 +41,14 @@ describe("semantic game-state validation", () => {
     expect(decodeGame(encodeGame(campaign))).toBeNull();
 
     const room = createScenarioGame("flash_point");
-    room.rooms.furnace.id = "washlock";
+    roomState(room, "furnace").id = "washlock";
     expect(decodeGame(encodeGame(room))).toBeNull();
   });
 
   it("rejects enabled uninstalled conduits and invalid next identities", () => {
     const conduit = createScenarioGame("flash_point");
-    conduit.gasConduits.core_furnace.installed = false;
-    conduit.gasConduits.core_furnace.enabled = true;
+    gasConduitState(conduit, "core_furnace").installed = false;
+    gasConduitState(conduit, "core_furnace").enabled = true;
     expect(decodeGame(encodeGame(conduit))).toBeNull();
 
     const identity = createScenarioGame("flash_point");

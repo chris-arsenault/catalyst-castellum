@@ -3,19 +3,20 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 import { createScenarioGame } from "../../game/simulation";
 import { RoomTooltip } from "./RoomTooltip";
+import { gasConduitState, roomState } from "../../game/world/instances";
 
 afterEach(cleanup);
 
 describe("room map detail", () => {
   it("shows complete layered composition and distinguishes static pressure from a flash pulse", () => {
     const game = createScenarioGame("flash_point");
-    game.rooms.furnace.gas.upper.hydrogen = 18;
-    game.rooms.furnace.gas.upper.oxygen = 9;
-    game.rooms.furnace.gas.lower.hydrogen = 7;
-    game.rooms.furnace.gasTemperature.lower = 72;
-    game.rooms.furnace.pressurePulse = 38;
-    game.gasConduits.core_furnace.flowCause = "fan";
-    game.gasConduits.core_furnace.lastFlow = 1.4;
+    roomState(game, "furnace").gas.upper.hydrogen = 18;
+    roomState(game, "furnace").gas.upper.oxygen = 9;
+    roomState(game, "furnace").gas.lower.hydrogen = 7;
+    roomState(game, "furnace").gasTemperature.lower = 72;
+    roomState(game, "furnace").pressurePulse = 38;
+    gasConduitState(game, "core_furnace").flowCause = "fan";
+    gasConduitState(game, "core_furnace").lastFlow = 1.4;
 
     render(<RoomTooltip game={game} roomId="furnace" />);
 

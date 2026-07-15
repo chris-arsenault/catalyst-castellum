@@ -1,4 +1,4 @@
-import { ENEMY_DEFINITIONS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
+import { ENEMY_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   enemyGasZone,
   enemyRoomId,
@@ -11,6 +11,8 @@ import { DAMAGE_CHANNELS, dominantDamageChannel } from "../../presentation/damag
 import { enemyCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { Translator } from "../../localization/translator";
+import { roomState } from "../../game/world/instances";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | null => {
   const roomId = enemyRoomId(enemy);
@@ -21,9 +23,9 @@ const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | nul
     !definition.flying &&
     enemy.mode !== "climbing" &&
     enemy.mode !== "falling" &&
-    liquidSurfaceElevation(game.rooms[roomId]) > footElevation;
+    liquidSurfaceElevation(roomState(game, roomId)) > footElevation;
   const base = roomHazards(
-    game.rooms[roomId],
+    roomState(game, roomId),
     floorContact,
     definition.needsOxygen,
     enemyGasZone(enemy)
@@ -44,7 +46,7 @@ const enemyPositionCopy = (
 ): string => {
   if (!roomId) return translator.text("ui.map.enemy.position.transit");
   return translator.text("ui.map.enemy.position.room", {
-    room: ROOM_DEFINITIONS[roomId].code,
+    room: roomDefinition(roomId).code,
     zone: translator.text(zone === "upper" ? "ui.map.enemy.zone.upper" : "ui.map.enemy.zone.lower"),
   });
 };

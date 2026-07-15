@@ -6,6 +6,7 @@ import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
 import { tutorialText } from "./tutorialCopy";
+import { roomState } from "../game/world/instances";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -113,7 +114,7 @@ describe("CL-2 live reaction status", () => {
       socketId: "socket_a",
       equipmentId: "gas_agitator",
     });
-    const room = game.rooms.furnace;
+    const room = roomState(game, "furnace");
     room.gas.upper.hydrogen = 1;
     room.gas.upper.chlorine = 1;
     room.gasTemperature.upper = 38;

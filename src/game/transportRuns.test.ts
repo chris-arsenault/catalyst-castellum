@@ -1,12 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { TRANSPORT_RUNS } from "./config";
+import { instance } from "./world/instances";
 import { createScenarioGame, executeCommand } from "./simulation";
-import { TRANSPORT_RUN_IDS } from "./types";
+import { gasConduitState, liquidConduitState } from "./world/instances";
+
+const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
 
 describe("conduit command boundary", () => {
   it("has one binary control state per phase and no purpose-specific settings", () => {
     const state = createScenarioGame("flash_point");
-    const conduit = state.gasConduits.core_furnace;
+    const conduit = gasConduitState(state, "core_furnace");
     expect(conduit).toMatchObject({ installed: true, enabled: false });
     expect(Object.keys(conduit)).not.toContain("setting");
     expect(Object.keys(state)).not.toContain("gasLines");
@@ -24,7 +27,7 @@ describe("conduit command boundary", () => {
     });
     expect(enabled.accepted).toBe(true);
     state = enabled.state;
-    expect(state.gasConduits.core_furnace.enabled).toBe(true);
+    expect(gasConduitState(state, "core_furnace").enabled).toBe(true);
 
     const unavailable = executeCommand(state, {
       type: "set_conduit",
@@ -37,13 +40,13 @@ describe("conduit command boundary", () => {
 
   it("keeps every phase route on its owning definition", () => {
     const state = createScenarioGame("commissioning_exam");
-    for (const runId of TRANSPORT_RUN_IDS) {
-      const definition = TRANSPORT_RUNS[runId];
+    for (const runId of PACK_RUN_IDS) {
+      const definition = instance(TRANSPORT_RUNS, runId, "transport run");
       if (definition.gas) {
-        expect(state.gasConduits[runId].route).toEqual(definition.gas.blueprint);
+        expect(gasConduitState(state, runId).route).toEqual(definition.gas.blueprint);
       }
       if (definition.liquid) {
-        expect(state.liquidConduits[runId].route).toEqual(definition.liquid.blueprint);
+        expect(liquidConduitState(state, runId).route).toEqual(definition.liquid.blueprint);
       }
     }
   });

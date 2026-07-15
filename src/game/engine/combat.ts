@@ -28,6 +28,7 @@ import { liquidSurfaceElevation } from "./physics";
 import { roomHazards, roomMovementMultiplier } from "./roomState";
 import { enemyGasZone, enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 import { ENEMY_WORLD_SPEED_SCALE, LOCOMOTION_SPEED } from "./enemyMovementRules";
+import { roomState } from "../world/instances";
 
 export { enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 
@@ -156,8 +157,8 @@ const neutralizeEnemy = (
   if (finalSource) state.stats.killsBySource[finalSource] += 1;
   state.stats.matterHarvested += definition.matterYield;
   state.pendingMatter += definition.matterYield;
-  state.rooms[roomId].residue = clamp(
-    state.rooms[roomId].residue + definition.residueOnDeath,
+  roomState(state, roomId).residue = clamp(
+    roomState(state, roomId).residue + definition.residueOnDeath,
     0,
     100
   );
@@ -239,7 +240,7 @@ const resolveCombatForEnemy = (
     roomId !== null && burst.roomId === roomId ? [index] : []
   );
   const packets = [
-    ...(roomId ? environmentalDamagePackets(state.rooms[roomId], enemy, dt, definition) : []),
+    ...(roomId ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, definition) : []),
     ...matchingBurstIndices.map((index) =>
       burstPacket(bursts[index] as HazardBurst, index, enemy, definition)
     ),
@@ -401,7 +402,7 @@ const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDef
 export const moveEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
   state.enemies = state.enemies.filter((enemy) => {
     const roomId = enemyRoomId(enemy, definition);
-    const room = roomId ? state.rooms[roomId] : null;
+    const room = roomId ? roomState(state, roomId) : null;
     if (!moveEnemy(state, enemy, room, dt, definition)) return true;
     breachCore(state, enemy, definition);
     return false;

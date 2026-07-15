@@ -1,17 +1,11 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
-import {
-  TRANSPORT_RUN_IDS,
-  type GameState,
-  type RoomId,
-  type SpeciesId,
-  type TransportRunId,
-} from "../../game/types";
+import { type GameState, type RoomId, type SpeciesId, type TransportRunId } from "../../game/types";
 import { transportPhaseAvailable } from "../../game/queries";
-import { TRANSPORT_RUNS } from "../../presentation/defaultGame";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun } from "./transportGraphics";
+import { transportRunDefinition } from "../../presentation/defaultGame";
 
 export { IncidentLayer } from "./IncidentLayer";
 
@@ -84,25 +78,27 @@ export const TransportNetwork = ({
   selectedSpecies,
 }: TransportNetworkProps) => (
   <>
-    {TRANSPORT_RUN_IDS.filter(
-      (runId) =>
-        transportPhaseAvailable(game, runId, "gas") ||
-        transportPhaseAvailable(game, runId, "liquid")
-    ).map((runId) => (
-      <TransportRunNode
-        key={runId}
-        emphasized={pipeMode}
-        game={game}
-        hovered={
-          hoveredRunId === runId ||
-          (pipeDragSourceRoomId !== null &&
-            TRANSPORT_RUNS[runId].rooms.includes(pipeDragSourceRoomId))
-        }
-        onHover={onHover}
-        runId={runId}
-        selectedSpecies={selectedSpecies}
-      />
-    ))}
+    {game.world.connections
+      .filter(
+        (runId) =>
+          transportPhaseAvailable(game, runId, "gas") ||
+          transportPhaseAvailable(game, runId, "liquid")
+      )
+      .map((runId) => (
+        <TransportRunNode
+          key={runId}
+          emphasized={pipeMode}
+          game={game}
+          hovered={
+            hoveredRunId === runId ||
+            (pipeDragSourceRoomId !== null &&
+              transportRunDefinition(runId).rooms.includes(pipeDragSourceRoomId))
+          }
+          onHover={onHover}
+          runId={runId}
+          selectedSpecies={selectedSpecies}
+        />
+      ))}
   </>
 );
 

@@ -1,5 +1,6 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { TutorialCopy, TutorialCopyKey } from "./copyTypes";
+import { definitionTransportRun } from "../game/world/instances";
 
 export type GuideConceptKind =
   "feed" | "accumulate" | "mix" | "ignite" | "convert" | "separate" | "relieve" | "heat" | "route";
@@ -37,7 +38,7 @@ interface FlashPointConceptValues {
 const flashPointConceptValues = (): FlashPointConceptValues => {
   const reaction = DEFAULT_GAME_DEFINITION.reactions.hydrogen_oxygen_combustion;
   const behavior = reaction.behavior;
-  const run = DEFAULT_GAME_DEFINITION.transportRuns.core_furnace.gas;
+  const run = definitionTransportRun(DEFAULT_GAME_DEFINITION, "core_furnace").gas;
   const grade = DEFAULT_GAME_DEFINITION.equipment.gas_agitator.grades.find(
     (candidate) => candidate.level === 1
   );

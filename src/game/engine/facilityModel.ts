@@ -12,6 +12,7 @@ import type {
 } from "../types";
 import type { FacilityModel } from "../definitionTypes";
 import { cell, cellKey, worldPointToGridCell } from "../spatial";
+import { instance } from "../world/instances";
 
 const STANDARD_ROOM_CELL_AREA = 14 * 8;
 const STANDARD_ROOM_VOLUME = 100;
@@ -58,7 +59,7 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
       definition.connectorCells.map((connector) => [cellKey(connector), definition] as const)
     )
   );
-  const coreBounds = map.rooms.core.bounds;
+  const coreBounds = instance(map.rooms, "core", "map room").bounds;
   const coreShellKeys = new Set<string>();
   for (
     let column = coreBounds.column - 1;
@@ -189,7 +190,7 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
     ])
   ) as Record<RoomId, RoomGeometryDefinition>;
   const roomCenterWorld = (roomId: RoomId): WorldPoint => {
-    const bounds = map.rooms[roomId].bounds;
+    const bounds = instance(map.rooms, roomId, "map room").bounds;
     return {
       x: bounds.column + bounds.width / 2,
       elevation: bounds.elevation + bounds.height / 2,
@@ -217,7 +218,7 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
     for (const atmosphericCell of roomAtmosphericCells(roomId))
       rows.set(atmosphericCell.elevation, (rows.get(atmosphericCell.elevation) ?? 0) + 1);
     const elevations = [...rows.keys()].sort((left, right) => left - right);
-    const floor = elevations[0] ?? map.rooms[roomId].bounds.elevation;
+    const floor = elevations[0] ?? instance(map.rooms, roomId, "map room").bounds.elevation;
     let remaining = Math.max(0, liquidVolume);
     for (const elevation of elevations) {
       const rowCapacity = (rows.get(elevation) ?? 0) * ROOM_VOLUME_PER_CELL;
@@ -228,7 +229,7 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
     return (elevations.at(-1) ?? floor) + 1;
   };
   const roomPortHeight = (roomId: RoomId, elevation: number): number => {
-    const bounds = map.rooms[roomId].bounds;
+    const bounds = instance(map.rooms, roomId, "map room").bounds;
     return Math.max(0, Math.min(1, (elevation - bounds.elevation) / bounds.height));
   };
 

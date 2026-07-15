@@ -12,6 +12,7 @@ import type { GasZone, RoomState } from "../game/types";
 import { equipmentCopy as localizedEquipmentCopy } from "./entityCopy";
 import { DEFAULT_GAME_DEFINITION } from "./defaultGame";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
+import { definitionRoom } from "../game/world/instances";
 
 export type HazardLabel = "CLEAR" | "LOW" | "HOSTILE" | "LETHAL";
 
@@ -178,7 +179,7 @@ export const roomRingDescription = (
   definition: GameDefinition = DEFAULT_GAME_DEFINITION,
   translator: Translator = DEFAULT_TRANSLATOR
 ): string => {
-  const room = definition.rooms[roomId];
+  const room = definitionRoom(definition, roomId);
   if (room.structure === "entry") return translator.text("presentation.room.entry");
   if (room.structure === "room") return translator.text("presentation.room.standard");
   return translator.text("presentation.room.core");

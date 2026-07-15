@@ -7,6 +7,7 @@ import {
 } from "./simulation";
 import type { GameCommand, GameState } from "./types";
 import { GAS_TYPES } from "./types";
+import { roomState } from "./world/instances";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -23,7 +24,7 @@ describe("OX-1 ignition status", () => {
       socketId: "socket_a",
       equipmentId: "gas_agitator",
     });
-    const room = game.rooms.furnace;
+    const room = roomState(game, "furnace");
     for (const species of GAS_TYPES) room.gas.lower[species] = 0;
     Object.assign(room.gas.lower, { hydrogen: 2, nitrogen: 7, oxygen: 1 });
 
@@ -46,7 +47,7 @@ describe("OX-1 ignition status", () => {
 
   it("reports each unmet ignition condition independently", () => {
     const game = createScenarioGame("flash_point");
-    const status = hydrogenOxygenFlashStatus(game.rooms.furnace, "upper");
+    const status = hydrogenOxygenFlashStatus(roomState(game, "furnace"), "upper");
 
     expect(status.agitationReady).toBe(false);
     expect(status.hydrogenReady).toBe(false);

@@ -3,7 +3,6 @@ import type { RoomEquipment } from "./facilityTypes";
 import {
   DAMAGE_SOURCE_IDS,
   ENEMY_LOCOMOTION_MODES,
-  ENEMY_ROUTE_IDS,
   ENEMY_TYPES,
   EQUIPMENT_IDS,
   EQUIPMENT_LEVELS,
@@ -21,10 +20,8 @@ import {
   LIMIT_CONDITION_CODES,
   PROCESS_IDS,
   REACTION_IDS,
-  ROOM_IDS,
   ROOM_REACTION_IDS,
   TRANSPORT_PHASES,
-  TRANSPORT_RUN_IDS,
 } from "./identifiers";
 
 export * from "./gameStateTypes";
@@ -36,12 +33,16 @@ export type GasZone = (typeof GAS_ZONES)[number];
 export type LiquidType = (typeof LIQUID_TYPES)[number];
 export type SpeciesId = GasType | LiquidType;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
-export type EnemyRouteId = (typeof ENEMY_ROUTE_IDS)[number];
+/** Opaque enemy-route instance id (ADR-0002); alias kept for signature readability. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type EnemyRouteId = string;
 export type GasSourceId = (typeof GAS_SOURCE_IDS)[number];
 export type LiquidSourceId = (typeof LIQUID_SOURCE_IDS)[number];
 export type GasBufferId = (typeof GAS_BUFFER_IDS)[number];
 export type LiquidBufferId = (typeof LIQUID_BUFFER_IDS)[number];
-export type TransportRunId = (typeof TRANSPORT_RUN_IDS)[number];
+/** Opaque transport-connection instance id (ADR-0002); alias kept for signature readability. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type TransportRunId = string;
 export type EquipmentId = (typeof EQUIPMENT_IDS)[number];
 export type EquipmentSocketId = (typeof EQUIPMENT_SOCKET_IDS)[number];
 export type EquipmentLevel = (typeof EQUIPMENT_LEVELS)[number];
@@ -59,7 +60,9 @@ export type GasTemperatures = Record<GasZone, number>;
 export type LiquidAmounts = Record<LiquidType, number>;
 export type ElementalComposition = Record<string, number>;
 
-export type RoomId = (typeof ROOM_IDS)[number];
+/** Opaque room instance id (ADR-0002); alias kept for signature readability. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type RoomId = string;
 
 export interface Point {
   x: number;

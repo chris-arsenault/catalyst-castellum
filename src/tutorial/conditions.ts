@@ -6,6 +6,7 @@ import type {
   TransportPhase,
   TransportRunId,
 } from "../game/types";
+import { gasConduitState, liquidConduitState, roomState } from "../game/world/instances";
 
 export type GuideCondition =
   | { kind: "all"; conditions: readonly GuideCondition[] }
@@ -26,7 +27,7 @@ const equipmentIsActive = (
   game: GameState,
   condition: Extract<GuideCondition, { kind: "equipment_active" }>
 ): boolean =>
-  Object.values(game.rooms[condition.roomId].equipment).some(
+  Object.values(roomState(game, condition.roomId).equipment).some(
     (instance) => instance?.equipmentId === condition.equipmentId && instance.enabled
   );
 
@@ -36,8 +37,8 @@ const transportIsEnabled = (
 ): boolean => {
   const conduit =
     condition.phase === "gas"
-      ? game.gasConduits[condition.runId]
-      : game.liquidConduits[condition.runId];
+      ? gasConduitState(game, condition.runId)
+      : liquidConduitState(game, condition.runId);
   return conduit.installed && conduit.enabled;
 };
 

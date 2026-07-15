@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { EquipmentBuildTarget } from "../../application/storeTypes";
 import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
-import { EQUIPMENT_DEFINITIONS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   EQUIPMENT_IDS,
   type CommandDecision,
@@ -14,6 +14,7 @@ import {
 import type { EquipmentCategory } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
 import { equipmentCopy } from "../../presentation/entityCopy";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 type CategoryFilter = "all" | EquipmentCategory;
 
@@ -50,7 +51,7 @@ const BuildContext = ({ target }: { target: EquipmentBuildTarget | null }) => {
         <strong>
           {target
             ? translator.text("ui.manual.build.target", {
-                room: ROOM_DEFINITIONS[target.roomId].code,
+                room: roomDefinition(target.roomId).code,
                 socket: socketName,
               })
             : translator.text("ui.manual.build.preview")}

@@ -7,6 +7,7 @@ import { cloneGame } from "../src/game/engine/roomState";
 import { decodeGame, encodeGame } from "../src/game/save";
 import type { GameState } from "../src/game/types";
 import { roomAnalysis } from "../src/presentation/selectors";
+import { roomState } from "../src/game/world/instances";
 
 interface Measurement {
   averageMs: number;
@@ -65,7 +66,7 @@ const baseline = (): PerformanceBaseline => {
       decodeGame(encoded);
     }),
     cachedRoomAnalysis: measure(5_000, () => {
-      roomAnalysis(state.rooms.furnace);
+      roomAnalysis(roomState(state, "furnace"));
     }),
     roomProjection: measure(1_000, () => {
       roomRenderModel(state, "furnace", true, 1);

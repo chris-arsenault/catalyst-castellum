@@ -17,6 +17,7 @@ import {
   type MutableReactionInventory,
 } from "./reactionExecutor";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
+import { roomState } from "../world/instances";
 
 const outputAmount = (state: GameState, output: ProcessOutputDefinition): number =>
   output.phase === "gas"
@@ -131,7 +132,7 @@ const simulateElectrolysis = (
     return;
   }
   process.setting = 1;
-  const room = state.rooms[installation.roomId];
+  const room = roomState(state, installation.roomId);
   const reaction = definition.reactions[processDefinition.reactionId];
   const behavior = reaction.behavior;
   if (behavior.kind !== "electrolysis") throw new Error("Electrolysis reaction is misconfigured");

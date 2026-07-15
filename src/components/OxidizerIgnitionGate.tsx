@@ -4,6 +4,7 @@ import { useGamePresentation } from "../application/presentationContext";
 import { hydrogenOxygenFlashStatus } from "../game/queries";
 import type { RoomId } from "../game/types";
 import type { LocaleFormatters } from "../localization/formatters";
+import { roomState } from "../game/world/instances";
 
 const formatPercent = (value: number, formatters: LocaleFormatters): string => {
   if (value > 0 && value < 0.001) return `<${formatters.percent(0.001, 1)}`;
@@ -76,7 +77,7 @@ const IgnitionLayer = ({ status }: { status: ReturnType<typeof hydrogenOxygenFla
 export const OxidizerIgnitionGate = ({ roomId }: { roomId: RoomId }) => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const room = game.rooms[roomId];
+  const room = roomState(game, roomId);
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenOxygenFlashStatus(room, zone)
   );

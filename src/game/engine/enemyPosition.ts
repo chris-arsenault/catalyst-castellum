@@ -1,6 +1,7 @@
 import { gridCellToWorldPoint } from "../spatial";
 import type { GameDefinition } from "../definitionTypes";
 import type { EnemyState, GasZone, RoomId, WorldPoint } from "../types";
+import { instance } from "../world/instances";
 
 export const enemyWorldPosition = (enemy: EnemyState): WorldPoint => {
   const current = enemy.path[Math.min(enemy.pathIndex, enemy.path.length - 1)];
@@ -20,7 +21,7 @@ export const enemyRoomId = (enemy: EnemyState, definition: GameDefinition): Room
 export const enemyGasZone = (enemy: EnemyState, definition: GameDefinition): GasZone => {
   const roomId = enemyRoomId(enemy, definition);
   if (!roomId) return "lower";
-  const bounds = definition.facilityMap.rooms[roomId].bounds;
+  const bounds = instance(definition.facilityMap.rooms, roomId, "map room").bounds;
   const relativeElevation =
     (enemyWorldPosition(enemy).elevation - bounds.elevation) / bounds.height;
   return relativeElevation >= 0.5 ? "upper" : "lower";

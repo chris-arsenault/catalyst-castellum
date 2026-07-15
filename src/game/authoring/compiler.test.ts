@@ -3,6 +3,7 @@ import { DEFAULT_GAME_DEFINITION, deriveGame } from "../definition";
 import { GamePackCompilationError } from "./compiler";
 import { createGameRuntime } from "../runtime";
 import type { ReactionId, RoomReactionId } from "../types";
+import { roomState } from "../world/instances";
 
 describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
@@ -70,7 +71,7 @@ describe("game pack compiler", () => {
     const game = createGameRuntime(definition).createScenario("flash_point");
 
     expect(definition.reactions[fixtureId].behavior.kind).toBe("mixed_contact");
-    expect(game.rooms.furnace.reactions[fixtureId as RoomReactionId]).toMatchObject({
+    expect(roomState(game, "furnace").reactions[fixtureId as RoomReactionId]).toMatchObject({
       lastRate: 0,
       limitingFactor: { kind: "condition", code: "conditions", zone: null },
     });

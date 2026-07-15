@@ -1,24 +1,25 @@
 import { roomEquipmentIsActive } from "../game/queries";
 import type { CombatIncident, GameState, RoomId } from "../game/types";
+import { gasConduitState, roomState } from "../game/world/instances";
 
 export const roomHasAgitator = (game: GameState, roomId: RoomId): boolean =>
-  Object.values(game.rooms[roomId].equipment).some(
+  Object.values(roomState(game, roomId).equipment).some(
     (instance) => instance?.equipmentId === "gas_agitator"
   );
 
 export const roomAgitatorRunning = (game: GameState, roomId: RoomId): boolean =>
-  roomEquipmentIsActive(game.rooms[roomId], "gas_agitator");
+  roomEquipmentIsActive(roomState(game, roomId), "gas_agitator");
 
 export const furnaceAgitatorRunning = (game: GameState): boolean =>
   roomAgitatorRunning(game, "furnace");
 
 export const furnaceAgitatorUpgraded = (game: GameState): boolean =>
-  Object.values(game.rooms.furnace.equipment).some(
+  Object.values(roomState(game, "furnace").equipment).some(
     (instance) => instance?.equipmentId === "gas_agitator" && instance.level >= 2
   );
 
 export const coreFurnaceFeedEnabled = (game: GameState): boolean =>
-  game.gasConduits.core_furnace.installed && game.gasConduits.core_furnace.enabled;
+  gasConduitState(game, "core_furnace").installed && gasConduitState(game, "core_furnace").enabled;
 
 /** Forward Core feed routes a player may choose for the second OX-1 chamber. */
 export const SECOND_CHAMBER_FEEDS = [
@@ -28,7 +29,7 @@ export const SECOND_CHAMBER_FEEDS = [
 ] as const;
 
 const feedEnabled = (game: GameState, runId: (typeof SECOND_CHAMBER_FEEDS)[number]["runId"]) =>
-  game.gasConduits[runId].installed && game.gasConduits[runId].enabled;
+  gasConduitState(game, runId).installed && gasConduitState(game, runId).enabled;
 
 export const secondFeedEnabled = (game: GameState): boolean =>
   SECOND_CHAMBER_FEEDS.some((feed) => feedEnabled(game, feed.runId));

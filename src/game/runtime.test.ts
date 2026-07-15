@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
 import { createGameRuntime } from "./runtime";
+import { definitionRoom, roomState } from "./world/instances";
 
 describe("game runtime", () => {
   it("binds all public transitions and queries to one immutable definition", () => {
@@ -8,14 +9,14 @@ describe("game runtime", () => {
       id: "runtime-test",
       rooms: {
         ...DEFAULT_GAME_DEFINITION.rooms,
-        furnace: { ...DEFAULT_GAME_DEFINITION.rooms.furnace, ambientTemperature: 44 },
+        furnace: { ...definitionRoom(DEFAULT_GAME_DEFINITION, "furnace"), ambientTemperature: 44 },
       },
     });
     const runtime = createGameRuntime(alternateDefinition);
     const briefing = runtime.createScenario("flash_point");
 
     expect(runtime.definition.id).toBe("runtime-test");
-    expect(briefing.rooms.furnace.temperature).toBe(44);
+    expect(roomState(briefing, "furnace").temperature).toBe(44);
     expect(runtime.validate(briefing)).toEqual([]);
     expect(runtime.level(briefing).id).toBe("flash_point");
     expect(runtime.round(briefing).id).toBe("first_spark");

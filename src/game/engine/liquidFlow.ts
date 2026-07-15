@@ -1,6 +1,5 @@
 import {
   LIQUID_TYPES,
-  TRANSPORT_RUN_IDS,
   type FlowCause,
   type GameState,
   type LiquidAmounts,
@@ -24,6 +23,8 @@ import {
   transportPlanIsBlocked,
   type TransportPlan,
 } from "./transportPlanning";
+import { definitionTransportRun, liquidConduitState, roomState } from "../world/instances";
+import { liquidJunctionState } from "../world/instances";
 
 const FULL_FLOW_HEAD = 3;
 const FULL_CONDUIT_EPSILON = 1e-6;
@@ -35,11 +36,11 @@ const destinationHeadroom = (
   runId: TransportRunId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = gameDefinition.transportRuns[runId].liquid;
+  const definition = definitionTransportRun(gameDefinition, runId).liquid;
   if (!definition || definition.destinationKind === "liquid_recovery") {
     return Number.POSITIVE_INFINITY;
   }
-  return roomLiquidHeadroom(state.rooms[definition.direction[1]], gameDefinition);
+  return roomLiquidHeadroom(roomState(state, definition.direction[1]), gameDefinition);
 };
 
 const desiredThroughput = (
@@ -48,7 +49,7 @@ const desiredThroughput = (
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = gameDefinition.transportRuns[runId].liquid;
+  const definition = definitionTransportRun(gameDefinition, runId).liquid;
   if (!definition) return 0;
   const source = conduitEndpoint(state, runId, "liquid", "from");
   const destination = conduitEndpoint(state, runId, "liquid", "to");
@@ -56,7 +57,7 @@ const desiredThroughput = (
   const lift = Math.max(0, crest - source.elevation);
   const fall = Math.max(0, source.elevation - destination.elevation);
   const density = liquidRelativeDensity(
-    state.liquidJunctions[definition.direction[0]].liquid,
+    liquidJunctionState(state, definition.direction[0]).liquid,
     gameDefinition
   );
   const actuatorHead =
@@ -75,8 +76,8 @@ const initialPlan = (
   dt: number,
   gameDefinition: GameDefinition
 ): LiquidPlan | null => {
-  const definition = gameDefinition.transportRuns[runId].liquid;
-  const conduit = state.liquidConduits[runId];
+  const definition = definitionTransportRun(gameDefinition, runId).liquid;
+  const conduit = liquidConduitState(state, runId);
   if (!definition || !conduit.installed || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
   const retained = liquidAmountTotal(conduit.liquid);
@@ -105,17 +106,17 @@ const deliverLiquid = (
   packet: LiquidAmounts,
   gameDefinition: GameDefinition
 ): void => {
-  const definition = gameDefinition.transportRuns[runId].liquid;
+  const definition = definitionTransportRun(gameDefinition, runId).liquid;
   if (!definition) return;
   if (definition.destinationKind === "liquid_recovery") {
     addLiquid(state.liquidDrain, packet);
     return;
   }
-  addLiquid(state.rooms[definition.direction[1]].liquid, packet);
+  addLiquid(roomState(state, definition.direction[1]).liquid, packet);
 };
 
 const clearReadout = (state: GameState, runId: TransportRunId): void => {
-  const conduit = state.liquidConduits[runId];
+  const conduit = liquidConduitState(state, runId);
   conduit.lastFlow = 0;
   conduit.blocked = false;
   conduit.flowCause = "idle";
@@ -159,7 +160,7 @@ const isBlockedAfterPlan = (
   definition: GameDefinition
 ): boolean =>
   transportPlanIsBlocked(
-    state.liquidConduits[plan.runId].enabled,
+    liquidConduitState(state, plan.runId).enabled,
     desiredThroughput(state, plan.runId, dt, definition),
     plan.outgoingAmount,
     incomingAmount
@@ -171,7 +172,7 @@ const applyPlan = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  const conduit = state.liquidConduits[plan.runId];
+  const conduit = liquidConduitState(state, plan.runId);
   const outgoing = takeLiquid(conduit.liquid, plan.outgoingAmount);
   deliverLiquid(state, plan.runId, outgoing, definition);
   const incoming = takeLiquidFromJunction(state, plan.sourceRoomId, plan.incomingAmount);
@@ -187,21 +188,23 @@ export const simulateLiquidConduits = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  for (const runId of TRANSPORT_RUN_IDS) clearReadout(state, runId);
-  const plans = TRANSPORT_RUN_IDS.flatMap((runId) => {
+  for (const runId of state.world.connections) clearReadout(state, runId);
+  const plans = state.world.connections.flatMap((runId) => {
     const plan = initialPlan(state, runId, dt, definition);
     return plan ? [plan] : [];
   });
   allocateTransportPlans(
-    plans.filter((plan) => definition.transportRuns[plan.runId].liquid?.destinationKind === "room"),
+    plans.filter(
+      (plan) => definitionTransportRun(definition, plan.runId).liquid?.destinationKind === "room"
+    ),
     "destinationRoomId",
     "outgoingRequest",
     "outgoingAmount",
-    (roomId) => roomLiquidHeadroom(state.rooms[roomId], definition)
+    (roomId) => roomLiquidHeadroom(roomState(state, roomId), definition)
   );
   reconcileTransportCapacity(
     plans,
-    (runId) => liquidAmountTotal(state.liquidConduits[runId].liquid),
+    (runId) => liquidAmountTotal(liquidConduitState(state, runId).liquid),
     (runId) => conduitCapacity(state, runId, "liquid", definition)
   );
   allocateTransportPlans(plans, "sourceRoomId", "incomingRequest", "incomingAmount", (roomId) =>
@@ -216,7 +219,7 @@ export const liquidConduitFillRatio = (
   definition: GameDefinition
 ): number => {
   const capacity = conduitCapacity(state, runId, "liquid", definition);
-  return capacity > 0 ? liquidAmountTotal(state.liquidConduits[runId].liquid) / capacity : 0;
+  return capacity > 0 ? liquidAmountTotal(liquidConduitState(state, runId).liquid) / capacity : 0;
 };
 
 export const liquidConduitCrestElevation = (state: GameState, runId: TransportRunId): number =>

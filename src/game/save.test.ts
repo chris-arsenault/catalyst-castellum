@@ -3,7 +3,11 @@ import { emptyGas, emptyLiquid } from "./config";
 import { emptyDamageLedger, emptyHazardChannels } from "./engine/damage";
 import { decodeGame, encodeGame } from "./save";
 import { createScenarioGame, findEnemyPath } from "./simulation";
-import { TRANSPORT_RUN_IDS, type EnemyState, type GameState } from "./types";
+import { type EnemyState, type GameState } from "./types";
+import { gasConduitState, liquidConduitState, roomState } from "./world/instances";
+import { TRANSPORT_RUNS } from "./config";
+
+const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
 
 const persistedEnemy = (game: GameState): EnemyState => {
   const path = findEnemyPath({ flying: false, portalStates: game.portalStates });
@@ -34,8 +38,8 @@ describe("v12 persistence", () => {
   it("round-trips conduit routes, damage ledgers, and structured incidents", () => {
     const game = createScenarioGame("flash_point");
     game.phase = "assault";
-    game.gasConduits.core_furnace.enabled = true;
-    game.gasConduits.core_furnace.gas.hydrogen = 4;
+    gasConduitState(game, "core_furnace").enabled = true;
+    gasConduitState(game, "core_furnace").gas.hydrogen = 4;
     game.enemies.push(persistedEnemy(game));
     game.nextEnemyId = 10;
     game.enemies[0]!.damageBySource.hydrogen_oxygen_combustion.pressure = 53;
@@ -70,7 +74,9 @@ describe("v12 persistence", () => {
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the v11 save to decode.");
     expect(decoded.version).toBe(12);
-    expect(decoded.gasConduits.core_furnace.route).toEqual(game.gasConduits.core_furnace.route);
+    expect(gasConduitState(decoded, "core_furnace").route).toEqual(
+      gasConduitState(game, "core_furnace").route
+    );
     expect(decoded.enemies[0]?.damageBySource.hydrogen_oxygen_combustion.pressure).toBe(53);
     expect(decoded.enemies[0]?.path).toEqual(game.enemies[0]?.path);
     expect(decoded.enemies[0]).toMatchObject({
@@ -95,7 +101,11 @@ describe("legacy compatibility decoding", () => {
       rooms: Record<string, { reactions: Record<string, Record<string, unknown>> }>;
       processes: Record<string, Record<string, unknown>>;
     };
-    const legacyReaction = legacyShape.rooms.furnace!.reactions.hydrogen_oxygen_combustion!;
+    const legacyRoom = legacyShape.rooms.furnace!;
+    const legacyReaction = legacyRoom.reactions.hydrogen_oxygen_combustion! as Record<
+      string,
+      unknown
+    >;
     delete legacyReaction.limitingFactor;
     legacyReaction.limitingReactant = "legacy reaction feed";
     const legacyProcess = legacyShape.processes.chlor_alkali_cell!;
@@ -105,7 +115,9 @@ describe("legacy compatibility decoding", () => {
 
     expect(decoded?.version).toBe(12);
     expect(decoded?.campaign.levelId).toBe("make_the_reagent");
-    expect(decoded?.rooms.furnace.reactions.hydrogen_oxygen_combustion.limitingFactor).toEqual({
+    expect(
+      roomState(decoded!, "furnace").reactions.hydrogen_oxygen_combustion.limitingFactor
+    ).toEqual({
       kind: "legacy",
       label: "legacy reaction feed",
     });
@@ -308,7 +320,7 @@ describe("conserving v7 migration", () => {
     liquidLines.liquid_water_to_cell.liquid.water = 4;
     liquidLines.liquid_salt_to_cell.liquid.sodium_chloride = 6;
     const transportRuns = Object.fromEntries(
-      TRANSPORT_RUN_IDS.map((id) => [id, { gasInstalled: true, liquidInstalled: true }])
+      PACK_RUN_IDS.map((id) => [id, { gasInstalled: true, liquidInstalled: true }])
     );
     const gasBuffers = {
       ...baseline.gasBuffers,
@@ -340,14 +352,14 @@ describe("conserving v7 migration", () => {
     const migrated = decodeGame(JSON.stringify(legacy));
     expect(migrated).not.toBeNull();
     if (!migrated) throw new Error("Expected the valid V7 fixture to migrate");
-    expect(migrated.gasConduits.core_furnace.gas.oxygen).toBe(7);
-    expect(migrated.gasConduits.core_furnace.gas.hydrogen).toBe(5);
-    expect(migrated.gasConduits.core_furnace.gas.nitrogen).toBe(3);
-    expect(migrated.gasConduits.core_furnace.enabled).toBe(false);
-    expect(migrated.gasConduits.absorber_final.installed).toBe(false);
-    expect(migrated.liquidConduits.furnace_return.installed).toBe(false);
-    expect(migrated.liquidConduits.core_cell.liquid.water).toBe(4);
-    expect(migrated.liquidConduits.core_cell.liquid.sodium_chloride).toBe(6);
+    expect(gasConduitState(migrated, "core_furnace").gas.oxygen).toBe(7);
+    expect(gasConduitState(migrated, "core_furnace").gas.hydrogen).toBe(5);
+    expect(gasConduitState(migrated, "core_furnace").gas.nitrogen).toBe(3);
+    expect(gasConduitState(migrated, "core_furnace").enabled).toBe(false);
+    expect(gasConduitState(migrated, "absorber_final").installed).toBe(false);
+    expect(liquidConduitState(migrated, "furnace_return").installed).toBe(false);
+    expect(liquidConduitState(migrated, "core_cell").liquid.water).toBe(4);
+    expect(liquidConduitState(migrated, "core_cell").liquid.sodium_chloride).toBe(6);
     expect(migrated.gasSources.starter_gas_header.gas.oxygen).toBe(11);
     expect(migrated.gasSources.starter_gas_header.gas.nitrogen).toBe(2);
     expect(migrated.gasSources.starter_gas_header.gas.hydrogen).toBe(13);

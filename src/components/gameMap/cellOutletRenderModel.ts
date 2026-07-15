@@ -1,4 +1,4 @@
-import { GAS_BUFFERS, LIQUID_BUFFERS, ROOM_DEFINITIONS } from "../../presentation/defaultGame";
+import { GAS_BUFFERS, LIQUID_BUFFERS } from "../../presentation/defaultGame";
 import {
   type GasBufferId,
   type GameState,
@@ -10,6 +10,7 @@ import { equipmentRenderModels } from "./equipmentRenderModel";
 import { colorNumber, roomMapRect } from "./mapGeometry";
 import { bufferCopy } from "../../presentation/entityCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 export type CellOutletId = GasBufferId | LiquidBufferId;
 
@@ -77,7 +78,7 @@ export const cellOutletAssemblyModel = (
 
   return {
     header: translator.text("ui.map.outlet.header", {
-      room: ROOM_DEFINITIONS[installation.roomId].code,
+      room: roomDefinition(installation.roomId).code,
     }),
     installationX: installation.x,
     installationY: installation.y,

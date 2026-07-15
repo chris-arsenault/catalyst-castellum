@@ -1,12 +1,13 @@
 import { ArrowLeft, ArrowRight, Biohazard, Droplets, Gauge } from "lucide-react";
 import { useState } from "react";
-import { LEVEL_DEFINITIONS, ROOM_DEFINITIONS } from "../presentation/defaultGame";
+import { LEVEL_DEFINITIONS } from "../presentation/defaultGame";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { GameState } from "../game/types";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import type { Translator } from "../localization/translator";
+import { roomDefinition } from "../presentation/defaultGame";
 
 const BriefingGraphic = () => {
   const { translator } = useGamePresentation();
@@ -44,7 +45,7 @@ const BriefingObjective = ({
   const round = roundDefinitionFor(game);
   const level = levelDefinitionFor(game);
   const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
-  const nextRoom = ROOM_DEFINITIONS[nextLevel.focusRoomId];
+  const nextRoom = roomDefinition(nextLevel.focusRoomId);
   let detail = translator.text("ui.briefing.objective", {
     objective: localizedLevelCopy.round(level, round).objective,
     duration: formatters.duration(round.primeSeconds),
@@ -113,12 +114,12 @@ const hint = (
   const level = levelDefinitionFor(game);
   if (!offersOpeningDrill)
     return translator.text("ui.briefing.hint.checkpoint", {
-      room: ROOM_DEFINITIONS[level.focusRoomId].code,
+      room: roomDefinition(level.focusRoomId).code,
       lesson,
     });
   if (!tutorialEnabled) return translator.text("ui.briefing.hint.lesson");
   return translator.text("ui.briefing.hint.drill", {
-    room: ROOM_DEFINITIONS[level.focusRoomId].code,
+    room: roomDefinition(level.focusRoomId).code,
   });
 };
 

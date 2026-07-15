@@ -130,6 +130,7 @@ const finishResult = (
     rejectedActions: counters.rejected,
     simulatedSeconds,
     stable,
+    reports: [...counters.reports].sort((left, right) => left.round - right.round),
   };
 };
 

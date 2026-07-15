@@ -178,6 +178,10 @@ const cloneCombatState = (
 export const cloneGame = (state: GameState): GameState => ({
   ...state,
   pack: { ...state.pack },
+  world: {
+    rooms: [...state.world.rooms],
+    connections: [...state.world.connections],
+  },
   campaign: {
     ...state.campaign,
     completedLevelIds: [...state.campaign.completedLevelIds],

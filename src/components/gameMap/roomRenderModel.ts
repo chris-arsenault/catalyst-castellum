@@ -2,7 +2,6 @@ import {
   FACILITY_MAP,
   GAS_COLORS,
   LIQUID_COLORS,
-  ROOM_DEFINITIONS,
   facilityRingForRoom,
   roomAtmosphericCells,
   roomCenterWorld,
@@ -25,6 +24,8 @@ import {
   worldToMapPoint,
 } from "./mapGeometry";
 import type { RoomDrawModel } from "./roomGraphics";
+import { instance, roomState } from "../../game/world/instances";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 const weightedGasColor = (gas: GasAmounts): number => {
   const total = GAS_TYPES.reduce((sum, species) => sum + gas[species], 0);
@@ -51,8 +52,8 @@ export const roomRenderModel = (
   selected: boolean,
   occupied: number
 ): RoomDrawModel => {
-  const definition = ROOM_DEFINITIONS[roomId];
-  const room = game.rooms[roomId];
+  const definition = roomDefinition(roomId);
+  const room = roomState(game, roomId);
   const analysis = roomAnalysis(room);
   const dimensions = roomMapRect(roomId);
   const gasColor = (zone: GasZone): number => weightedGasColor(room.gas[zone]);
@@ -61,7 +62,8 @@ export const roomRenderModel = (
     : 0x41baf5;
   const center = worldToMapPoint(roomCenterWorld(roomId));
   const zoneSplit =
-    FACILITY_MAP.rooms[roomId].bounds.elevation + FACILITY_MAP.rooms[roomId].bounds.height / 2;
+    instance(FACILITY_MAP.rooms, roomId, "map room").bounds.elevation +
+    instance(FACILITY_MAP.rooms, roomId, "map room").bounds.height / 2;
   const zoneCapacity = Math.max(1, roomVolume(roomId) / 2);
   const gasFill = (amount: number): number =>
     Math.min(1, 1 - Math.exp(-Math.max(0, amount) / zoneCapacity));

@@ -1,5 +1,4 @@
 import {
-  TRANSPORT_RUN_IDS,
   type FacilityUtilityNodeId,
   type GridCell,
   type TransportPhase,
@@ -111,7 +110,7 @@ export const conduitBlueprintWorldPath = (
   runId: TransportRunId,
   phase: TransportPhase
 ): readonly WorldPoint[] => {
-  const path = CONDUIT_BLUEPRINTS[runId][phase];
+  const path = CONDUIT_BLUEPRINTS[runId]?.[phase];
   return path ? gridPathToWorldPath(path) : [];
 };
 
@@ -126,8 +125,3 @@ export const conduitBlueprintEndpoint = (
 
 export const utilityNodeWorldPoint = (nodeId: FacilityUtilityNodeId): WorldPoint =>
   gridCellToWorldPoint(FACILITY_MAP.utilityNodes[nodeId].cell);
-
-// Keep the key list checked at module construction time when content changes.
-if (Object.keys(CONDUIT_BLUEPRINTS).length !== TRANSPORT_RUN_IDS.length) {
-  throw new Error("Every transport run must own an explicit spatial blueprint entry.");
-}

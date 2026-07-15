@@ -1,6 +1,5 @@
 import {
   DEFAULT_GAME_DEFINITION,
-  ROOM_DEFINITIONS,
   SPECIES_DEFINITIONS,
   roomVolume,
 } from "../../presentation/defaultGame";
@@ -28,6 +27,8 @@ import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
 import type { HazardLabel } from "../../presentation/roomCopy";
 import type { RoomViewModel } from "../../presentation/selectors";
+import { roomState } from "../../game/world/instances";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 const percentage = (value: number, formatters: LocaleFormatters): string => {
   if (value >= 10) return `${formatters.number(value, 0)}%`;
@@ -206,8 +207,8 @@ const RoomExposure = ({
 export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId | null }) => {
   const { selectors, translator } = useGamePresentation();
   if (!roomId) return null;
-  const definition = ROOM_DEFINITIONS[roomId];
-  const room = game.rooms[roomId];
+  const definition = roomDefinition(roomId);
+  const room = roomState(game, roomId);
   const analysis = selectors.roomAnalysis(room);
   const gasInflow = roomGasInflow(game, roomId);
   const openGasPortals = activeRoomGasPortals(game, roomId);

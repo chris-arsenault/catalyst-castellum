@@ -1,9 +1,4 @@
-import {
-  FACILITY_MAP,
-  ROOM_DEFINITIONS,
-  ROOM_ORDER,
-  facilityCells,
-} from "../../presentation/defaultGame";
+import { FACILITY_MAP, ROOM_ORDER, facilityCells } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { cellOutletAssemblyModel } from "./cellOutletRenderModel";
 import {
@@ -15,6 +10,7 @@ import {
 } from "./mapGeometry";
 import { roomCopy } from "../../presentation/entityCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 const EDGE_PADDING = 8;
 const LABEL_PADDING_X = 8;
@@ -163,7 +159,7 @@ export const layoutMapLabels = (
     (left, right) => labelPriority(right, selectedRoomId) - labelPriority(left, selectedRoomId)
   );
   for (const roomId of ordered) {
-    const definition = ROOM_DEFINITIONS[roomId];
+    const definition = roomDefinition(roomId);
     const textOptions = [
       `${definition.code} · ${roomCopy(definition, translator).name}`,
       definition.code,

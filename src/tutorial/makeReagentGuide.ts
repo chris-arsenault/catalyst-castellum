@@ -3,23 +3,24 @@ import type { GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
 import { MAKE_REAGENT_CONCEPT_MODEL } from "./makeReagentConcept";
+import { gasConduitState, liquidConduitState, roomState } from "../game/world/instances";
 
 const membraneCellInstalled = (game: GameState): boolean =>
-  Object.values(game.rooms.lower_intake.equipment).some(
+  Object.values(roomState(game, "lower_intake").equipment).some(
     (instance) => instance?.equipmentId === "membrane_cell"
   );
 
 const membraneCellRunning = (game: GameState): boolean =>
-  roomEquipmentIsActive(game.rooms.lower_intake, "membrane_cell");
+  roomEquipmentIsActive(roomState(game, "lower_intake"), "membrane_cell");
 
 const liquidFeedEnabled = (game: GameState): boolean =>
-  game.liquidConduits.core_cell.installed && game.liquidConduits.core_cell.enabled;
+  liquidConduitState(game, "core_cell").installed && liquidConduitState(game, "core_cell").enabled;
 
 const coProductsEstablished = (game: GameState): boolean =>
   game.processes.chlor_alkali_cell.totalProcessed >= 0.05;
 
 const recoveryEnabled = (game: GameState): boolean =>
-  game.gasConduits.core_cell.installed && game.gasConduits.core_cell.enabled;
+  gasConduitState(game, "core_cell").installed && gasConduitState(game, "core_cell").enabled;
 
 const recoveryFlowEstablished = (game: GameState): boolean => gasAmountTotal(game.gasVent) >= 0.05;
 

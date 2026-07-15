@@ -18,12 +18,21 @@ import {
   LIQUID_BUFFER_IDS,
   LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
-  TRANSPORT_RUN_IDS,
   type ElementalComposition,
   type GameCommand,
   type GameState,
   type SpeciesId,
 } from "./types";
+import {
+  gasConduitState,
+  gasJunctionState,
+  liquidConduitState,
+  liquidJunctionState,
+  roomState,
+} from "./world/instances";
+import { TRANSPORT_RUNS } from "./config";
+
+const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -46,19 +55,19 @@ const elementalLedger = (state: GameState): ElementalComposition => {
     for (const species of LIQUID_TYPES) addSpecies(totals, species, liquid[species]);
   };
   for (const roomId of ROOM_ORDER) {
-    addGas(state.rooms[roomId].gas.lower);
-    addGas(state.rooms[roomId].gas.upper);
-    addLiquid(state.rooms[roomId].liquid);
-    addGas(state.gasJunctions[roomId].gas);
-    addLiquid(state.liquidJunctions[roomId].liquid);
+    addGas(roomState(state, roomId).gas.lower);
+    addGas(roomState(state, roomId).gas.upper);
+    addLiquid(roomState(state, roomId).liquid);
+    addGas(gasJunctionState(state, roomId).gas);
+    addLiquid(liquidJunctionState(state, roomId).liquid);
   }
   for (const id of GAS_SOURCE_IDS) addGas(state.gasSources[id].gas);
   for (const id of LIQUID_SOURCE_IDS) addLiquid(state.liquidSources[id].liquid);
   for (const id of GAS_BUFFER_IDS) addGas(state.gasBuffers[id].gas);
   for (const id of LIQUID_BUFFER_IDS) addLiquid(state.liquidBuffers[id].liquid);
-  for (const id of TRANSPORT_RUN_IDS) {
-    addGas(state.gasConduits[id].gas);
-    addLiquid(state.liquidConduits[id].liquid);
+  for (const id of PACK_RUN_IDS) {
+    addGas(gasConduitState(state, id).gas);
+    addLiquid(liquidConduitState(state, id).liquid);
   }
   addGas(state.gasVent);
   addLiquid(state.liquidDrain);
@@ -76,13 +85,13 @@ describe("finite-volume spatial rooms", () => {
     const state = createScenarioGame("flash_point");
     for (const roomId of ROOM_ORDER) {
       expect(roomVolume(roomId)).toBeGreaterThan(0);
-      expect(roomStaticPressure(state.rooms[roomId])).toBeCloseTo(101.3, 1);
+      expect(roomStaticPressure(roomState(state, roomId))).toBeCloseTo(101.3, 1);
     }
   });
 
   it("keeps liquid and static pressure slowdown independent", () => {
     const state = createScenarioGame("flash_point");
-    const room = state.rooms.furnace;
+    const room = roomState(state, "furnace");
     room.liquid.water = roomVolume("furnace") * 0.45;
     expect(liquidMovementMultiplier(room, false)).toBeLessThan(1);
     expect(liquidMovementMultiplier(room, true)).toBe(1);
@@ -93,11 +102,11 @@ describe("finite-volume spatial rooms", () => {
 
   it("uses equipment-displaced usable volume for liquid pickup submergence", () => {
     const state = createScenarioGame("stored_chlorine");
-    state.rooms.lower_intake.liquid.water = roomVolume("lower_intake") * 0.125;
+    roomState(state, "lower_intake").liquid.water = roomVolume("lower_intake") * 0.125;
     simulateNetworks(state, 0.5);
     expect(
-      state.liquidJunctions.lower_intake.liquid.water +
-        state.liquidConduits.cell_absorber.liquid.water
+      liquidJunctionState(state, "lower_intake").liquid.water +
+        liquidConduitState(state, "cell_absorber").liquid.water
     ).toBeGreaterThan(0);
   });
 });
@@ -155,7 +164,7 @@ describe("complete-state conservation", () => {
     for (const element of Object.keys(before)) {
       expect(after[element], element).toBeCloseTo(before[element] ?? 0, 5);
     }
-    expect(state.rooms.furnace.combustionCount).toBeGreaterThan(0);
+    expect(roomState(state, "furnace").combustionCount).toBeGreaterThan(0);
   });
 
   it("keeps every membrane-cell co-product in state", () => {
@@ -177,15 +186,15 @@ describe("complete-state conservation", () => {
 
     const chlorine =
       state.gasBuffers.anode_header.gas.chlorine +
-      state.gasJunctions.lower_intake.gas.chlorine +
-      state.gasConduits.cell_absorber.gas.chlorine;
+      gasJunctionState(state, "lower_intake").gas.chlorine +
+      gasConduitState(state, "cell_absorber").gas.chlorine;
     const hydrogen =
       state.gasBuffers.cathode_header.gas.hydrogen +
-      state.gasJunctions.lower_intake.gas.hydrogen +
-      state.gasConduits.cell_absorber.gas.hydrogen;
+      gasJunctionState(state, "lower_intake").gas.hydrogen +
+      gasConduitState(state, "cell_absorber").gas.hydrogen;
     const caustic =
       state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide +
-      state.liquidJunctions.lower_intake.liquid.sodium_hydroxide;
+      liquidJunctionState(state, "lower_intake").liquid.sodium_hydroxide;
     expect(chlorine).toBeGreaterThan(0);
     expect(hydrogen).toBeGreaterThan(0);
     expect(caustic).toBeGreaterThan(0);

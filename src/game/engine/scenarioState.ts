@@ -8,7 +8,6 @@ import {
   LIQUID_BUFFER_IDS,
   LIQUID_SOURCE_IDS,
   PROCESS_IDS,
-  TRANSPORT_RUN_IDS,
   type GameState,
   type GasAmounts,
   type LevelId,
@@ -21,6 +20,8 @@ import { emptyRoomEquipment, roomEquipmentVolume } from "./equipment";
 import { makeStats } from "./events";
 import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
+import { worldCatalogsFor } from "../world/catalogs";
+import { definitionRoom } from "../world/instances";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
   lastRate: 0,
@@ -45,7 +46,8 @@ const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefiniti
       if (instance) equipment[socketId as keyof typeof equipment] = { ...instance };
     }
   }
-  const temperature = loadout.initialTemperatures[id] ?? definition.rooms[id].ambientTemperature;
+  const temperature =
+    loadout.initialTemperatures[id] ?? definitionRoom(definition, id).ambientTemperature;
   const usableVolume = Math.max(
     8,
     definition.facility.roomVolume(id) - roomEquipmentVolume({ equipment }, definition)
@@ -143,8 +145,8 @@ const makeGasConduits = (
   gameDefinition: GameDefinition
 ): GameState["gasConduits"] =>
   Object.fromEntries(
-    TRANSPORT_RUN_IDS.map((runId) => {
-      const definition = gameDefinition.transportRuns[runId].gas;
+    Object.keys(gameDefinition.transportRuns).map((runId) => {
+      const definition = gameDefinition.transportRuns[runId]?.gas;
       const configured = loadout.gasConduits[runId];
       return [
         runId,
@@ -168,8 +170,8 @@ const makeLiquidConduits = (
   gameDefinition: GameDefinition
 ): GameState["liquidConduits"] =>
   Object.fromEntries(
-    TRANSPORT_RUN_IDS.map((runId) => {
-      const definition = gameDefinition.transportRuns[runId].liquid;
+    Object.keys(gameDefinition.transportRuns).map((runId) => {
+      const definition = gameDefinition.transportRuns[runId]?.liquid;
       const configured = loadout.liquidConduits[runId];
       return [
         runId,
@@ -221,6 +223,7 @@ export const createScenarioGame = (
       checkpointLevelId: levelId,
       completedLevelIds: [...completedLevelIds],
     },
+    world: worldCatalogsFor(definition),
     availability: {
       equipment: [...round.availability.equipment],
       gasRuns: [...round.availability.gasRuns],

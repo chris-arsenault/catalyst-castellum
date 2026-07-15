@@ -3,6 +3,7 @@ import { LEVEL_DEFINITIONS } from "./config";
 import { createInitialGame, createScenarioGame, executeCommand, stepGame } from "./simulation";
 import type { GameCommand, GameState, ScenarioAvailability } from "./types";
 import { LEVEL_PLAYTEST_PLANS } from "./content/playtestPlans";
+import { gasConduitState, gasJunctionState, roomState } from "./world/instances";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -23,9 +24,12 @@ describe("Flash Point scenario truth", () => {
     expect(game.phase).toBe("level_briefing");
     expect(game.gasSources.starter_gas_header.gas.hydrogen).toBeGreaterThan(0);
     expect(game.gasSources.starter_gas_header.gas.oxygen).toBeGreaterThan(0);
-    expect(game.gasConduits.core_furnace).toMatchObject({ installed: true, enabled: false });
+    expect(gasConduitState(game, "core_furnace")).toMatchObject({
+      installed: true,
+      enabled: false,
+    });
     expect(game.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
-    expect(game.gasJunctions.lower_intake.gas.hydrogen).toBe(0);
+    expect(gasJunctionState(game, "lower_intake").gas.hydrogen).toBe(0);
     expect(game.availability.gasRuns).toEqual(["core_furnace"]);
   });
 
@@ -34,8 +38,8 @@ describe("Flash Point scenario truth", () => {
     for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)) {
       state = command(state, action);
     }
-    expect(state.rooms.furnace.equipment.socket_a?.equipmentId).toBe("gas_agitator");
-    expect(state.gasConduits.core_furnace.enabled).toBe(true);
+    expect(roomState(state, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
+    expect(gasConduitState(state, "core_furnace").enabled).toBe(true);
   });
 
   it("emits the real prime flash before the automatic assault removes its action button", () => {
@@ -64,8 +68,8 @@ describe("campaign checkpoints", () => {
 
   it("preserves room and conduit inventory between rounds", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    state.rooms.furnace.gas.lower.steam = 9;
-    state.gasConduits.core_furnace.gas.hydrogen = 3;
+    roomState(state, "furnace").gas.lower.steam = 9;
+    gasConduitState(state, "core_furnace").gas.hydrogen = 3;
     state = command(state, { type: "start_prime" });
     state = command(state, { type: "start_assault" });
     state.spawnCursor = LEVEL_DEFINITIONS.flash_point.rounds[0]!.wave.length;
@@ -74,9 +78,9 @@ describe("campaign checkpoints", () => {
     expect(state.phase).toBe("round_result");
     state = command(state, { type: "continue_round" });
     expect(
-      state.rooms.furnace.gas.lower.steam + state.rooms.furnace.gas.upper.steam
+      roomState(state, "furnace").gas.lower.steam + roomState(state, "furnace").gas.upper.steam
     ).toBeGreaterThan(8.9);
-    expect(state.gasConduits.core_furnace.gas.hydrogen).toBeGreaterThan(2.9);
+    expect(gasConduitState(state, "core_furnace").gas.hydrogen).toBeGreaterThan(2.9);
   });
 
   it("keeps unlocks cumulative inside every authored level", () => {

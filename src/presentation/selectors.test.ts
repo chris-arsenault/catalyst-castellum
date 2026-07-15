@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createInitialGame } from "../game/simulation";
 import { commandDecision, roomAnalysis } from "./selectors";
+import { roomState } from "../game/world/instances";
 
 describe("snapshot selectors", () => {
   it("reuses room analysis for one immutable room snapshot", () => {
-    const room = createInitialGame().rooms.furnace;
+    const room = roomState(createInitialGame(), "furnace");
     expect(roomAnalysis(room)).toBe(roomAnalysis(room));
   });
 

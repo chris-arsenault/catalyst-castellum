@@ -4,6 +4,7 @@ import { clamp } from "./math";
 import { gasAmountTotal, gasZoneTotal, kelvin, mixedTemperature, roomZoneDensity } from "./physics";
 import { addGas, takeGas } from "./roomState";
 import { roomGasMixingRate } from "./equipment";
+import { roomState } from "../world/instances";
 
 const PRESSURE_EQUALIZATION_RATE = 5;
 const MOLECULAR_DIFFUSION_RATE = 0.025;
@@ -110,5 +111,5 @@ export const simulateStratification = (
   definition: GameDefinition
 ): void => {
   for (const roomId of definition.roomOrder)
-    simulateRoomStratification(state.rooms[roomId], dt, definition);
+    simulateRoomStratification(roomState(state, roomId), dt, definition);
 };

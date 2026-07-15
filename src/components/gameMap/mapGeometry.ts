@@ -4,6 +4,7 @@ import {
   roomCenterWorld,
 } from "../../presentation/defaultGame";
 import type { GridCell, Point, RoomId, WorldPoint } from "../../game/types";
+import { instance } from "../../game/world/instances";
 
 export const VIEWPORT_WIDTH = 1120;
 export const VIEWPORT_HEIGHT = 560;
@@ -105,7 +106,7 @@ export const gridCellMapRect = (gridCell: GridCell): MapRect => {
 };
 
 export const roomMapRect = (roomId: RoomId): RoomMapRect => {
-  const bounds = FACILITY_MAP.rooms[roomId].bounds;
+  const bounds = instance(FACILITY_MAP.rooms, roomId, "map room").bounds;
   const topLeft = worldToMapPoint({
     x: bounds.column,
     elevation: bounds.elevation + bounds.height,

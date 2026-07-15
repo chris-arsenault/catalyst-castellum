@@ -1,12 +1,10 @@
-import {
-  EQUIPMENT_DEFINITIONS,
-  ROOM_DEFINITIONS,
-  equipmentGrade,
-} from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS, equipmentGrade } from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
 import type { EquipmentHover } from "./EquipmentLayer";
 import { equipmentCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
+import { roomState } from "../../game/world/instances";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 export const EquipmentTooltip = ({
   equipment,
@@ -17,10 +15,10 @@ export const EquipmentTooltip = ({
 }) => {
   const { equipmentGradeEffect, translator } = useGamePresentation();
   if (!equipment) return null;
-  const instance = game.rooms[equipment.roomId].equipment[equipment.socketId];
+  const instance = roomState(game, equipment.roomId).equipment[equipment.socketId];
   if (!instance) return null;
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  const room = ROOM_DEFINITIONS[equipment.roomId];
+  const room = roomDefinition(equipment.roomId);
   return (
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="equipment-map-tooltip">
       <header>

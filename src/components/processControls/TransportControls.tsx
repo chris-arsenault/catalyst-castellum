@@ -1,12 +1,13 @@
 import { ArrowRightLeft, Droplets, Trash2, Wind } from "lucide-react";
 import { useCallback } from "react";
-import { ROOM_DEFINITIONS, TRANSPORT_RUNS } from "../../presentation/defaultGame";
 import { transportPhaseAvailable } from "../../game/queries";
 import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { GameState, TransportPhase, TransportRunId } from "../../game/types";
 import { ConduitActuator } from "./ActuatorControls";
 import { roomCopy } from "../../presentation/entityCopy";
+import { gasConduitState, liquidConduitState } from "../../game/world/instances";
+import { roomDefinition, transportRunDefinition } from "../../presentation/defaultGame";
 
 interface PhaseModel {
   installed: boolean;
@@ -17,10 +18,12 @@ const phaseModel = (
   runId: TransportRunId,
   phase: TransportPhase
 ): PhaseModel | null => {
-  const definition = TRANSPORT_RUNS[runId][phase];
+  const definition = transportRunDefinition(runId)[phase];
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const installed =
-    phase === "gas" ? game.gasConduits[runId].installed : game.liquidConduits[runId].installed;
+    phase === "gas"
+      ? gasConduitState(game, runId).installed
+      : liquidConduitState(game, runId).installed;
   return {
     installed,
   };
@@ -94,7 +97,7 @@ const TransportPhasePanel = ({
 
 export const TransportRunPanel = ({ runId }: { runId: TransportRunId }) => {
   const { translator } = useGamePresentation();
-  const run = TRANSPORT_RUNS[runId];
+  const run = transportRunDefinition(runId);
   const [leftRoom, rightRoom] = run.rooms;
   return (
     <article className="transport-run-control" data-testid={`pipe-run-${runId}`}>
@@ -102,11 +105,11 @@ export const TransportRunPanel = ({ runId }: { runId: TransportRunId }) => {
         <ArrowRightLeft size={14} />
         <div>
           <strong>
-            {ROOM_DEFINITIONS[leftRoom].code} ⇄ {ROOM_DEFINITIONS[rightRoom].code}
+            {roomDefinition(leftRoom).code} ⇄ {roomDefinition(rightRoom).code}
           </strong>
           <small>
-            {roomCopy(ROOM_DEFINITIONS[leftRoom], translator).name} ·{" "}
-            {roomCopy(ROOM_DEFINITIONS[rightRoom], translator).name}
+            {roomCopy(roomDefinition(leftRoom), translator).name} ·{" "}
+            {roomCopy(roomDefinition(rightRoom), translator).name}
           </small>
         </div>
       </div>

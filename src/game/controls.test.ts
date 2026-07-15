@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { GAS_SOURCES, roomRing } from "./config";
 import { createScenarioGame, executeCommand } from "./simulation";
-import { EQUIPMENT_IDS, ROOM_IDS } from "./types";
+import { EQUIPMENT_IDS } from "./types";
+import { ROOM_ORDER } from "./config";
+import { gasConduitState } from "./world/instances";
 
 describe("simple conduit controls", () => {
   it("locks the one actuator during assault", () => {
@@ -21,19 +23,19 @@ describe("simple conduit controls", () => {
       enabled: false,
     });
     expect(result.accepted).toBe(false);
-    expect(result.state.gasConduits.core_furnace.enabled).toBe(true);
+    expect(gasConduitState(result.state, "core_furnace").enabled).toBe(true);
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
-    state.gasConduits.furnace_return.installed = false;
+    gasConduitState(state, "furnace_return").installed = false;
     const built = executeCommand(state, {
       type: "build_transport",
       runId: "furnace_return",
       phase: "gas",
     });
     expect(built.accepted).toBe(true);
-    expect(built.state.gasConduits.furnace_return.installed).toBe(true);
+    expect(gasConduitState(built.state, "furnace_return").installed).toBe(true);
     const dismantled = executeCommand(built.state, {
       type: "dismantle_transport",
       runId: "furnace_return",
@@ -44,7 +46,7 @@ describe("simple conduit controls", () => {
 
   it("rejects dismantling conserved retained material", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
-    state.gasConduits.cell_furnace.gas.hydrogen = 1;
+    gasConduitState(state, "cell_furnace").gas.hydrogen = 1;
     const result = executeCommand(state, {
       type: "dismantle_transport",
       runId: "cell_furnace",
@@ -86,7 +88,7 @@ describe("derived rings and mixed exotic stock", () => {
 
 describe("universal equipment sockets", () => {
   it("accepts every equipment type in every standard room", () => {
-    for (const roomId of ROOM_IDS.filter(
+    for (const roomId of ROOM_ORDER.filter(
       (candidate) => !["west_intake", "core"].includes(candidate)
     )) {
       for (const equipmentId of EQUIPMENT_IDS) {

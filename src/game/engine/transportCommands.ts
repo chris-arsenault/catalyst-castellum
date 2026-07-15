@@ -8,9 +8,10 @@ import type {
 } from "../types";
 import { acceptCommand } from "./commandResult";
 import { cloneGame } from "./roomState";
+import { gasConduitState, liquidConduitState } from "../world/instances";
 
 const conduitFor = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
-  phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
+  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
 
 export const setConduitCommand = (
   source: GameState,

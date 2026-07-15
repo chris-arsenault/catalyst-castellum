@@ -1,12 +1,13 @@
 import { useCallback, useMemo } from "react";
 import type { Graphics } from "pixi.js";
-import { ROOM_DEFINITIONS, facilityRingForRoom } from "../../presentation/defaultGame";
+import { facilityRingForRoom } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { layoutMapLabels, type MapLabelPlacement } from "./labelLayout";
 import { useGamePresentation } from "../../application/presentationContext";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 const labelAccent = (roomId: RoomId): number => {
-  if (ROOM_DEFINITIONS[roomId].structure === "core") return 0xd2b85f;
+  if (roomDefinition(roomId).structure === "core") return 0xd2b85f;
   if (facilityRingForRoom(roomId) === "inner") return 0xc49d64;
   if (facilityRingForRoom(roomId) === "middle") return 0x629db3;
   return 0x54a891;

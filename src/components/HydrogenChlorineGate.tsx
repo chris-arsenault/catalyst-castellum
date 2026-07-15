@@ -4,6 +4,7 @@ import { useGamePresentation } from "../application/presentationContext";
 import { hydrogenChlorineReactionStatus } from "../game/queries";
 import type { RoomId } from "../game/types";
 import type { LocaleFormatters } from "../localization/formatters";
+import { roomState } from "../game/world/instances";
 
 const formatAmount = (value: number, formatters: LocaleFormatters): string =>
   value > 0 && value < 0.01
@@ -28,7 +29,7 @@ const ReactionCondition = ({
 
 export const HydrogenChlorineGate = ({ roomId }: { roomId: RoomId }) => {
   const { formatters, translator } = useGamePresentation();
-  const room = useGameStore((state) => state.game.rooms[roomId]);
+  const room = useGameStore((state) => roomState(state.game, roomId));
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenChlorineReactionStatus(room, zone)
   );

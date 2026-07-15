@@ -6,6 +6,7 @@ import { roomHazards } from "./engine/physics";
 import { simulateProcesses } from "./engine/processExecutor";
 import { createScenarioGame as createScenarioGameForDefinition } from "./engine/scenarioState";
 import { createScenarioGame } from "./simulation";
+import { roomState } from "./world/instances";
 
 describe("definition extension contracts", () => {
   it("drives engine behavior and copy from one equipment-grade definition", () => {
@@ -25,21 +26,21 @@ describe("definition extension contracts", () => {
       },
     });
     const state = createScenarioGameForDefinition("flash_point", [], definition);
-    state.rooms.furnace.equipment.socket_a = {
+    roomState(state, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 1,
       enabled: true,
     };
 
-    expect(roomGasMixingRate(state.rooms.furnace, definition)).toBe(9);
+    expect(roomGasMixingRate(roomState(state, "furnace"), definition)).toBe(9);
     expect(equipmentGradeEffect(grade)).toBe("9 layer exchange · 4× gas kinetics");
   });
 
   it("adds or removes species hazard policy without a physics branch", () => {
     const state = createScenarioGame("flash_point");
-    state.rooms.furnace.gas.lower.chlorine = 20;
+    roomState(state, "furnace").gas.lower.chlorine = 20;
     const hazardous = roomHazards(
-      state.rooms.furnace,
+      roomState(state, "furnace"),
       true,
       true,
       "lower",
@@ -52,7 +53,7 @@ describe("definition extension contracts", () => {
         chlorine: { ...DEFAULT_GAME_DEFINITION.species.chlorine, hazards: [] },
       },
     });
-    const inert = roomHazards(state.rooms.furnace, true, true, "lower", definition);
+    const inert = roomHazards(roomState(state, "furnace"), true, true, "lower", definition);
 
     expect(hazardous.atmosphere + hazardous.corrosion).toBeGreaterThan(0);
     expect(inert.atmosphere + inert.corrosion).toBe(0);
@@ -75,8 +76,8 @@ describe("definition extension contracts", () => {
       },
     });
     const state = createScenarioGameForDefinition("commissioning_exam", [], definition);
-    state.rooms.lower_intake.liquid.water = 10;
-    state.rooms.lower_intake.liquid.sodium_chloride = 10;
+    roomState(state, "lower_intake").liquid.water = 10;
+    roomState(state, "lower_intake").liquid.sodium_chloride = 10;
     simulateProcesses(state, 0.5, definition);
 
     expect(state.gasBuffers.cathode_header.gas.chlorine).toBeGreaterThan(0);

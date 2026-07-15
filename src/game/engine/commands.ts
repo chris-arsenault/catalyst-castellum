@@ -27,6 +27,7 @@ import {
   dismantleTransportCommand,
   setConduitCommand,
 } from "./transportCommands";
+import { roomState } from "../world/instances";
 
 const startPrime = (source: GameState, definition: GameDefinition): CommandResult => {
   const state = cloneGame(source);
@@ -57,7 +58,7 @@ const installEquipment = (
   const instance: EquipmentInstance = { equipmentId: command.equipmentId, level: 1, enabled: true };
   const state = cloneGame(source);
   state.matter -= decision.cost;
-  state.rooms[command.roomId].equipment[command.socketId] = instance;
+  roomState(state, command.roomId).equipment[command.socketId] = instance;
   addEvent(
     state,
     "info",
@@ -73,7 +74,7 @@ const toggleEquipment = (
   command: GameCommand & { type: "toggle_equipment" }
 ): CommandResult => {
   const state = cloneGame(source);
-  const target = state.rooms[command.roomId].equipment[command.socketId];
+  const target = roomState(state, command.roomId).equipment[command.socketId];
   if (target) target.enabled = command.enabled;
   return acceptCommand(state);
 };
@@ -83,10 +84,10 @@ const upgradeEquipment = (
   command: GameCommand & { type: "upgrade_equipment" },
   decision: CommandDecision
 ): CommandResult => {
-  const instance = source.rooms[command.roomId].equipment[command.socketId];
+  const instance = roomState(source, command.roomId).equipment[command.socketId];
   if (!instance) throw new Error("Upgrade was applied without an installed equipment instance.");
   const state = cloneGame(source);
-  const target = state.rooms[command.roomId].equipment[command.socketId];
+  const target = roomState(state, command.roomId).equipment[command.socketId];
   if (!target) throw new Error("Cloned equipment state lost the upgraded instance.");
   target.level = (target.level + 1) as 2 | 3;
   state.matter -= decision.cost;
@@ -106,7 +107,7 @@ const dismantleEquipment = (
   decision: CommandDecision
 ): CommandResult => {
   const state = cloneGame(source);
-  state.rooms[command.roomId].equipment[command.socketId] = null;
+  roomState(state, command.roomId).equipment[command.socketId] = null;
   state.matter += decision.refund;
   return acceptCommand(state);
 };

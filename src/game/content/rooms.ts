@@ -1,4 +1,4 @@
-import { ROOM_IDS, type RoomDefinition, type RoomId } from "../types";
+import type { RoomDefinition, RoomId } from "../types";
 
 export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
   west_intake: {
@@ -59,4 +59,14 @@ export const ROOM_DEFINITIONS: Record<RoomId, RoomDefinition> = {
   },
 };
 
-export const ROOM_ORDER: readonly RoomId[] = ROOM_IDS;
+/** Authored simulation order for the pack's rooms. */
+export const ROOM_ORDER: readonly RoomId[] = [
+  "west_intake",
+  "switchyard",
+  "furnace",
+  "reservoir",
+  "gallery",
+  "lower_intake",
+  "washlock",
+  "core",
+];

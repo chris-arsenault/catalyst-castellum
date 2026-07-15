@@ -24,7 +24,6 @@ import {
 import {
   GAS_SOURCE_IDS,
   LIQUID_SOURCE_IDS,
-  TRANSPORT_RUN_IDS,
   type CellRect,
   type GridCell,
   type RoomId,
@@ -38,6 +37,9 @@ import {
   worldToClientPoint,
   worldToMapPoint,
 } from "../components/gameMap/mapGeometry";
+import { instance } from "./world/instances";
+
+const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
 
 const overlaps = (left: CellRect, right: CellRect): boolean =>
   left.column < right.column + right.width &&
@@ -48,53 +50,57 @@ const overlaps = (left: CellRect, right: CellRect): boolean =>
 const isAdjacent = (left: GridCell, right: GridCell): boolean =>
   Math.abs(left.column - right.column) + Math.abs(left.elevation - right.elevation) === 1;
 
-const ROOM_IDS = Object.keys(FACILITY_MAP.rooms) as RoomId[];
+const PACK_ROOM_IDS = Object.keys(FACILITY_MAP.rooms) as RoomId[];
 
 describe("canonical tile-addressable facility", () => {
   it("authors varied, non-overlapping room dimensions", () => {
-    for (let left = 0; left < ROOM_IDS.length; left += 1) {
-      for (let right = left + 1; right < ROOM_IDS.length; right += 1) {
+    for (let left = 0; left < PACK_ROOM_IDS.length; left += 1) {
+      for (let right = left + 1; right < PACK_ROOM_IDS.length; right += 1) {
         expect(
           overlaps(
-            FACILITY_MAP.rooms[ROOM_IDS[left] as RoomId].bounds,
-            FACILITY_MAP.rooms[ROOM_IDS[right] as RoomId].bounds
+            instance(FACILITY_MAP.rooms, PACK_ROOM_IDS[left] as RoomId, "map room").bounds,
+            instance(FACILITY_MAP.rooms, PACK_ROOM_IDS[right] as RoomId, "map room").bounds
           )
         ).toBe(false);
       }
     }
 
     const dimensions = new Set(
-      ROOM_IDS.map((roomId) => {
-        const bounds = FACILITY_MAP.rooms[roomId].bounds;
+      PACK_ROOM_IDS.map((roomId) => {
+        const bounds = instance(FACILITY_MAP.rooms, roomId, "map room").bounds;
         return `${bounds.width}x${bounds.height}`;
       })
     );
     expect(dimensions.size).toBeGreaterThanOrEqual(6);
-    expect(FACILITY_MAP.rooms.furnace.bounds.height).toBeGreaterThan(
-      FACILITY_MAP.rooms.furnace.bounds.width
+    expect(instance(FACILITY_MAP.rooms, "furnace", "map room").bounds.height).toBeGreaterThan(
+      instance(FACILITY_MAP.rooms, "furnace", "map room").bounds.width
     );
-    expect(FACILITY_MAP.rooms.reservoir.bounds.width).toBeGreaterThan(
-      FACILITY_MAP.rooms.reservoir.bounds.height * 2
+    expect(instance(FACILITY_MAP.rooms, "reservoir", "map room").bounds.width).toBeGreaterThan(
+      instance(FACILITY_MAP.rooms, "reservoir", "map room").bounds.height * 2
     );
   });
 
   it("uses room atmosphere for most of the compact playable envelope", () => {
-    const minColumn = Math.min(...ROOM_IDS.map((id) => FACILITY_MAP.rooms[id].bounds.column));
+    const minColumn = Math.min(
+      ...PACK_ROOM_IDS.map((id) => instance(FACILITY_MAP.rooms, id, "map room").bounds.column)
+    );
     const maxColumn = Math.max(
-      ...ROOM_IDS.map((id) => {
-        const bounds = FACILITY_MAP.rooms[id].bounds;
+      ...PACK_ROOM_IDS.map((id) => {
+        const bounds = instance(FACILITY_MAP.rooms, id, "map room").bounds;
         return bounds.column + bounds.width;
       })
     );
-    const minElevation = Math.min(...ROOM_IDS.map((id) => FACILITY_MAP.rooms[id].bounds.elevation));
+    const minElevation = Math.min(
+      ...PACK_ROOM_IDS.map((id) => instance(FACILITY_MAP.rooms, id, "map room").bounds.elevation)
+    );
     const maxElevation = Math.max(
-      ...ROOM_IDS.map((id) => {
-        const bounds = FACILITY_MAP.rooms[id].bounds;
+      ...PACK_ROOM_IDS.map((id) => {
+        const bounds = instance(FACILITY_MAP.rooms, id, "map room").bounds;
         return bounds.elevation + bounds.height;
       })
     );
     const envelopeArea = (maxColumn - minColumn) * (maxElevation - minElevation);
-    const atmosphericArea = ROOM_IDS.reduce(
+    const atmosphericArea = PACK_ROOM_IDS.reduce(
       (total, roomId) => total + roomAtmosphericCells(roomId).length,
       0
     );
@@ -123,7 +129,7 @@ describe("cell ownership and room-derived physics", () => {
   });
 
   it("includes every host-owned portal cell in canonical room atmosphere and volume", () => {
-    for (const roomId of ROOM_IDS) {
+    for (const roomId of PACK_ROOM_IDS) {
       const expected = facilityCells().filter(
         (definition) =>
           definition.roomId === roomId &&
@@ -144,7 +150,7 @@ describe("cell ownership and room-derived physics", () => {
 
 describe("room-derived physical capacity", () => {
   it("derives room volume, ownership, utilities, and rings from spatial cells", () => {
-    for (const roomId of ROOM_IDS) {
+    for (const roomId of PACK_ROOM_IDS) {
       expect(roomVolume(roomId)).toBeCloseTo(
         roomAtmosphericCells(roomId).length * ROOM_VOLUME_PER_CELL
       );
@@ -300,16 +306,16 @@ describe("portal state navigation policy", () => {
 
 describe("dedicated routes and transforms", () => {
   it("gives every physical conduit a valid endpoint-owned route independent of portals", () => {
-    expect(Object.keys(CONDUIT_BLUEPRINTS).sort()).toEqual([...TRANSPORT_RUN_IDS].sort());
-    for (const runId of TRANSPORT_RUN_IDS) {
+    expect(Object.keys(CONDUIT_BLUEPRINTS).sort()).toEqual([...PACK_RUN_IDS].sort());
+    for (const runId of PACK_RUN_IDS) {
       for (const phase of ["gas", "liquid"] as const satisfies readonly TransportPhase[]) {
-        const path = CONDUIT_BLUEPRINTS[runId][phase];
+        const path = instance(CONDUIT_BLUEPRINTS, runId, "blueprint")[phase];
         if (!path) continue;
         expect(path.length).toBeGreaterThan(1);
         expect(path.every(inFacilityBounds)).toBe(true);
         for (let index = 1; index < path.length; index += 1)
           expect(isAdjacent(path[index - 1]!, path[index]!)).toBe(true);
-        const definition = TRANSPORT_RUNS[runId][phase];
+        const definition = instance(TRANSPORT_RUNS, runId, "transport run")[phase];
         expect(definition).not.toBeNull();
         const [fromRoom, toRoom] = definition!.direction;
         expect(roomAtWorldPoint(gridCellToWorldPoint(path[0]!))).toBe(fromRoom);

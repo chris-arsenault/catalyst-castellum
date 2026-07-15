@@ -1,5 +1,6 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { GuideConceptModel, GuideConceptStage } from "./flashPointConcept";
+import { definitionTransportRun } from "../game/world/instances";
 
 const ACID_REACTION = DEFAULT_GAME_DEFINITION.reactions.hydrogen_chlorine_recombination;
 const acidCoefficient = (species: string): number =>
@@ -9,9 +10,9 @@ const acidCoefficient = (species: string): number =>
 const acidLineStages = (): GuideConceptStage[] => {
   const definition = DEFAULT_GAME_DEFINITION;
   const behavior = ACID_REACTION.behavior;
-  const feed = definition.transportRuns.cell_furnace.gas;
-  const firstReturn = definition.transportRuns.furnace_return.gas;
-  const finalReturn = definition.transportRuns.return_final.gas;
+  const feed = definitionTransportRun(definition, "cell_furnace").gas;
+  const firstReturn = definitionTransportRun(definition, "furnace_return").gas;
+  const finalReturn = definitionTransportRun(definition, "return_final").gas;
   const coil = definition.equipment.thermal_coil.grades[0];
   const agitator = definition.equipment.gas_agitator.grades[0];
   if (

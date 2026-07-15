@@ -1,11 +1,7 @@
-import { FACILITY_MAP, TRANSPORT_RUNS } from "./defaultGame";
-import {
-  GAS_TYPES,
-  TRANSPORT_RUN_IDS,
-  type GameState,
-  type GasAmounts,
-  type RoomId,
-} from "../game/types";
+import { FACILITY_MAP } from "./defaultGame";
+import { GAS_TYPES, type GameState, type GasAmounts, type RoomId } from "../game/types";
+import { gasConduitState, liquidConduitState } from "../game/world/instances";
+import { transportRunDefinition } from "./defaultGame";
 
 const emptyGasRates = (): GasAmounts =>
   Object.fromEntries(GAS_TYPES.map((species) => [species, 0])) as GasAmounts;
@@ -18,10 +14,10 @@ export interface RoomGasInflow {
 export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow => {
   const species = emptyGasRates();
   let rate = 0;
-  for (const runId of TRANSPORT_RUN_IDS) {
-    const definition = TRANSPORT_RUNS[runId].gas;
+  for (const runId of game.world.connections) {
+    const definition = transportRunDefinition(runId).gas;
     if (!definition || definition.direction[1] !== roomId) continue;
-    const conduit = game.gasConduits[runId];
+    const conduit = gasConduitState(game, runId);
     if (conduit.flowCause !== "fan") continue;
     rate += Math.abs(conduit.lastFlow);
     for (const gas of GAS_TYPES) species[gas] += Math.abs(conduit.lastSpeciesFlow[gas]);
@@ -30,10 +26,10 @@ export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow =>
 };
 
 export const roomLiquidInflowRate = (game: GameState, roomId: RoomId): number =>
-  TRANSPORT_RUN_IDS.reduce((total, runId) => {
-    const definition = TRANSPORT_RUNS[runId].liquid;
+  game.world.connections.reduce((total: number, runId: string) => {
+    const definition = transportRunDefinition(runId).liquid;
     if (!definition || definition.direction[1] !== roomId) return total;
-    const conduit = game.liquidConduits[runId];
+    const conduit = liquidConduitState(game, runId);
     return conduit.flowCause === "pump" ? total + Math.abs(conduit.lastFlow) : total;
   }, 0);
 

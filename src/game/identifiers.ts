@@ -19,28 +19,11 @@ export const LIQUID_TYPES = [
 ] as const;
 
 export const ENEMY_TYPES = ["crawler", "skimmer", "floater", "shell", "bellows"] as const;
-export const ENEMY_ROUTE_IDS = ["entry_to_core"] as const;
 
 export const GAS_SOURCE_IDS = ["starter_gas_header"] as const;
 export const LIQUID_SOURCE_IDS = ["water_tank", "sodium_chloride_tank"] as const;
 export const GAS_BUFFER_IDS = ["anode_header", "cathode_header"] as const;
 export const LIQUID_BUFFER_IDS = ["cell_liquor"] as const;
-
-export const TRANSPORT_RUN_IDS = [
-  "core_furnace",
-  "core_switchyard",
-  "core_reservoir",
-  "core_gallery",
-  "cell_furnace",
-  "core_cell",
-  "cell_absorber",
-  "furnace_return",
-  "return_final",
-  "return_outer",
-  "core_final",
-  "absorber_final",
-  "core_absorber",
-] as const;
 
 export const EQUIPMENT_IDS = [
   "gas_agitator",
@@ -89,17 +72,6 @@ export const ROOM_REACTION_IDS = [
   "acid_neutralization",
   "hypochlorite_formation",
   "acid_chlorine_release",
-] as const;
-
-export const ROOM_IDS = [
-  "west_intake",
-  "switchyard",
-  "furnace",
-  "reservoir",
-  "gallery",
-  "lower_intake",
-  "washlock",
-  "core",
 ] as const;
 
 export const GAME_PHASES = [

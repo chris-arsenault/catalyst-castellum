@@ -1,7 +1,7 @@
-import { ROOM_DEFINITIONS } from "../../presentation/defaultGame";
 import type { GameState } from "../../game/types";
 import { cellOutletAssemblyModel, type CellOutletId } from "./cellOutletRenderModel";
 import { useGamePresentation } from "../../application/presentationContext";
+import { roomDefinition } from "../../presentation/defaultGame";
 
 export const CellOutletTooltip = ({
   bufferId,
@@ -15,7 +15,7 @@ export const CellOutletTooltip = ({
   const assembly = cellOutletAssemblyModel(game, translator);
   const outlet = assembly?.outlets.find((candidate) => candidate.bufferId === bufferId);
   if (!assembly || !outlet) return null;
-  const room = ROOM_DEFINITIONS[assembly.roomId];
+  const room = roomDefinition(assembly.roomId);
   return (
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="cell-outlet-tooltip">
       <header>

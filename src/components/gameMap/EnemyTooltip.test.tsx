@@ -6,6 +6,7 @@ import { emptyDamageLedger, emptyHazardChannels } from "../../game/engine/damage
 import { createScenarioGame, findEnemyPath } from "../../game/simulation";
 import type { EnemyState } from "../../game/types";
 import { EnemyTooltip } from "./EnemyTooltip";
+import { roomState } from "../../game/world/instances";
 
 afterEach(cleanup);
 
@@ -46,7 +47,7 @@ describe("enemy map detail", () => {
     const game = createScenarioGame("flash_point");
     const enemy = furnaceCrawler();
     game.elapsed = 8;
-    game.rooms.furnace.gasTemperature.lower = 72;
+    roomState(game, "furnace").gasTemperature.lower = 72;
     game.enemies = [enemy];
 
     render(<EnemyTooltip game={game} enemyId={enemy.id} />);

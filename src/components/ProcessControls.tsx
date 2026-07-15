@@ -1,12 +1,13 @@
 import { ArrowDownToLine, Beaker, LockKeyhole, Spline } from "lucide-react";
-import { TRANSPORT_RUNS } from "../presentation/defaultGame";
 import { roomSocketIds, transportPhaseAvailable } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
-import { TRANSPORT_RUN_IDS } from "../game/types";
+
 import type { Translator } from "../localization/translator";
 import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
+import { roomState } from "../game/world/instances";
+import { transportRunDefinition } from "../presentation/defaultGame";
 
 const localizedPhaseLabel = (phase: string, translator: Translator): string => {
   if (phase === "build") return translator.text("ui.process.phase.planning");
@@ -19,11 +20,11 @@ export const ProcessControls = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const setPipeMode = useGameStore((state) => state.setPipeMode);
-  const room = game.rooms[roomId];
+  const room = roomState(game, roomId);
   const socketIds = roomSocketIds(roomId);
-  const connectedRuns = TRANSPORT_RUN_IDS.filter(
+  const connectedRuns = game.world.connections.filter(
     (runId) =>
-      TRANSPORT_RUNS[runId].rooms.includes(roomId) &&
+      transportRunDefinition(runId).rooms.includes(roomId) &&
       (transportPhaseAvailable(game, runId, "gas") ||
         transportPhaseAvailable(game, runId, "liquid"))
   );

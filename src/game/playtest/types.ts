@@ -1,4 +1,4 @@
-import type { DamageSourceId, GameCommand, GamePhase, LevelId } from "../types";
+import type { DamageSourceId, GameCommand, GamePhase, LevelId, RoundReport } from "../types";
 
 export interface PlaytestPlan {
   name: string;
@@ -23,6 +23,7 @@ export interface PlaytestResult {
   rejectedActions: number;
   simulatedSeconds: number;
   stable: boolean;
+  reports: RoundReport[];
 }
 
 export interface EvaluationOptions {

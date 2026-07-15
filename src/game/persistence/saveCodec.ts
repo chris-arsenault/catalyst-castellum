@@ -4,7 +4,6 @@ import type { GameDefinition } from "../definitionTypes";
 import {
   DAMAGE_SOURCE_IDS,
   ENEMY_LOCOMOTION_MODES,
-  ENEMY_ROUTE_IDS,
   ENEMY_TYPES,
   EQUIPMENT_IDS,
   EQUIPMENT_SOCKET_IDS,
@@ -22,9 +21,7 @@ import {
   LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
   PROCESS_IDS,
-  ROOM_IDS,
   ROOM_REACTION_IDS,
-  TRANSPORT_RUN_IDS,
   type GameState,
 } from "../types";
 import { gameStateIsValid } from "../engine/stateValidation";
@@ -36,8 +33,9 @@ import {
   migrateV8Game,
   migrateV9Game,
 } from "./legacySaveMigrations";
+import { worldCatalogsFor } from "../world/catalogs";
 
-const roomIdSchema = z.enum(ROOM_IDS);
+const roomIdSchema = z.string().min(1);
 const phaseSchema = z.enum(GAME_PHASES);
 const levelIdSchema = z.enum(LEVEL_IDS);
 const gasSourceIdSchema = z.enum(GAS_SOURCE_IDS);
@@ -48,7 +46,7 @@ const processIdSchema = z.enum(PROCESS_IDS);
 const reactionIdSchema = z.enum(ROOM_REACTION_IDS);
 const equipmentIdSchema = z.enum(EQUIPMENT_IDS);
 const socketIdSchema = z.enum(EQUIPMENT_SOCKET_IDS);
-const runIdSchema = z.enum(TRANSPORT_RUN_IDS);
+const runIdSchema = z.string().min(1);
 const damageSourceSchema = z.enum(DAMAGE_SOURCE_IDS);
 
 const gasSchema = z.object({
@@ -196,7 +194,7 @@ const enemySchema = z.object({
   type: z.enum(ENEMY_TYPES),
   health: z.number().nonnegative(),
   maxHealth: z.number().positive(),
-  routeId: z.enum(ENEMY_ROUTE_IDS),
+  routeId: z.string().min(1),
   path: z.array(enemyPathStepSchema).min(1),
   pathIndex: z.number().int().nonnegative(),
   progress: z.number().min(0).max(1),
@@ -435,8 +433,14 @@ export const encodeGame = (game: GameState, definition: GameDefinition): string 
   });
 };
 
-const validGame = (game: GameState, definition: GameDefinition): GameState | null =>
-  gameStateIsValid(game, definition) ? game : null;
+/**
+ * World catalogs are pack-derived while topology is pack-static, so every decode path
+ * rebuilds them from the definition instead of trusting the serialized copy.
+ */
+const validGame = (game: GameState, definition: GameDefinition): GameState | null => {
+  const withCatalogs: GameState = { ...game, world: worldCatalogsFor(definition) };
+  return gameStateIsValid(withCatalogs, definition) ? withCatalogs : null;
+};
 
 const decodeCurrent = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = saveEnvelopeSchema.safeParse(parsed);

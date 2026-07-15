@@ -3,6 +3,7 @@ import { CONDUIT_BLUEPRINTS, FACILITY_MAP, gridCellToWorldPoint } from "../../sr
 import type { WorldPoint } from "../../src/game/types";
 import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
 import { installEquipment } from "./tutorialAssertions";
+import { instance } from "../../src/game/world/instances";
 
 const mapCamera = async (page: Page): Promise<CameraTransform> => {
   const map = page.getByTestId("game-map");
@@ -146,7 +147,7 @@ test("hovering a shared conduit exposes all measured species on that physical ro
 }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
-  const route = CONDUIT_BLUEPRINTS.core_furnace.gas;
+  const route = instance(CONDUIT_BLUEPRINTS, "core_furnace", "blueprint").gas;
   if (!route) throw new Error("Flash Point gas route is not authored.");
   const routePoint = await worldClientPoint(
     page,
@@ -165,7 +166,7 @@ test("installed equipment appears on its authored room socket", async ({ page })
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await expect(page.getByTestId("game-map")).toHaveAttribute("data-installed-equipment-count", "1");
 
-  const socket = FACILITY_MAP.rooms.furnace.socketCells.socket_a;
+  const socket = instance(FACILITY_MAP.rooms, "furnace", "map room").socketCells.socket_a;
   if (!socket) throw new Error("R-02 socket A is absent from the facility map.");
   const socketPoint = gridCellToWorldPoint(socket);
   const marker = await worldClientPoint(page, {

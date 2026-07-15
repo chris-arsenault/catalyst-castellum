@@ -8,6 +8,7 @@ import {
   type RoomId,
 } from "../../game/types";
 import { colorNumber, gridCellMapRect } from "./mapGeometry";
+import { instance as worldInstance, roomState } from "../../game/world/instances";
 
 export const EQUIPMENT_MAP_CODES: Record<EquipmentId, string> = {
   gas_agitator: "MIX",
@@ -31,8 +32,8 @@ export interface EquipmentRenderModel {
 export const equipmentRenderModels = (game: GameState): EquipmentRenderModel[] =>
   ROOM_ORDER.flatMap((roomId) =>
     EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
-      const instance = game.rooms[roomId].equipment[socketId];
-      const cell = FACILITY_MAP.rooms[roomId].socketCells[socketId];
+      const instance = roomState(game, roomId).equipment[socketId];
+      const cell = worldInstance(FACILITY_MAP.rooms, roomId, "map room").socketCells[socketId];
       if (!instance || !cell) return [];
       const rect = gridCellMapRect(cell);
       return [

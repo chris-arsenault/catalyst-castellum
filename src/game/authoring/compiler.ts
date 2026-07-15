@@ -317,9 +317,36 @@ const validateProcesses = (source: GamePackSource, issues: AuthoringIssue[]): vo
   }
 };
 
+const validateWorldCoverage = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  const roomIds = Object.keys(source.rooms);
+  if ([...source.roomOrder].sort().join("|") !== [...roomIds].sort().join("|")) {
+    push(issues, "roomOrder", "roomOrder must list every room exactly once.");
+  }
+  for (const [roomId, room] of Object.entries(source.rooms)) {
+    validateIdentity(issues, `rooms.${roomId}.id`, roomId, room.id);
+    if (!(roomId in source.gasJunctions))
+      push(issues, `gasJunctions.${roomId}`, "Every room requires a gas junction definition.");
+    if (!(roomId in source.liquidJunctions))
+      push(
+        issues,
+        `liquidJunctions.${roomId}`,
+        "Every room requires a liquid junction definition."
+      );
+    if (!(roomId in source.facilityMap.rooms))
+      push(issues, `facilityMap.rooms.${roomId}`, "Every room requires map geometry.");
+  }
+  for (const run of Object.values(source.transportRuns)) {
+    for (const roomId of run.rooms) {
+      if (!(roomId in source.rooms))
+        push(issues, `transportRuns.${run.id}.rooms`, `Unknown room ${roomId}.`);
+    }
+  }
+};
+
 export const validateGamePack = (source: GamePackSource): readonly AuthoringIssue[] => {
   const issues: AuthoringIssue[] = [];
   if (source.packId.trim().length === 0) push(issues, "packId", "Pack ID must be non-empty.");
+  validateWorldCoverage(source, issues);
   if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);

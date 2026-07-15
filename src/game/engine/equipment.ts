@@ -12,13 +12,14 @@ import {
   type RoomState,
 } from "../types";
 import { clamp } from "./math";
+import { definitionRoom } from "../world/instances";
 
 export const NATURAL_REACTION_MULTIPLIER = 0.55;
 
 export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket_b: null });
 
 export const roomSocketIds = (roomId: RoomId, definition: GameDefinition): EquipmentSocketId[] =>
-  EQUIPMENT_SOCKET_IDS.slice(0, definition.rooms[roomId].socketCount);
+  EQUIPMENT_SOCKET_IDS.slice(0, definitionRoom(definition, roomId).socketCount);
 
 export const installedEquipment = (room: Pick<RoomState, "equipment">): EquipmentInstance[] =>
   EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {

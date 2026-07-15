@@ -1,0 +1,559 @@
+{
+  "flash_point": {
+    "terminalPhase": "level_complete",
+    "reports": [
+      {
+        "spawned": 10,
+        "killed": 10,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 739.9999999999998,
+        "reactions": 21.372178986385478,
+        "combustionFlashes": 6,
+        "peakHazard": 2.8774365921844383,
+        "matterHarvested": 50,
+        "damageByChannel": {
+          "atmosphere": 0,
+          "corrosion": 0,
+          "heat": 25.94756262085611,
+          "pressure": 714.0524373791437,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 4.047863651975744,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 735.9521363480242,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 10,
+          "legacy_unattributed": 0
+        },
+        "levelId": "flash_point",
+        "round": 1
+      },
+      {
+        "spawned": 7,
+        "killed": 7,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 437.99999999999994,
+        "reactions": 15.176787706790137,
+        "combustionFlashes": 6,
+        "peakHazard": 3.4987565657259325,
+        "matterHarvested": 35,
+        "damageByChannel": {
+          "atmosphere": 0,
+          "corrosion": 0,
+          "heat": 24.858752905654267,
+          "pressure": 413.1412470943457,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 12.958229138291026,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 425.041770861709,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 7,
+          "legacy_unattributed": 0
+        },
+        "levelId": "flash_point",
+        "round": 2
+      },
+      {
+        "spawned": 18,
+        "killed": 18,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 2897.1999999999985,
+        "reactions": 61.33075277726376,
+        "combustionFlashes": 36,
+        "peakHazard": 10.32428013125967,
+        "matterHarvested": 122,
+        "damageByChannel": {
+          "atmosphere": 0,
+          "corrosion": 0,
+          "heat": 217.95203149078426,
+          "pressure": 2679.247968509216,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 172.23380231437235,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 2724.966197685628,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 18,
+          "legacy_unattributed": 0
+        },
+        "levelId": "flash_point",
+        "round": 3
+      },
+      {
+        "spawned": 21,
+        "killed": 21,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 2976.399999999997,
+        "reactions": 38.43315827449307,
+        "combustionFlashes": 24,
+        "peakHazard": 13.56690286928979,
+        "matterHarvested": 112,
+        "damageByChannel": {
+          "atmosphere": 0,
+          "corrosion": 0,
+          "heat": 600.2476929502866,
+          "pressure": 2376.1523070497137,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 519.063615381827,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 2457.3363846181733,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 3,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 18,
+          "legacy_unattributed": 0
+        },
+        "levelId": "flash_point",
+        "round": 4
+      },
+      {
+        "spawned": 28,
+        "killed": 28,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 5189.9999999999945,
+        "reactions": 60.66593288862222,
+        "combustionFlashes": 37,
+        "peakHazard": 20.935629402207404,
+        "matterHarvested": 202,
+        "damageByChannel": {
+          "atmosphere": 0,
+          "corrosion": 0,
+          "heat": 852.9820362861941,
+          "pressure": 4337.017963713801,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 781.8562722069153,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 4408.143727793079,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 2,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 26,
+          "legacy_unattributed": 0
+        },
+        "levelId": "flash_point",
+        "round": 5
+      }
+    ]
+  },
+  "make_the_reagent": {
+    "terminalPhase": "level_complete",
+    "reports": [
+      {
+        "spawned": 5,
+        "killed": 5,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 369.9999999999999,
+        "reactions": 15,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 25,
+        "damageByChannel": {
+          "atmosphere": 229.8816568047337,
+          "corrosion": 140.1183431952663,
+          "heat": 0,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 229.8816568047337,
+          "surface_corrosion": 140.1183431952663,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 5,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "make_the_reagent",
+        "round": 1
+      },
+      {
+        "spawned": 9,
+        "killed": 9,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 521.9999999999999,
+        "reactions": 0,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 45,
+        "damageByChannel": {
+          "atmosphere": 296.27027027027026,
+          "corrosion": 225.7297297297297,
+          "heat": 0,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 296.27027027027026,
+          "surface_corrosion": 225.7297297297297,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 9,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "make_the_reagent",
+        "round": 2
+      }
+    ]
+  },
+  "acid_line": {
+    "terminalPhase": "level_complete",
+    "reports": [
+      {
+        "spawned": 5,
+        "killed": 5,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 660.0000000000003,
+        "reactions": 6.176167206520075,
+        "combustionFlashes": 0,
+        "peakHazard": 51.35800876684684,
+        "matterHarvested": 45,
+        "damageByChannel": {
+          "atmosphere": 87.34933586719586,
+          "corrosion": 570.330370634713,
+          "heat": 2.3202934980907597,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 87.34933586719586,
+          "surface_corrosion": 570.330370634713,
+          "thermal_exposure": 2.3202934980907597,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 5,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "acid_line",
+        "round": 1
+      },
+      {
+        "spawned": 8,
+        "killed": 8,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 492.00000000000006,
+        "reactions": 3.299270890859466,
+        "combustionFlashes": 0,
+        "peakHazard": 69.42551152442279,
+        "matterHarvested": 42,
+        "damageByChannel": {
+          "atmosphere": 179.46972167438147,
+          "corrosion": 309.11201553751033,
+          "heat": 3.418262788108109,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 179.46972167438147,
+          "surface_corrosion": 309.11201553751033,
+          "thermal_exposure": 3.418262788108109,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 8,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "acid_line",
+        "round": 2
+      }
+    ]
+  },
+  "stored_chlorine": {
+    "terminalPhase": "level_complete",
+    "reports": [
+      {
+        "spawned": 4,
+        "killed": 3,
+        "breached": 1,
+        "coreDamage": 10,
+        "damageDealt": 295.1006525960179,
+        "reactions": 42.121800670940345,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 15,
+        "damageByChannel": {
+          "atmosphere": 105.12339517531065,
+          "corrosion": 185.68197067742733,
+          "heat": 4.295286743280045,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 105.12339517531065,
+          "surface_corrosion": 185.68197067742733,
+          "thermal_exposure": 4.295286743280045,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 3,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "stored_chlorine",
+        "round": 1
+      },
+      {
+        "spawned": 5,
+        "killed": 3,
+        "breached": 2,
+        "coreDamage": 28,
+        "damageDealt": 586.4124876017286,
+        "reactions": 116.15552803632633,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 27,
+        "damageByChannel": {
+          "atmosphere": 8.395519879304437,
+          "corrosion": 574.9107083874233,
+          "heat": 3.1062593350014542,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 8.395519879304437,
+          "surface_corrosion": 574.9107083874233,
+          "thermal_exposure": 3.1062593350014542,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 3,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "stored_chlorine",
+        "round": 2
+      }
+    ]
+  },
+  "commissioning_exam": {
+    "terminalPhase": "victory",
+    "reports": [
+      {
+        "spawned": 5,
+        "killed": 5,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 370.00000000000006,
+        "reactions": 131.67913373605535,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 25,
+        "damageByChannel": {
+          "atmosphere": 22.69807004726631,
+          "corrosion": 339.30582007567233,
+          "heat": 7.996109877061624,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 22.69807004726631,
+          "surface_corrosion": 339.30582007567233,
+          "thermal_exposure": 7.996109877061624,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 5,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "commissioning_exam",
+        "round": 1
+      },
+      {
+        "spawned": 7,
+        "killed": 5,
+        "breached": 2,
+        "coreDamage": 18,
+        "damageDealt": 322.358454127331,
+        "reactions": 182.07994470771015,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 25,
+        "damageByChannel": {
+          "atmosphere": 43.869741201990514,
+          "corrosion": 256.90137887522786,
+          "heat": 21.587334050112588,
+          "pressure": 0,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 43.869741201990514,
+          "surface_corrosion": 256.90137887522786,
+          "thermal_exposure": 21.587334050112588,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 5,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 0,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "commissioning_exam",
+        "round": 2
+      },
+      {
+        "spawned": 5,
+        "killed": 5,
+        "breached": 0,
+        "coreDamage": 0,
+        "damageDealt": 620,
+        "reactions": 110.2031796267862,
+        "combustionFlashes": 0,
+        "peakHazard": 100,
+        "matterHarvested": 47,
+        "damageByChannel": {
+          "atmosphere": 35.563189259806656,
+          "corrosion": 77.46958392703365,
+          "heat": 0,
+          "pressure": 506.96722681315975,
+          "radiation": 0
+        },
+        "damageBySource": {
+          "atmospheric_exposure": 35.563189259806656,
+          "surface_corrosion": 77.46958392703365,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 506.96722681315975,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "killsBySource": {
+          "atmospheric_exposure": 0,
+          "surface_corrosion": 0,
+          "thermal_exposure": 0,
+          "catastrophic_overpressure": 5,
+          "radiation_field": 0,
+          "hydrogen_oxygen_combustion": 0,
+          "legacy_unattributed": 0
+        },
+        "levelId": "commissioning_exam",
+        "round": 3
+      }
+    ]
+  }
+}

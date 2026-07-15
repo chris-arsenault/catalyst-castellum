@@ -1,8 +1,9 @@
-import { FACILITY_MAP, ROOM_DEFINITIONS } from "../presentation/defaultGame";
+import { FACILITY_MAP } from "../presentation/defaultGame";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { FacilityPortalDefinition, GameState, RoomId } from "../game/types";
 import type { Translator } from "../localization/translator";
+import { roomDefinition } from "../presentation/defaultGame";
 
 const portalKindLabel = (kind: FacilityPortalDefinition["kind"], translator: Translator): string =>
   ({
@@ -70,7 +71,7 @@ const ArchitecturalConnection = ({
     <article data-portal-id={portal.id}>
       <strong>{portalKindLabel(portal.kind, translator)}</strong>
       <span>
-        {ROOM_DEFINITIONS[model.otherRoomId].code} · {portalStateLabel(model.state, translator)}
+        {roomDefinition(model.otherRoomId).code} · {portalStateLabel(model.state, translator)}
       </span>
       <small>
         {translator.text("ui.architecture.flow", {

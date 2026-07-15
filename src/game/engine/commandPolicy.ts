@@ -20,6 +20,7 @@ import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } fr
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
+import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -50,7 +51,7 @@ const equipmentFits = (
   instance: EquipmentInstance,
   definition: GameDefinition
 ): boolean => {
-  const room = state.rooms[roomId];
+  const room = roomState(state, roomId);
   const candidate = {
     ...room,
     equipment: { ...room.equipment, [socketId]: instance },
@@ -68,7 +69,7 @@ const evaluateInstallationPlacement = (
   if (!equipmentAvailable(state, command.equipmentId)) return reject("unavailable", { cost });
   if (!roomSocketIds(command.roomId, gameDefinition).includes(command.socketId))
     return reject("placement", { cost });
-  if (state.rooms[command.roomId].equipment[command.socketId])
+  if (roomState(state, command.roomId).equipment[command.socketId])
     return reject("occupied_socket", { cost });
   if (definition.unique && findEquipmentInstallation(state, command.equipmentId, gameDefinition))
     return reject("unique_equipment", { cost });
@@ -101,7 +102,7 @@ const evaluateToggleEquipment = (
   command: Extract<GameCommand, { type: "toggle_equipment" }>
 ): CommandDecision => {
   if (!configurationUnlocked(state)) return reject("invalid_phase");
-  if (!state.rooms[command.roomId].equipment[command.socketId]) return reject("empty_socket");
+  if (!roomState(state, command.roomId).equipment[command.socketId]) return reject("empty_socket");
   return allow();
 };
 
@@ -111,7 +112,7 @@ const evaluateUpgrade = (
   gameDefinition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  const instance = state.rooms[command.roomId].equipment[command.socketId];
+  const instance = roomState(state, command.roomId).equipment[command.socketId];
   if (!instance) return reject("empty_socket");
   if (instance.level >= 3) return reject("already_complete");
   const definition = gameDefinition.equipment[instance.equipmentId];
@@ -132,13 +133,13 @@ const evaluateDismantleEquipment = (
   definition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  const instance = state.rooms[command.roomId].equipment[command.socketId];
+  const instance = roomState(state, command.roomId).equipment[command.socketId];
   if (!instance) return reject("empty_socket");
   return allow({ refund: equipmentDismantleRefund(instance, definition) });
 };
 
 const conduitFor = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
-  phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
+  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
 
 const evaluateSetConduit = (
   state: GameState,
@@ -157,7 +158,7 @@ const evaluateBuildTransport = (
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = gameDefinition.transportRuns[command.runId][command.phase];
+  const definition = gameDefinition.transportRuns[command.runId]?.[command.phase];
   if (!definition) return reject("route_unavailable");
   if (conduitFor(state, command.runId, command.phase).installed)
     return reject("already_installed", { cost: definition.buildCost });
@@ -173,13 +174,13 @@ const evaluateDismantleTransport = (
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = gameDefinition.transportRuns[command.runId][command.phase];
+  const definition = gameDefinition.transportRuns[command.runId]?.[command.phase];
   if (!definition) return reject("route_unavailable");
   if (!conduitFor(state, command.runId, command.phase).installed) return reject("not_installed");
   const amount =
     command.phase === "gas"
-      ? gasAmountTotal(state.gasConduits[command.runId].gas)
-      : liquidAmountTotal(state.liquidConduits[command.runId].liquid);
+      ? gasAmountTotal(gasConduitState(state, command.runId).gas)
+      : liquidAmountTotal(liquidConduitState(state, command.runId).liquid);
   const refund = Math.floor(definition.buildCost * 0.75);
   if (amount > 0.001) return reject("capacity", { refund });
   return allow({ refund });

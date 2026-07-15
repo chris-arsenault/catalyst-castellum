@@ -8,6 +8,8 @@ import type {
   TransportRunId,
   WorldPoint,
 } from "../types";
+import { gasConduitState, liquidConduitState } from "../world/instances";
+import { definitionTransportRun } from "../world/instances";
 
 const REFERENCE_ROUTE_LENGTH = 32;
 const MINIMUM_LENGTH_FACTOR = 0.68;
@@ -17,10 +19,10 @@ export const conduitDefinition = (
   runId: TransportRunId,
   phase: TransportPhase,
   definition: GameDefinition
-): ConduitPhaseDefinition | null => definition.transportRuns[runId][phase];
+): ConduitPhaseDefinition | null => definitionTransportRun(definition, runId)[phase];
 
 export const conduitState = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
-  phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
+  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
 
 export const conduitRoute = (
   state: GameState,

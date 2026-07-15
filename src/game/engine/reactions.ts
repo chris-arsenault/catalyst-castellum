@@ -21,6 +21,8 @@ import {
   type MutableReactionInventory,
 } from "./reactionExecutor";
 import { analyzeRoom, liquidTotal, roomGasHeadroom, roomLiquidHeadroom } from "./roomState";
+import { roomState } from "../world/instances";
+import { definitionRoom } from "../world/instances";
 
 const PRESSURE_PULSE_DECAY_PER_SECOND = 160;
 const rate = (amount: number, dt: number): number => amount / Math.max(dt, 0.0001);
@@ -299,7 +301,7 @@ const simulateRoomChemistry = (
     });
   }
   simulatePhaseChanges(room, dt, definition);
-  const baseline = definition.rooms[room.id].ambientTemperature;
+  const baseline = definitionRoom(definition, room.id).ambientTemperature;
   room.temperature += (baseline - room.temperature) * 0.03 * dt;
   room.reactionIntensity = Math.max(0, room.reactionIntensity - dt * 1.3);
   state.stats.peakHazard = Math.max(state.stats.peakHazard, analyzeRoom(room, definition).hazard);
@@ -313,6 +315,6 @@ export const simulateReactions = (
   const bursts: HazardBurst[] = [];
   simulateProcesses(state, dt, definition);
   for (const roomId of definition.roomOrder)
-    simulateRoomChemistry(state, state.rooms[roomId], dt, bursts, definition);
+    simulateRoomChemistry(state, roomState(state, roomId), dt, bursts, definition);
   return bursts;
 };

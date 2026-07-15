@@ -21,7 +21,7 @@ const phase = (
   options: PhaseOptions,
   destinationKind: ConduitDestinationKind = "room"
 ): ConduitPhaseDefinition => {
-  const blueprint = CONDUIT_BLUEPRINTS[options.runId][options.phase];
+  const blueprint = CONDUIT_BLUEPRINTS[options.runId]?.[options.phase];
   if (!blueprint) throw new Error(`${options.runId} has no ${options.phase} conduit blueprint`);
   return {
     direction: options.direction,

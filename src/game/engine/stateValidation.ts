@@ -1,6 +1,5 @@
 import type { GameDefinition } from "../definitionTypes";
 import {
-  TRANSPORT_RUN_IDS,
   type GameState,
   type GridCell,
   type ScenarioAvailability,
@@ -9,9 +8,12 @@ import {
 } from "../types";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { validateEnemyNavigation } from "./enemyNavigationValidation";
+import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
+import { definitionTransportRun } from "../world/instances";
 
 export type StateValidationCode =
   | "availability_mismatch"
+  | "world_catalog_mismatch"
   | "campaign_mismatch"
   | "conduit_installation_mismatch"
   | "conduit_route_invalid"
@@ -114,8 +116,8 @@ const unauthoredConduitAmount = (
   phase: TransportPhase
 ): number =>
   phase === "gas"
-    ? gasAmountTotal(state.gasConduits[runId].gas)
-    : liquidAmountTotal(state.liquidConduits[runId].liquid);
+    ? gasAmountTotal(gasConduitState(state, runId).gas)
+    : liquidAmountTotal(liquidConduitState(state, runId).liquid);
 
 const validateUnauthoredConduit = (
   state: GameState,
@@ -123,7 +125,8 @@ const validateUnauthoredConduit = (
   phase: TransportPhase,
   issues: StateValidationIssue[]
 ): void => {
-  const conduit = phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
+  const conduit =
+    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const hasState =
     conduit.route.length > 0 ||
     conduit.installed ||
@@ -196,8 +199,9 @@ const validateRoute = (
   issues: StateValidationIssue[],
   gameDefinition: GameDefinition
 ): void => {
-  const definition = gameDefinition.transportRuns[runId][phase];
-  const conduit = phase === "gas" ? state.gasConduits[runId] : state.liquidConduits[runId];
+  const definition = definitionTransportRun(gameDefinition, runId)[phase];
+  const conduit =
+    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const path = `${phase}Conduits.${runId}`;
   if (!definition) {
     validateUnauthoredConduit(state, runId, phase, issues);
@@ -229,12 +233,12 @@ const validateTopology = (
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {
-  for (const runId of TRANSPORT_RUN_IDS) {
+  for (const runId of state.world.connections) {
     validateRoute(state, runId, "gas", issues, definition);
     validateRoute(state, runId, "liquid", issues, definition);
   }
   for (const roomId of definition.roomOrder) {
-    if (state.rooms[roomId].id !== roomId) {
+    if (roomState(state, roomId).id !== roomId) {
       issue(
         issues,
         "identity_mismatch",
@@ -333,11 +337,56 @@ const validatePhase = (
   validateNextIdentifiers(state, issues);
 };
 
+/**
+ * The world catalogs are the exhaustiveness backstop for instance-keyed records
+ * (ADR-0002): every catalog id must own a record entry and vice versa.
+ */
+const validateWorldCatalogs = (
+  state: GameState,
+  issues: StateValidationIssue[],
+  definition: GameDefinition
+): void => {
+  const expectations: readonly [string, readonly string[], Record<string, unknown>][] = [
+    ["rooms", state.world.rooms, state.rooms],
+    ["gasJunctions", state.world.rooms, state.gasJunctions],
+    ["liquidJunctions", state.world.rooms, state.liquidJunctions],
+    ["gasConduits", state.world.connections, state.gasConduits],
+    ["liquidConduits", state.world.connections, state.liquidConduits],
+  ];
+  for (const [field, catalog, record] of expectations) {
+    if (!sameIdentifiers(Object.keys(record), catalog)) {
+      issue(
+        issues,
+        "world_catalog_mismatch",
+        field,
+        `State ${field} record keys do not match the world catalog.`
+      );
+    }
+  }
+  if (!sameIdentifiers([...state.world.rooms], [...definition.roomOrder])) {
+    issue(
+      issues,
+      "world_catalog_mismatch",
+      "world.rooms",
+      "World room catalog does not match the pack."
+    );
+  }
+  if (!sameIdentifiers([...state.world.connections], Object.keys(definition.transportRuns))) {
+    issue(
+      issues,
+      "world_catalog_mismatch",
+      "world.connections",
+      "World connection catalog does not match the pack."
+    );
+  }
+};
+
 export const validateGameState = (
   state: GameState,
   definition: GameDefinition
 ): StateValidationIssue[] => {
   const issues: StateValidationIssue[] = [];
+  validateWorldCatalogs(state, issues, definition);
   if (
     state.pack.id !== definition.packId ||
     state.pack.contentVersion !== definition.contentVersion

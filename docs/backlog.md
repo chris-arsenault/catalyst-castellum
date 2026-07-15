@@ -14,6 +14,10 @@ commitment to order.
 
 ## Systems
 
+- React warning during map render: `Cannot update a component (TopBar) while rendering a
+  different component (GameMap)` — a hover/selection setState fires during GameMap render.
+  Harmless today (all e2e green) but should move to an event/effect.
+
 - Free-form graft placement (edge-snap beyond hardpoints) if the hardpoint envelope
   proves too confining.
 - Hull damage and repair as a site-defense consequence.

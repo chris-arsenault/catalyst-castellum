@@ -5,6 +5,7 @@ import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator"
 import type { LocaleKey } from "../localization/types";
 import { enemyCopy, equipmentCopy, processCopy } from "./entityCopy";
 import { createLevelCopy } from "./levelCopy";
+import { definitionRoom } from "../game/world/instances";
 
 export interface EventCopy {
   detail: string;
@@ -75,7 +76,7 @@ const scenarioStartCopy: EventCopyHandler = (event, context) => {
 const infrastructureCopy: EventCopyHandler = (event, context) => {
   const { definition, formatters, translator } = context;
   const room = event.roomId
-    ? definition.rooms[event.roomId].code
+    ? definitionRoom(definition, event.roomId).code
     : translator.text("events.common.facility");
   if (event.code === "equipment_installed" || event.code === "equipment_upgraded") {
     const equipment = equipmentCopy(
@@ -126,7 +127,7 @@ const infrastructureCopy: EventCopyHandler = (event, context) => {
 const processEventCopy: EventCopyHandler = (event, context) => {
   const { definition, translator } = context;
   const room = event.roomId
-    ? definition.rooms[event.roomId].code
+    ? definitionRoom(definition, event.roomId).code
     : translator.text("events.common.facility");
   switch (event.code) {
     case "separator_cross_leak":

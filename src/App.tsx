@@ -11,9 +11,8 @@ import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
-import { ROOM_DEFINITIONS, TRANSPORT_RUNS } from "./presentation/defaultGame";
 import { transportPhaseAvailable } from "./game/queries";
-import { TRANSPORT_PHASES, TRANSPORT_RUN_IDS, type RoomId } from "./game/types";
+import { TRANSPORT_PHASES, type RoomId } from "./game/types";
 import {
   useApplicationInitialization,
   useAudioDirector,
@@ -21,6 +20,8 @@ import {
 } from "./application/hooks";
 import { useGameStore } from "./application/store";
 import { useGamePresentation } from "./application/presentationContext";
+import { gasConduitState, liquidConduitState } from "./game/world/instances";
+import { roomDefinition, transportRunDefinition } from "./presentation/defaultGame";
 
 const GuidedTutorial = lazy(async () => ({
   default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
@@ -38,21 +39,22 @@ const MapStage = () => {
   const togglePipeMode = useCallback(() => setPipeMode(!pipeMode), [pipeMode, setPipeMode]);
   const connectRooms = useCallback(
     (from: RoomId, to: RoomId) => {
-      const runId = TRANSPORT_RUN_IDS.find((id) => {
-        const rooms = TRANSPORT_RUNS[id].rooms;
+      const runId = game.world.connections.find((id) => {
+        const rooms = transportRunDefinition(id).rooms;
         return (rooms[0] === from && rooms[1] === to) || (rooms[0] === to && rooms[1] === from);
       });
       const buildablePhases = runId
         ? TRANSPORT_PHASES.filter(
             (phase) =>
               transportPhaseAvailable(game, runId, phase) &&
-              !(phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId]).installed
+              !(phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId))
+                .installed
           )
         : [];
       if (!runId || buildablePhases.length === 0) {
         const parameters = {
-          from: ROOM_DEFINITIONS[from].code,
-          to: ROOM_DEFINITIONS[to].code,
+          from: roomDefinition(from).code,
+          to: roomDefinition(to).code,
         };
         showNotice(
           runId

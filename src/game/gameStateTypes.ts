@@ -162,12 +162,19 @@ export interface CombatIncident {
   targets: CombatIncidentTarget[];
 }
 
+/** Canonical world instance catalogs; iteration order is simulation order (ADR-0002). */
+export interface WorldCatalogs {
+  rooms: readonly RoomId[];
+  connections: readonly TransportRunId[];
+}
+
 export interface GameState {
   version: 12;
   pack: {
     id: string;
     contentVersion: number;
   };
+  world: WorldCatalogs;
   phase: GamePhase;
   campaign: CampaignProgress;
   availability: ScenarioAvailability;

@@ -1,9 +1,5 @@
 import type { Graphics } from "pixi.js";
-import {
-  SPECIES_DEFINITIONS,
-  TRANSPORT_RUNS,
-  gridCellsToWorldPath,
-} from "../../presentation/defaultGame";
+import { SPECIES_DEFINITIONS, gridCellsToWorldPath } from "../../presentation/defaultGame";
 import {
   transportRunMaterialFlow,
   transportRunPhaseStatus,
@@ -21,6 +17,8 @@ import {
   type TransportRunId,
 } from "../../game/types";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
+import { gasConduitState, liquidConduitState } from "../../game/world/instances";
+import { transportRunDefinition } from "../../presentation/defaultGame";
 
 const GAS_RUN_COLOR = 0x58aab3;
 const LIQUID_RUN_COLOR = 0x3f76ba;
@@ -246,11 +244,11 @@ const mixedPhaseColor = (
     phase === "gas"
       ? GAS_TYPES.map((species) => ({
           color: colorNumber(SPECIES_DEFINITIONS[species].color),
-          rate: Math.abs(state.gasConduits[runId].lastSpeciesFlow[species]),
+          rate: Math.abs(gasConduitState(state, runId).lastSpeciesFlow[species]),
         }))
       : LIQUID_TYPES.map((species) => ({
           color: colorNumber(SPECIES_DEFINITIONS[species].color),
-          rate: Math.abs(state.liquidConduits[runId].lastSpeciesFlow[species]),
+          rate: Math.abs(liquidConduitState(state, runId).lastSpeciesFlow[species]),
         }));
   const total = rates.reduce((sum, entry) => sum + entry.rate, 0);
   if (total <= FLOW_EPSILON) return fallback;
@@ -309,14 +307,14 @@ const phaseRouteCells = (
   runId: TransportRunId,
   phase: TransportPhase
 ): readonly GridCell[] | null => {
-  const definition = TRANSPORT_RUNS[runId][phase];
+  const definition = transportRunDefinition(runId)[phase];
   const available =
     phase === "gas"
       ? state.availability.gasRuns.includes(runId)
       : state.availability.liquidRuns.includes(runId);
   if (!definition || !available) return null;
   const route =
-    phase === "gas" ? state.gasConduits[runId].route : state.liquidConduits[runId].route;
+    phase === "gas" ? gasConduitState(state, runId).route : liquidConduitState(state, runId).route;
   return route.length > 0 ? route : definition.blueprint;
 };
 

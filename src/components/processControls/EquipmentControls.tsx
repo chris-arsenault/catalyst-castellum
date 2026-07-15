@@ -14,6 +14,7 @@ import {
 import { BinaryControl } from "./ActuatorControls";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 import { equipmentCopy } from "../../presentation/entityCopy";
+import { roomState } from "../../game/world/instances";
 
 const socketLabel = (socketId: EquipmentSocketId, translator: Translator): string =>
   translator.text(socketId === "socket_a" ? "ui.process.socket.a" : "ui.process.socket.b");
@@ -44,7 +45,7 @@ const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnc
   if (roomId !== "furnace") return null;
   if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
   if (game.campaign.levelId === "acid_line") {
-    const thermalInstalled = Object.values(game.rooms.furnace.equipment).some(
+    const thermalInstalled = Object.values(roomState(game, "furnace").equipment).some(
       (instance) => instance?.equipmentId === "thermal_coil"
     );
     return thermalInstalled
@@ -244,7 +245,7 @@ export const EquipmentSocket = ({
   socketId: EquipmentSocketId;
 }) => {
   const game = useGameStore((state) => state.game);
-  const instance = game.rooms[roomId].equipment[socketId];
+  const instance = roomState(game, roomId).equipment[socketId];
   if (!instance) return <EmptyEquipmentSocket roomId={roomId} socketId={socketId} />;
   return <InstalledEquipmentSocket instance={instance} roomId={roomId} socketId={socketId} />;
 };

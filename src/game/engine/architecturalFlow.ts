@@ -21,6 +21,7 @@ import {
   STANDARD_PRESSURE,
 } from "./physics";
 import { proportionalMixture, subtractMixture } from "./mixture";
+import { instance, roomState } from "../world/instances";
 
 const GAS_DIFFUSION_FRACTION = 0.012;
 const GAS_DRIVE_SCALE = 4;
@@ -54,7 +55,7 @@ const gasZoneForEndpoint = (
   endpointIndex: 0 | 1,
   definition: GameDefinition
 ): GasZone => {
-  const roomId = portal.rooms[endpointIndex];
+  const roomId = portal.rooms[endpointIndex] as string;
   return gasZoneForPort(
     definition.facility.roomPortHeight(roomId, portal.endpoints[endpointIndex].elevation)
   );
@@ -69,14 +70,14 @@ const gasDrive = (
   const leftZone = gasZoneForEndpoint(portal, 0, definition);
   const rightZone = gasZoneForEndpoint(portal, 1, definition);
   const pressureDrive =
-    (roomPressure(state.rooms[leftId], definition) -
-      roomPressure(state.rooms[rightId], definition)) /
+    (roomPressure(roomState(state, leftId), definition) -
+      roomPressure(roomState(state, rightId), definition)) /
     STANDARD_PRESSURE;
   if (portal.orientation !== "vertical") return pressureDrive;
   const leftIsLower = portal.endpoints[0].elevation < portal.endpoints[1].elevation;
   const densityDifference =
-    roomZoneDensity(state.rooms[rightId], rightZone, definition) -
-    roomZoneDensity(state.rooms[leftId], leftZone, definition);
+    roomZoneDensity(roomState(state, rightId), rightZone, definition) -
+    roomZoneDensity(roomState(state, leftId), leftZone, definition);
   return pressureDrive + densityDifference * (leftIsLower ? 0.22 : -0.22);
 };
 
@@ -90,8 +91,8 @@ const directedGasPlan = (
   if (Math.abs(drive) < 1e-7) return null;
   const sourceIndex: 0 | 1 = drive > 0 ? 0 : 1;
   const destinationIndex: 0 | 1 = sourceIndex === 0 ? 1 : 0;
-  const sourceRoomId = portal.rooms[sourceIndex];
-  const destinationRoomId = portal.rooms[destinationIndex];
+  const sourceRoomId = portal.rooms[sourceIndex] as string;
+  const destinationRoomId = portal.rooms[destinationIndex] as string;
   const sourceZone = gasZoneForEndpoint(portal, sourceIndex, definition);
   const destinationZone = gasZoneForEndpoint(portal, destinationIndex, definition);
   const requested =
@@ -105,8 +106,8 @@ const directedGasPlan = (
     destinationZone,
     requested,
     amount: requested,
-    packet: packetFromGas(state.rooms[sourceRoomId].gas[sourceZone], 0),
-    temperature: state.rooms[sourceRoomId].gasTemperature[sourceZone],
+    packet: packetFromGas(roomState(state, sourceRoomId).gas[sourceZone], 0),
+    temperature: roomState(state, sourceRoomId).gasTemperature[sourceZone],
   };
 };
 
@@ -121,8 +122,8 @@ const diffusionPlans = (
   const rightZone = gasZoneForEndpoint(portal, 1, definition);
   const amount =
     Math.min(
-      gasAmountTotal(state.rooms[leftId].gas[leftZone]),
-      gasAmountTotal(state.rooms[rightId].gas[rightZone])
+      gasAmountTotal(roomState(state, leftId).gas[leftZone]),
+      gasAmountTotal(roomState(state, rightId).gas[rightZone])
     ) *
     portal.gasConductance *
     portal.aperture *
@@ -139,8 +140,8 @@ const diffusionPlans = (
       destinationZone: rightZone,
       requested: amount,
       amount,
-      packet: packetFromGas(state.rooms[leftId].gas[leftZone], 0),
-      temperature: state.rooms[leftId].gasTemperature[leftZone],
+      packet: packetFromGas(roomState(state, leftId).gas[leftZone], 0),
+      temperature: roomState(state, leftId).gasTemperature[leftZone],
     },
     {
       portalId: portal.id,
@@ -151,8 +152,8 @@ const diffusionPlans = (
       destinationZone: leftZone,
       requested: amount,
       amount,
-      packet: packetFromGas(state.rooms[rightId].gas[rightZone], 0),
-      temperature: state.rooms[rightId].gasTemperature[rightZone],
+      packet: packetFromGas(roomState(state, rightId).gas[rightZone], 0),
+      temperature: roomState(state, rightId).gasTemperature[rightZone],
     },
   ];
 };
@@ -167,7 +168,7 @@ const allocateGasPlans = (
     const matching = plans.filter((plan) => `${plan.sourceRoomId}:${plan.sourceZone}` === key);
     const first = matching[0];
     if (!first) continue;
-    const available = gasAmountTotal(state.rooms[first.sourceRoomId].gas[first.sourceZone]);
+    const available = gasAmountTotal(roomState(state, first.sourceRoomId).gas[first.sourceZone]);
     const requested = matching.reduce((total, plan) => total + plan.requested, 0);
     const scale = requested > 0 ? Math.min(1, available / requested) : 0;
     for (const plan of matching) plan.amount = plan.requested * scale;
@@ -176,7 +177,9 @@ const allocateGasPlans = (
     const matching = plans.filter((plan) => plan.destinationRoomId === roomId);
     const requested = matching.reduce((total, plan) => total + plan.amount, 0);
     const scale =
-      requested > 0 ? Math.min(1, roomGasHeadroom(state.rooms[roomId], definition) / requested) : 0;
+      requested > 0
+        ? Math.min(1, roomGasHeadroom(roomState(state, roomId), definition) / requested)
+        : 0;
     for (const plan of matching) plan.amount *= scale;
   }
 };
@@ -196,11 +199,18 @@ export const simulateArchitecturalGas = (
   });
   allocateGasPlans(state, plans, definition);
   for (const plan of plans) {
-    plan.packet = packetFromGas(state.rooms[plan.sourceRoomId].gas[plan.sourceZone], plan.amount);
-    subtractMixture(state.rooms[plan.sourceRoomId].gas[plan.sourceZone], plan.packet, GAS_TYPES);
+    plan.packet = packetFromGas(
+      roomState(state, plan.sourceRoomId).gas[plan.sourceZone],
+      plan.amount
+    );
+    subtractMixture(
+      roomState(state, plan.sourceRoomId).gas[plan.sourceZone],
+      plan.packet,
+      GAS_TYPES
+    );
   }
   for (const plan of plans) {
-    const targetRoom = state.rooms[plan.destinationRoomId];
+    const targetRoom = roomState(state, plan.destinationRoomId);
     const target = targetRoom.gas[plan.destinationZone];
     const before = gasAmountTotal(target);
     addGas(target, plan.packet);
@@ -242,16 +252,22 @@ const liquidPlan = (
   let head: number;
   if (portal.liquidMode === "drain") {
     [sourceIndex, destinationIndex] = verticalPortalOrder(portal);
-    const source = state.rooms[portal.rooms[sourceIndex]];
+    const source = roomState(state, portal.rooms[sourceIndex] as string);
     if (liquidAmountTotal(source.liquid) <= 1e-8) return null;
     head = Math.max(
       0.25,
       liquidSurfaceElevation(source, definition) -
-        definition.facilityMap.rooms[source.id].bounds.elevation
+        instance(definition.facilityMap.rooms, source.id, "map room").bounds.elevation
     );
   } else {
-    const leftSurface = liquidSurfaceElevation(state.rooms[portal.rooms[0]], definition);
-    const rightSurface = liquidSurfaceElevation(state.rooms[portal.rooms[1]], definition);
+    const leftSurface = liquidSurfaceElevation(
+      roomState(state, portal.rooms[0] as string),
+      definition
+    );
+    const rightSurface = liquidSurfaceElevation(
+      roomState(state, portal.rooms[1] as string),
+      definition
+    );
     if (Math.max(leftSurface, rightSurface) <= portal.sillElevation) return null;
     sourceIndex = leftSurface >= rightSurface ? 0 : 1;
     destinationIndex = sourceIndex === 0 ? 1 : 0;
@@ -261,8 +277,8 @@ const liquidPlan = (
         Math.max(portal.sillElevation, Math.min(leftSurface, rightSurface))
     );
   }
-  const sourceRoomId = portal.rooms[sourceIndex];
-  const destinationRoomId = portal.rooms[destinationIndex];
+  const sourceRoomId = portal.rooms[sourceIndex] as string;
+  const destinationRoomId = portal.rooms[destinationIndex] as string;
   const requested = portal.liquidConductance * portal.aperture * Math.sqrt(head) * dt;
   return {
     portalId: portal.id,
@@ -271,7 +287,7 @@ const liquidPlan = (
     destinationRoomId,
     requested,
     amount: requested,
-    packet: packetFromLiquid(state.rooms[sourceRoomId].liquid, 0),
+    packet: packetFromLiquid(roomState(state, sourceRoomId).liquid, 0),
   };
 };
 
@@ -282,7 +298,7 @@ const allocateLiquidPlans = (
 ): void => {
   for (const roomId of [...new Set(plans.map((plan) => plan.sourceRoomId))]) {
     const matching = plans.filter((plan) => plan.sourceRoomId === roomId);
-    const available = liquidAmountTotal(state.rooms[roomId].liquid);
+    const available = liquidAmountTotal(roomState(state, roomId).liquid);
     const requested = matching.reduce((total, plan) => total + plan.requested, 0);
     const scale = requested > 0 ? Math.min(1, available / requested) : 0;
     for (const plan of matching) plan.amount = plan.requested * scale;
@@ -292,7 +308,7 @@ const allocateLiquidPlans = (
     const requested = matching.reduce((total, plan) => total + plan.amount, 0);
     const scale =
       requested > 0
-        ? Math.min(1, roomLiquidHeadroom(state.rooms[roomId], definition) / requested)
+        ? Math.min(1, roomLiquidHeadroom(roomState(state, roomId), definition) / requested)
         : 0;
     for (const plan of matching) plan.amount *= scale;
   }
@@ -311,11 +327,11 @@ export const simulateArchitecturalLiquid = (
   });
   allocateLiquidPlans(state, plans, definition);
   for (const plan of plans) {
-    plan.packet = packetFromLiquid(state.rooms[plan.sourceRoomId].liquid, plan.amount);
-    subtractMixture(state.rooms[plan.sourceRoomId].liquid, plan.packet, LIQUID_TYPES);
+    plan.packet = packetFromLiquid(roomState(state, plan.sourceRoomId).liquid, plan.amount);
+    subtractMixture(roomState(state, plan.sourceRoomId).liquid, plan.packet, LIQUID_TYPES);
   }
   for (const plan of plans) {
-    addLiquid(state.rooms[plan.destinationRoomId].liquid, plan.packet);
+    addLiquid(roomState(state, plan.destinationRoomId).liquid, plan.packet);
     state.portalStates[plan.portalId]!.lastLiquidFlow += (plan.sign * plan.amount) / dt;
   }
 };

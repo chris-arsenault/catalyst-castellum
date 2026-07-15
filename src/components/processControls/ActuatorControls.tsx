@@ -1,12 +1,9 @@
 import { CirclePower, Gauge } from "lucide-react";
-import { useCallback } from "react";
 import {
   GAS_BUFFERS,
   LIQUID_BUFFERS,
   REACTION_DEFINITIONS,
-  ROOM_DEFINITIONS,
   SPECIES_DEFINITIONS,
-  TRANSPORT_RUNS,
 } from "../../presentation/defaultGame";
 import {
   conduitCapacity,
@@ -24,6 +21,7 @@ import {
   LIQUID_TYPES,
   type ActuatorKind,
   type ConduitDestinationKind,
+  type ConduitPhaseDefinition,
   type GameState,
   type FlowCause,
   type GasAmounts,
@@ -33,6 +31,14 @@ import {
 } from "../../game/types";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 import { bufferCopy, speciesCopy, transportCopy } from "../../presentation/entityCopy";
+import { roomDefinition } from "../../presentation/defaultGame";
+import {
+  gasConduitState,
+  gasJunctionState,
+  liquidConduitState,
+  liquidJunctionState,
+} from "../../game/world/instances";
+import { transportRunDefinition } from "../../presentation/defaultGame";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -175,35 +181,35 @@ const phaseReadout = (
 ): PhaseReadout => {
   if (phase === "gas") {
     return {
-      amount: gasAmountTotal(game.gasConduits[runId].gas),
+      amount: gasAmountTotal(gasConduitState(game, runId).gas),
       junctionMixture: gasMixtureSummary(
-        game.gasJunctions[sourceRoomId].gas,
+        gasJunctionState(game, sourceRoomId).gas,
         translator,
         formatters
       ),
       measuredSpecies: gasFlowSummary(
-        game.gasConduits[runId].lastSpeciesFlow,
+        gasConduitState(game, runId).lastSpeciesFlow,
         translator,
         formatters
       ),
-      mixture: gasMixtureSummary(game.gasConduits[runId].gas, translator, formatters),
+      mixture: gasMixtureSummary(gasConduitState(game, runId).gas, translator, formatters),
       noun: translator.text("ui.process.duct"),
       physical: formatters.measurement(gasConduitPressure(game, runId), "kPa", 0),
     };
   }
   return {
-    amount: liquidAmountTotal(game.liquidConduits[runId].liquid),
+    amount: liquidAmountTotal(liquidConduitState(game, runId).liquid),
     junctionMixture: liquidMixtureSummary(
-      game.liquidJunctions[sourceRoomId].liquid,
+      liquidJunctionState(game, sourceRoomId).liquid,
       translator,
       formatters
     ),
     measuredSpecies: liquidFlowSummary(
-      game.liquidConduits[runId].lastSpeciesFlow,
+      liquidConduitState(game, runId).lastSpeciesFlow,
       translator,
       formatters
     ),
-    mixture: liquidMixtureSummary(game.liquidConduits[runId].liquid, translator, formatters),
+    mixture: liquidMixtureSummary(liquidConduitState(game, runId).liquid, translator, formatters),
     noun: translator.text("ui.process.pipe"),
     physical: translator.text("ui.process.primed", {
       percent: formatters.number(liquidConduitFillRatio(game, runId) * 100, 0),
@@ -265,27 +271,36 @@ export const ConduitActuator = ({
   phase: TransportPhase;
   runId: TransportRunId;
 }) => {
+  const definition = transportRunDefinition(runId)[phase];
+  if (!definition) return null;
+  return <InstalledConduitActuator definition={definition} phase={phase} runId={runId} />;
+};
+
+const InstalledConduitActuator = ({
+  definition,
+  phase,
+  runId,
+}: {
+  definition: ConduitPhaseDefinition;
+  phase: TransportPhase;
+  runId: TransportRunId;
+}) => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
-  const definition = TRANSPORT_RUNS[runId][phase];
-  const conduit = phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId];
+  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
   const active = conduit.enabled;
   const command = { type: "set_conduit", runId, phase, enabled: !active } as const;
   const decision = selectors.commandDecision(game, command);
-  const toggle = useCallback(
-    () => dispatch({ type: "set_conduit", runId, phase, enabled: !active }),
-    [active, dispatch, phase, runId]
-  );
-  if (!definition) return null;
+  const toggle = () => dispatch({ type: "set_conduit", runId, phase, enabled: !active });
 
   const [activeLabel, inactiveLabel] = actuatorLabels(
     definition.actuator,
     definition.destinationKind,
     translator
   );
-  const from = ROOM_DEFINITIONS[definition.direction[0]].code;
-  const to = ROOM_DEFINITIONS[definition.direction[1]].code;
+  const from = roomDefinition(definition.direction[0]).code;
+  const to = roomDefinition(definition.direction[1]).code;
   const capacity = conduitCapacity(game, runId, phase);
   const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
 

@@ -32,3 +32,14 @@ export {
   roomVolume,
   utilityNodeWorldPoint,
 } from "../game/config";
+
+import { DEFAULT_GAME_DEFINITION as PACK } from "../game/config";
+import { instance } from "../game/world/instances";
+import type { RoomDefinition, TransportRunDefinition } from "../game/types";
+
+/** Loud pack lookups for world-topology instances (ADR-0002). */
+export const roomDefinition = (roomId: string): RoomDefinition =>
+  instance(PACK.rooms, roomId, "room definition");
+
+export const transportRunDefinition = (runId: string): TransportRunDefinition =>
+  instance(PACK.transportRuns, runId, "transport run definition");

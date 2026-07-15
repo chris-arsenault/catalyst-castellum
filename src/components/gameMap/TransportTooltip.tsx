@@ -1,8 +1,4 @@
-import {
-  ROOM_DEFINITIONS,
-  SPECIES_DEFINITIONS,
-  TRANSPORT_RUNS,
-} from "../../presentation/defaultGame";
+import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   conduitCapacity,
   gasAmountTotal,
@@ -26,6 +22,8 @@ import { transportCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
+import { gasConduitState, liquidConduitState } from "../../game/world/instances";
+import { roomDefinition, transportRunDefinition } from "../../presentation/defaultGame";
 
 const FLOW_EPSILON = 0.005;
 
@@ -51,11 +49,11 @@ const phaseConduit = (
   runId: TransportRunId,
   phase: TransportPhase
 ): GasConduitState | LiquidConduitState =>
-  phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId];
+  phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
 
 const phaseAmount = (game: GameState, runId: TransportRunId, phase: TransportPhase): number => {
-  if (phase === "gas") return gasAmountTotal(game.gasConduits[runId].gas);
-  return liquidAmountTotal(game.liquidConduits[runId].liquid);
+  if (phase === "gas") return gasAmountTotal(gasConduitState(game, runId).gas);
+  return liquidAmountTotal(liquidConduitState(game, runId).liquid);
 };
 
 const phaseName = (phase: TransportPhase, translator: Translator): string =>
@@ -94,7 +92,7 @@ const conduitMixtureSummary = (
   formatters: LocaleFormatters
 ): string => {
   if (phase === "gas") {
-    const gas = game.gasConduits[runId].gas;
+    const gas = gasConduitState(game, runId).gas;
     const entries = GAS_TYPES.filter((species) => gas[species] >= FLOW_EPSILON);
     return entries.length > 0
       ? entries
@@ -106,7 +104,7 @@ const conduitMixtureSummary = (
           .join(" · ")
       : translator.text("ui.map.transport.empty");
   }
-  const liquid = game.liquidConduits[runId].liquid;
+  const liquid = liquidConduitState(game, runId).liquid;
   const entries = LIQUID_TYPES.filter((species) => liquid[species] >= FLOW_EPSILON);
   return entries.length > 0
     ? entries
@@ -131,7 +129,7 @@ const PhaseSection = ({
   runId: TransportRunId;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  const definition = TRANSPORT_RUNS[runId][phase];
+  const definition = transportRunDefinition(runId)[phase];
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const conduit = phaseConduit(game, runId, phase);
   const amount = phaseAmount(game, runId, phase);
@@ -151,8 +149,8 @@ const PhaseSection = ({
         <div>
           <strong>{transportCopy(runId, phase, translator).name}</strong>
           <small>
-            {ROOM_DEFINITIONS[definition.direction[0]].code} →{" "}
-            {ROOM_DEFINITIONS[definition.direction[1]].code} ·{" "}
+            {roomDefinition(definition.direction[0]).code} →{" "}
+            {roomDefinition(definition.direction[1]).code} ·{" "}
             {translator.text(
               (
                 {
@@ -198,7 +196,7 @@ interface TransportTooltipProps {
 export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTooltipProps) => {
   const { translator } = useGamePresentation();
   if (!runId) return null;
-  const run = TRANSPORT_RUNS[runId];
+  const run = transportRunDefinition(runId);
   const channels = transportRunChannels(game, runId);
   const [fromRoom, toRoom] = run.rooms;
   return (
@@ -207,7 +205,7 @@ export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTool
         <div>
           <span>{translator.text("ui.map.transport.title")}</span>
           <strong>
-            {ROOM_DEFINITIONS[fromRoom].code} ⇄ {ROOM_DEFINITIONS[toRoom].code}
+            {roomDefinition(fromRoom).code} ⇄ {roomDefinition(toRoom).code}
           </strong>
         </div>
         {selectedSpecies && (

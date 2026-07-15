@@ -3,9 +3,10 @@ import type { GameState, GasAmounts, RoomId } from "../game/types";
 import { ACID_LINE_CONCEPT_MODEL } from "./acidLineConcept";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
+import { gasConduitState, roomState } from "../game/world/instances";
 
 const equipmentRunning = (game: GameState, equipmentId: "gas_agitator" | "thermal_coil"): boolean =>
-  roomEquipmentIsActive(game.rooms.furnace, equipmentId);
+  roomEquipmentIsActive(roomState(game, "furnace"), equipmentId);
 
 const thermalCoilRunning = (game: GameState): boolean => equipmentRunning(game, "thermal_coil");
 const agitatorRunning = (game: GameState): boolean => equipmentRunning(game, "gas_agitator");
@@ -13,7 +14,7 @@ const agitatorRunning = (game: GameState): boolean => equipmentRunning(game, "ga
 const gasRunEnabled = (
   game: GameState,
   runId: "cell_furnace" | "furnace_return" | "return_final"
-): boolean => game.gasConduits[runId].installed && game.gasConduits[runId].enabled;
+): boolean => gasConduitState(game, runId).installed && gasConduitState(game, runId).enabled;
 
 const acidFeedEnabled = (game: GameState): boolean => gasRunEnabled(game, "cell_furnace");
 const firstReturnEnabled = (game: GameState): boolean => gasRunEnabled(game, "furnace_return");
@@ -39,12 +40,12 @@ const hclProductionEstablished = (game: GameState): boolean =>
 const hclAmount = (gas: GasAmounts): number => gas.hydrogen_chloride;
 
 const roomHcl = (game: GameState, roomId: RoomId): number =>
-  hclAmount(game.rooms[roomId].gas.lower) + hclAmount(game.rooms[roomId].gas.upper);
+  hclAmount(roomState(game, roomId).gas.lower) + hclAmount(roomState(game, roomId).gas.upper);
 
 const downstreamHclEstablished = (game: GameState): boolean =>
-  hclAmount(game.gasConduits.furnace_return.gas) +
+  hclAmount(gasConduitState(game, "furnace_return").gas) +
     roomHcl(game, "gallery") +
-    hclAmount(game.gasConduits.return_final.gas) +
+    hclAmount(gasConduitState(game, "return_final").gas) +
     roomHcl(game, "washlock") >
   0.005;
 
