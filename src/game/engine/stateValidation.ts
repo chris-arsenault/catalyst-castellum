@@ -332,7 +332,7 @@ const validateWorldCatalogs = (
       );
     }
   }
-  if (!sameIdentifiers([...state.world.rooms], [...definition.roomOrder])) {
+  if (!sameIdentifiers([...state.world.rooms], Object.keys(state.map.rooms))) {
     issue(
       issues,
       "world_catalog_mismatch",

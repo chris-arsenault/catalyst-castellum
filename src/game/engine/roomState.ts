@@ -181,6 +181,7 @@ export const cloneGame = (state: GameState): GameState => ({
   // The map is immutable between edits; clones share it so derived geometry caches hold.
   map: state.map,
   mapRevision: state.mapRevision,
+  run: { ...state.run },
   world: {
     rooms: [...state.world.rooms],
     connections: [...state.world.connections],

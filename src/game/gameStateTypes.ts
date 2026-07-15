@@ -181,6 +181,8 @@ export interface GameState {
    */
   map: WorldMap;
   mapRevision: number;
+  /** One save is one run (ADR-0004); the seed is consumed strictly pre-level (ADR-0003). */
+  run: { seed: string; position: number };
   world: WorldCatalogs;
   phase: GamePhase;
   campaign: CampaignProgress;

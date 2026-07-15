@@ -1,12 +1,15 @@
 import type { GameDefinition } from "../definitionTypes";
 import type { WorldCatalogs } from "../gameStateTypes";
+import type { WorldMap } from "./map";
 
 /**
- * World catalogs are pack-derived while topology is pack-static; they are rebuilt from
- * the definition at scenario creation and save decode rather than serialized. The
- * mutable-Map save (plan M4) takes ownership when topology becomes player-editable.
+ * World catalogs derive from whichever map the state runs on; iteration order is the
+ * map's insertion order (ADR-0002 — iteration order is simulation order).
  */
-export const worldCatalogsFor = (definition: GameDefinition): WorldCatalogs => ({
-  rooms: [...definition.roomOrder],
-  connections: Object.keys(definition.map.connections),
+export const worldCatalogsForMap = (map: WorldMap): WorldCatalogs => ({
+  rooms: Object.keys(map.rooms),
+  connections: Object.keys(map.connections),
 });
+
+export const worldCatalogsFor = (definition: GameDefinition): WorldCatalogs =>
+  worldCatalogsForMap(definition.map);

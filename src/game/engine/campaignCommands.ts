@@ -6,6 +6,8 @@ import { advanceRound } from "./phases";
 import { cloneGame } from "./roomState";
 import { createScenarioGame } from "./scenarioState";
 import { nextLevelIdFor } from "./campaign";
+import { extractHullFragment } from "../world/hullFragment";
+import { authoredSiteSpec, produceAuthoredSite } from "../world/producer";
 import { transitionPhase } from "./phaseModel";
 
 export const beginLevelCommand = (source: GameState): CommandResult => {
@@ -40,7 +42,11 @@ export const startNextLevelCommand = (
 ): CommandResult => {
   const next = nextLevelIdFor(source.campaign.levelId, definition);
   if (!next) throw new Error("Next-level command was applied after campaign completion.");
-  return acceptCommand(createScenarioGame(next, source.campaign.completedLevelIds, definition));
+  const hull = extractHullFragment(source);
+  const site = produceAuthoredSite(authoredSiteSpec(definition, next), hull);
+  return acceptCommand(
+    createScenarioGame(next, source.campaign.completedLevelIds, definition, site)
+  );
 };
 
 export const retryLevelCommand = (source: GameState, definition: GameDefinition): CommandResult => {

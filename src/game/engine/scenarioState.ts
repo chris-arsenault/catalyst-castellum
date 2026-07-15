@@ -21,7 +21,11 @@ import { emptyRoomEquipment, roomEquipmentVolume } from "./equipment";
 import { makeStats } from "./events";
 import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
-import { worldCatalogsFor } from "../world/catalogs";
+import { worldCatalogsForMap } from "../world/catalogs";
+import type { HullFragment } from "../world/hullFragment";
+import { authoredSiteSpec, produceAuthoredSite, type ProducedSite } from "../world/producer";
+import type { RoundDefinition } from "../definitionTypes";
+import type { WorldMap } from "../world/map";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionRoom } from "../world/instances";
 
@@ -39,7 +43,12 @@ const emptyRoomReactions = (
       .map(({ id }) => [id, emptyTelemetry()])
   ) as Record<RoomReactionId, ReactionTelemetry>;
 
-const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefinition): RoomState => {
+const makeRoom = (
+  id: RoomId,
+  loadout: FacilityLoadout,
+  definition: GameDefinition,
+  map: WorldMap
+): RoomState => {
   const ambient = definition.ambientGas;
   const equipment = emptyRoomEquipment();
   const scenarioEquipment = loadout.equipment[id];
@@ -52,8 +61,7 @@ const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefiniti
     loadout.initialTemperatures[id] ?? definitionRoom(definition, id).ambientTemperature;
   const usableVolume = Math.max(
     8,
-    facilityModelForMap(definition.map).roomVolume(id) -
-      roomEquipmentVolume({ equipment }, definition)
+    facilityModelForMap(map).roomVolume(id) - roomEquipmentVolume({ equipment }, definition)
   );
   // A newly excavated room starts at the same ambient pressure even when its authored
   // temperature or usable geometry differs. Gas inventory therefore scales with both
@@ -86,10 +94,11 @@ const makeRoom = (id: RoomId, loadout: FacilityLoadout, definition: GameDefiniti
 
 const makeRooms = (
   loadout: FacilityLoadout,
-  definition: GameDefinition
+  definition: GameDefinition,
+  map: WorldMap
 ): Record<RoomId, RoomState> =>
   Object.fromEntries(
-    definition.roomOrder.map((id) => [id, makeRoom(id, loadout, definition)])
+    Object.keys(map.rooms).map((id) => [id, makeRoom(id, loadout, definition, map)])
   ) as Record<RoomId, RoomState>;
 
 const makeGasSources = (
@@ -133,23 +142,20 @@ const makeLiquidBuffers = (loadout: FacilityLoadout): GameState["liquidBuffers"]
     ])
   ) as GameState["liquidBuffers"];
 
-const makeGasJunctions = (definition: GameDefinition): GameState["gasJunctions"] =>
+const makeGasJunctions = (map: WorldMap): GameState["gasJunctions"] =>
   Object.fromEntries(
-    definition.roomOrder.map((roomId) => [roomId, { gas: emptyGas(), temperature: 22 }])
+    Object.keys(map.rooms).map((roomId) => [roomId, { gas: emptyGas(), temperature: 22 }])
   ) as GameState["gasJunctions"];
 
-const makeLiquidJunctions = (definition: GameDefinition): GameState["liquidJunctions"] =>
+const makeLiquidJunctions = (map: WorldMap): GameState["liquidJunctions"] =>
   Object.fromEntries(
-    definition.roomOrder.map((roomId) => [roomId, { liquid: emptyLiquid() }])
+    Object.keys(map.rooms).map((roomId) => [roomId, { liquid: emptyLiquid() }])
   ) as GameState["liquidJunctions"];
 
-const makeGasConduits = (
-  loadout: FacilityLoadout,
-  gameDefinition: GameDefinition
-): GameState["gasConduits"] =>
+const makeGasConduits = (loadout: FacilityLoadout, map: WorldMap): GameState["gasConduits"] =>
   Object.fromEntries(
-    processLineIds(gameDefinition, "gas_line").map((runId) => {
-      const definition = maybeLineDefinition(gameDefinition, runId, "gas");
+    processLineIds({ map }, "gas_line").map((runId) => {
+      const definition = maybeLineDefinition({ map }, runId, "gas");
       const configured = loadout.gasConduits[runId];
       return [
         runId,
@@ -168,13 +174,10 @@ const makeGasConduits = (
     })
   ) as GameState["gasConduits"];
 
-const makeLiquidConduits = (
-  loadout: FacilityLoadout,
-  gameDefinition: GameDefinition
-): GameState["liquidConduits"] =>
+const makeLiquidConduits = (loadout: FacilityLoadout, map: WorldMap): GameState["liquidConduits"] =>
   Object.fromEntries(
-    processLineIds(gameDefinition, "liquid_line").map((runId) => {
-      const definition = maybeLineDefinition(gameDefinition, runId, "liquid");
+    processLineIds({ map }, "liquid_line").map((runId) => {
+      const definition = maybeLineDefinition({ map }, runId, "liquid");
       const configured = loadout.liquidConduits[runId];
       return [
         runId,
@@ -207,14 +210,53 @@ const makeProcesses = (): GameState["processes"] =>
     ])
   ) as GameState["processes"];
 
+const copyAvailability = (
+  availability: RoundDefinition["availability"]
+): GameState["availability"] => ({
+  equipment: [...availability.equipment],
+  gasLines: [...availability.gasLines],
+  liquidLines: [...availability.liquidLines],
+  gasSources: [...availability.gasSources],
+  liquidSources: [...availability.liquidSources],
+});
+
+const scenarioStartedEvent = (levelId: LevelId): GameState["events"][number] => ({
+  id: 1,
+  levelId,
+  round: 1,
+  phase: "level_briefing",
+  tone: "info",
+  code: "scenario_started",
+  parameters: {},
+  roomId: null,
+  elapsed: 0,
+  incidentId: null,
+});
+
+/** Overlay the embedded hull's live contents onto freshly made records. */
+const seedHullContents = (state: GameState, hull: HullFragment | null): void => {
+  if (!hull) return;
+  for (const [roomId, roomState] of Object.entries(hull.roomStates)) {
+    state.rooms[roomId] = structuredClone(roomState);
+  }
+  for (const [id, conduit] of Object.entries(hull.gasConduits)) {
+    state.gasConduits[id] = structuredClone(conduit);
+  }
+  for (const [id, conduit] of Object.entries(hull.liquidConduits)) {
+    state.liquidConduits[id] = structuredClone(conduit);
+  }
+};
+
 export const createScenarioGame = (
   levelId: LevelId,
   completedLevelIds: LevelId[] = [],
-  definition: GameDefinition
+  definition: GameDefinition,
+  site: ProducedSite = produceAuthoredSite(authoredSiteSpec(definition, levelId), null)
 ): GameState => {
   const level = definition.levels[levelId];
-  const round = level.rounds[0];
+  const round = site.rounds[0];
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
+  const map = site.map;
   const state: GameState = {
     version: 13,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
@@ -226,28 +268,23 @@ export const createScenarioGame = (
       checkpointLevelId: levelId,
       completedLevelIds: [...completedLevelIds],
     },
-    map: definition.map,
+    map,
     mapRevision: 0,
-    world: worldCatalogsFor(definition),
-    availability: {
-      equipment: [...round.availability.equipment],
-      gasLines: [...round.availability.gasLines],
-      liquidLines: [...round.availability.liquidLines],
-      gasSources: [...round.availability.gasSources],
-      liquidSources: [...round.availability.liquidSources],
-    },
+    world: worldCatalogsForMap(map),
+    run: { seed: "authored", position: definition.levelOrder.indexOf(levelId) },
+    availability: copyAvailability(round.availability),
     phaseTime: 0,
     elapsed: 0,
-    rooms: makeRooms(level.loadout, definition),
+    rooms: makeRooms(level.loadout, definition, map),
     gasSources: makeGasSources(level.loadout, definition),
     liquidSources: makeLiquidSources(level.loadout, definition),
     gasBuffers: makeGasBuffers(level.loadout),
     liquidBuffers: makeLiquidBuffers(level.loadout),
-    gasJunctions: makeGasJunctions(definition),
-    liquidJunctions: makeLiquidJunctions(definition),
-    gasConduits: makeGasConduits(level.loadout, definition),
-    liquidConduits: makeLiquidConduits(level.loadout, definition),
-    portalStates: facilityModelForMap(definition.map).initialPortalStates(),
+    gasJunctions: makeGasJunctions(map),
+    liquidJunctions: makeLiquidJunctions(map),
+    gasConduits: makeGasConduits(level.loadout, map),
+    liquidConduits: makeLiquidConduits(level.loadout, map),
+    portalStates: facilityModelForMap(map).initialPortalStates(),
     processes: makeProcesses(),
     gasVent: emptyGas(),
     liquidDrain: emptyLiquid(),
@@ -263,22 +300,10 @@ export const createScenarioGame = (
     speed: 1,
     stats: makeStats(),
     lastReport: null,
-    events: [
-      {
-        id: 1,
-        levelId,
-        round: 1,
-        phase: "level_briefing",
-        tone: "info",
-        code: "scenario_started",
-        parameters: {},
-        roomId: null,
-        elapsed: 0,
-        incidentId: null,
-      },
-    ],
+    events: [scenarioStartedEvent(levelId)],
     incidents: [],
   };
+  seedHullContents(state, site.hull);
   assertValidGameState(state, definition);
   return state;
 };

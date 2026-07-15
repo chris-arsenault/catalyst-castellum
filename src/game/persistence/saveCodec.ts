@@ -416,6 +416,7 @@ const gameSchema = legacyV11GameSchema.omit({ version: true }).extend({
   pack: packIdentitySchema,
   map: worldMapSchema,
   mapRevision: z.number().int().min(0),
+  run: z.object({ seed: z.string().min(1), position: z.number().int().min(0) }),
 });
 
 const saveEnvelopeSchema = z.object({
@@ -520,9 +521,17 @@ const validGame = (game: GameState, definition: GameDefinition): GameState | nul
   return gameStateIsValid(withCatalogs, definition) ? withCatalogs : null;
 };
 
-/** Legacy saves predate map edits: they run on the pack map. */
+/** Legacy saves predate map edits and runs: pack map, authored run. */
 const validLegacyGame = (game: GameState, definition: GameDefinition): GameState | null =>
-  validGame({ ...game, map: definition.map, mapRevision: 0 }, definition);
+  validGame(
+    {
+      ...game,
+      map: definition.map,
+      mapRevision: 0,
+      run: { seed: "authored", position: game.campaign.levelIndex },
+    },
+    definition
+  );
 
 const decodeCurrent = (parsed: unknown, definition: GameDefinition): GameState | null => {
   const result = saveEnvelopeSchema.safeParse(parsed);
