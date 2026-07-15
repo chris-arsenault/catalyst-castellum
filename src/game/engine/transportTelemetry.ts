@@ -12,7 +12,7 @@ import {
   type TransportRunId,
 } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
-import { definitionTransportRun } from "../world/instances";
+import { maybeLineDefinition } from "../world/instances";
 
 const FLOW_EPSILON = 0.0005;
 
@@ -56,7 +56,7 @@ const phaseChannel = (
   phase: TransportPhase,
   gameDefinition: GameDefinition
 ): TransportChannelTelemetry | null => {
-  const definition = definitionTransportRun(gameDefinition, runId)[phase];
+  const definition = maybeLineDefinition(gameDefinition, runId, phase);
   if (!definition) return null;
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
@@ -106,7 +106,7 @@ export const transportRunMaterialFlow = (
   gameDefinition: GameDefinition
 ): MaterialRunFlow => {
   const phase: TransportPhase = GAS_TYPES.includes(species as GasType) ? "gas" : "liquid";
-  const definition = definitionTransportRun(gameDefinition, runId)[phase];
+  const definition = maybeLineDefinition(gameDefinition, runId, phase);
   if (!definition) {
     return { forward: 0, reverse: 0, net: 0, blocked: false, priming: false };
   }
@@ -116,10 +116,7 @@ export const transportRunMaterialFlow = (
     phase === "gas"
       ? gasConduitState(state, runId).lastSpeciesFlow[species as GasType]
       : liquidConduitState(state, runId).lastSpeciesFlow[species as LiquidType];
-  const oriented =
-    definition.direction[0] === definitionTransportRun(gameDefinition, runId).rooms[0]
-      ? rate
-      : -rate;
+  const oriented = definition.direction[0] === definition.rooms[0] ? rate : -rate;
   return {
     forward: Math.max(0, oriented),
     reverse: Math.max(0, -oriented),
@@ -137,7 +134,7 @@ export const transportRunPhaseStatus = (
 ): TransportPhaseStatus => {
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
-  const exists = definitionTransportRun(definition, runId)[phase] !== null;
+  const exists = maybeLineDefinition(definition, runId, phase) !== null;
   if (!exists) {
     return {
       installed: false,

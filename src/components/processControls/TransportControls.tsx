@@ -7,7 +7,7 @@ import type { GameState, TransportPhase, TransportRunId } from "../../game/types
 import { ConduitActuator } from "./ActuatorControls";
 import { roomCopy } from "../../presentation/entityCopy";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
-import { roomDefinition, transportRunDefinition } from "../../presentation/defaultGame";
+import { connectionRoomPair, lineDefinition, roomDefinition } from "../../presentation/defaultGame";
 
 interface PhaseModel {
   installed: boolean;
@@ -18,7 +18,7 @@ const phaseModel = (
   runId: TransportRunId,
   phase: TransportPhase
 ): PhaseModel | null => {
-  const definition = transportRunDefinition(runId)[phase];
+  const definition = lineDefinition(runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const installed =
     phase === "gas"
@@ -97,8 +97,7 @@ const TransportPhasePanel = ({
 
 export const TransportRunPanel = ({ runId }: { runId: TransportRunId }) => {
   const { translator } = useGamePresentation();
-  const run = transportRunDefinition(runId);
-  const [leftRoom, rightRoom] = run.rooms;
+  const [leftRoom, rightRoom] = connectionRoomPair(runId);
   return (
     <article className="transport-run-control" data-testid={`pipe-run-${runId}`}>
       <div className="transport-run-heading">

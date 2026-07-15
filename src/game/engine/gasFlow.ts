@@ -29,7 +29,7 @@ import {
   type TransportPlan,
 } from "./transportPlanning";
 import { gasConduitState, gasJunctionState, roomState } from "../world/instances";
-import { definitionGasJunction, definitionTransportRun } from "../world/instances";
+import { definitionGasJunction, gasLineDefinition } from "../world/instances";
 
 const FULL_FLOW_DRIVE = 0.7;
 const FULL_CONDUIT_EPSILON = 1e-6;
@@ -60,7 +60,7 @@ const destinationHeadroom = (
   runId: TransportRunId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = definitionTransportRun(gameDefinition, runId).gas;
+  const definition = gasLineDefinition(gameDefinition, runId);
   if (!definition || definition.destinationKind === "gas_vent") return Number.POSITIVE_INFINITY;
   return roomGasHeadroom(roomState(state, definition.direction[1]), gameDefinition);
 };
@@ -70,7 +70,7 @@ const destinationPressureRatio = (
   runId: TransportRunId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = definitionTransportRun(gameDefinition, runId).gas;
+  const definition = gasLineDefinition(gameDefinition, runId);
   if (!definition || definition.destinationKind === "gas_vent") return 0;
   return (
     roomPressure(roomState(state, definition.direction[1]), gameDefinition) / STANDARD_PRESSURE
@@ -91,7 +91,7 @@ const desiredThroughput = (
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = definitionTransportRun(gameDefinition, runId).gas;
+  const definition = gasLineDefinition(gameDefinition, runId);
   if (!definition) return 0;
   const from = conduitEndpoint(state, runId, "gas", "from");
   const to = conduitEndpoint(state, runId, "gas", "to");
@@ -116,7 +116,7 @@ const initialPlan = (
   dt: number,
   gameDefinition: GameDefinition
 ): GasPlan | null => {
-  const definition = definitionTransportRun(gameDefinition, runId).gas;
+  const definition = gasLineDefinition(gameDefinition, runId);
   const conduit = gasConduitState(state, runId);
   if (!definition || !conduit.installed || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
@@ -148,7 +148,7 @@ const deliverGas = (
   packetTemperature: number,
   gameDefinition: GameDefinition
 ): void => {
-  const definition = definitionTransportRun(gameDefinition, runId).gas;
+  const definition = gasLineDefinition(gameDefinition, runId);
   if (!definition) return;
   if (definition.destinationKind === "gas_vent") {
     addGas(state.gasVent, packet);
@@ -255,9 +255,7 @@ export const simulateGasConduits = (
   });
 
   allocateTransportPlans(
-    plans.filter(
-      (plan) => definitionTransportRun(definition, plan.runId).gas?.destinationKind === "room"
-    ),
+    plans.filter((plan) => gasLineDefinition(definition, plan.runId)?.destinationKind === "room"),
     "destinationRoomId",
     "outgoingRequest",
     "outgoingAmount",

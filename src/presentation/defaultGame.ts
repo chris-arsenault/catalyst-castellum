@@ -34,8 +34,8 @@ export {
 } from "../game/config";
 
 import { DEFAULT_GAME_DEFINITION as PACK } from "../game/config";
-import { instance } from "../game/world/instances";
-import type { RoomDefinition, TransportRunDefinition } from "../game/types";
+import { instance, maybeLineDefinition, type ProcessLineView } from "../game/world/instances";
+import type { RoomDefinition, RoomId, TransportPhase, TransportRunDefinition } from "../game/types";
 
 /** Loud pack lookups for world-topology instances (ADR-0002). */
 export const roomDefinition = (roomId: string): RoomDefinition =>
@@ -43,3 +43,10 @@ export const roomDefinition = (roomId: string): RoomDefinition =>
 
 export const transportRunDefinition = (runId: string): TransportRunDefinition =>
   instance(PACK.transportRuns, runId, "transport run definition");
+
+/** Per-phase process-line view (ADR-0005); null when the pair has no line of this phase. */
+export const lineDefinition = (id: string, phase: TransportPhase): ProcessLineView | null =>
+  maybeLineDefinition(PACK, id, phase);
+
+export const connectionRoomPair = (id: string): readonly [RoomId, RoomId] =>
+  transportRunDefinition(id).rooms;

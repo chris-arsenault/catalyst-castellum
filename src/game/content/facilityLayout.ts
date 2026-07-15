@@ -1,7 +1,7 @@
 import type { FacilityMapDefinition, FacilityPortalDefinition, GridCell } from "../types";
-import { cell, cellKey } from "../spatial";
+import { cell } from "../spatial";
 
-export { cell, cellKey } from "../spatial";
+export { cell, cellKey, orthogonalGridPath } from "../spatial";
 
 const horizontalCells = (fromColumn: number, toColumn: number, elevation: number): GridCell[] =>
   Array.from({ length: toColumn - fromColumn + 1 }, (_, index) =>
@@ -12,31 +12,6 @@ const verticalCells = (column: number, fromElevation: number, toElevation: numbe
   Array.from({ length: toElevation - fromElevation + 1 }, (_, index) =>
     cell(column, fromElevation + index)
   );
-
-/** Expand orthogonal waypoints into the exact grid cells a route occupies. */
-export const orthogonalGridPath = (...waypoints: readonly GridCell[]): GridCell[] => {
-  const first = waypoints[0];
-  if (!first) return [];
-  const result: GridCell[] = [{ ...first }];
-  let current = { ...first };
-  for (const target of waypoints.slice(1)) {
-    if (current.column !== target.column && current.elevation !== target.elevation) {
-      throw new Error(
-        `Facility routes must be orthogonal: ${cellKey(current)} -> ${cellKey(target)}`
-      );
-    }
-    const columnStep = Math.sign(target.column - current.column);
-    const elevationStep = Math.sign(target.elevation - current.elevation);
-    while (current.column !== target.column || current.elevation !== target.elevation) {
-      current = {
-        column: current.column + columnStep,
-        elevation: current.elevation + elevationStep,
-      };
-      result.push(current);
-    }
-  }
-  return result;
-};
 
 const portal = (
   definition: Omit<FacilityPortalDefinition, "defaultOpen" | "defaultSealed" | "sealGroupId"> &

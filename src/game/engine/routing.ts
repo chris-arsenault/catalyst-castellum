@@ -1,7 +1,7 @@
 import type { GameDefinition } from "../definitionTypes";
 import type { GameState, TransportPhase, TransportRunId } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
-import { definitionTransportRun } from "../world/instances";
+import { maybeLineDefinition } from "../world/instances";
 
 export const transportPhaseInstalled = (
   state: GameState,
@@ -25,4 +25,4 @@ export const transportPhaseExists = (
   runId: TransportRunId,
   phase: TransportPhase,
   definition: GameDefinition
-): boolean => definitionTransportRun(definition, runId)[phase] !== null;
+): boolean => maybeLineDefinition(definition, runId, phase) !== null;

@@ -7,7 +7,7 @@ import type { Translator } from "../localization/translator";
 import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
 import { roomState } from "../game/world/instances";
-import { transportRunDefinition } from "../presentation/defaultGame";
+import { connectionRoomPair } from "../presentation/defaultGame";
 
 const localizedPhaseLabel = (phase: string, translator: Translator): string => {
   if (phase === "build") return translator.text("ui.process.phase.planning");
@@ -24,7 +24,7 @@ export const ProcessControls = () => {
   const socketIds = roomSocketIds(roomId);
   const connectedRuns = game.world.connections.filter(
     (runId) =>
-      transportRunDefinition(runId).rooms.includes(roomId) &&
+      connectionRoomPair(runId).includes(roomId) &&
       (transportPhaseAvailable(game, runId, "gas") ||
         transportPhaseAvailable(game, runId, "liquid"))
   );

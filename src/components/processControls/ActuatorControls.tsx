@@ -21,7 +21,6 @@ import {
   LIQUID_TYPES,
   type ActuatorKind,
   type ConduitDestinationKind,
-  type ConduitPhaseDefinition,
   type GameState,
   type FlowCause,
   type GasAmounts,
@@ -38,7 +37,8 @@ import {
   liquidConduitState,
   liquidJunctionState,
 } from "../../game/world/instances";
-import { transportRunDefinition } from "../../presentation/defaultGame";
+import { lineDefinition } from "../../presentation/defaultGame";
+import type { ProcessLineView } from "../../game/world/instances";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -271,7 +271,7 @@ export const ConduitActuator = ({
   phase: TransportPhase;
   runId: TransportRunId;
 }) => {
-  const definition = transportRunDefinition(runId)[phase];
+  const definition = lineDefinition(runId, phase);
   if (!definition) return null;
   return <InstalledConduitActuator definition={definition} phase={phase} runId={runId} />;
 };
@@ -281,7 +281,7 @@ const InstalledConduitActuator = ({
   phase,
   runId,
 }: {
-  definition: ConduitPhaseDefinition;
+  definition: ProcessLineView;
   phase: TransportPhase;
   runId: TransportRunId;
 }) => {

@@ -20,7 +20,12 @@ import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } fr
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
-import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
+import {
+  gasConduitState,
+  liquidConduitState,
+  maybeLineDefinition,
+  roomState,
+} from "../world/instances";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -158,7 +163,7 @@ const evaluateBuildTransport = (
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = gameDefinition.transportRuns[command.runId]?.[command.phase];
+  const definition = maybeLineDefinition(gameDefinition, command.runId, command.phase);
   if (!definition) return reject("route_unavailable");
   if (conduitFor(state, command.runId, command.phase).installed)
     return reject("already_installed", { cost: definition.buildCost });
@@ -174,7 +179,7 @@ const evaluateDismantleTransport = (
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = gameDefinition.transportRuns[command.runId]?.[command.phase];
+  const definition = maybeLineDefinition(gameDefinition, command.runId, command.phase);
   if (!definition) return reject("route_unavailable");
   if (!conduitFor(state, command.runId, command.phase).installed) return reject("not_installed");
   const amount =

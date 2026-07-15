@@ -5,7 +5,7 @@ import { transportPhaseAvailable } from "../../game/queries";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun } from "./transportGraphics";
-import { transportRunDefinition } from "../../presentation/defaultGame";
+import { connectionRoomPair } from "../../presentation/defaultGame";
 
 export { IncidentLayer } from "./IncidentLayer";
 
@@ -92,7 +92,7 @@ export const TransportNetwork = ({
           hovered={
             hoveredRunId === runId ||
             (pipeDragSourceRoomId !== null &&
-              transportRunDefinition(runId).rooms.includes(pipeDragSourceRoomId))
+              connectionRoomPair(runId).includes(pipeDragSourceRoomId))
           }
           onHover={onHover}
           runId={runId}

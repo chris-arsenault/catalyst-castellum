@@ -23,7 +23,7 @@ import { useGamePresentation } from "../../application/presentationContext";
 import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
-import { roomDefinition, transportRunDefinition } from "../../presentation/defaultGame";
+import { connectionRoomPair, lineDefinition, roomDefinition } from "../../presentation/defaultGame";
 
 const FLOW_EPSILON = 0.005;
 
@@ -129,7 +129,7 @@ const PhaseSection = ({
   runId: TransportRunId;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  const definition = transportRunDefinition(runId)[phase];
+  const definition = lineDefinition(runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const conduit = phaseConduit(game, runId, phase);
   const amount = phaseAmount(game, runId, phase);
@@ -196,9 +196,8 @@ interface TransportTooltipProps {
 export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTooltipProps) => {
   const { translator } = useGamePresentation();
   if (!runId) return null;
-  const run = transportRunDefinition(runId);
   const channels = transportRunChannels(game, runId);
-  const [fromRoom, toRoom] = run.rooms;
+  const [fromRoom, toRoom] = connectionRoomPair(runId);
   return (
     <aside className="transport-tooltip" data-testid="transport-tooltip">
       <header>

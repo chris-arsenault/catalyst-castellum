@@ -23,7 +23,7 @@ import {
   transportPlanIsBlocked,
   type TransportPlan,
 } from "./transportPlanning";
-import { definitionTransportRun, liquidConduitState, roomState } from "../world/instances";
+import { liquidConduitState, liquidLineDefinition, roomState } from "../world/instances";
 import { liquidJunctionState } from "../world/instances";
 
 const FULL_FLOW_HEAD = 3;
@@ -36,7 +36,7 @@ const destinationHeadroom = (
   runId: TransportRunId,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = definitionTransportRun(gameDefinition, runId).liquid;
+  const definition = liquidLineDefinition(gameDefinition, runId);
   if (!definition || definition.destinationKind === "liquid_recovery") {
     return Number.POSITIVE_INFINITY;
   }
@@ -49,7 +49,7 @@ const desiredThroughput = (
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
-  const definition = definitionTransportRun(gameDefinition, runId).liquid;
+  const definition = liquidLineDefinition(gameDefinition, runId);
   if (!definition) return 0;
   const source = conduitEndpoint(state, runId, "liquid", "from");
   const destination = conduitEndpoint(state, runId, "liquid", "to");
@@ -76,7 +76,7 @@ const initialPlan = (
   dt: number,
   gameDefinition: GameDefinition
 ): LiquidPlan | null => {
-  const definition = definitionTransportRun(gameDefinition, runId).liquid;
+  const definition = liquidLineDefinition(gameDefinition, runId);
   const conduit = liquidConduitState(state, runId);
   if (!definition || !conduit.installed || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
@@ -106,7 +106,7 @@ const deliverLiquid = (
   packet: LiquidAmounts,
   gameDefinition: GameDefinition
 ): void => {
-  const definition = definitionTransportRun(gameDefinition, runId).liquid;
+  const definition = liquidLineDefinition(gameDefinition, runId);
   if (!definition) return;
   if (definition.destinationKind === "liquid_recovery") {
     addLiquid(state.liquidDrain, packet);
@@ -195,7 +195,7 @@ export const simulateLiquidConduits = (
   });
   allocateTransportPlans(
     plans.filter(
-      (plan) => definitionTransportRun(definition, plan.runId).liquid?.destinationKind === "room"
+      (plan) => liquidLineDefinition(definition, plan.runId)?.destinationKind === "room"
     ),
     "destinationRoomId",
     "outgoingRequest",

@@ -21,6 +21,7 @@ import { makeStats } from "./events";
 import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
 import { worldCatalogsFor } from "../world/catalogs";
+import { maybeLineDefinition } from "../world/instances";
 import { definitionRoom } from "../world/instances";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
@@ -146,14 +147,14 @@ const makeGasConduits = (
 ): GameState["gasConduits"] =>
   Object.fromEntries(
     Object.keys(gameDefinition.transportRuns).map((runId) => {
-      const definition = gameDefinition.transportRuns[runId]?.gas;
+      const definition = maybeLineDefinition(gameDefinition, runId, "gas");
       const configured = loadout.gasConduits[runId];
       return [
         runId,
         {
           installed: configured?.installed ?? false,
           enabled: configured?.enabled ?? false,
-          route: definition ? definition.blueprint.map((cell) => ({ ...cell })) : [],
+          route: definition ? definition.route.map((cell) => ({ ...cell })) : [],
           gas: { ...emptyGas(), ...(configured?.gas ?? {}) },
           temperature: 22,
           lastFlow: 0,
@@ -171,14 +172,14 @@ const makeLiquidConduits = (
 ): GameState["liquidConduits"] =>
   Object.fromEntries(
     Object.keys(gameDefinition.transportRuns).map((runId) => {
-      const definition = gameDefinition.transportRuns[runId]?.liquid;
+      const definition = maybeLineDefinition(gameDefinition, runId, "liquid");
       const configured = loadout.liquidConduits[runId];
       return [
         runId,
         {
           installed: configured?.installed ?? false,
           enabled: configured?.enabled ?? false,
-          route: definition ? definition.blueprint.map((cell) => ({ ...cell })) : [],
+          route: definition ? definition.route.map((cell) => ({ ...cell })) : [],
           liquid: { ...emptyLiquid(), ...(configured?.liquid ?? {}) },
           lastFlow: 0,
           lastSpeciesFlow: emptyLiquid(),

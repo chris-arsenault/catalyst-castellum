@@ -16,7 +16,8 @@ import { liquidFillRatio, mixedTemperature } from "./physics";
 import {
   definitionGasJunction,
   definitionLiquidJunction,
-  definitionTransportRun,
+  gasLineDefinition,
+  liquidLineDefinition,
 } from "../world/instances";
 import { addGas, addLiquid, gasAmountTotal, liquidAmountTotal } from "./roomState";
 import {
@@ -72,7 +73,7 @@ const gasJunctionDemanded = (
   gameDefinition: GameDefinition
 ): boolean =>
   state.world.connections.some((runId) => {
-    const definition = definitionTransportRun(gameDefinition, runId).gas;
+    const definition = gasLineDefinition(gameDefinition, runId);
     const conduit = gasConduitState(state, runId);
     return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
   });
@@ -83,7 +84,7 @@ const liquidJunctionDemanded = (
   gameDefinition: GameDefinition
 ): boolean =>
   state.world.connections.some((runId) => {
-    const definition = definitionTransportRun(gameDefinition, runId).liquid;
+    const definition = liquidLineDefinition(gameDefinition, runId);
     const conduit = liquidConduitState(state, runId);
     return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
   });

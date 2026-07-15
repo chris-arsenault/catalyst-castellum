@@ -18,7 +18,7 @@ import {
 } from "../../game/types";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
-import { transportRunDefinition } from "../../presentation/defaultGame";
+import { lineDefinition } from "../../presentation/defaultGame";
 
 const GAS_RUN_COLOR = 0x58aab3;
 const LIQUID_RUN_COLOR = 0x3f76ba;
@@ -307,7 +307,7 @@ const phaseRouteCells = (
   runId: TransportRunId,
   phase: TransportPhase
 ): readonly GridCell[] | null => {
-  const definition = transportRunDefinition(runId)[phase];
+  const definition = lineDefinition(runId, phase);
   const available =
     phase === "gas"
       ? state.availability.gasRuns.includes(runId)
@@ -315,7 +315,7 @@ const phaseRouteCells = (
   if (!definition || !available) return null;
   const route =
     phase === "gas" ? gasConduitState(state, runId).route : liquidConduitState(state, runId).route;
-  return route.length > 0 ? route : definition.blueprint;
+  return route.length > 0 ? route : definition.route;
 };
 
 const routesMatch = (

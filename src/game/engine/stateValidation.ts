@@ -9,7 +9,7 @@ import {
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { validateEnemyNavigation } from "./enemyNavigationValidation";
 import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
-import { definitionTransportRun } from "../world/instances";
+import { maybeLineDefinition } from "../world/instances";
 
 export type StateValidationCode =
   | "availability_mismatch"
@@ -199,7 +199,7 @@ const validateRoute = (
   issues: StateValidationIssue[],
   gameDefinition: GameDefinition
 ): void => {
-  const definition = definitionTransportRun(gameDefinition, runId)[phase];
+  const definition = maybeLineDefinition(gameDefinition, runId, phase);
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const path = `${phase}Conduits.${runId}`;
@@ -224,7 +224,7 @@ const validateRoute = (
     );
     return;
   }
-  validateRouteEndpoints(conduit.route, definition.blueprint, path, issues);
+  validateRouteEndpoints(conduit.route, definition.route, path, issues);
   validateRouteCells(conduit.route, path, issues, gameDefinition);
 };
 
