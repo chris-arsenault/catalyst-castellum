@@ -28,6 +28,9 @@ export const LIQUID_BUFFER_IDS = ["cell_liquor"] as const;
 
 export const TRANSPORT_RUN_IDS = [
   "core_furnace",
+  "core_switchyard",
+  "core_reservoir",
+  "core_gallery",
   "cell_furnace",
   "core_cell",
   "cell_absorber",

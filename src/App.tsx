@@ -1,15 +1,19 @@
 import { Pause } from "lucide-react";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useCallback } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
 import { BriefingModal } from "./components/BriefingModal";
 import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/Modals";
 import { FacilityManual } from "./components/manual/FacilityManual";
 import { PhaseBanner } from "./components/PhaseBanner";
+import { PipeBoard } from "./components/PipeBoard";
 import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
+import { ROOM_DEFINITIONS, TRANSPORT_RUNS } from "./presentation/defaultGame";
+import { transportPhaseAvailable } from "./game/queries";
+import { TRANSPORT_PHASES, TRANSPORT_RUN_IDS, type RoomId } from "./game/types";
 import {
   useApplicationInitialization,
   useAudioDirector,
@@ -27,9 +31,50 @@ const MapStage = () => {
   const game = useGameStore((state) => state.game);
   const selectedRoomId = useGameStore((state) => state.selectedRoomId);
   const selectRoom = useGameStore((state) => state.selectRoom);
+  const pipeMode = useGameStore((state) => state.pipeMode);
+  const setPipeMode = useGameStore((state) => state.setPipeMode);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const showNotice = useGameStore((state) => state.showNotice);
+  const togglePipeMode = useCallback(() => setPipeMode(!pipeMode), [pipeMode, setPipeMode]);
+  const connectRooms = useCallback(
+    (from: RoomId, to: RoomId) => {
+      const runId = TRANSPORT_RUN_IDS.find((id) => {
+        const rooms = TRANSPORT_RUNS[id].rooms;
+        return (rooms[0] === from && rooms[1] === to) || (rooms[0] === to && rooms[1] === from);
+      });
+      const buildablePhases = runId
+        ? TRANSPORT_PHASES.filter(
+            (phase) =>
+              transportPhaseAvailable(game, runId, phase) &&
+              !(phase === "gas" ? game.gasConduits[runId] : game.liquidConduits[runId]).installed
+          )
+        : [];
+      if (!runId || buildablePhases.length === 0) {
+        const parameters = {
+          from: ROOM_DEFINITIONS[from].code,
+          to: ROOM_DEFINITIONS[to].code,
+        };
+        showNotice(
+          runId
+            ? translator.text("ui.pipes.alreadyRouted", parameters)
+            : translator.text("ui.pipes.noRoute", parameters)
+        );
+        return;
+      }
+      for (const phase of buildablePhases) dispatch({ type: "build_transport", runId, phase });
+    },
+    [dispatch, game, showNotice, translator]
+  );
   return (
     <div className="map-stage-wrap">
-      <GameMap game={game} selectedRoomId={selectedRoomId} onSelectRoom={selectRoom} />
+      <GameMap
+        game={game}
+        selectedRoomId={selectedRoomId}
+        onSelectRoom={selectRoom}
+        onConnectRooms={connectRooms}
+        onTogglePipeMode={togglePipeMode}
+        pipeMode={pipeMode}
+      />
       <FeedstockStrip />
       <EventLog />
       {game.paused && (
@@ -44,6 +89,7 @@ const MapStage = () => {
 };
 
 const ActiveGame = () => {
+  const pipeMode = useGameStore((state) => state.pipeMode);
   return (
     <div className="app-shell" data-simulation-clock="live">
       <TopBar />
@@ -56,7 +102,7 @@ const ActiveGame = () => {
           </section>
         </section>
 
-        <RoomInspector />
+        {pipeMode ? <PipeBoard /> : <RoomInspector />}
       </main>
 
       <BriefingModal />

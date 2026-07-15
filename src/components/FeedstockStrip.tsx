@@ -36,6 +36,7 @@ interface SupplyProps {
   chargeCost: number;
   detail: string;
   formula: string;
+  infinite: boolean;
   name: string;
   sourceId: GasSourceId | LiquidSourceId;
   sourceKind: "gas" | "liquid";
@@ -57,7 +58,7 @@ const Supply = (props: SupplyProps) => {
     }
     dispatch({ type: "charge_liquid_source", sourceId: props.sourceId as LiquidSourceId });
   }, [dispatch, props.sourceId, props.sourceKind]);
-  const fill = Math.min(100, (props.amount / props.capacity) * 100);
+  const fill = props.infinite ? 100 : Math.min(100, (props.amount / props.capacity) * 100);
   return (
     <article className="supply-card" style={{ "--supply": props.accent }}>
       <span className="supply-formula">{props.formula}</span>
@@ -65,29 +66,35 @@ const Supply = (props: SupplyProps) => {
       <span className="supply-fill" aria-hidden="true">
         <i style={{ "--supply-fill": `${fill}%` }} />
       </span>
-      <strong data-testid={`source-${props.sourceId}`}>{formatters.number(props.amount, 0)}</strong>
-      <button
-        type="button"
-        disabled={!decision.allowed}
-        title={
-          commandCopy(decision) ??
-          translator.text("ui.supplies.restockFormula", { formula: props.formula })
-        }
-        aria-label={translator.text("ui.supplies.restock", { name: props.name })}
-        onClick={charge}
-      >
-        <Plus size={13} />
-      </button>
+      <strong data-testid={`source-${props.sourceId}`}>
+        {props.infinite ? "∞" : formatters.number(props.amount, 0)}
+      </strong>
+      {!props.infinite && (
+        <button
+          type="button"
+          disabled={!decision.allowed}
+          title={
+            commandCopy(decision) ??
+            translator.text("ui.supplies.restockFormula", { formula: props.formula })
+          }
+          aria-label={translator.text("ui.supplies.restock", { name: props.name })}
+          onClick={charge}
+        >
+          <Plus size={13} />
+        </button>
+      )}
       <span className="supply-tooltip" role="tooltip">
         <b>{props.name}</b>
         {props.detail}
         <small>
-          {translator.text("ui.supplies.detail", {
-            amount: formatters.measurement(props.amount, "mol-eq", 1),
-            capacity: formatters.measurement(props.capacity, "mol-eq", 1),
-            charge: formatters.number(props.chargeAmount, 0),
-            cost: formatters.number(props.chargeCost, 0),
-          })}
+          {props.infinite
+            ? translator.text("ui.supplies.detailInfinite")
+            : translator.text("ui.supplies.detail", {
+                amount: formatters.measurement(props.amount, "mol-eq", 1),
+                capacity: formatters.measurement(props.capacity, "mol-eq", 1),
+                charge: formatters.number(props.chargeAmount, 0),
+                cost: formatters.number(props.chargeCost, 0),
+              })}
         </small>
       </span>
     </article>
@@ -111,6 +118,7 @@ const GasSupply = ({ sourceId }: { sourceId: GasSourceId }) => {
       chargeCost={source.chargeCost}
       detail={gasComposition(gas, translator, formatters)}
       formula={source.formula}
+      infinite={source.infinite}
       name={sourceCopy(source, translator).name}
       sourceId={sourceId}
       sourceKind="gas"
@@ -132,6 +140,7 @@ const LiquidSupply = ({ sourceId }: { sourceId: LiquidSourceId }) => {
       chargeCost={source.chargeCost}
       detail={`${source.formula} ${formatters.number(amount, 1)}`}
       formula={source.formula}
+      infinite={false}
       name={sourceCopy(source, translator).name}
       sourceId={sourceId}
       sourceKind="liquid"

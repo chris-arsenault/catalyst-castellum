@@ -42,7 +42,7 @@ export const startGuidedTutorial = async (page: Page): Promise<void> => {
   await expect(intro).toContainText("2 H₂ : 1 O₂ · up to 2.2 mol-eq/s");
   await expect(intro).toContainText("2 open passages · pressure/density outflow");
   await expect(intro).toContainText("0.42× air density · 1.5 layer exchange");
-  await expect(intro).toContainText("H₂ ≥ 5% · O₂ ≥ 8% · 2 H₂ + 1 O₂");
+  await expect(intro).toContainText("H₂ ≥ 7.5% · O₂ ≥ 12% · 2 H₂ + 1 O₂");
   await expect(intro).not.toContainText("Install and run a Gas Agitator in R-02.");
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
   await page.getByTestId("enter-stage-controls").click();
@@ -109,21 +109,19 @@ export const verifyStoredMomentumHasNoTeachingBreak = async (page: Page): Promis
   await expect(page.getByTestId("tutorial-task-card")).toContainText("Hold Stored Momentum");
 };
 
-export const continueIntoMakeTheReagent = async (page: Page): Promise<void> => {
+export const continueIntoSecondChamber = async (page: Page): Promise<void> => {
   const progress = page.getByTestId("campaign-progress-panel");
-  await expect(progress).toContainText("Checkpoint secured", { timeout: 60_000 });
-  await expect(page.getByTestId("tutorial-task-card")).toContainText("Flash Point secured");
-  await page.getByTestId("next-level").click();
-  await expect(page.getByText("Checkpoint 02")).toBeVisible();
-  await page.getByTestId("enter-control-room").click();
+  await expect(progress).toContainText("Round analysis", { timeout: 60_000 });
+  await expect(page.getByTestId("tutorial-task-card")).toContainText("Momentum held");
+  await page.getByTestId("continue-round").click();
+  await expect(page.getByTestId("phase-banner")).toContainText("Planning");
 
-  const intro = page.getByTestId("tutorial-stage-intro");
-  await expect(intro).toContainText("Site the membrane cell on the R-05 process line");
-  await expect(intro).toContainText("Create three co-products");
-  await page.getByTestId("enter-stage-controls").click();
-  await expect(page.getByTestId("tutorial-task-card")).toContainText("Establish CL-1 production");
+  const taskCard = page.getByTestId("tutorial-task-card");
+  await expect(taskCard).toContainText("Commission the second chamber");
+  await expect(page.getByTestId("begin-prime")).toBeDisabled();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
-    "install-membrane-cell"
+    "open-pipe-board"
   );
+  await expect(page.getByTestId("pipe-board")).toHaveCount(0);
 };

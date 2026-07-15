@@ -11,6 +11,7 @@ import {
   guideStepIndexFor,
   primeFlashIncident,
   type GuideDefinition,
+  type GuideUiState,
 } from "./guideModel";
 import { GuideTooltip } from "./GuideTooltip";
 import { FirstFlashExplanation } from "./FirstFlashExplanation";
@@ -55,12 +56,14 @@ const stepsFor = (guide: GuideDefinition, translator: Translator): Step[] =>
 
 const stepIsSatisfied = (
   step: GuideDefinition["steps"][number] | null,
-  game: Parameters<GuideDefinition["steps"][number]["completed"]>[0]
-): boolean => Boolean(step && step.kind !== "complete" && step.completed(game));
+  game: GameState,
+  ui: GuideUiState
+): boolean => Boolean(step && step.kind !== "complete" && step.completed(game, ui));
 
 const stageIntroShouldShow = (
   guide: GuideDefinition,
   game: GameState,
+  ui: GuideUiState,
   guideDismissed: boolean,
   acknowledgedStageIntroIds: string[]
 ): boolean =>
@@ -68,7 +71,7 @@ const stageIntroShouldShow = (
   !acknowledgedStageIntroIds.includes(guide.id) &&
   !guideDismissed &&
   game.phase === "build" &&
-  guide.steps[0]?.completed(game) === false;
+  guide.steps[0]?.completed(game, ui) === false;
 
 const guideShouldRun = (
   game: GameState,
@@ -152,11 +155,19 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
   const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   const acknowledgedStageIntroIds = useGameStore((state) => state.acknowledgedStageIntroIds);
   const acknowledgeStageIntro = useGameStore((state) => state.acknowledgeStageIntro);
-  const stepIndex = guideStepIndexFor(game, guide);
+  const pipeMode = useGameStore((state) => state.pipeMode);
+  const ui: GuideUiState = { pipeMode };
+  const stepIndex = guideStepIndexFor(game, guide, ui);
   const steps = useMemo(() => stepsFor(guide, translator), [guide, translator]);
   const activeStep = guide.steps[stepIndex] ?? null;
   const dismissed = dismissedGuideIds.includes(guide.dismissalId);
-  const showStageIntro = stageIntroShouldShow(guide, game, dismissed, acknowledgedStageIntroIds);
+  const showStageIntro = stageIntroShouldShow(
+    guide,
+    game,
+    ui,
+    dismissed,
+    acknowledgedStageIntroIds
+  );
   const enterStage = useCallback(
     () => acknowledgeStageIntro(guide.id),
     [acknowledgeStageIntro, guide.id]
@@ -167,7 +178,7 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
     !showHelp &&
     !showStageIntro &&
     (guideCanRun(game) || game.phase === "round_result" || game.phase === "level_complete");
-  const satisfied = stepIsSatisfied(activeStep, game);
+  const satisfied = stepIsSatisfied(activeStep, game, ui);
   const teachingBreak = teachingBreakFor(game, guide, run);
 
   useEffect(() => {

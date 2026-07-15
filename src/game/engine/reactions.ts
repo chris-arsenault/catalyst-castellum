@@ -300,7 +300,7 @@ const simulateRoomChemistry = (
   }
   simulatePhaseChanges(room, dt, definition);
   const baseline = definition.rooms[room.id].ambientTemperature;
-  room.temperature += (baseline - room.temperature) * 0.008 * dt;
+  room.temperature += (baseline - room.temperature) * 0.03 * dt;
   room.reactionIntensity = Math.max(0, room.reactionIntensity - dt * 1.3);
   state.stats.peakHazard = Math.max(state.stats.peakHazard, analyzeRoom(room, definition).hazard);
 };

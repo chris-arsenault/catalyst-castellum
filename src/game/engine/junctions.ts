@@ -1,6 +1,7 @@
 import { emptyGas, emptyLiquid } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
 import {
+  GAS_SOURCE_IDS,
   GAS_TYPES,
   LIQUID_TYPES,
   TRANSPORT_RUN_IDS,
@@ -181,11 +182,21 @@ const takeLiquidFromPools = (pools: readonly LiquidAmounts[], requested: number)
   return packet;
 };
 
+/** Infinite sources hold their rated mixture forever, so junction draws never run them dry. */
+const replenishInfiniteGasSources = (state: GameState, gameDefinition: GameDefinition): void => {
+  for (const sourceId of GAS_SOURCE_IDS) {
+    const definition = gameDefinition.gasSources[sourceId];
+    if (!definition.infinite) continue;
+    state.gasSources[sourceId].gas = { ...emptyGas(), ...definition.initialGas };
+  }
+};
+
 export const refillLocalJunctions = (
   state: GameState,
   dt: number,
   gameDefinition: GameDefinition
 ): void => {
+  replenishInfiniteGasSources(state, gameDefinition);
   for (const roomId of gameDefinition.roomOrder) {
     if (gasJunctionDemanded(state, roomId, gameDefinition)) {
       const junction = state.gasJunctions[roomId];

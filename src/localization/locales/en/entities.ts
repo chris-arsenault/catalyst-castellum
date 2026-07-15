@@ -48,10 +48,10 @@ export const ENTITY_MESSAGES = {
     "Airborne organism that avoids liquid contact but remains vulnerable to room gases.",
   "entities.enemies.shell.name": "Shell",
   "entities.enemies.shell.description":
-    "Mineral armor resists atmospheric exposure but fails under corrosive liquids.",
+    "Mineral armor sheds ambient heat and atmosphere but cracks under pressure shock and corrosive liquids.",
   "entities.enemies.bellows.name": "Bellows",
   "entities.enemies.bellows.description":
-    "Large respiratory volume resists atmosphere hazards but is vulnerable to corrosion and shock.",
+    "Large insulated respiratory volume resists atmosphere and heat but is vulnerable to corrosion and shock.",
 
   "entities.species.oxygen.name": "Oxygen",
   "entities.species.nitrogen.name": "Nitrogen",
@@ -88,6 +88,15 @@ export const ENTITY_MESSAGES = {
   "entities.transport.core_furnace.gas.name": "Core–R-02 gas duct",
   "entities.transport.core_furnace.gas.description":
     "Feeds the Core starter-header mixture into R-02.",
+  "entities.transport.core_switchyard.gas.name": "Core–R-01 gas duct",
+  "entities.transport.core_switchyard.gas.description":
+    "Feeds the Core starter-header mixture into R-01.",
+  "entities.transport.core_reservoir.gas.name": "Core–R-03 gas duct",
+  "entities.transport.core_reservoir.gas.description":
+    "Feeds the Core starter-header mixture into R-03.",
+  "entities.transport.core_gallery.gas.name": "Core–R-04 gas duct",
+  "entities.transport.core_gallery.gas.description":
+    "Feeds the Core starter-header mixture into R-04.",
   "entities.transport.cell_furnace.gas.name": "R-05–R-02 gas duct",
   "entities.transport.cell_furnace.gas.description":
     "Carries the R-05 gas-junction stream to R-02.",

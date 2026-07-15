@@ -87,9 +87,19 @@ const makeRooms = (
     definition.roomOrder.map((id) => [id, makeRoom(id, loadout, definition)])
   ) as Record<RoomId, RoomState>;
 
-const makeGasSources = (loadout: FacilityLoadout): GameState["gasSources"] =>
+const makeGasSources = (
+  loadout: FacilityLoadout,
+  definition: GameDefinition
+): GameState["gasSources"] =>
   Object.fromEntries(
-    GAS_SOURCE_IDS.map((id) => [id, { gas: { ...emptyGas(), ...loadout.gasSourceGas[id] } }])
+    GAS_SOURCE_IDS.map((id) => [
+      id,
+      {
+        gas: definition.gasSources[id].infinite
+          ? { ...emptyGas(), ...definition.gasSources[id].initialGas }
+          : { ...emptyGas(), ...loadout.gasSourceGas[id] },
+      },
+    ])
   ) as GameState["gasSources"];
 
 const makeLiquidSources = (
@@ -221,7 +231,7 @@ export const createScenarioGame = (
     phaseTime: 0,
     elapsed: 0,
     rooms: makeRooms(level.loadout, definition),
-    gasSources: makeGasSources(level.loadout),
+    gasSources: makeGasSources(level.loadout, definition),
     liquidSources: makeLiquidSources(level.loadout, definition),
     gasBuffers: makeGasBuffers(level.loadout),
     liquidBuffers: makeLiquidBuffers(level.loadout),

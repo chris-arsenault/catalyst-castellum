@@ -70,7 +70,9 @@ test("the tutorial task list occupies a collapsible left rail", async ({ page })
 test("refresh returns to save selection before loading the live process", async ({ page }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
+  await page.getByTestId("pipe-mode-toggle").click();
   await page.getByTestId("conduit-control-core_furnace-gas").click();
+  await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
   await page.waitForTimeout(900);
 
@@ -81,6 +83,7 @@ test("refresh returns to save selection before loading the live process", async 
   await page.getByTestId("load-save-slot-1").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
+  await page.getByTestId("pipe-mode-toggle").click();
   await expect(page.getByTestId("conduit-control-core_furnace-gas")).toHaveAttribute(
     "aria-pressed",
     "true"
@@ -158,6 +161,7 @@ test("hovering a shared conduit exposes all measured species on that physical ro
 
 test("installed equipment appears on its authored room socket", async ({ page }) => {
   await startGuidedTutorial(page);
+  await skipGuidance(page);
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await expect(page.getByTestId("game-map")).toHaveAttribute("data-installed-equipment-count", "1");
 

@@ -39,6 +39,21 @@ export const LEVEL_MESSAGES = {
     "A faster follow-up tests the chamber inventory and the timing of its discrete flash cycle.",
   "levels.flash_point.rounds.stored_momentum.objective":
     "Run the established R-02 cycle and inspect each incident before adjusting it.",
+  "levels.flash_point.rounds.second_chamber.title": "Second chamber",
+  "levels.flash_point.rounds.second_chamber.detail":
+    "An armored column shrugs off single detonations. The Core can feed a second OX-1 trap in R-01, R-03, or R-04.",
+  "levels.flash_point.rounds.second_chamber.objective":
+    "Feed a second chamber of your choice from the Core and commission an agitator inside it.",
+  "levels.flash_point.rounds.higher_cadence.title": "Higher cadence",
+  "levels.flash_point.rounds.higher_cadence.detail":
+    "Skimmers slip through the gaps between flashes. A finer agitator grade ignites smaller batches sooner.",
+  "levels.flash_point.rounds.higher_cadence.objective":
+    "Upgrade the R-02 Gas Agitator so smaller batches detonate sooner.",
+  "levels.flash_point.rounds.corridor_exam.title": "Corridor exam",
+  "levels.flash_point.rounds.corridor_exam.detail":
+    "A mixed veteran column tests everything: two chambers, open feeds, and flash cadence.",
+  "levels.flash_point.rounds.corridor_exam.objective":
+    "Run both OX-1 chambers at full cadence through the entire assault.",
   "levels.make_the_reagent.rounds.co_products.title": "Co-products",
   "levels.make_the_reagent.rounds.co_products.detail":
     "A crawler column will cross R-03 as the R-05 gas stream arrives.",

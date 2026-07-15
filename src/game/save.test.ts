@@ -352,7 +352,7 @@ describe("conserving v7 migration", () => {
     expect(migrated.gasSources.starter_gas_header.gas.nitrogen).toBe(2);
     expect(migrated.gasSources.starter_gas_header.gas.hydrogen).toBe(13);
     expect(migrated.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
-    expect(migrated.campaign.roundIndex).toBe(1);
+    expect(migrated.campaign.roundIndex).toBe(4);
     expect(migrated.events[0]?.code).toBe("physical_conduit_migrated");
   });
 });

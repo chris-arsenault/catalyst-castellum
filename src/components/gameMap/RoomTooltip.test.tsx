@@ -27,6 +27,6 @@ describe("room map detail", () => {
     expect(tooltip.textContent).toContain("OX-1 pulse+38 kPa");
     expect(tooltip.textContent).toContain("2 open passages");
     expect(tooltip.textContent).toContain("THERMAL");
-    expect(tooltip.textContent).toContain("Thermal exposure begins above 48 °C");
+    expect(tooltip.textContent).toContain("Thermal exposure begins above 60 °C");
   });
 });

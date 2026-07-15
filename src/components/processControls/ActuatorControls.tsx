@@ -43,11 +43,12 @@ const CONDUIT_TUTORIAL_ANCHORS: Partial<
   "core_cell:gas": TUTORIAL_ANCHORS.conduitCoreCellGas,
   "core_cell:liquid": TUTORIAL_ANCHORS.conduitCoreCellLiquid,
   "core_furnace:gas": TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
+  "core_gallery:gas": TUTORIAL_ANCHORS.conduitCoreGalleryGas,
   "furnace_return:gas": TUTORIAL_ANCHORS.conduitFurnaceReturnGas,
   "return_final:gas": TUTORIAL_ANCHORS.conduitReturnFinalGas,
 };
 
-const conduitTutorialAnchor = (
+export const conduitTutorialAnchor = (
   runId: TransportRunId,
   phase: TransportPhase
 ): TutorialAnchorId | null => CONDUIT_TUTORIAL_ANCHORS[`${runId}:${phase}`] ?? null;

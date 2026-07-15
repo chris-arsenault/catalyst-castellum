@@ -1,4 +1,4 @@
-import { Activity, ArrowDownToLine, Beaker, LockKeyhole } from "lucide-react";
+import { ArrowDownToLine, Beaker, LockKeyhole, Spline } from "lucide-react";
 import { TRANSPORT_RUNS } from "../presentation/defaultGame";
 import { roomSocketIds, transportPhaseAvailable } from "../game/queries";
 import { useGameStore } from "../application/store";
@@ -7,7 +7,6 @@ import { TRANSPORT_RUN_IDS } from "../game/types";
 import type { Translator } from "../localization/translator";
 import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
-import { TransportRunPanel } from "./processControls/TransportControls";
 
 const localizedPhaseLabel = (phase: string, translator: Translator): string => {
   if (phase === "build") return translator.text("ui.process.phase.planning");
@@ -19,9 +18,10 @@ export const ProcessControls = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
+  const setPipeMode = useGameStore((state) => state.setPipeMode);
   const room = game.rooms[roomId];
   const socketIds = roomSocketIds(roomId);
-  const runs = TRANSPORT_RUN_IDS.filter(
+  const connectedRuns = TRANSPORT_RUN_IDS.filter(
     (runId) =>
       TRANSPORT_RUNS[runId].rooms.includes(roomId) &&
       (transportPhaseAvailable(game, runId, "gas") ||
@@ -53,17 +53,18 @@ export const ProcessControls = () => {
         </>
       ) : null}
       {hasCell && <OutletBuffers />}
-      {runs.length > 0 && (
-        <div className="control-kind-heading">
-          <Activity size={14} /> {translator.text("ui.process.connections")}
-        </div>
+      {connectedRuns.length > 0 && (
+        <button
+          type="button"
+          className="open-pipe-board"
+          data-testid="open-pipe-board"
+          onClick={() => setPipeMode(true)}
+        >
+          <Spline size={14} />
+          {translator.text("ui.process.openPipeBoard", { count: connectedRuns.length })}
+        </button>
       )}
-      <div className="transport-run-list">
-        {runs.map((runId) => (
-          <TransportRunPanel key={runId} runId={runId} />
-        ))}
-      </div>
-      {runs.length === 0 && socketIds.length === 0 && (
+      {connectedRuns.length === 0 && socketIds.length === 0 && (
         <div className="passive-room-note">
           <ArrowDownToLine size={18} />
           <p>{translator.text("ui.process.passive")}</p>

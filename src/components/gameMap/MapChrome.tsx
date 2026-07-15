@@ -1,4 +1,5 @@
-import { Maximize2, Minus, Move, Plus } from "lucide-react";
+import { Maximize2, Minus, Move, Plus, Spline, X } from "lucide-react";
+import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -96,42 +97,29 @@ const CameraControls = ({ zoom, onReset, onZoom }: CameraControlsProps) => {
   );
 };
 
-interface MapChromeProps {
+interface MapTooltipsProps {
   game: GameState;
   hoveredCellOutletId: CellOutletId | null;
   hoveredEquipment: EquipmentHover | null;
   hoveredEnemyId: number | null;
   hoveredRunId: TransportRunId | null;
   hoveredRoomId: RoomId | null;
-  onResetCamera: () => void;
-  onSelectSpecies: (species: SpeciesId | null) => void;
-  onZoom: (factor: number) => void;
   selectedSpecies: SpeciesId | null;
-  zoom: number;
 }
 
-export const MapChrome = ({
+const MapTooltips = ({
   game,
   hoveredCellOutletId,
   hoveredEquipment,
   hoveredEnemyId,
   hoveredRunId,
   hoveredRoomId,
-  onResetCamera,
-  onSelectSpecies,
-  onZoom,
   selectedSpecies,
-  zoom,
-}: MapChromeProps) => {
-  const { translator } = useGamePresentation();
+}: MapTooltipsProps) => {
+  const blocking =
+    hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment !== null;
   return (
-    <div
-      className="map-chrome"
-      onPointerDown={(event) => event.stopPropagation()}
-      onWheel={(event) => event.stopPropagation()}
-    >
-      <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
-      <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
+    <>
       <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
       <CellOutletTooltip
         game={game}
@@ -145,20 +133,90 @@ export const MapChrome = ({
       />
       <TransportTooltip
         game={game}
-        runId={
-          hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
-            ? null
-            : hoveredRunId
-        }
+        runId={blocking ? null : hoveredRunId}
         selectedSpecies={selectedSpecies}
       />
-      <RoomTooltip
+      <RoomTooltip game={game} roomId={blocking ? null : hoveredRoomId} />
+    </>
+  );
+};
+
+interface PipeModeToggleProps {
+  pipeMode: boolean;
+  onToggle: () => void;
+}
+
+const PipeModeToggle = ({ pipeMode, onToggle }: PipeModeToggleProps) => {
+  const { translator } = useGamePresentation();
+  return (
+    <button
+      type="button"
+      className={`pipe-mode-toggle ${pipeMode ? "active" : ""}`}
+      data-testid="pipe-mode-toggle"
+      data-tutorial-anchor={TUTORIAL_ANCHORS.pipeModeToggle}
+      aria-pressed={pipeMode}
+      onClick={onToggle}
+    >
+      {pipeMode ? <X size={14} /> : <Spline size={14} />}
+      {translator.text(pipeMode ? "ui.map.pipes.exit" : "ui.map.pipes.enter")}
+    </button>
+  );
+};
+
+interface MapChromeProps {
+  game: GameState;
+  hoveredCellOutletId: CellOutletId | null;
+  hoveredEquipment: EquipmentHover | null;
+  hoveredEnemyId: number | null;
+  hoveredRunId: TransportRunId | null;
+  hoveredRoomId: RoomId | null;
+  onResetCamera: () => void;
+  onSelectSpecies: (species: SpeciesId | null) => void;
+  onTogglePipeMode: () => void;
+  onZoom: (factor: number) => void;
+  pipeMode: boolean;
+  selectedSpecies: SpeciesId | null;
+  zoom: number;
+}
+
+export const MapChrome = ({
+  game,
+  hoveredCellOutletId,
+  hoveredEquipment,
+  hoveredEnemyId,
+  hoveredRunId,
+  hoveredRoomId,
+  onResetCamera,
+  onSelectSpecies,
+  onTogglePipeMode,
+  onZoom,
+  pipeMode,
+  selectedSpecies,
+  zoom,
+}: MapChromeProps) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div
+      className="map-chrome"
+      onPointerDown={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
+    >
+      <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
+      <PipeModeToggle pipeMode={pipeMode} onToggle={onTogglePipeMode} />
+      {pipeMode && (
+        <p className="pipe-mode-hint" data-testid="pipe-mode-hint">
+          {translator.text("ui.map.pipes.hint")}
+        </p>
+      )}
+      <CameraControls zoom={zoom} onReset={onResetCamera} onZoom={onZoom} />
+      <MapTooltips
         game={game}
-        roomId={
-          hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment
-            ? null
-            : hoveredRoomId
-        }
+        hoveredCellOutletId={hoveredCellOutletId}
+        hoveredEquipment={hoveredEquipment}
+        hoveredEnemyId={hoveredEnemyId}
+        hoveredRunId={hoveredRunId}
+        hoveredRoomId={hoveredRoomId}
+        selectedSpecies={selectedSpecies}
       />
       <div className="map-material-legend" aria-label={translator.text("ui.map.legend")}>
         <span>

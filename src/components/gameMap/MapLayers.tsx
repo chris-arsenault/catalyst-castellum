@@ -3,10 +3,12 @@ import type { Graphics } from "pixi.js";
 import {
   TRANSPORT_RUN_IDS,
   type GameState,
+  type RoomId,
   type SpeciesId,
   type TransportRunId,
 } from "../../game/types";
 import { transportPhaseAvailable } from "../../game/queries";
+import { TRANSPORT_RUNS } from "../../presentation/defaultGame";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun } from "./transportGraphics";
@@ -32,6 +34,7 @@ export const FacilityDoors = ({ game }: { game: GameState }) => {
 };
 
 interface TransportRunNodeProps {
+  emphasized: boolean;
   game: GameState;
   hovered: boolean;
   onHover: (runId: TransportRunId | null) => void;
@@ -40,6 +43,7 @@ interface TransportRunNodeProps {
 }
 
 const TransportRunNode = ({
+  emphasized,
   game,
   hovered,
   onHover,
@@ -47,8 +51,9 @@ const TransportRunNode = ({
   selectedSpecies,
 }: TransportRunNodeProps) => {
   const draw = useCallback(
-    (graphics: Graphics) => drawTransportRun(graphics, game, runId, selectedSpecies, hovered),
-    [game, hovered, runId, selectedSpecies]
+    (graphics: Graphics) =>
+      drawTransportRun(graphics, game, runId, selectedSpecies, hovered, emphasized),
+    [emphasized, game, hovered, runId, selectedSpecies]
   );
   return (
     <pixiGraphics
@@ -65,6 +70,8 @@ interface TransportNetworkProps {
   game: GameState;
   hoveredRunId: TransportRunId | null;
   onHover: (runId: TransportRunId | null) => void;
+  pipeDragSourceRoomId: RoomId | null;
+  pipeMode: boolean;
   selectedSpecies: SpeciesId | null;
 }
 
@@ -72,6 +79,8 @@ export const TransportNetwork = ({
   game,
   hoveredRunId,
   onHover,
+  pipeDragSourceRoomId,
+  pipeMode,
   selectedSpecies,
 }: TransportNetworkProps) => (
   <>
@@ -82,8 +91,13 @@ export const TransportNetwork = ({
     ).map((runId) => (
       <TransportRunNode
         key={runId}
+        emphasized={pipeMode}
         game={game}
-        hovered={hoveredRunId === runId}
+        hovered={
+          hoveredRunId === runId ||
+          (pipeDragSourceRoomId !== null &&
+            TRANSPORT_RUNS[runId].rooms.includes(pipeDragSourceRoomId))
+        }
         onHover={onHover}
         runId={runId}
         selectedSpecies={selectedSpecies}

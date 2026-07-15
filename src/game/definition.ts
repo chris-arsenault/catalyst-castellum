@@ -69,7 +69,7 @@ export const deriveGame = (
 export const DEFAULT_GAME_DEFINITION = defineGame({
   id: "catalyst-castellum",
   packId: "catalyst-castellum",
-  contentVersion: 1,
+  contentVersion: 2,
   facilityMap: FACILITY_MAP,
   roomOrder: ROOM_ORDER,
   rooms: ROOM_DEFINITIONS,

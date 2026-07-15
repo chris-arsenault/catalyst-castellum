@@ -228,6 +228,7 @@ export const NoticeToast = () => {
     <button
       className="notice-toast"
       type="button"
+      data-testid="notice-toast"
       onClick={clear}
       aria-label={translator.text("ui.notice.dismiss", { notice })}
     >

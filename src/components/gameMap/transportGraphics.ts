@@ -155,6 +155,7 @@ const drawStopMarker = (graphics: Graphics, points: readonly Point[]): void => {
 interface LaneModel {
   color: number;
   elapsed: number;
+  emphasized: boolean;
   flow: MaterialRunFlow | null;
   hovered: boolean;
   points: readonly Point[];
@@ -163,9 +164,11 @@ interface LaneModel {
 
 const laneAlpha = (model: LaneModel): number => {
   if (!model.status.installed) {
+    if (model.emphasized) return model.hovered ? 0.85 : 0.5;
     if (model.hovered) return 0.24;
     return 0.08;
   }
+  if (model.emphasized) return model.hovered ? 1 : 0.85;
   if (model.hovered) return 0.9;
   if (model.status.active) return 0.68;
   if (model.status.configured) return 0.42;
@@ -173,12 +176,14 @@ const laneAlpha = (model: LaneModel): number => {
 };
 
 const laneShellWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return 3;
+  if (!model.status.installed) return model.emphasized ? 5 : 3;
+  if (model.emphasized) return model.hovered ? 7.5 : 6;
   return model.hovered ? 6 : 4.5;
 };
 
 const laneCoreWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return 1;
+  if (!model.status.installed) return model.emphasized ? 1.8 : 1;
+  if (model.emphasized) return model.hovered ? 3.4 : 2.8;
   return model.hovered ? 3 : 2;
 };
 
@@ -187,12 +192,17 @@ const laneColor = (model: LaneModel): number => {
   return model.color;
 };
 
+const laneShellAlpha = (model: LaneModel): number => {
+  if (model.status.installed) return 0.72;
+  return model.emphasized ? 0.5 : 0.28;
+};
+
 const drawLane = (graphics: Graphics, model: LaneModel): void => {
   tracePath(graphics, model.points);
   graphics.stroke({
     color: 0x020705,
     width: laneShellWidth(model),
-    alpha: model.status.installed ? 0.72 : 0.28,
+    alpha: laneShellAlpha(model),
   });
   tracePath(graphics, model.points);
   graphics.stroke({
@@ -217,6 +227,7 @@ interface PhaseLaneModel {
   baseColor: number;
   basePath: readonly Point[];
   elapsed: number;
+  emphasized: boolean;
   hovered: boolean;
   offset: number;
   phase: "gas" | "liquid";
@@ -288,6 +299,7 @@ const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
     status,
     flow,
     elapsed: model.elapsed,
+    emphasized: model.emphasized,
     hovered: model.hovered,
   });
 };
@@ -341,7 +353,8 @@ export const drawTransportRun = (
   state: GameState,
   runId: TransportRunId,
   selectedSpecies: SpeciesId | null,
-  hovered: boolean
+  hovered: boolean,
+  emphasized: boolean
 ): void => {
   graphics.clear();
   const gasCells = phaseRouteCells(state, runId, "gas");
@@ -356,6 +369,7 @@ export const drawTransportRun = (
       baseColor: GAS_RUN_COLOR,
       basePath: gasPath,
       elapsed: state.elapsed,
+      emphasized,
       hovered,
       offset: laneOffsets.gas,
       phase: "gas",
@@ -369,6 +383,7 @@ export const drawTransportRun = (
       baseColor: LIQUID_RUN_COLOR,
       basePath: liquidPath,
       elapsed: state.elapsed,
+      emphasized,
       hovered,
       offset: laneOffsets.liquid,
       phase: "liquid",

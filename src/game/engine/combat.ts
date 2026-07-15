@@ -113,11 +113,12 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
       gameDefinition
     );
     if (path.length === 0) throw new Error(`No cell route reaches Core for ${entry.type}.`);
+    const health = definition.health * entry.healthScale;
     state.enemies.push({
       id: state.nextEnemyId,
       type: entry.type,
-      health: definition.health,
-      maxHealth: definition.health,
+      health,
+      maxHealth: health,
       routeId: entry.routeId,
       path,
       pathIndex: 0,

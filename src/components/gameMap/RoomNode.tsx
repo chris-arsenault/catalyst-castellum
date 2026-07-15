@@ -13,9 +13,21 @@ interface RoomNodeProps {
   selected: boolean;
   onHover: (roomId: RoomId | null) => void;
   onSelect: (roomId: RoomId) => void;
+  onPipeDragStart: (roomId: RoomId) => void;
+  onPipeDragEnd: (roomId: RoomId) => void;
+  pipeMode: boolean;
 }
 
-export const RoomNode = ({ game, roomId, selected, onHover, onSelect }: RoomNodeProps) => {
+export const RoomNode = ({
+  game,
+  roomId,
+  selected,
+  onHover,
+  onSelect,
+  onPipeDragStart,
+  onPipeDragEnd,
+  pipeMode,
+}: RoomNodeProps) => {
   const geometry = roomMapRect(roomId);
   const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy) === roomId).length;
   const model = roomRenderModel(game, roomId, selected, occupied);
@@ -27,10 +39,16 @@ export const RoomNode = ({ game, roomId, selected, onHover, onSelect }: RoomNode
         draw={draw}
         hitArea={hitArea}
         eventMode="static"
-        cursor="pointer"
+        cursor={pipeMode ? "crosshair" : "pointer"}
         onPointerOver={() => onHover(roomId)}
         onPointerOut={() => onHover(null)}
         onPointerTap={() => onSelect(roomId)}
+        onPointerDown={() => {
+          if (pipeMode) onPipeDragStart(roomId);
+        }}
+        onPointerUp={() => {
+          if (pipeMode) onPipeDragEnd(roomId);
+        }}
       />
       {model.structure === "core" && (
         <pixiText

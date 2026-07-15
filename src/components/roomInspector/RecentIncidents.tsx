@@ -1,7 +1,14 @@
 import { Activity } from "lucide-react";
 import { useGamePresentation } from "../../application/presentationContext";
 import { useGameStore } from "../../application/store";
-import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
+import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
+import type { RoomId } from "../../game/types";
+
+const incidentsTutorialAnchor = (roomId: RoomId | null): TutorialAnchorId | undefined => {
+  if (roomId === "furnace") return TUTORIAL_ANCHORS.furnaceIncidents;
+  if (roomId === "gallery") return TUTORIAL_ANCHORS.galleryIncidents;
+  return undefined;
+};
 
 export const RecentIncidents = () => {
   const { formatters, translator } = useGamePresentation();
@@ -12,7 +19,7 @@ export const RecentIncidents = () => {
     <section
       className="effects-panel recent-incidents"
       data-testid={`recent-incidents-${roomId}`}
-      data-tutorial-anchor={roomId === "furnace" ? TUTORIAL_ANCHORS.furnaceIncidents : undefined}
+      data-tutorial-anchor={incidentsTutorialAnchor(roomId)}
     >
       <div className="section-title-row">
         <h3>{translator.text("ui.room.incidents")}</h3>

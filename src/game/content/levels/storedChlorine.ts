@@ -42,16 +42,15 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
     {
       id: "store",
       primeSeconds: 34,
-      wave: enemySequence(5, "shell", 0.5, 2.8),
+      wave: enemySequence(4, "crawler", 6, 4),
       availability: ALL_AVAILABILITY,
     },
     {
       id: "release",
       primeSeconds: 25,
-      wave: [
-        ...enemySequence(5, "bellows", 0.5, 2.25),
-        ...enemySequence(5, "shell", 1.8, 2.35),
-      ].sort((left, right) => left.at - right.at),
+      wave: [...enemySequence(2, "bellows", 4, 4), ...enemySequence(3, "shell", 6, 4)].sort(
+        (left, right) => left.at - right.at
+      ),
       availability: ALL_AVAILABILITY,
     },
   ],

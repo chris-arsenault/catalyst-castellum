@@ -54,7 +54,7 @@ describe("enemy map detail", () => {
     const tooltip = screen.getByTestId("enemy-map-tooltip");
     expect(tooltip.textContent).toContain("R-02 · lower gas");
     expect(tooltip.textContent).toContain("THERMAL");
-    expect(tooltip.textContent).toContain("4.1 HP/s");
+    expect(tooltip.textContent).toContain("0.2 HP/s");
     expect(tooltip.textContent).toContain("Last tick · −0.41 THERMAL");
     expect(tooltip.textContent).toContain("hot gas exposure");
   });

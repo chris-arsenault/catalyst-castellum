@@ -21,14 +21,26 @@ const socketLabel = (socketId: EquipmentSocketId, translator: Translator): strin
 const equipmentToggleTutorialAnchor = (
   roomId: RoomId,
   equipmentId: EquipmentId
+): TutorialAnchorId | null => {
+  if (equipmentId !== "gas_agitator") return null;
+  if (roomId === "furnace") return TUTORIAL_ANCHORS.furnaceAgitatorToggle;
+  if (roomId === "gallery") return TUTORIAL_ANCHORS.galleryAgitatorToggle;
+  return null;
+};
+
+const equipmentUpgradeTutorialAnchor = (
+  roomId: RoomId,
+  equipmentId: EquipmentId
 ): TutorialAnchorId | null =>
   roomId === "furnace" && equipmentId === "gas_agitator"
-    ? TUTORIAL_ANCHORS.furnaceAgitatorToggle
+    ? TUTORIAL_ANCHORS.furnaceAgitatorUpgrade
     : null;
 
 const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnchorId | null => {
   if (roomId === "lower_intake" && game.campaign.levelId === "make_the_reagent")
     return TUTORIAL_ANCHORS.lowerIntakeMembraneCell;
+  if (roomId === "gallery" && game.campaign.levelId === "flash_point")
+    return TUTORIAL_ANCHORS.galleryAgitator;
   if (roomId !== "furnace") return null;
   if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
   if (game.campaign.levelId === "acid_line") {
@@ -90,6 +102,35 @@ const EmptyEquipmentSocket = ({
   );
 };
 
+const UpgradeButton = ({
+  disabled,
+  label,
+  onUpgrade,
+  roomId,
+  socketId,
+  title,
+  tutorialAnchor,
+}: {
+  disabled: boolean;
+  label: string;
+  onUpgrade: () => void;
+  roomId: RoomId;
+  socketId: EquipmentSocketId;
+  title: string | undefined;
+  tutorialAnchor: TutorialAnchorId | null;
+}) => (
+  <button
+    type="button"
+    disabled={disabled}
+    title={title}
+    data-testid={`equipment-upgrade-${roomId}-${socketId}`}
+    data-tutorial-anchor={tutorialAnchor ?? undefined}
+    onClick={onUpgrade}
+  >
+    <Wrench size={13} /> {label}
+  </button>
+);
+
 const EquipmentActions = ({
   instance,
   roomId,
@@ -140,15 +181,15 @@ const EquipmentActions = ({
         tutorialAnchor={equipmentToggleTutorialAnchor(roomId, instance.equipmentId)}
         onClick={toggle}
       />
-      <button
-        type="button"
+      <UpgradeButton
         disabled={!upgradeDecision.allowed}
+        label={upgradeLabel}
+        onUpgrade={upgrade}
+        roomId={roomId}
+        socketId={socketId}
         title={commandCopy(upgradeDecision) ?? undefined}
-        data-testid={`equipment-upgrade-${roomId}-${socketId}`}
-        onClick={upgrade}
-      >
-        <Wrench size={13} /> {upgradeLabel}
-      </button>
+        tutorialAnchor={equipmentUpgradeTutorialAnchor(roomId, instance.equipmentId)}
+      />
       <button
         type="button"
         disabled={!dismantleDecision.allowed}

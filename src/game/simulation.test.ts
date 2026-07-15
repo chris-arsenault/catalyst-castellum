@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ROOM_ORDER, SPECIES_DEFINITIONS, roomVolume } from "./config";
+import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
+import { createGameRuntime } from "./runtime";
 import {
   createScenarioGame,
   executeCommand,
@@ -100,24 +102,54 @@ describe("finite-volume spatial rooms", () => {
   });
 });
 
+/**
+ * Infinite sources are open boundaries by design, so conservation is asserted
+ * against a derived pack whose starter header is a sealed finite stock.
+ */
+const finiteRuntime = createGameRuntime(
+  deriveGame(DEFAULT_GAME_DEFINITION, {
+    gasSources: {
+      starter_gas_header: {
+        ...DEFAULT_GAME_DEFINITION.gasSources.starter_gas_header,
+        infinite: false,
+      },
+    },
+    levels: {
+      ...DEFAULT_GAME_DEFINITION.levels,
+      flash_point: {
+        ...DEFAULT_GAME_DEFINITION.levels.flash_point,
+        loadout: {
+          ...DEFAULT_GAME_DEFINITION.levels.flash_point.loadout,
+          gasSourceGas: { starter_gas_header: { hydrogen: 100, oxygen: 50 } },
+        },
+      },
+    },
+  })
+);
+
 describe("complete-state conservation", () => {
   it("conserves elements across junction fill, transport, combustion, and phase changes", () => {
-    let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    state = command(state, {
+    const run = (source: GameState, value: GameCommand): GameState => {
+      const result = finiteRuntime.execute(source, value);
+      expect(result.accepted, result.code ?? undefined).toBe(true);
+      return result.state;
+    };
+    let state = run(finiteRuntime.createScenario("flash_point"), { type: "begin_level" });
+    state = run(state, {
       type: "install_equipment",
       roomId: "furnace",
       socketId: "socket_a",
       equipmentId: "gas_agitator",
     });
-    state = command(state, {
+    state = run(state, {
       type: "set_conduit",
       runId: "core_furnace",
       phase: "gas",
       enabled: true,
     });
     const before = elementalLedger(state);
-    state = command(state, { type: "start_prime" });
-    state = advance(state, 23);
+    state = run(state, { type: "start_prime" });
+    for (let elapsed = 0; elapsed < 23; elapsed += 0.1) state = finiteRuntime.step(state, 0.1);
     const after = elementalLedger(state);
 
     for (const element of Object.keys(before)) {

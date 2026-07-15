@@ -31,7 +31,7 @@ describe("Flash Point scenario truth", () => {
 
   it("requires the authored equipment and shared fan action", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands) {
+    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)) {
       state = command(state, action);
     }
     expect(state.rooms.furnace.equipment.socket_a?.equipmentId).toBe("gas_agitator");
@@ -40,7 +40,7 @@ describe("Flash Point scenario truth", () => {
 
   it("emits the real prime flash before the automatic assault removes its action button", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands) {
+    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)) {
       state = command(state, action);
     }
     state = command(state, { type: "start_prime" });

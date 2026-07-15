@@ -17,8 +17,12 @@ export const createUiActions = (
   | "restartTutorialGuide"
   | "acknowledgeStageIntro"
   | "clearNotice"
+  | "setPipeMode"
+  | "showNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
+  setPipeMode: (pipeMode) => set({ pipeMode }),
+  showNotice: (notice) => set({ notice }),
   setShowHelp: (showHelp) =>
     set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),
   openManual: (manualSection = "operations") =>

@@ -8,6 +8,7 @@ import {
   guidedPhaseActionReason,
   guideDefinitionFor,
   guideStepIndexFor,
+  IDLE_GUIDE_UI,
 } from "./guideModel";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, GuideRegistry } from "./guideModel";
@@ -58,6 +59,7 @@ const incident = (
 const FLASH_POINT_STEP_IDS = [
   "install-agitator",
   "run-agitator",
+  "open-pipe-board",
   "start-shared-duct",
   "begin-prime",
   "accelerate-clock",
@@ -82,7 +84,7 @@ describe("Flash Point guide definition", () => {
       "2 H₂ : 1 O₂ · up to 2.2 mol-eq/s",
       "2 open passages · pressure/density outflow",
       "0.42× air density · 1.5 layer exchange",
-      "H₂ ≥ 5% · O₂ ≥ 8% · 2 H₂ + 1 O₂",
+      "H₂ ≥ 7.5% · O₂ ≥ 12% · 2 H₂ + 1 O₂",
     ]);
     expect(tutorialText(DEFAULT_TRANSLATOR, guide.story.model!.conclusion)).toContain(
       "Prime supplies transport time"
@@ -157,8 +159,8 @@ describe("Flash Point guided flow", () => {
       socketId: "socket_a",
       equipmentId: "gas_agitator",
     });
-    expect(guide.steps[0]?.completed(game)).toBe(true);
-    expect(guide.steps[1]?.completed(game)).toBe(true);
+    expect(guide.steps[0]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
+    expect(guide.steps[1]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
     expect(guideStepIndexFor(game, guide)).toBe(2);
 
     game = command(game, {
@@ -185,24 +187,24 @@ describe("Flash Point guided flow", () => {
       phase: "gas",
       enabled: true,
     });
-    expect(guide.steps[2]?.completed(game)).toBe(true);
+    expect(guide.steps[2]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
     expect(guidedPhaseActionReason(game, "start_prime", [])).toBeNull();
     game = command(game, { type: "start_prime" });
     game = command(game, { type: "set_speed", speed: 2 });
 
     game.incidents.unshift(incident(game, "prime", false));
-    expect(guide.steps[5]?.completed(game)).toBe(true);
+    expect(guide.steps[6]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
     expect(assaultFlashIncident(game)).toBeNull();
-    expect(guideStepIndexFor(game, guide)).toBe(7);
+    expect(guideStepIndexFor(game, guide)).toBe(8);
     expect(guidedPhaseActionReason(game, "start_assault", [])).toBeNull();
 
     game = command(game, { type: "start_assault" });
     game.incidents.unshift(incident(game, "assault", false));
     expect(assaultFlashIncident(game)).not.toBeNull();
-    expect(guide.steps[8]?.completed(game)).toBe(false);
+    expect(guide.steps[9]?.completed(game, IDLE_GUIDE_UI)).toBe(false);
 
     game.incidents.unshift(incident(game, "assault", true));
-    expect(guide.steps[8]?.completed(game)).toBe(true);
+    expect(guide.steps[9]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
     expect(guideStepIndexFor(game, guide)).toBe(guide.steps.length);
   });
 });

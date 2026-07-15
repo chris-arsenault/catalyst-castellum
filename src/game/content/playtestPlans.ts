@@ -16,6 +16,16 @@ export const LEVEL_PLAYTEST_PLANS: Record<LevelId, LevelPlaytestPlan> = {
         equipmentId: "gas_agitator",
       },
       { type: "set_conduit", runId: "core_furnace", phase: "gas", enabled: true },
+      { type: "build_transport", runId: "core_gallery", phase: "gas" },
+      { type: "set_conduit", runId: "core_gallery", phase: "gas", enabled: true },
+      {
+        type: "install_equipment",
+        roomId: "gallery",
+        socketId: "socket_a",
+        equipmentId: "gas_agitator",
+      },
+      { type: "upgrade_equipment", roomId: "furnace", socketId: "socket_a" },
+      { type: "upgrade_equipment", roomId: "gallery", socketId: "socket_a" },
     ],
   },
   make_the_reagent: {

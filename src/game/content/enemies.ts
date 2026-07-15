@@ -68,8 +68,8 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     hazardMultipliers: {
       atmosphere: 0.42,
       corrosion: 1.55,
-      heat: 1.45,
-      pressure: 0.85,
+      heat: 0.35,
+      pressure: 1.15,
       radiation: 1,
     },
     color: "#8dafb2",
@@ -87,7 +87,7 @@ export const ENEMY_DEFINITIONS: Record<EnemyType, EnemyDefinition> = {
     hazardMultipliers: {
       atmosphere: 0.65,
       corrosion: 1.2,
-      heat: 1.1,
+      heat: 0.55,
       pressure: 1.25,
       radiation: 1,
     },
@@ -102,20 +102,22 @@ export const enemySequence = (
   count: number,
   type: EnemyType,
   start: number,
-  interval: number
+  interval: number,
+  healthScale = 1
 ): WaveEntry[] =>
   Array.from({ length: count }, (_, index) => ({
     at: start + index * interval,
     type,
     routeId: "entry_to_core",
+    healthScale,
   }));
 
 export const COMMISSIONING_WAVES: WaveEntry[][] = [
-  enemySequence(8, "crawler", 0.5, 1.7),
-  [...enemySequence(8, "skimmer", 0.5, 1.15), ...enemySequence(4, "floater", 3, 2)].sort(
+  enemySequence(5, "crawler", 0.5, 2.6),
+  [...enemySequence(5, "skimmer", 0.5, 2), ...enemySequence(2, "floater", 3, 3)].sort(
     (left, right) => left.at - right.at
   ),
-  [...enemySequence(4, "bellows", 0.5, 2.5), ...enemySequence(5, "shell", 2, 2.3)].sort(
+  [...enemySequence(2, "bellows", 0.5, 4), ...enemySequence(3, "shell", 2, 3.2)].sort(
     (left, right) => left.at - right.at
   ),
 ];

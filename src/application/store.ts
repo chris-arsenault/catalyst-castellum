@@ -37,6 +37,7 @@ const CLEAN_TUTORIAL_UI = {
   manualSection: "operations" as const,
   equipmentBuildTarget: null,
   notice: null,
+  pipeMode: false,
 };
 
 const createLifecycleActions = (

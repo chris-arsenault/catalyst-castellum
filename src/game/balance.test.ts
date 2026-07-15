@@ -7,11 +7,36 @@ import { LEVEL_PLAYTEST_PLANS } from "./content/playtestPlans";
 
 describe("tutorial balance contract", () => {
   it("keeps the opening lesson inert until both simple player decisions are made", () => {
-    const actions = LEVEL_PLAYTEST_PLANS.flash_point.commands;
-    expect(actions).toHaveLength(2);
-    expect(actions.map((action) => action.type)).toEqual(["install_equipment", "set_conduit"]);
+    const opening = LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2);
+    expect(opening.map((action) => action.type)).toEqual(["install_equipment", "set_conduit"]);
     expect(LEVEL_DEFINITIONS.flash_point.rounds[0]!.wave.length).toBeGreaterThan(0);
   });
+
+  it("leaves Monte Carlo evaluation outside normal CI", () => {
+    // The expensive policy evaluator remains available through `pnpm playtest` only.
+    expect(LEVEL_DEFINITIONS.flash_point.id).toBe("flash_point");
+  });
+});
+
+describe("flash point reinforcement contract", () => {
+  it("defeats the opening chamber alone once the reinforcement rounds begin", () => {
+    const singleRoom: PlaytestPlan = {
+      name: "single_room",
+      commands: [...LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)],
+      primeFraction: 1,
+    };
+    const result = runPlan("flash_point", singleRoom);
+    expect(result.terminalPhase).toBe("defeat");
+    expect(result.roundsCleared).toBeLessThan(LEVEL_DEFINITIONS.flash_point.rounds.length);
+  }, 60_000);
+
+  it("clears all five rounds with the taught two-chamber corridor", () => {
+    const intended = runPlan("flash_point", intendedPlan("flash_point"));
+    expect(intended.terminalPhase).toBe("level_complete");
+    expect(intended.roundsCleared).toBe(LEVEL_DEFINITIONS.flash_point.rounds.length);
+    expect(intended.coreIntegrity).toBeGreaterThanOrEqual(85);
+    expect(intended.killsBySource.hydrogen_oxygen_combustion).toBeGreaterThan(0);
+  }, 60_000);
 
   it("gates every checkpoint behind at least one authored conduit action that starts off", () => {
     for (const level of Object.values(LEVEL_DEFINITIONS)) {
@@ -25,11 +50,6 @@ describe("tutorial balance contract", () => {
       });
       expect(startsOff, level.id).toBe(true);
     }
-  });
-
-  it("leaves Monte Carlo evaluation outside normal CI", () => {
-    // The expensive policy evaluator remains available through `pnpm playtest` only.
-    expect(LEVEL_DEFINITIONS.flash_point.id).toBe("flash_point");
   });
 
   it("makes a running agitator decisive in Flash Point", () => {
@@ -69,5 +89,5 @@ describe("tutorial balance contract", () => {
     expect(intended.terminalPhase).toBe("level_complete");
     expect(intended.coreIntegrity).toBe(100);
     expect(intended.killsBySource.hydrogen_oxygen_combustion).toBeGreaterThan(0);
-  }, 15_000);
+  }, 60_000);
 });

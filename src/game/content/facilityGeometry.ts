@@ -57,6 +57,25 @@ export const CONDUIT_BLUEPRINTS: Record<
     gas: blueprint(cell(54, 16), cell(54, 36), cell(18, 36), cell(18, 32)),
     liquid: null,
   },
+  core_switchyard: {
+    gas: blueprint(cell(54, 16), cell(58, 16), cell(58, 39), cell(4, 39), cell(4, 11), cell(7, 11)),
+    liquid: null,
+  },
+  core_reservoir: {
+    gas: blueprint(
+      cell(54, 16),
+      cell(54, 18),
+      cell(57, 18),
+      cell(57, 34),
+      cell(40, 34),
+      cell(40, 32)
+    ),
+    liquid: null,
+  },
+  core_gallery: {
+    gas: blueprint(cell(54, 16), cell(56, 16), cell(56, 38), cell(28, 38), cell(28, 22)),
+    liquid: null,
+  },
   cell_furnace: {
     gas: blueprint(cell(46, 18), cell(52, 18), cell(52, 35), cell(18, 35), cell(18, 32)),
     liquid: null,

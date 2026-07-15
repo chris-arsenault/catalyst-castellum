@@ -38,8 +38,11 @@ export interface UiSlice {
   notice: string | null;
   dismissedGuideIds: string[];
   tutorialSessionRevision: number;
+  pipeMode: boolean;
   acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
+  setPipeMode: (pipeMode: boolean) => void;
+  showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;
   openEquipmentBuild: (roomId: RoomId, socketId: EquipmentSocketId) => void;

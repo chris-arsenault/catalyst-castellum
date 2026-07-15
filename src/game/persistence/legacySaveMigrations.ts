@@ -47,6 +47,9 @@ export const LEGACY_LIQUID_LINE_IDS = [
 const GAS_LINE_MIGRATION: Record<TransportRunId, readonly (typeof LEGACY_GAS_LINE_IDS)[number][]> =
   {
     core_furnace: ["gas_oxygen_to_furnace", "gas_furnace_exhaust"],
+    core_switchyard: [],
+    core_reservoir: [],
+    core_gallery: [],
     cell_furnace: ["gas_anode_to_furnace", "gas_cathode_to_furnace"],
     core_cell: ["gas_cathode_relief"],
     cell_absorber: ["gas_anode_to_absorber"],
@@ -63,6 +66,9 @@ const LIQUID_LINE_MIGRATION: Record<
   readonly (typeof LEGACY_LIQUID_LINE_IDS)[number][]
 > = {
   core_furnace: [],
+  core_switchyard: [],
+  core_reservoir: [],
+  core_gallery: [],
   cell_furnace: [],
   core_cell: [
     "liquid_water_to_cell",
@@ -104,6 +110,44 @@ const gasLinesForMigration = (
   return GAS_LINE_MIGRATION[runId];
 };
 
+const migrateV7Conduits = (
+  state: GameState,
+  legacy: LegacyV7Game,
+  definition: GameDefinition
+): void => {
+  const levelId = legacy.campaign.levelId;
+  for (const runId of TRANSPORT_RUN_IDS) {
+    const legacyRun = legacy.transportRuns[runId];
+    const gas = emptyGas();
+    let temperatureMass = 0;
+    let temperatureAmount = 0;
+    for (const lineId of gasLinesForMigration(levelId, runId)) {
+      const line = legacy.gasLines[lineId];
+      addGas(gas, line.gas);
+      const amount = gasTotal(line.gas);
+      temperatureMass += line.temperature * amount;
+      temperatureAmount += amount;
+    }
+    state.gasConduits[runId].gas = gas;
+    state.gasConduits[runId].temperature =
+      temperatureAmount > 0 ? temperatureMass / temperatureAmount : 22;
+    state.gasConduits[runId].installed = Boolean(
+      definition.transportRuns[runId].gas && legacyRun?.gasInstalled
+    );
+    state.gasConduits[runId].enabled = false;
+
+    const liquid = emptyLiquid();
+    for (const lineId of LIQUID_LINE_MIGRATION[runId]) {
+      addLiquid(liquid, legacy.liquidLines[lineId].liquid);
+    }
+    state.liquidConduits[runId].liquid = liquid;
+    state.liquidConduits[runId].installed = Boolean(
+      definition.transportRuns[runId].liquid && legacyRun?.liquidInstalled
+    );
+    state.liquidConduits[runId].enabled = false;
+  }
+};
+
 export const migrateV7Game = (legacy: LegacyV7Game, definition: GameDefinition): GameState => {
   const levelId = legacy.campaign.levelId;
   const state = createScenarioGame(levelId, legacy.campaign.completedLevelIds, definition);
@@ -138,36 +182,7 @@ export const migrateV7Game = (legacy: LegacyV7Game, definition: GameDefinition):
     state.gasBuffers.cathode_header.gas = emptyGas();
   }
 
-  for (const runId of TRANSPORT_RUN_IDS) {
-    const legacyRun = legacy.transportRuns[runId];
-    const gas = emptyGas();
-    let temperatureMass = 0;
-    let temperatureAmount = 0;
-    for (const lineId of gasLinesForMigration(levelId, runId)) {
-      const line = legacy.gasLines[lineId];
-      addGas(gas, line.gas);
-      const amount = gasTotal(line.gas);
-      temperatureMass += line.temperature * amount;
-      temperatureAmount += amount;
-    }
-    state.gasConduits[runId].gas = gas;
-    state.gasConduits[runId].temperature =
-      temperatureAmount > 0 ? temperatureMass / temperatureAmount : 22;
-    state.gasConduits[runId].installed = Boolean(
-      definition.transportRuns[runId].gas && legacyRun.gasInstalled
-    );
-    state.gasConduits[runId].enabled = false;
-
-    const liquid = emptyLiquid();
-    for (const lineId of LIQUID_LINE_MIGRATION[runId]) {
-      addLiquid(liquid, legacy.liquidLines[lineId].liquid);
-    }
-    state.liquidConduits[runId].liquid = liquid;
-    state.liquidConduits[runId].installed = Boolean(
-      definition.transportRuns[runId].liquid && legacyRun.liquidInstalled
-    );
-    state.liquidConduits[runId].enabled = false;
-  }
+  migrateV7Conduits(state, legacy, definition);
   addEvent(state, "warning", "physical_conduit_migrated");
   return state;
 };

@@ -101,6 +101,8 @@ export interface GasSourceDefinition {
   id: GasSourceId;
   formula: string;
   capacity: number;
+  /** Infinite sources hold their initial mixture forever; draws never deplete them. */
+  infinite: boolean;
   initialGas: Partial<GasAmounts>;
   chargeGas: Partial<GasAmounts>;
   chargeCost: number;
@@ -381,4 +383,6 @@ export interface WaveEntry {
   at: number;
   type: EnemyType;
   routeId: EnemyRouteId;
+  /** Multiplies the enemy's base health at spawn; 1 is a standard unit, above 1 is a veteran. */
+  healthScale: number;
 }

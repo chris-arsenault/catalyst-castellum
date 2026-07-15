@@ -8,6 +8,12 @@ const flashAvailability = availability({
   gasSources: ["starter_gas_header"],
 });
 
+const secondChamberAvailability = availability({
+  equipment: ["gas_agitator"],
+  gasRuns: ["core_furnace", "core_switchyard", "core_reservoir", "core_gallery"],
+  gasSources: ["starter_gas_header"],
+});
+
 export const FLASH_POINT_LEVEL: LevelDefinition = {
   id: "flash_point",
   number: 1,
@@ -19,7 +25,6 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
   loadout: {
     ...emptyLoadout(),
     gasConduits: { core_furnace: gasRun(false) },
-    gasSourceGas: { starter_gas_header: { hydrogen: 76, oxygen: 38 } },
   },
   rounds: [
     {
@@ -31,11 +36,39 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
     {
       id: "stored_momentum",
       primeSeconds: 10,
-      wave: [
-        ...enemySequence(6, "skimmer", 0.5, 1.65),
-        ...enemySequence(2, "crawler", 2.2, 2.5),
-      ].sort((left, right) => left.at - right.at),
+      wave: [...enemySequence(5, "skimmer", 0.5, 2.2), ...enemySequence(2, "crawler", 3, 2.5)].sort(
+        (left, right) => left.at - right.at
+      ),
       availability: flashAvailability,
+    },
+    {
+      id: "second_chamber",
+      primeSeconds: 30,
+      wave: [
+        ...enemySequence(10, "skimmer", 0.5, 1.5, 1.9),
+        ...enemySequence(8, "shell", 3, 2.2, 1.7),
+      ].sort((left, right) => left.at - right.at),
+      availability: secondChamberAvailability,
+    },
+    {
+      id: "higher_cadence",
+      primeSeconds: 12,
+      wave: [
+        ...enemySequence(14, "skimmer", 0.5, 1.2, 2.3),
+        ...enemySequence(7, "floater", 2.5, 2.2, 2.2),
+      ].sort((left, right) => left.at - right.at),
+      availability: secondChamberAvailability,
+    },
+    {
+      id: "corridor_exam",
+      primeSeconds: 20,
+      wave: [
+        ...enemySequence(10, "skimmer", 0.5, 1.8, 2.3),
+        ...enemySequence(8, "shell", 2.5, 2.5, 2),
+        ...enemySequence(5, "floater", 5, 2.8, 2.2),
+        ...enemySequence(5, "bellows", 8, 3, 1.7),
+      ].sort((left, right) => left.at - right.at),
+      availability: secondChamberAvailability,
     },
   ],
 };
