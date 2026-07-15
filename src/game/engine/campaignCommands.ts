@@ -36,12 +36,23 @@ export const continueRoundCommand = (
   return acceptCommand(state);
 };
 
+/** Leaving a cleared site: the castellum is underway until it docks. */
 export const startNextLevelCommand = (
   source: GameState,
   definition: GameDefinition
 ): CommandResult => {
   const next = nextLevelIdFor(source.campaign.levelId, definition);
   if (!next) throw new Error("Next-level command was applied after campaign completion.");
+  const state = cloneGame(source);
+  transitionPhase(state, "travel");
+  addEvent(state, "info", "travel_started");
+  return acceptCommand(state);
+};
+
+/** Docking runs the producer over the next site with the traveling hull. */
+export const dockAtSiteCommand = (source: GameState, definition: GameDefinition): CommandResult => {
+  const next = nextLevelIdFor(source.campaign.levelId, definition);
+  if (!next) throw new Error("Dock command was applied after campaign completion.");
   const hull = extractHullFragment(source);
   const site = produceAuthoredSite(authoredSiteSpec(definition, next), hull);
   return acceptCommand(

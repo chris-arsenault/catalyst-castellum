@@ -282,6 +282,11 @@ const campaignProgressCopy: EventCopyHandler = (event, context) => {
         detail: translator.text("events.round_advanced.detail", { detail: roundText.detail }),
       };
     }
+    case "travel_started":
+      return {
+        title: translator.text("events.travel_started.title"),
+        detail: translator.text("events.travel_started.detail"),
+      };
     case "scenario_defeated":
       return {
         title: translator.text("events.defeat.title"),

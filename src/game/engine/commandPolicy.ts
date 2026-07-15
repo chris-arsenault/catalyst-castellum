@@ -318,6 +318,11 @@ const evaluateStartNextLevel = (state: GameState, definition: GameDefinition): C
   return nextLevelIdFor(state.campaign.levelId, definition) ? allow() : reject("already_complete");
 };
 
+const evaluateDockAtSite = (state: GameState, definition: GameDefinition): CommandDecision => {
+  if (state.phase !== "travel") return reject("invalid_phase");
+  return nextLevelIdFor(state.campaign.levelId, definition) ? allow() : reject("already_complete");
+};
+
 const evaluateLiveControl = (state: GameState): CommandDecision =>
   simulationActive(state) ? allow() : reject("invalid_phase");
 
@@ -379,6 +384,8 @@ export const evaluateCommand = (
       return requirePhase(state, "round_result");
     case "start_next_level":
       return evaluateStartNextLevel(state, definition);
+    case "dock_at_site":
+      return evaluateDockAtSite(state, definition);
     case "retry_level":
       return requirePhase(state, "defeat");
     case "toggle_pause":

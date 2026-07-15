@@ -427,7 +427,11 @@ const gameSchema = legacyV11GameSchema.omit({ version: true }).extend({
   pack: packIdentitySchema,
   map: worldMapSchema,
   mapRevision: z.number().int().min(0),
-  run: z.object({ seed: z.string().min(1), position: z.number().int().min(0) }),
+  run: z.object({
+    seed: z.string().min(1),
+    position: z.number().int().min(0),
+    outcome: z.enum(["active", "defeated", "victorious"]),
+  }),
 });
 
 const saveEnvelopeSchema = z.object({
@@ -539,7 +543,7 @@ const validLegacyGame = (game: GameState, definition: GameDefinition): GameState
       ...game,
       map: definition.map,
       mapRevision: 0,
-      run: { seed: "authored", position: game.campaign.levelIndex },
+      run: { seed: "authored", position: game.campaign.levelIndex, outcome: "active" },
     },
     definition
   );

@@ -139,10 +139,35 @@ const LevelProgressModal = () => {
   );
 };
 
+const TravelModal = () => {
+  const { levelCopy: localizedLevelCopy, translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const nextId = nextLevelId(game.campaign.levelId);
+  const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
+  const nextLevelText = nextLevel ? localizedLevelCopy.level(nextLevel) : null;
+  const dock = useCallback(() => dispatch({ type: "dock_at_site" }), [dispatch]);
+  return (
+    <ProgressFrame
+      actionLabel={translator.text("ui.progress.travel.action")}
+      detail={translator.text("ui.progress.travel.detail")}
+      eyebrow={translator.text("ui.progress.travel.eyebrow")}
+      nextDetail={nextLevelText?.briefing ?? translator.text("ui.progress.level.curriculum")}
+      nextLabel={translator.text("ui.progress.travel.next")}
+      onAdvance={dock}
+      testId="dock-at-site"
+      title={translator.text("ui.progress.travel.title", {
+        name: nextLevelText?.name ?? translator.text("ui.progress.level.campaign"),
+      })}
+    />
+  );
+};
+
 export const CampaignProgressModal = () => {
   const phase = useGameStore((state) => state.game.phase);
   if (phase === "round_result") return <RoundProgressModal />;
   if (phase === "level_complete") return <LevelProgressModal />;
+  if (phase === "travel") return <TravelModal />;
   return null;
 };
 

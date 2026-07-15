@@ -34,6 +34,7 @@ import type {
 import { EVENT_TONES, GAME_EVENT_CODES, GAME_PHASES } from "./identifiers";
 
 export type GamePhase = (typeof GAME_PHASES)[number];
+export type RunOutcome = "active" | "defeated" | "victorious";
 
 export interface RoundStats {
   spawned: number;
@@ -115,6 +116,7 @@ export interface GameEventParameterMap {
   };
   scenario_started: Record<never, never>;
   scenario_defeated: Record<never, never>;
+  travel_started: Record<never, never>;
   separator_cross_leak: Record<never, never>;
 }
 
@@ -182,7 +184,7 @@ export interface GameState {
   map: WorldMap;
   mapRevision: number;
   /** One save is one run (ADR-0004); the seed is consumed strictly pre-level (ADR-0003). */
-  run: { seed: string; position: number };
+  run: { seed: string; position: number; outcome: RunOutcome };
   world: WorldCatalogs;
   phase: GamePhase;
   campaign: CampaignProgress;
@@ -276,6 +278,7 @@ export type GameCommand =
   | { type: "skip_tutorial" }
   | { type: "continue_round" }
   | { type: "start_next_level" }
+  | { type: "dock_at_site" }
   | { type: "retry_level" }
   | { type: "toggle_pause" }
   | { type: "set_pause"; paused: boolean }

@@ -81,6 +81,7 @@ export const GAME_PHASES = [
   "assault",
   "round_result",
   "level_complete",
+  "travel",
   "victory",
   "defeat",
 ] as const;
@@ -126,6 +127,7 @@ export const GAME_EVENT_CODES = [
   "separator_cross_leak",
   "scenario_started",
   "scenario_defeated",
+  "travel_started",
 ] as const;
 
 export const LIMIT_CONDITION_CODES = [

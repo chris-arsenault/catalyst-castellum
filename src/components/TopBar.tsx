@@ -27,6 +27,7 @@ const localizedPhaseLabel = (phase: GamePhase, translator: Translator): string =
     assault: "ui.topbar.phase.assault",
     round_result: "ui.topbar.phase.roundResult",
     level_complete: "ui.topbar.phase.levelComplete",
+    travel: "ui.topbar.phase.travel",
     victory: "ui.topbar.phase.victory",
     defeat: "ui.topbar.phase.defeat",
   } as const;

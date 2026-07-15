@@ -34,6 +34,7 @@ const PHASE_CUES: Record<Exclude<GamePhase, "assault">, MusicCueState> = {
   round_result: PLANNING,
   prime: { track: "interlude", mood: "priming" },
   level_complete: AFTERGLOW,
+  travel: AFTERGLOW,
   victory: AFTERGLOW,
   defeat: { track: "interlude", mood: "defeat" },
 };

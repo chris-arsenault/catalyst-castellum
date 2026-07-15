@@ -16,6 +16,7 @@ const phaseLabel = (phase: SaveSlotRecord["game"]["phase"], translator: Translat
     assault: "ui.save.phase.assault",
     round_result: "ui.save.phase.roundComplete",
     level_complete: "ui.save.phase.checkpointComplete",
+    travel: "ui.save.phase.travel",
     victory: "ui.save.phase.campaignComplete",
     defeat: "ui.save.phase.coreLost",
   } as const;

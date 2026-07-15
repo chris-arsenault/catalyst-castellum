@@ -18,6 +18,7 @@ import { acceptCommand, rejectCommand } from "./commandResult";
 import { transitionPhase } from "./phaseModel";
 import {
   beginLevelCommand,
+  dockAtSiteCommand,
   continueRoundCommand,
   retryLevelCommand,
   skipTutorialCommand,
@@ -221,6 +222,8 @@ export const executeCommand = (
       return continueRoundCommand(source, definition);
     case "start_next_level":
       return startNextLevelCommand(source, definition);
+    case "dock_at_site":
+      return dockAtSiteCommand(source, definition);
     case "retry_level":
       return retryLevelCommand(source, definition);
     case "toggle_pause":

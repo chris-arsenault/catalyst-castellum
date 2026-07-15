@@ -286,7 +286,7 @@ export const createScenarioGame = (
     map,
     mapRevision: 0,
     world: worldCatalogsForMap(map),
-    run: { seed: "authored", position: definition.levelOrder.indexOf(levelId) },
+    run: { seed: "authored", position: definition.levelOrder.indexOf(levelId), outcome: "active" },
     availability: copyAvailability(round.availability),
     phaseTime: 0,
     elapsed: 0,

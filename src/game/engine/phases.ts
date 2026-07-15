@@ -38,6 +38,7 @@ const completeCampaign = (state: GameState, definition: GameDefinition): void =>
     state.campaign.completedLevelIds.push(level.id);
   }
   transitionPhase(state, "victory");
+  state.run.outcome = "victorious";
   addEvent(state, "good", "campaign_completed", {
     completedLevels: state.campaign.completedLevelIds.length,
     coreIntegrity: Math.round(state.coreIntegrity),
@@ -83,5 +84,6 @@ export const advanceRound = (state: GameState, definition: GameDefinition): void
 export const declareDefeat = (state: GameState): void => {
   state.lastReport = makeReport(state);
   transitionPhase(state, "defeat");
+  state.run.outcome = "defeated";
   addEvent(state, "danger", "scenario_defeated", {}, "core");
 };

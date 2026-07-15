@@ -71,6 +71,9 @@ export const EVENT_MESSAGES = {
   "events.round_advanced.detail": "{detail} New availability is now visible in the control room.",
   "events.round_advanced.fallback.title": "New round",
   "events.round_advanced.fallback.detail": "New conditions apply.",
+  "events.travel_started.title": "Castellum underway",
+  "events.travel_started.detail":
+    "The walking castellum leaves the cleared site and makes for the next dock.",
   "events.defeat.title": "Catalyst core lost",
   "events.defeat.detail":
     "The core fell during {level}, round {round}. The original facility state is ready for another attempt.",
