@@ -1,3 +1,4 @@
+import { architecturalConnections } from "../world/map";
 import type { GameDefinition } from "../definitionTypes";
 import {
   GAS_TYPES,
@@ -190,7 +191,7 @@ export const simulateArchitecturalGas = (
   definition: GameDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastGasFlow = 0;
-  const portals = definition.facilityMap.portals.filter(
+  const portals = architecturalConnections(definition.map).filter(
     (portal) => portal.gasConductance > 0 && portalActive(state, portal)
   );
   const plans = portals.flatMap((portal) => {
@@ -257,7 +258,7 @@ const liquidPlan = (
     head = Math.max(
       0.25,
       liquidSurfaceElevation(source, definition) -
-        instance(definition.facilityMap.rooms, source.id, "map room").bounds.elevation
+        instance(definition.map.rooms, source.id, "map room").bounds.elevation
     );
   } else {
     const leftSurface = liquidSurfaceElevation(
@@ -320,7 +321,7 @@ export const simulateArchitecturalLiquid = (
   definition: GameDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastLiquidFlow = 0;
-  const plans = definition.facilityMap.portals.flatMap((portal) => {
+  const plans = architecturalConnections(definition.map).flatMap((portal) => {
     if (portal.liquidConductance <= 0 || !portalActive(state, portal)) return [];
     const plan = liquidPlan(state, portal, dt, definition);
     return plan ? [plan] : [];

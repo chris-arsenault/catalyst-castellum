@@ -15,8 +15,8 @@ describe("room map detail", () => {
     roomState(game, "furnace").gas.lower.hydrogen = 7;
     roomState(game, "furnace").gasTemperature.lower = 72;
     roomState(game, "furnace").pressurePulse = 38;
-    gasConduitState(game, "core_furnace").flowCause = "fan";
-    gasConduitState(game, "core_furnace").lastFlow = 1.4;
+    gasConduitState(game, "gas:core__furnace").flowCause = "fan";
+    gasConduitState(game, "gas:core__furnace").lastFlow = 1.4;
 
     render(<RoomTooltip game={game} roomId="furnace" />);
 

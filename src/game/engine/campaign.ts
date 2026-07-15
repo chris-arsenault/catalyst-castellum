@@ -6,7 +6,7 @@ import type {
   LiquidSourceId,
   ScenarioAvailability,
   TransportPhase,
-  TransportRunId,
+  ConnectionId,
 } from "../types";
 
 export const levelDefinitionFor = (state: GameState, definition: GameDefinition) =>
@@ -25,8 +25,8 @@ export const nextLevelIdFor = (
 
 export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailability => ({
   equipment: [...source.equipment],
-  gasRuns: [...source.gasRuns],
-  liquidRuns: [...source.liquidRuns],
+  gasLines: [...source.gasLines],
+  liquidLines: [...source.liquidLines],
   gasSources: [...source.gasSources],
   liquidSources: [...source.liquidSources],
 });
@@ -36,12 +36,16 @@ export const equipmentAvailable = (state: GameState, equipmentId: EquipmentId): 
 
 export const transportPhaseAvailable = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): boolean =>
   phase === "gas"
-    ? state.availability.gasRuns.includes(runId)
-    : state.availability.liquidRuns.includes(runId);
+    ? state.availability.gasLines.includes(runId)
+    : state.availability.liquidLines.includes(runId);
+
+export const connectionAvailable = (state: GameState, connectionId: ConnectionId): boolean =>
+  state.availability.gasLines.includes(connectionId) ||
+  state.availability.liquidLines.includes(connectionId);
 
 export const gasSourceAvailable = (state: GameState, sourceId: GasSourceId): boolean =>
   state.availability.gasSources.includes(sourceId);

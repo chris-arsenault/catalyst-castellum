@@ -8,5 +8,5 @@ import type { WorldCatalogs } from "../gameStateTypes";
  */
 export const worldCatalogsFor = (definition: GameDefinition): WorldCatalogs => ({
   rooms: [...definition.roomOrder],
-  connections: Object.keys(definition.transportRuns),
+  connections: Object.keys(definition.map.connections),
 });

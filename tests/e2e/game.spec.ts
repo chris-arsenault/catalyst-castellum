@@ -158,7 +158,7 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await page.getByTestId("pipe-mode-toggle").click();
   await expect(page.getByTestId("pipe-board")).toBeVisible();
   await expect(coach).toHaveAttribute("data-guide-step", "start-shared-duct");
-  const conduit = page.getByTestId("conduit-control-core_furnace-gas");
+  const conduit = page.getByTestId("conduit-control-gas:core__furnace");
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
   await expect(conduit).toHaveAttribute("aria-pressed", "false");
   await conduit.click();
@@ -212,7 +212,7 @@ test("the first-flash teaching pause survives a page refresh and resumes the sam
   await startGuidedTutorial(page);
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await page.getByTestId("pipe-mode-toggle").click();
-  await page.getByTestId("conduit-control-core_furnace-gas").click();
+  await page.getByTestId("conduit-control-gas:core__furnace").click();
   await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
   await page.getByTestId("simulation-speed").click();
@@ -264,7 +264,7 @@ test("the map reveals room materials on hover and keeps full history on demand",
 
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");
   await page.getByTestId("pipe-mode-toggle").click();
-  await page.getByTestId("conduit-control-core_furnace-gas").click();
+  await page.getByTestId("conduit-control-gas:core__furnace").click();
   await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
   await page.getByTestId("simulation-speed").click();
@@ -376,7 +376,7 @@ test("supplies expose actionable reserves without duplicating hidden plant inven
   await expect(page.getByTestId("liquid-drain-total")).toHaveCount(0);
 
   await page.getByTestId("pipe-mode-toggle").click();
-  await page.getByTestId("conduit-control-core_furnace-gas").click();
+  await page.getByTestId("conduit-control-gas:core__furnace").click();
   await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
   await expect(page.getByTestId("source-starter_gas_header")).toHaveText("∞");

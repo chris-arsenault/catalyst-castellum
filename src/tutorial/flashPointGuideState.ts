@@ -19,13 +19,14 @@ export const furnaceAgitatorUpgraded = (game: GameState): boolean =>
   );
 
 export const coreFurnaceFeedEnabled = (game: GameState): boolean =>
-  gasConduitState(game, "core_furnace").installed && gasConduitState(game, "core_furnace").enabled;
+  gasConduitState(game, "gas:core__furnace").installed &&
+  gasConduitState(game, "gas:core__furnace").enabled;
 
 /** Forward Core feed routes a player may choose for the second OX-1 chamber. */
 export const SECOND_CHAMBER_FEEDS = [
-  { runId: "core_switchyard", roomId: "switchyard" },
-  { runId: "core_reservoir", roomId: "reservoir" },
-  { runId: "core_gallery", roomId: "gallery" },
+  { runId: "gas:core__switchyard", roomId: "switchyard" },
+  { runId: "gas:core__reservoir", roomId: "reservoir" },
+  { runId: "gas:core__gallery", roomId: "gallery" },
 ] as const;
 
 const feedEnabled = (game: GameState, runId: (typeof SECOND_CHAMBER_FEEDS)[number]["runId"]) =>

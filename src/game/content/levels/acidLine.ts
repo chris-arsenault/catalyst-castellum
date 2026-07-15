@@ -4,8 +4,8 @@ import { availability, emptyLoadout, gasRun, liquidRun } from "./helpers";
 
 const acidAvailability = availability({
   equipment: ["membrane_cell", "thermal_coil", "gas_agitator"],
-  gasRuns: ["cell_furnace", "furnace_return", "return_final"],
-  liquidRuns: ["core_cell"],
+  gasLines: ["gas:furnace__lower_intake", "gas:furnace__gallery", "gas:gallery__washlock"],
+  liquidLines: ["liquid:core__lower_intake"],
   liquidSources: ["water_tank", "sodium_chloride_tank"],
 });
 
@@ -25,11 +25,11 @@ export const ACID_LINE_LEVEL: LevelDefinition = {
       },
     },
     gasConduits: {
-      cell_furnace: gasRun(false),
-      furnace_return: gasRun(false),
-      return_final: gasRun(false),
+      "gas:furnace__lower_intake": gasRun(false),
+      "gas:furnace__gallery": gasRun(false),
+      "gas:gallery__washlock": gasRun(false),
     },
-    liquidConduits: { core_cell: liquidRun(false) },
+    liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
     liquidSourceAmounts: { water_tank: 130, sodium_chloride_tank: 130 },
     gasBuffers: { anode_header: { chlorine: 16 }, cathode_header: { hydrogen: 16 } },
   },

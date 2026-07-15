@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  CONDUIT_BLUEPRINTS,
   FACILITY_MAP,
   GAS_SOURCES,
   LIQUID_SOURCES,
   ROOM_VOLUME_PER_CELL,
-  TRANSPORT_RUNS,
   facilityCellDefinition,
   facilityCellHasSupport,
   facilityCells,
@@ -27,7 +25,6 @@ import {
   type CellRect,
   type GridCell,
   type RoomId,
-  type TransportPhase,
 } from "./types";
 import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./simulation";
 import {
@@ -38,8 +35,7 @@ import {
   worldToMapPoint,
 } from "../components/gameMap/mapGeometry";
 import { instance } from "./world/instances";
-
-const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
+import { architecturalConnections, isProcessLine } from "./world/map";
 
 const overlaps = (left: CellRect, right: CellRect): boolean =>
   left.column < right.column + right.width &&
@@ -172,9 +168,11 @@ describe("room-derived physical capacity", () => {
       expect(roomContainsWorldPoint(node.hostRoomId, gridCellToWorldPoint(node.cell))).toBe(true);
     }
     for (const sourceId of GAS_SOURCE_IDS)
-      expect(FACILITY_MAP.utilityNodes[sourceId].hostRoomId).toBe(GAS_SOURCES[sourceId].hostRoomId);
+      expect(instance(FACILITY_MAP.utilityNodes, sourceId, "utility node").hostRoomId).toBe(
+        GAS_SOURCES[sourceId].hostRoomId
+      );
     for (const sourceId of LIQUID_SOURCE_IDS)
-      expect(FACILITY_MAP.utilityNodes[sourceId].hostRoomId).toBe(
+      expect(instance(FACILITY_MAP.utilityNodes, sourceId, "utility node").hostRoomId).toBe(
         LIQUID_SOURCES[sourceId].hostRoomId
       );
   });
@@ -194,10 +192,10 @@ describe("room-derived physical capacity", () => {
 
 describe("architectural portals and cell navigation", () => {
   it("derives every room transition from unique, contiguous portal cells", () => {
-    expect(new Set(FACILITY_MAP.portals.map(({ id }) => id)).size).toBe(
-      FACILITY_MAP.portals.length
+    expect(new Set(architecturalConnections(FACILITY_MAP).map(({ id }) => id)).size).toBe(
+      architecturalConnections(FACILITY_MAP).length
     );
-    for (const portal of FACILITY_MAP.portals) {
+    for (const portal of architecturalConnections(FACILITY_MAP)) {
       const completeCrossing = [portal.endpoints[0], ...portal.connectorCells, portal.endpoints[1]];
       expect(completeCrossing.every(inFacilityBounds)).toBe(true);
       for (let index = 1; index < completeCrossing.length; index += 1) {
@@ -271,7 +269,9 @@ describe("portal state navigation policy", () => {
   });
 
   it("uses the authored Core door cells for opening policy instead of a synthetic action tag", () => {
-    const portal = FACILITY_MAP.portals.find(({ id }) => id === "washlock_to_core_door")!;
+    const portal = architecturalConnections(FACILITY_MAP).find(
+      ({ id }) => id === "washlock_to_core_door"
+    )!;
     const closed = initialPortalStates();
     expect(
       findEnemyPathBetween({
@@ -306,21 +306,17 @@ describe("portal state navigation policy", () => {
 
 describe("dedicated routes and transforms", () => {
   it("gives every physical conduit a valid endpoint-owned route independent of portals", () => {
-    expect(Object.keys(CONDUIT_BLUEPRINTS).sort()).toEqual([...PACK_RUN_IDS].sort());
-    for (const runId of PACK_RUN_IDS) {
-      for (const phase of ["gas", "liquid"] as const satisfies readonly TransportPhase[]) {
-        const path = instance(CONDUIT_BLUEPRINTS, runId, "blueprint")[phase];
-        if (!path) continue;
-        expect(path.length).toBeGreaterThan(1);
-        expect(path.every(inFacilityBounds)).toBe(true);
-        for (let index = 1; index < path.length; index += 1)
-          expect(isAdjacent(path[index - 1]!, path[index]!)).toBe(true);
-        const definition = instance(TRANSPORT_RUNS, runId, "transport run")[phase];
-        expect(definition).not.toBeNull();
-        const [fromRoom, toRoom] = definition!.direction;
-        expect(roomAtWorldPoint(gridCellToWorldPoint(path[0]!))).toBe(fromRoom);
-        expect(roomAtWorldPoint(gridCellToWorldPoint(path.at(-1)!))).toBe(toRoom);
-      }
+    const lines = Object.values(FACILITY_MAP.connections).filter(isProcessLine);
+    expect(lines.length).toBeGreaterThan(0);
+    for (const line of lines) {
+      const path = line.route;
+      expect(path.length).toBeGreaterThan(1);
+      expect(path.every(inFacilityBounds)).toBe(true);
+      for (let index = 1; index < path.length; index += 1)
+        expect(isAdjacent(path[index - 1]!, path[index]!)).toBe(true);
+      const [fromRoom, toRoom] = line.direction;
+      expect(roomAtWorldPoint(gridCellToWorldPoint(path[0]!))).toBe(fromRoom);
+      expect(roomAtWorldPoint(gridCellToWorldPoint(path.at(-1)!))).toBe(toRoom);
     }
   });
 

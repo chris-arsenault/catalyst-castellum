@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
-import { type GameState, type RoomId, type SpeciesId, type TransportRunId } from "../../game/types";
+import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
 import { transportPhaseAvailable } from "../../game/queries";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
@@ -31,8 +31,8 @@ interface TransportRunNodeProps {
   emphasized: boolean;
   game: GameState;
   hovered: boolean;
-  onHover: (runId: TransportRunId | null) => void;
-  runId: TransportRunId;
+  onHover: (runId: ConnectionId | null) => void;
+  runId: ConnectionId;
   selectedSpecies: SpeciesId | null;
 }
 
@@ -62,8 +62,8 @@ const TransportRunNode = ({
 
 interface TransportNetworkProps {
   game: GameState;
-  hoveredRunId: TransportRunId | null;
-  onHover: (runId: TransportRunId | null) => void;
+  hoveredRunId: ConnectionId | null;
+  onHover: (runId: ConnectionId | null) => void;
   pipeDragSourceRoomId: RoomId | null;
   pipeMode: boolean;
   selectedSpecies: SpeciesId | null;

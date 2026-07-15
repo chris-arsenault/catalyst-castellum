@@ -42,7 +42,7 @@ export type GasBufferId = (typeof GAS_BUFFER_IDS)[number];
 export type LiquidBufferId = (typeof LIQUID_BUFFER_IDS)[number];
 /** Opaque transport-connection instance id (ADR-0002); alias kept for signature readability. */
 // eslint-disable-next-line sonarjs/redundant-type-aliases
-export type TransportRunId = string;
+export type ConnectionId = string;
 export type EquipmentId = (typeof EQUIPMENT_IDS)[number];
 export type EquipmentSocketId = (typeof EQUIPMENT_SOCKET_IDS)[number];
 export type EquipmentLevel = (typeof EQUIPMENT_LEVELS)[number];

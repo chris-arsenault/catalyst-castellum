@@ -44,7 +44,7 @@ test("pipe mode dims the plant and drag-connecting rooms reports the routed stat
   await expect(page.getByTestId("pipe-board")).toBeVisible();
   await expect(page.getByTestId("pipe-mode-hint")).toContainText("Drag between two rooms");
   await expect(page.getByTestId("room-inspector")).toHaveCount(0);
-  await expect(page.getByTestId("pipe-run-core_furnace")).toContainText("CORE ⇄ R-02");
+  await expect(page.getByTestId("pipe-run-gas:core__furnace")).toContainText("CORE ⇄ R-02");
 
   const core = await roomClientPoint(page, "core");
   const furnace = await roomClientPoint(page, "furnace");
@@ -67,10 +67,10 @@ test("the first lesson exposes its route and complete equipment catalog", async 
   await page.getByTestId("pipe-mode-toggle").click();
   const board = page.getByTestId("pipe-board");
   await expect(board.getByText("Core–R-02 gas duct", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toContainText("READY");
+  await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toContainText("READY");
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(1);
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
-  await expect(page.getByTestId("pipe-run-core_gallery")).toHaveCount(0);
+  await expect(page.getByTestId("pipe-run-gas:core__gallery")).toHaveCount(0);
   await page.getByTestId("pipe-board-close").click();
   await expect(page.getByText("Membrane cell", { exact: true })).toHaveCount(0);
   await expect(page.getByText("Wet contactor", { exact: true })).toHaveCount(0);
@@ -100,7 +100,7 @@ test("planning uses the same equipment and physical-conduit construction rules",
   await page.mouse.down();
   await page.mouse.move(furnace.x, furnace.y, { steps: 8 });
   await page.mouse.up();
-  await expect(page.getByTestId("conduit-panel-core_furnace-gas")).toBeVisible();
+  await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toBeVisible();
   await page.getByTestId("pipe-board-close").click();
 
   await installEquipment(page, "furnace", "socket_a", "gas_agitator");

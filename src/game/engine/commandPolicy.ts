@@ -6,26 +6,21 @@ import type {
   GameCommand,
   GameState,
   RoomId,
-  TransportPhase,
-  TransportRunId,
+  ConnectionId,
 } from "../types";
 import {
   equipmentAvailable,
   gasSourceAvailable,
   liquidSourceAvailable,
   nextLevelIdFor,
-  transportPhaseAvailable,
+  connectionAvailable,
 } from "./campaign";
 import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } from "./equipment";
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
-import {
-  gasConduitState,
-  liquidConduitState,
-  maybeLineDefinition,
-  roomState,
-} from "../world/instances";
+import { conduitState, gasConduitState, liquidConduitState, roomState } from "../world/instances";
+import { isProcessLine } from "../world/map";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -143,17 +138,19 @@ const evaluateDismantleEquipment = (
   return allow({ refund: equipmentDismantleRefund(instance, definition) });
 };
 
-const conduitFor = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
-  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
-
 const evaluateSetConduit = (
   state: GameState,
   command: Extract<GameCommand, { type: "set_conduit" }>
 ): CommandDecision => {
   if (!configurationUnlocked(state)) return reject("invalid_phase");
-  if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  if (!conduitFor(state, command.runId, command.phase).installed) return reject("not_installed");
+  if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
+  if (!conduitState(state, command.connectionId).installed) return reject("not_installed");
   return allow();
+};
+
+const lineFor = (gameDefinition: GameDefinition, connectionId: ConnectionId) => {
+  const connection = gameDefinition.map.connections[connectionId];
+  return connection && isProcessLine(connection) ? connection : null;
 };
 
 const evaluateBuildTransport = (
@@ -162,14 +159,13 @@ const evaluateBuildTransport = (
   gameDefinition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = maybeLineDefinition(gameDefinition, command.runId, command.phase);
-  if (!definition) return reject("route_unavailable");
-  if (conduitFor(state, command.runId, command.phase).installed)
-    return reject("already_installed", { cost: definition.buildCost });
-  if (state.matter < definition.buildCost)
-    return reject("insufficient_matter", { cost: definition.buildCost });
-  return allow({ cost: definition.buildCost });
+  if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
+  const line = lineFor(gameDefinition, command.connectionId);
+  if (!line) return reject("route_unavailable");
+  if (conduitState(state, command.connectionId).installed)
+    return reject("already_installed", { cost: line.buildCost });
+  if (state.matter < line.buildCost) return reject("insufficient_matter", { cost: line.buildCost });
+  return allow({ cost: line.buildCost });
 };
 
 const evaluateDismantleTransport = (
@@ -178,15 +174,15 @@ const evaluateDismantleTransport = (
   gameDefinition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  if (!transportPhaseAvailable(state, command.runId, command.phase)) return reject("unavailable");
-  const definition = maybeLineDefinition(gameDefinition, command.runId, command.phase);
-  if (!definition) return reject("route_unavailable");
-  if (!conduitFor(state, command.runId, command.phase).installed) return reject("not_installed");
+  if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
+  const line = lineFor(gameDefinition, command.connectionId);
+  if (!line) return reject("route_unavailable");
+  if (!conduitState(state, command.connectionId).installed) return reject("not_installed");
   const amount =
-    command.phase === "gas"
-      ? gasAmountTotal(gasConduitState(state, command.runId).gas)
-      : liquidAmountTotal(liquidConduitState(state, command.runId).liquid);
-  const refund = Math.floor(definition.buildCost * 0.75);
+    line.kind === "gas_line"
+      ? gasAmountTotal(gasConduitState(state, command.connectionId).gas)
+      : liquidAmountTotal(liquidConduitState(state, command.connectionId).liquid);
+  const refund = Math.floor(line.buildCost * 0.75);
   if (amount > 0.001) return reject("capacity", { refund });
   return allow({ refund });
 };

@@ -7,8 +7,8 @@ import type { GasAmounts, LiquidAmounts, ScenarioAvailability } from "../../type
 
 export const availability = (options: Partial<ScenarioAvailability>): ScenarioAvailability => ({
   equipment: options.equipment ?? [],
-  gasRuns: options.gasRuns ?? [],
-  liquidRuns: options.liquidRuns ?? [],
+  gasLines: options.gasLines ?? [],
+  liquidLines: options.liquidLines ?? [],
   gasSources: options.gasSources ?? [],
   liquidSources: options.liquidSources ?? [],
 });

@@ -4,8 +4,10 @@ import type {
   LevelDefinition,
   RoundDefinition,
 } from "../definitionTypes";
-import type { GridCell, ScenarioAvailability, SpeciesId, TransportPhase } from "../types";
+import type { ScenarioAvailability, SpeciesId } from "../types";
 import { createFacilityModel } from "../engine/facilityModel";
+import { isProcessLine } from "../world/map";
+import { validateWorldMap } from "../world/mapValidation";
 
 export interface AuthoringIssue {
   path: string;
@@ -33,9 +35,6 @@ const deepFreeze = <Value>(value: Value, seen = new WeakSet<object>()): Value =>
   return Object.freeze(value);
 };
 
-const cellIsAdjacent = (left: GridCell, right: GridCell): boolean =>
-  Math.abs(left.column - right.column) + Math.abs(left.elevation - right.elevation) === 1;
-
 const push = (issues: AuthoringIssue[], path: string, message: string): void => {
   issues.push({ path, message });
 };
@@ -58,21 +57,22 @@ const validateAvailability = (
 ): void => {
   const checks = [
     ["equipment", availability.equipment, source.equipment],
-    ["gasRuns", availability.gasRuns, source.transportRuns],
-    ["liquidRuns", availability.liquidRuns, source.transportRuns],
+    ["gasLines", availability.gasLines, source.map.connections],
+    ["liquidLines", availability.liquidLines, source.map.connections],
     ["gasSources", availability.gasSources, source.gasSources],
     ["liquidSources", availability.liquidSources, source.liquidSources],
   ] as const;
   for (const [field, ids, catalog] of checks) {
     validateAvailableIds(ids, catalog, `${path}.${field}`, issues);
   }
-  for (const runId of availability.gasRuns) {
-    if (!source.transportRuns[runId]?.gas)
-      push(issues, `${path}.gasRuns`, `${runId} has no gas phase.`);
-  }
-  for (const runId of availability.liquidRuns) {
-    if (!source.transportRuns[runId]?.liquid)
-      push(issues, `${path}.liquidRuns`, `${runId} has no liquid phase.`);
+  for (const [field, kind] of [
+    ["gasLines", "gas_line"],
+    ["liquidLines", "liquid_line"],
+  ] as const) {
+    for (const id of availability[field]) {
+      if (source.map.connections[id] && source.map.connections[id].kind !== kind)
+        push(issues, `${path}.${field}`, `${id} is not a ${kind}.`);
+    }
   }
 };
 
@@ -109,7 +109,7 @@ const validateRound = (
   }
   validateAvailability(source, round.availability, `${path}.availability`, issues);
   if (previous) {
-    const fields = ["equipment", "gasRuns", "liquidRuns", "gasSources", "liquidSources"] as const;
+    const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
     for (const field of fields) {
       if (!isSuperset(round.availability[field], previous.availability[field])) {
         push(issues, `${path}.availability.${field}`, "Round availability must be cumulative.");
@@ -174,13 +174,13 @@ const validateConduitLoadout = (
   issues: AuthoringIssue[]
 ): void => {
   const conduitLoadouts = [
-    ["gasConduits", level.loadout.gasConduits, "gas"],
-    ["liquidConduits", level.loadout.liquidConduits, "liquid"],
+    ["gasConduits", level.loadout.gasConduits, "gas_line"],
+    ["liquidConduits", level.loadout.liquidConduits, "liquid_line"],
   ] as const;
-  for (const [field, loadouts, phase] of conduitLoadouts) {
-    for (const runId of Object.keys(loadouts)) {
-      if (!source.transportRuns[runId as keyof typeof source.transportRuns]?.[phase])
-        push(issues, `${path}.loadout.${field}`, `${runId} has no ${phase} phase.`);
+  for (const [field, loadouts, kind] of conduitLoadouts) {
+    for (const id of Object.keys(loadouts)) {
+      if (source.map.connections[id]?.kind !== kind)
+        push(issues, `${path}.loadout.${field}`, `${id} is not an authored ${kind}.`);
     }
   }
 };
@@ -243,41 +243,18 @@ const validateReactions = (source: GamePackSource, issues: AuthoringIssue[]): vo
   }
 };
 
-type AuthoredTransportPhase = NonNullable<
-  GamePackSource["transportRuns"][keyof GamePackSource["transportRuns"]][TransportPhase]
->;
-
-const validateRouteBlueprint = (
-  facility: ReturnType<typeof createFacilityModel>,
-  definition: AuthoredTransportPhase,
-  path: string,
-  issues: AuthoringIssue[]
-): void => {
-  if (definition.blueprint.length < 2) push(issues, path, "A route requires at least two cells.");
-  definition.blueprint.forEach((cell, index) => {
-    if (!facility.inBounds(cell))
-      push(issues, `${path}.${index}`, "Route cell is outside the facility.");
-    const previous = definition.blueprint[index - 1];
-    if (previous && !cellIsAdjacent(previous, cell))
-      push(issues, `${path}.${index}`, "Route cells must be orthogonally adjacent.");
-  });
-  const start = definition.blueprint[0];
-  if (start && facility.cellDefinition(start).roomId !== definition.direction[0])
-    push(issues, path, "Route start is outside its source room.");
-  const end = definition.blueprint.at(-1);
-  if (end && facility.cellDefinition(end).roomId !== definition.direction[1])
-    push(issues, path, "Route end is outside its destination room.");
-};
-
-const validateRoutes = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  const facility = createFacilityModel(source.facilityMap);
-  for (const [runId, run] of Object.entries(source.transportRuns)) {
-    validateIdentity(issues, `transportRuns.${runId}.id`, runId, run.id);
-    for (const phase of ["gas", "liquid"] as const satisfies readonly TransportPhase[]) {
-      const definition = run[phase];
-      if (!definition) continue;
-      const path = `transportRuns.${runId}.${phase}.blueprint`;
-      validateRouteBlueprint(facility, definition, path, issues);
+const validateMap = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  for (const { path, message } of validateWorldMap(source.map)) {
+    push(issues, `map.${path}`, message);
+  }
+  for (const [roomId, room] of Object.entries(source.map.rooms)) {
+    for (const sourceId of room.taps.gas.sourceIds) {
+      if (!(sourceId in source.gasSources))
+        push(issues, `map.rooms.${roomId}.taps.gas`, `Unknown gas source ${sourceId}.`);
+    }
+    for (const sourceId of room.taps.liquid.sourceIds) {
+      if (!(sourceId in source.liquidSources))
+        push(issues, `map.rooms.${roomId}.taps.liquid`, `Unknown liquid source ${sourceId}.`);
     }
   }
 };
@@ -324,21 +301,18 @@ const validateWorldCoverage = (source: GamePackSource, issues: AuthoringIssue[])
   }
   for (const [roomId, room] of Object.entries(source.rooms)) {
     validateIdentity(issues, `rooms.${roomId}.id`, roomId, room.id);
-    if (!(roomId in source.gasJunctions))
-      push(issues, `gasJunctions.${roomId}`, "Every room requires a gas junction definition.");
-    if (!(roomId in source.liquidJunctions))
-      push(
-        issues,
-        `liquidJunctions.${roomId}`,
-        "Every room requires a liquid junction definition."
-      );
-    if (!(roomId in source.facilityMap.rooms))
-      push(issues, `facilityMap.rooms.${roomId}`, "Every room requires map geometry.");
+    if (!(roomId in source.map.rooms))
+      push(issues, `map.rooms.${roomId}`, "Every room requires map geometry.");
   }
-  for (const run of Object.values(source.transportRuns)) {
-    for (const roomId of run.rooms) {
+  for (const roomId of Object.keys(source.map.rooms)) {
+    if (!(roomId in source.rooms))
+      push(issues, `map.rooms.${roomId}`, `Map room ${roomId} has no room definition.`);
+  }
+  for (const connection of Object.values(source.map.connections)) {
+    if (!isProcessLine(connection)) continue;
+    for (const roomId of connection.rooms) {
       if (!(roomId in source.rooms))
-        push(issues, `transportRuns.${run.id}.rooms`, `Unknown room ${roomId}.`);
+        push(issues, `map.connections.${connection.id}.rooms`, `Unknown room ${roomId}.`);
     }
   }
 };
@@ -351,7 +325,7 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);
   validateReactions(source, issues);
-  validateRoutes(source, issues);
+  validateMap(source, issues);
   validateProcesses(source, issues);
   return issues;
 };
@@ -359,5 +333,5 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
 export const compileGamePack = (source: GamePackSource): GameDefinition => {
   const issues = validateGamePack(source);
   if (issues.length > 0) throw new GamePackCompilationError(issues);
-  return deepFreeze({ ...source, facility: createFacilityModel(source.facilityMap) });
+  return deepFreeze({ ...source, facility: createFacilityModel(source.map) });
 };

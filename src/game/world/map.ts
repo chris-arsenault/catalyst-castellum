@@ -1,5 +1,6 @@
 import type {
   ConduitDestinationKind,
+  ConnectionId,
   EquipmentSocketId,
   FacilityPortalKind,
   FacilityPortalLiquidMode,
@@ -15,10 +16,6 @@ import type {
  * connections. Producers make WorldMaps before a level starts; the engine and UI read
  * everything spatial from one of these.
  */
-
-/** Opaque connection instance id (ADR-0002); process lines use canonical pair ids. */
-// eslint-disable-next-line sonarjs/redundant-type-aliases
-export type ConnectionId = string;
 
 export type RoomProvenance = "site" | "hull";
 
@@ -122,6 +119,10 @@ export const isProcessLine = (connection: MapConnection): connection is ProcessL
 
 export const isArchitectural = (connection: MapConnection): connection is ArchitecturalConnection =>
   !isProcessLine(connection);
+
+/** Architectural openings in authored map order — iteration order is behavior. */
+export const architecturalConnections = (map: WorldMap): ArchitecturalConnection[] =>
+  Object.values(map.connections).filter(isArchitectural);
 
 /**
  * Canonical process-line id for a room pair. Sorted so authored lines and M3's

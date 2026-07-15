@@ -3,7 +3,7 @@ import { useCallback } from "react";
 import { transportPhaseAvailable } from "../../game/queries";
 import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
-import type { GameState, TransportPhase, TransportRunId } from "../../game/types";
+import type { GameState, TransportPhase, ConnectionId } from "../../game/types";
 import { ConduitActuator } from "./ActuatorControls";
 import { roomCopy } from "../../presentation/entityCopy";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
@@ -15,7 +15,7 @@ interface PhaseModel {
 
 const phaseModel = (
   game: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): PhaseModel | null => {
   const definition = lineDefinition(runId, phase);
@@ -32,18 +32,17 @@ const phaseModel = (
 const PhaseIcon = ({ phase }: { phase: TransportPhase }) =>
   phase === "gas" ? <Wind size={14} /> : <Droplets size={14} />;
 
-const DismantleAction = ({ phase, runId }: { phase: TransportPhase; runId: TransportRunId }) => {
+const DismantleAction = ({ phase, runId }: { phase: TransportPhase; runId: ConnectionId }) => {
   const { commandCopy, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const decision = selectors.commandDecision(game, {
     type: "dismantle_transport",
-    runId,
-    phase,
+    connectionId: runId,
   });
   const dismantle = useCallback(
-    () => dispatch({ type: "dismantle_transport", runId, phase }),
-    [dispatch, phase, runId]
+    () => dispatch({ type: "dismantle_transport", connectionId: runId }),
+    [dispatch, runId]
   );
   return (
     <button
@@ -62,13 +61,7 @@ const DismantleAction = ({ phase, runId }: { phase: TransportPhase; runId: Trans
   );
 };
 
-const TransportPhasePanel = ({
-  phase,
-  runId,
-}: {
-  phase: TransportPhase;
-  runId: TransportRunId;
-}) => {
+const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: ConnectionId }) => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const model = phaseModel(game, runId, phase);
@@ -76,7 +69,7 @@ const TransportPhasePanel = ({
   return (
     <div
       className={`transport-phase-control ${phase} installed`}
-      data-testid={`conduit-panel-${runId}-${phase}`}
+      data-testid={`conduit-panel-${runId}`}
     >
       <header>
         <span>
@@ -95,7 +88,7 @@ const TransportPhasePanel = ({
   );
 };
 
-export const TransportRunPanel = ({ runId }: { runId: TransportRunId }) => {
+export const TransportRunPanel = ({ runId }: { runId: ConnectionId }) => {
   const { translator } = useGamePresentation();
   const [leftRoom, rightRoom] = connectionRoomPair(runId);
   return (

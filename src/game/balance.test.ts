@@ -43,9 +43,8 @@ describe("flash point reinforcement contract", () => {
       const startsOff = LEVEL_PLAYTEST_PLANS[level.id].commands.some((action) => {
         if (action.type !== "set_conduit" || !action.enabled) return false;
         const loadout =
-          action.phase === "gas"
-            ? level.loadout.gasConduits[action.runId]
-            : level.loadout.liquidConduits[action.runId];
+          level.loadout.gasConduits[action.connectionId] ??
+          level.loadout.liquidConduits[action.connectionId];
         return loadout?.installed === true && loadout.enabled === false;
       });
       expect(startsOff, level.id).toBe(true);
@@ -55,7 +54,7 @@ describe("flash point reinforcement contract", () => {
   it("makes a running agitator decisive in Flash Point", () => {
     const conduitOnly: PlaytestPlan = {
       name: "conduit_only",
-      commands: [{ type: "set_conduit", runId: "core_furnace", phase: "gas", enabled: true }],
+      commands: [{ type: "set_conduit", connectionId: "gas:core__furnace", enabled: true }],
       primeFraction: 1,
     };
     const disabledAgitator: PlaytestPlan = {
@@ -67,7 +66,7 @@ describe("flash point reinforcement contract", () => {
           socketId: "socket_a",
           equipmentId: "gas_agitator",
         },
-        { type: "set_conduit", runId: "core_furnace", phase: "gas", enabled: true },
+        { type: "set_conduit", connectionId: "gas:core__furnace", enabled: true },
         {
           type: "toggle_equipment",
           roomId: "furnace",

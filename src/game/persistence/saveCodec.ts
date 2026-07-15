@@ -275,8 +275,8 @@ const campaignSchema = z.object({
 });
 const availabilitySchema = z.object({
   equipment: z.array(equipmentIdSchema),
-  gasRuns: z.array(runIdSchema),
-  liquidRuns: z.array(runIdSchema),
+  gasLines: z.array(runIdSchema),
+  liquidLines: z.array(runIdSchema),
   gasSources: z.array(gasSourceIdSchema),
   liquidSources: z.array(liquidSourceIdSchema),
 });

@@ -30,9 +30,12 @@ import {
   liquidJunctionState,
   roomState,
 } from "./world/instances";
-import { TRANSPORT_RUNS } from "./config";
+import { WORLD_MAP } from "./config";
+import { isProcessLine } from "./world/map";
 
-const PACK_RUN_IDS = Object.keys(TRANSPORT_RUNS);
+const PACK_LINE_IDS = Object.values(WORLD_MAP.connections)
+  .filter(isProcessLine)
+  .map(({ id }) => id);
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -65,9 +68,9 @@ const elementalLedger = (state: GameState): ElementalComposition => {
   for (const id of LIQUID_SOURCE_IDS) addLiquid(state.liquidSources[id].liquid);
   for (const id of GAS_BUFFER_IDS) addGas(state.gasBuffers[id].gas);
   for (const id of LIQUID_BUFFER_IDS) addLiquid(state.liquidBuffers[id].liquid);
-  for (const id of PACK_RUN_IDS) {
-    addGas(gasConduitState(state, id).gas);
-    addLiquid(liquidConduitState(state, id).liquid);
+  for (const line of Object.values(WORLD_MAP.connections).filter(isProcessLine)) {
+    if (line.kind === "gas_line") addGas(gasConduitState(state, line.id).gas);
+    else addLiquid(liquidConduitState(state, line.id).liquid);
   }
   addGas(state.gasVent);
   addLiquid(state.liquidDrain);
@@ -106,7 +109,7 @@ describe("finite-volume spatial rooms", () => {
     simulateNetworks(state, 0.5);
     expect(
       liquidJunctionState(state, "lower_intake").liquid.water +
-        liquidConduitState(state, "cell_absorber").liquid.water
+        liquidConduitState(state, "liquid:lower_intake__reservoir").liquid.water
     ).toBeGreaterThan(0);
   });
 });
@@ -152,8 +155,7 @@ describe("complete-state conservation", () => {
     });
     state = run(state, {
       type: "set_conduit",
-      runId: "core_furnace",
-      phase: "gas",
+      connectionId: "gas:core__furnace",
       enabled: true,
     });
     const before = elementalLedger(state);
@@ -177,8 +179,7 @@ describe("complete-state conservation", () => {
     });
     state = command(state, {
       type: "set_conduit",
-      runId: "core_cell",
-      phase: "liquid",
+      connectionId: "liquid:core__lower_intake",
       enabled: true,
     });
     state = command(state, { type: "start_prime" });
@@ -187,11 +188,11 @@ describe("complete-state conservation", () => {
     const chlorine =
       state.gasBuffers.anode_header.gas.chlorine +
       gasJunctionState(state, "lower_intake").gas.chlorine +
-      gasConduitState(state, "cell_absorber").gas.chlorine;
+      gasConduitState(state, "gas:lower_intake__reservoir").gas.chlorine;
     const hydrogen =
       state.gasBuffers.cathode_header.gas.hydrogen +
       gasJunctionState(state, "lower_intake").gas.hydrogen +
-      gasConduitState(state, "cell_absorber").gas.hydrogen;
+      gasConduitState(state, "gas:lower_intake__reservoir").gas.hydrogen;
     const caustic =
       state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide +
       liquidJunctionState(state, "lower_intake").liquid.sodium_hydroxide;

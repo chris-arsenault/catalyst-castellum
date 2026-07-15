@@ -1,6 +1,7 @@
+import { architecturalConnections } from "../game/world/map";
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { TutorialCopy, TutorialCopyKey } from "./copyTypes";
-import { definitionTransportRun } from "../game/world/instances";
+import { maybeLineDefinition } from "../game/world/instances";
 
 export type GuideConceptKind =
   "feed" | "accumulate" | "mix" | "ignite" | "convert" | "separate" | "relieve" | "heat" | "route";
@@ -38,7 +39,7 @@ interface FlashPointConceptValues {
 const flashPointConceptValues = (): FlashPointConceptValues => {
   const reaction = DEFAULT_GAME_DEFINITION.reactions.hydrogen_oxygen_combustion;
   const behavior = reaction.behavior;
-  const run = definitionTransportRun(DEFAULT_GAME_DEFINITION, "core_furnace").gas;
+  const run = maybeLineDefinition(DEFAULT_GAME_DEFINITION, "gas:core__furnace", "gas");
   const grade = DEFAULT_GAME_DEFINITION.equipment.gas_agitator.grades.find(
     (candidate) => candidate.level === 1
   );
@@ -68,7 +69,7 @@ const flashPointConceptValues = (): FlashPointConceptValues => {
       (hydrogen.coefficient * DEFAULT_GAME_DEFINITION.species.hydrogen.referenceDensity +
         oxygen.coefficient * DEFAULT_GAME_DEFINITION.species.oxygen.referenceDensity) /
       totalCoefficient,
-    openPassages: DEFAULT_GAME_DEFINITION.facilityMap.portals.filter(
+    openPassages: architecturalConnections(DEFAULT_GAME_DEFINITION.map).filter(
       (portal) =>
         portal.rooms.includes("furnace") &&
         portal.defaultOpen !== false &&

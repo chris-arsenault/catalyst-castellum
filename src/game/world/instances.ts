@@ -1,20 +1,21 @@
 import type { GameDefinition } from "../definitionTypes";
 import type {
-  ConduitDestinationKind,
   GameState,
   GasConduitState,
-  GasJunctionDefinition,
   GasJunctionState,
-  GridCell,
   LiquidConduitState,
-  LiquidJunctionDefinition,
   LiquidJunctionState,
   RoomDefinition,
-  RoomId,
   RoomState,
   TransportPhase,
-  TransportRunDefinition,
 } from "../types";
+import type {
+  GasTapDefinition,
+  LiquidTapDefinition,
+  ProcessLineConnection,
+  ProcessLineKind,
+} from "./map";
+import { isProcessLine } from "./map";
 
 /**
  * Instance-keyed world access (ADR-0002). In a dynamic world a missing instance id is
@@ -40,6 +41,16 @@ export const gasConduitState = (state: GameState, runId: string): GasConduitStat
 export const liquidConduitState = (state: GameState, runId: string): LiquidConduitState =>
   instance(state.liquidConduits, runId, "liquid conduit");
 
+/** Per-kind line ids are disjoint, so one lookup serves both conduit records. */
+export const conduitState = (
+  state: GameState,
+  connectionId: string
+): GasConduitState | LiquidConduitState => {
+  const conduit = state.gasConduits[connectionId] ?? state.liquidConduits[connectionId];
+  if (!conduit) throw new Error(`Unknown conduit instance: ${connectionId}`);
+  return conduit;
+};
+
 export const gasJunctionState = (state: GameState, roomId: string): GasJunctionState =>
   instance(state.gasJunctions, roomId, "gas junction");
 
@@ -49,74 +60,32 @@ export const liquidJunctionState = (state: GameState, roomId: string): LiquidJun
 export const definitionRoom = (definition: GameDefinition, roomId: string): RoomDefinition =>
   instance(definition.rooms, roomId, "room definition");
 
-export const definitionTransportRun = (
-  definition: GameDefinition,
-  runId: string
-): TransportRunDefinition => instance(definition.transportRuns, runId, "transport run");
-
 /**
- * Per-phase process-line view in the destination connection shape (ADR-0005). Every
- * engine/UI read of a line's parameters goes through this seam so the backing store
- * can move from the paired run catalog to Map connections without touching call sites.
+ * Per-phase process-line view (ADR-0005): the Map connection itself. Every engine/UI
+ * read of a line's parameters goes through this seam.
  */
-export interface ProcessLineView {
-  readonly rooms: readonly [RoomId, RoomId];
-  readonly direction: readonly [RoomId, RoomId];
-  readonly destinationKind: ConduitDestinationKind;
-  readonly actuator: "fan" | "pump" | "passive";
-  readonly actuatorHead: number;
-  readonly maxFlow: number;
-  readonly volumePerCell: number;
-  readonly buildCost: number;
-  readonly route: readonly GridCell[];
-}
+export type ProcessLineView = ProcessLineConnection;
 
-type LineViews = Record<TransportPhase, ReadonlyMap<string, ProcessLineView>>;
-const lineViewCache = new WeakMap<GameDefinition, LineViews>();
-
-const lineViewsFor = (definition: GameDefinition): LineViews => {
-  const cached = lineViewCache.get(definition);
-  if (cached) return cached;
-  const gas = new Map<string, ProcessLineView>();
-  const liquid = new Map<string, ProcessLineView>();
-  for (const run of Object.values(definition.transportRuns)) {
-    for (const [phase, views] of [
-      ["gas", gas],
-      ["liquid", liquid],
-    ] as const) {
-      const authored = run[phase];
-      if (!authored) continue;
-      views.set(run.id, {
-        rooms: run.rooms,
-        direction: authored.direction,
-        destinationKind: authored.destinationKind,
-        actuator: authored.actuator,
-        actuatorHead: authored.actuatorHead,
-        maxFlow: authored.maxFlow,
-        volumePerCell: authored.volumePerCell,
-        buildCost: authored.buildCost,
-        route: authored.blueprint,
-      });
-    }
-  }
-  const views: LineViews = { gas, liquid };
-  lineViewCache.set(definition, views);
-  return views;
-};
+const lineKindFor = (phase: TransportPhase): ProcessLineKind =>
+  phase === "gas" ? "gas_line" : "liquid_line";
 
 /** Tolerant lookup for command validation: unknown ids are null, not errors. */
 export const maybeLineDefinition = (
   definition: GameDefinition,
   id: string,
   phase: TransportPhase
-): ProcessLineView | null => lineViewsFor(definition)[phase].get(id) ?? null;
+): ProcessLineView | null => {
+  const connection = definition.map.connections[id];
+  if (!connection || !isProcessLine(connection)) return null;
+  return connection.kind === lineKindFor(phase) ? connection : null;
+};
 
-/** Loud on unknown connection ids; null when the pair has no line of this phase. */
+/** Loud on unknown connection ids; null when the connection is not a line of this phase. */
 export const gasLineDefinition = (
   definition: GameDefinition,
   id: string
 ): ProcessLineView | null => {
-  definitionTransportRun(definition, id);
+  instance(definition.map.connections, id, "connection");
   return maybeLineDefinition(definition, id, "gas");
 };
 
@@ -124,17 +93,35 @@ export const liquidLineDefinition = (
   definition: GameDefinition,
   id: string
 ): ProcessLineView | null => {
-  definitionTransportRun(definition, id);
+  instance(definition.map.connections, id, "connection");
   return maybeLineDefinition(definition, id, "liquid");
+};
+
+const lineIdCache = new WeakMap<GameDefinition, Record<ProcessLineKind, readonly string[]>>();
+
+/** Canonical per-kind line ids in authored map order — iteration order is behavior. */
+export const processLineIds = (
+  definition: GameDefinition,
+  kind: ProcessLineKind
+): readonly string[] => {
+  let cached = lineIdCache.get(definition);
+  if (!cached) {
+    const ids = (wanted: ProcessLineKind): readonly string[] =>
+      Object.values(definition.map.connections)
+        .filter((connection) => connection.kind === wanted)
+        .map((connection) => connection.id);
+    cached = { gas_line: ids("gas_line"), liquid_line: ids("liquid_line") };
+    lineIdCache.set(definition, cached);
+  }
+  return cached[kind];
 };
 
 export const definitionGasJunction = (
   definition: GameDefinition,
   roomId: string
-): GasJunctionDefinition => instance(definition.gasJunctions, roomId, "gas junction definition");
+): GasTapDefinition => instance(definition.map.rooms, roomId, "map room").taps.gas;
 
 export const definitionLiquidJunction = (
   definition: GameDefinition,
   roomId: string
-): LiquidJunctionDefinition =>
-  instance(definition.liquidJunctions, roomId, "liquid junction definition");
+): LiquidTapDefinition => instance(definition.map.rooms, roomId, "map room").taps.liquid;

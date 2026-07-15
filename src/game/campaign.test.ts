@@ -13,8 +13,8 @@ const command = (source: GameState, value: GameCommand): GameState => {
 
 const availabilitySubset = (before: ScenarioAvailability, after: ScenarioAvailability): boolean =>
   before.equipment.every((id) => after.equipment.includes(id)) &&
-  before.gasRuns.every((id) => after.gasRuns.includes(id)) &&
-  before.liquidRuns.every((id) => after.liquidRuns.includes(id)) &&
+  before.gasLines.every((id) => after.gasLines.includes(id)) &&
+  before.liquidLines.every((id) => after.liquidLines.includes(id)) &&
   before.gasSources.every((id) => after.gasSources.includes(id)) &&
   before.liquidSources.every((id) => after.liquidSources.includes(id));
 
@@ -24,13 +24,13 @@ describe("Flash Point scenario truth", () => {
     expect(game.phase).toBe("level_briefing");
     expect(game.gasSources.starter_gas_header.gas.hydrogen).toBeGreaterThan(0);
     expect(game.gasSources.starter_gas_header.gas.oxygen).toBeGreaterThan(0);
-    expect(gasConduitState(game, "core_furnace")).toMatchObject({
+    expect(gasConduitState(game, "gas:core__furnace")).toMatchObject({
       installed: true,
       enabled: false,
     });
     expect(game.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
     expect(gasJunctionState(game, "lower_intake").gas.hydrogen).toBe(0);
-    expect(game.availability.gasRuns).toEqual(["core_furnace"]);
+    expect(game.availability.gasLines).toEqual(["gas:core__furnace"]);
   });
 
   it("requires the authored equipment and shared fan action", () => {
@@ -39,7 +39,7 @@ describe("Flash Point scenario truth", () => {
       state = command(state, action);
     }
     expect(roomState(state, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
-    expect(gasConduitState(state, "core_furnace").enabled).toBe(true);
+    expect(gasConduitState(state, "gas:core__furnace").enabled).toBe(true);
   });
 
   it("emits the real prime flash before the automatic assault removes its action button", () => {
@@ -69,7 +69,7 @@ describe("campaign checkpoints", () => {
   it("preserves room and conduit inventory between rounds", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
     roomState(state, "furnace").gas.lower.steam = 9;
-    gasConduitState(state, "core_furnace").gas.hydrogen = 3;
+    gasConduitState(state, "gas:core__furnace").gas.hydrogen = 3;
     state = command(state, { type: "start_prime" });
     state = command(state, { type: "start_assault" });
     state.spawnCursor = LEVEL_DEFINITIONS.flash_point.rounds[0]!.wave.length;
@@ -80,7 +80,7 @@ describe("campaign checkpoints", () => {
     expect(
       roomState(state, "furnace").gas.lower.steam + roomState(state, "furnace").gas.upper.steam
     ).toBeGreaterThan(8.9);
-    expect(gasConduitState(state, "core_furnace").gas.hydrogen).toBeGreaterThan(2.9);
+    expect(gasConduitState(state, "gas:core__furnace").gas.hydrogen).toBeGreaterThan(2.9);
   });
 
   it("keeps unlocks cumulative inside every authored level", () => {

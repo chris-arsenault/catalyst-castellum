@@ -1,3 +1,4 @@
+import { architecturalConnections } from "../game/world/map";
 import { useCallback, useState } from "react";
 import { FACILITY_MAP } from "../presentation/defaultGame";
 import type { CameraTransform } from "./gameMap/mapGeometry";
@@ -20,7 +21,7 @@ interface GameMapProps {
 const mapTelemetry = (game: GameState, camera: CameraTransform, pipeMode: boolean) => ({
   "data-world-model": "cell-platform-v1",
   "data-grid": `${FACILITY_MAP.width}x${FACILITY_MAP.height}`,
-  "data-portal-count": FACILITY_MAP.portals.length,
+  "data-portal-count": architecturalConnections(FACILITY_MAP).length,
   "data-enemy-modes": [...new Set(game.enemies.map((enemy) => enemy.mode))].join(","),
   "data-camera-x": camera.x,
   "data-camera-y": camera.y,

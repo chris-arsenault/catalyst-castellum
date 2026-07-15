@@ -188,8 +188,8 @@ export const cloneGame = (state: GameState): GameState => ({
   },
   availability: {
     equipment: [...state.availability.equipment],
-    gasRuns: [...state.availability.gasRuns],
-    liquidRuns: [...state.availability.liquidRuns],
+    gasLines: [...state.availability.gasLines],
+    liquidLines: [...state.availability.liquidLines],
     gasSources: [...state.availability.gasSources],
     liquidSources: [...state.availability.liquidSources],
   },

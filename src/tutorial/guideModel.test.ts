@@ -183,8 +183,7 @@ describe("Flash Point guided flow", () => {
 
     game = command(game, {
       type: "set_conduit",
-      runId: "core_furnace",
-      phase: "gas",
+      connectionId: "gas:core__furnace",
       enabled: true,
     });
     expect(guide.steps[2]?.completed(game, IDLE_GUIDE_UI)).toBe(true);
@@ -239,8 +238,7 @@ describe("Flash Point follow-up guidance", () => {
     });
     game = command(game, {
       type: "set_conduit",
-      runId: "core_furnace",
-      phase: "gas",
+      connectionId: "gas:core__furnace",
       enabled: true,
     });
     game.campaign.roundIndex = 1;

@@ -10,47 +10,42 @@ describe("simple conduit controls", () => {
     let state = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
     state = executeCommand(state, {
       type: "set_conduit",
-      runId: "core_furnace",
-      phase: "gas",
+      connectionId: "gas:core__furnace",
       enabled: true,
     }).state;
     state = executeCommand(state, { type: "start_prime" }).state;
     state = executeCommand(state, { type: "start_assault" }).state;
     const result = executeCommand(state, {
       type: "set_conduit",
-      runId: "core_furnace",
-      phase: "gas",
+      connectionId: "gas:core__furnace",
       enabled: false,
     });
     expect(result.accepted).toBe(false);
-    expect(gasConduitState(result.state, "core_furnace").enabled).toBe(true);
+    expect(gasConduitState(result.state, "gas:core__furnace").enabled).toBe(true);
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
-    gasConduitState(state, "furnace_return").installed = false;
+    gasConduitState(state, "gas:furnace__gallery").installed = false;
     const built = executeCommand(state, {
       type: "build_transport",
-      runId: "furnace_return",
-      phase: "gas",
+      connectionId: "gas:furnace__gallery",
     });
     expect(built.accepted).toBe(true);
-    expect(gasConduitState(built.state, "furnace_return").installed).toBe(true);
+    expect(gasConduitState(built.state, "gas:furnace__gallery").installed).toBe(true);
     const dismantled = executeCommand(built.state, {
       type: "dismantle_transport",
-      runId: "furnace_return",
-      phase: "gas",
+      connectionId: "gas:furnace__gallery",
     });
     expect(dismantled.accepted).toBe(true);
   });
 
   it("rejects dismantling conserved retained material", () => {
     const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
-    gasConduitState(state, "cell_furnace").gas.hydrogen = 1;
+    gasConduitState(state, "gas:furnace__lower_intake").gas.hydrogen = 1;
     const result = executeCommand(state, {
       type: "dismantle_transport",
-      runId: "cell_furnace",
-      phase: "gas",
+      connectionId: "gas:furnace__lower_intake",
     });
     expect(result.accepted).toBe(false);
     expect(result.code).toBe("capacity");

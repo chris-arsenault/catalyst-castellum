@@ -1,15 +1,15 @@
+import { architecturalConnections } from "../world/map";
 import type { GameDefinition } from "../definitionTypes";
 import {
   type GameState,
   type GridCell,
   type ScenarioAvailability,
   type TransportPhase,
-  type TransportRunId,
+  type ConnectionId,
 } from "../types";
-import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { validateEnemyNavigation } from "./enemyNavigationValidation";
 import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
-import { maybeLineDefinition } from "../world/instances";
+import { maybeLineDefinition, processLineIds } from "../world/instances";
 
 export type StateValidationCode =
   | "availability_mismatch"
@@ -54,7 +54,7 @@ const validateAvailability = (
   expected: ScenarioAvailability,
   issues: StateValidationIssue[]
 ): void => {
-  const fields = ["equipment", "gasRuns", "liquidRuns", "gasSources", "liquidSources"] as const;
+  const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
   for (const field of fields) {
     if (!sameIdentifiers(state.availability[field], expected[field])) {
       issue(
@@ -110,37 +110,6 @@ const validateCampaign = (
   validateAvailability(state, level.rounds[campaign.roundIndex]!.availability, issues);
 };
 
-const unauthoredConduitAmount = (
-  state: GameState,
-  runId: TransportRunId,
-  phase: TransportPhase
-): number =>
-  phase === "gas"
-    ? gasAmountTotal(gasConduitState(state, runId).gas)
-    : liquidAmountTotal(liquidConduitState(state, runId).liquid);
-
-const validateUnauthoredConduit = (
-  state: GameState,
-  runId: TransportRunId,
-  phase: TransportPhase,
-  issues: StateValidationIssue[]
-): void => {
-  const conduit =
-    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
-  const hasState =
-    conduit.route.length > 0 ||
-    conduit.installed ||
-    conduit.enabled ||
-    unauthoredConduitAmount(state, runId, phase) > 0.001;
-  if (!hasState) return;
-  issue(
-    issues,
-    "conduit_installation_mismatch",
-    `${phase}Conduits.${runId}`,
-    `State exists for an unauthored ${phase} conduit.`
-  );
-};
-
 const validateRouteEndpoints = (
   route: readonly GridCell[],
   blueprint: readonly GridCell[],
@@ -194,7 +163,7 @@ const validateRouteCells = (
 
 const validateRoute = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   issues: StateValidationIssue[],
   gameDefinition: GameDefinition
@@ -203,10 +172,7 @@ const validateRoute = (
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const path = `${phase}Conduits.${runId}`;
-  if (!definition) {
-    validateUnauthoredConduit(state, runId, phase, issues);
-    return;
-  }
+  if (!definition) return;
   if (conduit.enabled && !conduit.installed) {
     issue(
       issues,
@@ -233,8 +199,10 @@ const validateTopology = (
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {
-  for (const runId of state.world.connections) {
+  for (const runId of processLineIds(definition, "gas_line")) {
     validateRoute(state, runId, "gas", issues, definition);
+  }
+  for (const runId of processLineIds(definition, "liquid_line")) {
     validateRoute(state, runId, "liquid", issues, definition);
   }
   for (const roomId of definition.roomOrder) {
@@ -247,7 +215,7 @@ const validateTopology = (
       );
     }
   }
-  const expectedPortals = definition.facilityMap.portals.map(({ id }) => id);
+  const expectedPortals = architecturalConnections(definition.map).map(({ id }) => id);
   if (!sameIdentifiers(Object.keys(state.portalStates), expectedPortals)) {
     issue(
       issues,
@@ -350,8 +318,8 @@ const validateWorldCatalogs = (
     ["rooms", state.world.rooms, state.rooms],
     ["gasJunctions", state.world.rooms, state.gasJunctions],
     ["liquidJunctions", state.world.rooms, state.liquidJunctions],
-    ["gasConduits", state.world.connections, state.gasConduits],
-    ["liquidConduits", state.world.connections, state.liquidConduits],
+    ["gasConduits", processLineIds(definition, "gas_line"), state.gasConduits],
+    ["liquidConduits", processLineIds(definition, "liquid_line"), state.liquidConduits],
   ];
   for (const [field, catalog, record] of expectations) {
     if (!sameIdentifiers(Object.keys(record), catalog)) {
@@ -371,7 +339,7 @@ const validateWorldCatalogs = (
       "World room catalog does not match the pack."
     );
   }
-  if (!sameIdentifiers([...state.world.connections], Object.keys(definition.transportRuns))) {
+  if (!sameIdentifiers([...state.world.connections], Object.keys(definition.map.connections))) {
     issue(
       issues,
       "world_catalog_mismatch",

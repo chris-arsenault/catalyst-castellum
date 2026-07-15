@@ -1,24 +1,14 @@
-import type {
-  CommandDecision,
-  CommandResult,
-  GameCommand,
-  GameState,
-  TransportPhase,
-  TransportRunId,
-} from "../types";
+import type { CommandDecision, CommandResult, GameCommand, GameState } from "../types";
 import { acceptCommand } from "./commandResult";
 import { cloneGame } from "./roomState";
-import { gasConduitState, liquidConduitState } from "../world/instances";
-
-const conduitFor = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
-  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
+import { conduitState } from "../world/instances";
 
 export const setConduitCommand = (
   source: GameState,
   command: GameCommand & { type: "set_conduit" }
 ): CommandResult => {
   const state = cloneGame(source);
-  conduitFor(state, command.runId, command.phase).enabled = command.enabled;
+  conduitState(state, command.connectionId).enabled = command.enabled;
   return acceptCommand(state);
 };
 
@@ -29,7 +19,7 @@ export const buildTransportCommand = (
 ): CommandResult => {
   const state = cloneGame(source);
   state.matter -= decision.cost;
-  const next = conduitFor(state, command.runId, command.phase);
+  const next = conduitState(state, command.connectionId);
   next.installed = true;
   next.enabled = false;
   return acceptCommand(state);
@@ -41,7 +31,7 @@ export const dismantleTransportCommand = (
   decision: CommandDecision
 ): CommandResult => {
   const state = cloneGame(source);
-  const next = conduitFor(state, command.runId, command.phase);
+  const next = conduitState(state, command.connectionId);
   next.installed = false;
   next.enabled = false;
   state.matter += decision.refund;

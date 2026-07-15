@@ -11,8 +11,8 @@ import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
-import { transportPhaseAvailable } from "./game/queries";
-import { TRANSPORT_PHASES, type RoomId } from "./game/types";
+import { connectionAvailable } from "./game/queries";
+import { type RoomId } from "./game/types";
 import {
   useApplicationInitialization,
   useAudioDirector,
@@ -20,8 +20,9 @@ import {
 } from "./application/hooks";
 import { useGameStore } from "./application/store";
 import { useGamePresentation } from "./application/presentationContext";
-import { gasConduitState, liquidConduitState } from "./game/world/instances";
-import { roomDefinition, transportRunDefinition } from "./presentation/defaultGame";
+import { conduitState } from "./game/world/instances";
+import { roomDefinition } from "./presentation/defaultGame";
+import { processLineId } from "./game/world/map";
 
 const GuidedTutorial = lazy(async () => ({
   default: (await import("./tutorial/GuidedTutorial")).GuidedTutorial,
@@ -39,31 +40,25 @@ const MapStage = () => {
   const togglePipeMode = useCallback(() => setPipeMode(!pipeMode), [pipeMode, setPipeMode]);
   const connectRooms = useCallback(
     (from: RoomId, to: RoomId) => {
-      const runId = game.world.connections.find((id) => {
-        const rooms = transportRunDefinition(id).rooms;
-        return (rooms[0] === from && rooms[1] === to) || (rooms[0] === to && rooms[1] === from);
-      });
-      const buildablePhases = runId
-        ? TRANSPORT_PHASES.filter(
-            (phase) =>
-              transportPhaseAvailable(game, runId, phase) &&
-              !(phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId))
-                .installed
-          )
-        : [];
-      if (!runId || buildablePhases.length === 0) {
+      const candidates = (["gas_line", "liquid_line"] as const)
+        .map((kind) => processLineId(kind, from, to))
+        .filter((id) => game.world.connections.includes(id));
+      const buildable = candidates.filter(
+        (id) => connectionAvailable(game, id) && !conduitState(game, id).installed
+      );
+      if (buildable.length === 0) {
         const parameters = {
           from: roomDefinition(from).code,
           to: roomDefinition(to).code,
         };
         showNotice(
-          runId
+          candidates.length > 0
             ? translator.text("ui.pipes.alreadyRouted", parameters)
             : translator.text("ui.pipes.noRoute", parameters)
         );
         return;
       }
-      for (const phase of buildablePhases) dispatch({ type: "build_transport", runId, phase });
+      for (const connectionId of buildable) dispatch({ type: "build_transport", connectionId });
     },
     [dispatch, game, showNotice, translator]
   );

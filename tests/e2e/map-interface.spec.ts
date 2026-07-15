@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { CONDUIT_BLUEPRINTS, FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
+import { FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
+import { isProcessLine } from "../../src/game/world/map";
 import type { WorldPoint } from "../../src/game/types";
 import { worldToClientPoint, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
 import { installEquipment } from "./tutorialAssertions";
@@ -72,7 +73,7 @@ test("refresh returns to save selection before loading the live process", async 
   await startGuidedTutorial(page);
   await skipGuidance(page);
   await page.getByTestId("pipe-mode-toggle").click();
-  await page.getByTestId("conduit-control-core_furnace-gas").click();
+  await page.getByTestId("conduit-control-gas:core__furnace").click();
   await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
   await page.waitForTimeout(900);
@@ -85,7 +86,7 @@ test("refresh returns to save selection before loading the live process", async 
   await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
   await page.getByTestId("pipe-mode-toggle").click();
-  await expect(page.getByTestId("conduit-control-core_furnace-gas")).toHaveAttribute(
+  await expect(page.getByTestId("conduit-control-gas:core__furnace")).toHaveAttribute(
     "aria-pressed",
     "true"
   );
@@ -147,8 +148,9 @@ test("hovering a shared conduit exposes all measured species on that physical ro
 }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
-  const route = instance(CONDUIT_BLUEPRINTS, "core_furnace", "blueprint").gas;
-  if (!route) throw new Error("Flash Point gas route is not authored.");
+  const connection = instance(FACILITY_MAP.connections, "gas:core__furnace", "connection");
+  if (!isProcessLine(connection)) throw new Error("Flash Point gas route is not authored.");
+  const route = connection.route;
   const routePoint = await worldClientPoint(
     page,
     gridCellToWorldPoint(route[Math.floor(route.length / 2)]!)

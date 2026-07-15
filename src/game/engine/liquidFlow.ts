@@ -4,7 +4,7 @@ import {
   type GameState,
   type LiquidAmounts,
   type LiquidConduitState,
-  type TransportRunId,
+  type ConnectionId,
 } from "../types";
 import type { GameDefinition } from "../definitionTypes";
 import { clamp } from "./math";
@@ -23,7 +23,12 @@ import {
   transportPlanIsBlocked,
   type TransportPlan,
 } from "./transportPlanning";
-import { liquidConduitState, liquidLineDefinition, roomState } from "../world/instances";
+import {
+  liquidConduitState,
+  liquidLineDefinition,
+  processLineIds,
+  roomState,
+} from "../world/instances";
 import { liquidJunctionState } from "../world/instances";
 
 const FULL_FLOW_HEAD = 3;
@@ -33,7 +38,7 @@ type LiquidPlan = TransportPlan;
 
 const destinationHeadroom = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
   const definition = liquidLineDefinition(gameDefinition, runId);
@@ -45,7 +50,7 @@ const destinationHeadroom = (
 
 const desiredThroughput = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
@@ -72,7 +77,7 @@ const desiredThroughput = (
 
 const initialPlan = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   dt: number,
   gameDefinition: GameDefinition
 ): LiquidPlan | null => {
@@ -102,7 +107,7 @@ const initialPlan = (
 
 const deliverLiquid = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   packet: LiquidAmounts,
   gameDefinition: GameDefinition
 ): void => {
@@ -115,7 +120,7 @@ const deliverLiquid = (
   addLiquid(roomState(state, definition.direction[1]).liquid, packet);
 };
 
-const clearReadout = (state: GameState, runId: TransportRunId): void => {
+const clearReadout = (state: GameState, runId: ConnectionId): void => {
   const conduit = liquidConduitState(state, runId);
   conduit.lastFlow = 0;
   conduit.blocked = false;
@@ -188,8 +193,9 @@ export const simulateLiquidConduits = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  for (const runId of state.world.connections) clearReadout(state, runId);
-  const plans = state.world.connections.flatMap((runId) => {
+  const lineIds = processLineIds(definition, "liquid_line");
+  for (const runId of lineIds) clearReadout(state, runId);
+  const plans = lineIds.flatMap((runId) => {
     const plan = initialPlan(state, runId, dt, definition);
     return plan ? [plan] : [];
   });
@@ -215,12 +221,12 @@ export const simulateLiquidConduits = (
 
 export const liquidConduitFillRatio = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   definition: GameDefinition
 ): number => {
   const capacity = conduitCapacity(state, runId, "liquid", definition);
   return capacity > 0 ? liquidAmountTotal(liquidConduitState(state, runId).liquid) / capacity : 0;
 };
 
-export const liquidConduitCrestElevation = (state: GameState, runId: TransportRunId): number =>
+export const liquidConduitCrestElevation = (state: GameState, runId: ConnectionId): number =>
   conduitCrestElevation(state, runId, "liquid");

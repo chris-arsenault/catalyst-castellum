@@ -1,7 +1,7 @@
 import { Application, extend } from "@pixi/react";
 import { Container, Graphics, Text } from "pixi.js";
 import { ROOM_ORDER } from "../../presentation/defaultGame";
-import type { GameState, RoomId, SpeciesId, TransportRunId } from "../../game/types";
+import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
 import { EnemyNode } from "./EnemyNode";
 import { DamageNumberLayer } from "./DamageNumberLayer";
 import { EquipmentLayer, type EquipmentHover } from "./EquipmentLayer";
@@ -24,12 +24,12 @@ extend({ Container, Graphics, Text });
 export interface MapSceneProps {
   camera: CameraTransform;
   game: GameState;
-  hoveredRunId: TransportRunId | null;
+  hoveredRunId: ConnectionId | null;
   onHoverCellOutlet: (bufferId: CellOutletId | null) => void;
   onHoverEquipment: (equipment: EquipmentHover | null) => void;
   onHoverEnemy: (enemyId: number | null) => void;
   onHoverRoom: (roomId: RoomId | null) => void;
-  onHoverRun: (runId: TransportRunId | null) => void;
+  onHoverRun: (runId: ConnectionId | null) => void;
   onPipeDragStart: (roomId: RoomId) => void;
   onPipeDragEnd: (roomId: RoomId) => void;
   onSelectRoom: (roomId: RoomId) => void;

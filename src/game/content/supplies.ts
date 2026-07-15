@@ -1,15 +1,12 @@
 import type {
   GasBufferDefinition,
   GasBufferId,
-  GasJunctionDefinition,
   GasSourceDefinition,
   GasSourceId,
   LiquidBufferDefinition,
   LiquidBufferId,
-  LiquidJunctionDefinition,
   LiquidSourceDefinition,
   LiquidSourceId,
-  RoomId,
 } from "../types";
 
 export const GAS_SOURCES: Record<GasSourceId, GasSourceDefinition> = {
@@ -69,51 +66,5 @@ export const LIQUID_BUFFERS: Record<LiquidBufferId, LiquidBufferDefinition> = {
     id: "cell_liquor",
     capacity: 30,
     accent: "#b555f5",
-  },
-};
-
-const roomGasJunction = (): GasJunctionDefinition => ({
-  capacity: 18,
-  includeRoomInventory: true,
-  roomPortHeight: 0.72,
-  sourceIds: [],
-});
-
-const roomLiquidJunction = (): LiquidJunctionDefinition => ({
-  capacity: 18,
-  includeRoomInventory: true,
-  roomPortHeight: 0.12,
-  sourceIds: [],
-});
-
-export const GAS_JUNCTIONS: Record<RoomId, GasJunctionDefinition> = {
-  west_intake: roomGasJunction(),
-  switchyard: roomGasJunction(),
-  furnace: roomGasJunction(),
-  reservoir: roomGasJunction(),
-  gallery: roomGasJunction(),
-  washlock: roomGasJunction(),
-  lower_intake: { ...roomGasJunction(), capacity: 22 },
-  core: {
-    capacity: 24,
-    includeRoomInventory: false,
-    roomPortHeight: 0.72,
-    sourceIds: ["starter_gas_header"],
-  },
-};
-
-export const LIQUID_JUNCTIONS: Record<RoomId, LiquidJunctionDefinition> = {
-  west_intake: roomLiquidJunction(),
-  switchyard: roomLiquidJunction(),
-  furnace: roomLiquidJunction(),
-  reservoir: roomLiquidJunction(),
-  gallery: roomLiquidJunction(),
-  washlock: roomLiquidJunction(),
-  lower_intake: { ...roomLiquidJunction(), capacity: 24 },
-  core: {
-    capacity: 28,
-    includeRoomInventory: false,
-    roomPortHeight: 0.12,
-    sourceIds: ["water_tank", "sodium_chloride_tank"],
   },
 };

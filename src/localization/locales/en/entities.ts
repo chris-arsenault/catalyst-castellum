@@ -85,46 +85,50 @@ export const ENTITY_MESSAGES = {
   "entities.buffers.cathode_header.name": "H₂ cathode header",
   "entities.buffers.cell_liquor.name": "NaOH cell-liquor outlet",
 
-  "entities.transport.core_furnace.gas.name": "Core–R-02 gas duct",
-  "entities.transport.core_furnace.gas.description":
+  "entities.transport.gas:core__furnace.name": "Core–R-02 gas duct",
+  "entities.transport.gas:core__furnace.description":
     "Feeds the Core starter-header mixture into R-02.",
-  "entities.transport.core_switchyard.gas.name": "Core–R-01 gas duct",
-  "entities.transport.core_switchyard.gas.description":
+  "entities.transport.gas:core__switchyard.name": "Core–R-01 gas duct",
+  "entities.transport.gas:core__switchyard.description":
     "Feeds the Core starter-header mixture into R-01.",
-  "entities.transport.core_reservoir.gas.name": "Core–R-03 gas duct",
-  "entities.transport.core_reservoir.gas.description":
+  "entities.transport.gas:core__reservoir.name": "Core–R-03 gas duct",
+  "entities.transport.gas:core__reservoir.description":
     "Feeds the Core starter-header mixture into R-03.",
-  "entities.transport.core_gallery.gas.name": "Core–R-04 gas duct",
-  "entities.transport.core_gallery.gas.description":
+  "entities.transport.gas:core__gallery.name": "Core–R-04 gas duct",
+  "entities.transport.gas:core__gallery.description":
     "Feeds the Core starter-header mixture into R-04.",
-  "entities.transport.cell_furnace.gas.name": "R-05–R-02 gas duct",
-  "entities.transport.cell_furnace.gas.description":
+  "entities.transport.gas:furnace__lower_intake.name": "R-05–R-02 gas duct",
+  "entities.transport.gas:furnace__lower_intake.description":
     "Carries the R-05 gas-junction stream to R-02.",
-  "entities.transport.core_cell.gas.name": "R-05 recovery duct",
-  "entities.transport.core_cell.gas.description":
+  "entities.transport.gas:core__lower_intake.name": "R-05 recovery duct",
+  "entities.transport.gas:core__lower_intake.description":
     "Draws the R-05 gas-junction stream into Core recovery.",
-  "entities.transport.core_cell.liquid.name": "Core–R-05 feed pipe",
-  "entities.transport.core_cell.liquid.description":
+  "entities.transport.liquid:core__lower_intake.name": "Core–R-05 feed pipe",
+  "entities.transport.liquid:core__lower_intake.description":
     "Pumps mixed water and brine from Core reserves to R-05.",
-  "entities.transport.cell_absorber.gas.name": "R-05–R-03 gas duct",
-  "entities.transport.cell_absorber.gas.description":
+  "entities.transport.gas:lower_intake__reservoir.name": "R-05–R-03 gas duct",
+  "entities.transport.gas:lower_intake__reservoir.description":
     "Carries the R-05 gas-junction stream into R-03.",
-  "entities.transport.cell_absorber.liquid.name": "R-05–R-03 liquor pipe",
-  "entities.transport.cell_absorber.liquid.description":
+  "entities.transport.liquid:lower_intake__reservoir.name": "R-05–R-03 liquor pipe",
+  "entities.transport.liquid:lower_intake__reservoir.description":
     "Pumps cell liquor from the R-05 junction into R-03.",
-  "entities.transport.furnace_return.gas.name": "R-02–R-04 return duct",
-  "entities.transport.furnace_return.gas.description": "Draws R-02 atmosphere into R-04.",
-  "entities.transport.return_final.gas.name": "R-04–R-06 gas duct",
-  "entities.transport.return_final.gas.description": "Delivers the R-04 return stream into R-06.",
-  "entities.transport.return_outer.gas.name": "R-04–R-01 outer duct",
-  "entities.transport.return_outer.gas.description": "Diverts the R-04 return stream toward R-01.",
-  "entities.transport.core_final.gas.name": "R-06 recovery duct",
-  "entities.transport.core_final.gas.description": "Exhausts R-06 atmosphere into Core recovery.",
-  "entities.transport.core_final.liquid.name": "Core–R-06 solvent pipe",
-  "entities.transport.core_final.liquid.description": "Pumps Core solvent stock into R-06.",
-  "entities.transport.absorber_final.liquid.name": "R-03–R-06 transfer pipe",
-  "entities.transport.absorber_final.liquid.description": "Transfers stored R-03 liquid into R-06.",
-  "entities.transport.core_absorber.liquid.name": "R-03 recovery pipe",
-  "entities.transport.core_absorber.liquid.description":
+  "entities.transport.gas:furnace__gallery.name": "R-02–R-04 return duct",
+  "entities.transport.gas:furnace__gallery.description": "Draws R-02 atmosphere into R-04.",
+  "entities.transport.gas:gallery__washlock.name": "R-04–R-06 gas duct",
+  "entities.transport.gas:gallery__washlock.description":
+    "Delivers the R-04 return stream into R-06.",
+  "entities.transport.gas:gallery__switchyard.name": "R-04–R-01 outer duct",
+  "entities.transport.gas:gallery__switchyard.description":
+    "Diverts the R-04 return stream toward R-01.",
+  "entities.transport.gas:core__washlock.name": "R-06 recovery duct",
+  "entities.transport.gas:core__washlock.description":
+    "Exhausts R-06 atmosphere into Core recovery.",
+  "entities.transport.liquid:core__washlock.name": "Core–R-06 solvent pipe",
+  "entities.transport.liquid:core__washlock.description": "Pumps Core solvent stock into R-06.",
+  "entities.transport.liquid:reservoir__washlock.name": "R-03–R-06 transfer pipe",
+  "entities.transport.liquid:reservoir__washlock.description":
+    "Transfers stored R-03 liquid into R-06.",
+  "entities.transport.liquid:core__reservoir.name": "R-03 recovery pipe",
+  "entities.transport.liquid:core__reservoir.description":
     "Returns stored R-03 liquid to Core recovery.",
 } as const;

@@ -59,10 +59,10 @@ describe("canonical room rendering projection", () => {
 
   it("exposes delivered conduit flow to the room animation instead of relying on gas labels", () => {
     const game = createScenarioGame("flash_point");
-    gasConduitState(game, "core_furnace").lastFlow = 1.4;
-    gasConduitState(game, "core_furnace").flowCause = "fan";
-    gasConduitState(game, "core_furnace").lastSpeciesFlow.hydrogen = 0.9;
-    gasConduitState(game, "core_furnace").lastSpeciesFlow.oxygen = 0.5;
+    gasConduitState(game, "gas:core__furnace").lastFlow = 1.4;
+    gasConduitState(game, "gas:core__furnace").flowCause = "fan";
+    gasConduitState(game, "gas:core__furnace").lastSpeciesFlow.hydrogen = 0.9;
+    gasConduitState(game, "gas:core__furnace").lastSpeciesFlow.oxygen = 0.5;
 
     const model = roomRenderModel(game, "furnace", false, 0);
 

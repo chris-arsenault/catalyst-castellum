@@ -21,7 +21,7 @@ import { makeStats } from "./events";
 import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
 import { worldCatalogsFor } from "../world/catalogs";
-import { maybeLineDefinition } from "../world/instances";
+import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionRoom } from "../world/instances";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
@@ -146,7 +146,7 @@ const makeGasConduits = (
   gameDefinition: GameDefinition
 ): GameState["gasConduits"] =>
   Object.fromEntries(
-    Object.keys(gameDefinition.transportRuns).map((runId) => {
+    processLineIds(gameDefinition, "gas_line").map((runId) => {
       const definition = maybeLineDefinition(gameDefinition, runId, "gas");
       const configured = loadout.gasConduits[runId];
       return [
@@ -171,7 +171,7 @@ const makeLiquidConduits = (
   gameDefinition: GameDefinition
 ): GameState["liquidConduits"] =>
   Object.fromEntries(
-    Object.keys(gameDefinition.transportRuns).map((runId) => {
+    processLineIds(gameDefinition, "liquid_line").map((runId) => {
       const definition = maybeLineDefinition(gameDefinition, runId, "liquid");
       const configured = loadout.liquidConduits[runId];
       return [
@@ -227,8 +227,8 @@ export const createScenarioGame = (
     world: worldCatalogsFor(definition),
     availability: {
       equipment: [...round.availability.equipment],
-      gasRuns: [...round.availability.gasRuns],
-      liquidRuns: [...round.availability.liquidRuns],
+      gasLines: [...round.availability.gasLines],
+      liquidLines: [...round.availability.liquidLines],
       gasSources: [...round.availability.gasSources],
       liquidSources: [...round.availability.liquidSources],
     },

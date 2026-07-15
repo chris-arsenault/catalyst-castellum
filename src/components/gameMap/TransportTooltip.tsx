@@ -16,7 +16,7 @@ import {
   type LiquidConduitState,
   type SpeciesId,
   type TransportPhase,
-  type TransportRunId,
+  type ConnectionId,
 } from "../../game/types";
 import { transportCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
@@ -46,12 +46,12 @@ const flowSpeciesSummary = (
 
 const phaseConduit = (
   game: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): GasConduitState | LiquidConduitState =>
   phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
 
-const phaseAmount = (game: GameState, runId: TransportRunId, phase: TransportPhase): number => {
+const phaseAmount = (game: GameState, runId: ConnectionId, phase: TransportPhase): number => {
   if (phase === "gas") return gasAmountTotal(gasConduitState(game, runId).gas);
   return liquidAmountTotal(liquidConduitState(game, runId).liquid);
 };
@@ -86,7 +86,7 @@ const conduitStateLabel = (
 
 const conduitMixtureSummary = (
   game: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   translator: Translator,
   formatters: LocaleFormatters
@@ -126,7 +126,7 @@ const PhaseSection = ({
   channel: TransportChannelTelemetry | null;
   game: GameState;
   phase: TransportPhase;
-  runId: TransportRunId;
+  runId: ConnectionId;
 }) => {
   const { formatters, translator } = useGamePresentation();
   const definition = lineDefinition(runId, phase);
@@ -147,7 +147,7 @@ const PhaseSection = ({
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>
-          <strong>{transportCopy(runId, phase, translator).name}</strong>
+          <strong>{transportCopy(runId, translator).name}</strong>
           <small>
             {roomDefinition(definition.direction[0]).code} →{" "}
             {roomDefinition(definition.direction[1]).code} ·{" "}
@@ -189,7 +189,7 @@ const PhaseSection = ({
 
 interface TransportTooltipProps {
   game: GameState;
-  runId: TransportRunId | null;
+  runId: ConnectionId | null;
   selectedSpecies: SpeciesId | null;
 }
 

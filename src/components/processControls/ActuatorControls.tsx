@@ -26,7 +26,7 @@ import {
   type GasAmounts,
   type LiquidAmounts,
   type TransportPhase,
-  type TransportRunId,
+  type ConnectionId,
 } from "../../game/types";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 import { bufferCopy, speciesCopy, transportCopy } from "../../presentation/entityCopy";
@@ -42,22 +42,20 @@ import type { ProcessLineView } from "../../game/world/instances";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
-const CONDUIT_TUTORIAL_ANCHORS: Partial<
-  Record<`${TransportRunId}:${TransportPhase}`, TutorialAnchorId>
-> = {
-  "cell_furnace:gas": TUTORIAL_ANCHORS.conduitCellFurnaceGas,
-  "core_cell:gas": TUTORIAL_ANCHORS.conduitCoreCellGas,
-  "core_cell:liquid": TUTORIAL_ANCHORS.conduitCoreCellLiquid,
-  "core_furnace:gas": TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
-  "core_gallery:gas": TUTORIAL_ANCHORS.conduitCoreGalleryGas,
-  "furnace_return:gas": TUTORIAL_ANCHORS.conduitFurnaceReturnGas,
-  "return_final:gas": TUTORIAL_ANCHORS.conduitReturnFinalGas,
+const CONDUIT_TUTORIAL_ANCHORS: Partial<Record<ConnectionId, TutorialAnchorId>> = {
+  "gas:furnace__lower_intake": TUTORIAL_ANCHORS.conduitCellFurnaceGas,
+  "gas:core__lower_intake": TUTORIAL_ANCHORS.conduitCoreCellGas,
+  "liquid:core__lower_intake": TUTORIAL_ANCHORS.conduitCoreCellLiquid,
+  "gas:core__furnace": TUTORIAL_ANCHORS.conduitCoreFurnaceGas,
+  "gas:core__gallery": TUTORIAL_ANCHORS.conduitCoreGalleryGas,
+  "gas:furnace__gallery": TUTORIAL_ANCHORS.conduitFurnaceReturnGas,
+  "gas:gallery__washlock": TUTORIAL_ANCHORS.conduitReturnFinalGas,
 };
 
 export const conduitTutorialAnchor = (
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
-): TutorialAnchorId | null => CONDUIT_TUTORIAL_ANCHORS[`${runId}:${phase}`] ?? null;
+): TutorialAnchorId | null => CONDUIT_TUTORIAL_ANCHORS[runId] ?? null;
 
 const gasMixtureSummary = (
   gas: GasAmounts,
@@ -173,7 +171,7 @@ interface PhaseReadout {
 
 const phaseReadout = (
   game: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   sourceRoomId: keyof GameState["rooms"],
   translator: Translator,
@@ -269,7 +267,7 @@ export const ConduitActuator = ({
   runId,
 }: {
   phase: TransportPhase;
-  runId: TransportRunId;
+  runId: ConnectionId;
 }) => {
   const definition = lineDefinition(runId, phase);
   if (!definition) return null;
@@ -283,16 +281,16 @@ const InstalledConduitActuator = ({
 }: {
   definition: ProcessLineView;
   phase: TransportPhase;
-  runId: TransportRunId;
+  runId: ConnectionId;
 }) => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
   const active = conduit.enabled;
-  const command = { type: "set_conduit", runId, phase, enabled: !active } as const;
+  const command = { type: "set_conduit", connectionId: runId, enabled: !active } as const;
   const decision = selectors.commandDecision(game, command);
-  const toggle = () => dispatch({ type: "set_conduit", runId, phase, enabled: !active });
+  const toggle = () => dispatch({ type: "set_conduit", connectionId: runId, enabled: !active });
 
   const [activeLabel, inactiveLabel] = actuatorLabels(
     definition.actuator,
@@ -307,7 +305,7 @@ const InstalledConduitActuator = ({
   return (
     <div className={`actuator-row ${conduit.blocked ? "blocked" : ""}`}>
       <div className="actuator-copy">
-        <strong>{transportCopy(runId, phase, translator).name}</strong>
+        <strong>{transportCopy(runId, translator).name}</strong>
         <small>
           {translator.text("ui.process.conduitSummary", {
             from,
@@ -340,7 +338,7 @@ const InstalledConduitActuator = ({
         activeLabel={activeLabel}
         disabled={!decision.allowed}
         inactiveLabel={inactiveLabel}
-        testId={`conduit-control-${runId}-${phase}`}
+        testId={`conduit-control-${runId}`}
         tutorialAnchor={conduitTutorialAnchor(runId, phase)}
         onClick={toggle}
       />

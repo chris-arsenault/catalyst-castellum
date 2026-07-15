@@ -66,7 +66,7 @@ const validateEnemyPath = (
       issues
     );
   }
-  if (!sameCell(enemy.path.at(-1)?.cell, definition.facilityMap.coreBreachCell))
+  if (!sameCell(enemy.path.at(-1)?.cell, definition.map.coreBreachCell))
     navigationIssue(issues, path, "Enemy path does not reach the Core threshold.");
 };
 

@@ -9,7 +9,7 @@ import {
   type RoomId,
   type SpeciesId,
   type TransportPhase,
-  type TransportRunId,
+  type ConnectionId,
 } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
 import { maybeLineDefinition } from "../world/instances";
@@ -52,7 +52,7 @@ export interface TransportPhaseStatus {
 
 const phaseChannel = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   gameDefinition: GameDefinition
 ): TransportChannelTelemetry | null => {
@@ -91,7 +91,7 @@ const phaseChannel = (
 
 export const transportRunChannels = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   definition: GameDefinition
 ): TransportChannelTelemetry[] =>
   (["gas", "liquid"] as const).flatMap((phase) => {
@@ -101,7 +101,7 @@ export const transportRunChannels = (
 
 export const transportRunMaterialFlow = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   species: SpeciesId,
   gameDefinition: GameDefinition
 ): MaterialRunFlow => {
@@ -128,7 +128,7 @@ export const transportRunMaterialFlow = (
 
 export const transportRunPhaseStatus = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   definition: GameDefinition
 ): TransportPhaseStatus => {

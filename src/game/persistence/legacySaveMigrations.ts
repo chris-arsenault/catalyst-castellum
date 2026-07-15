@@ -3,7 +3,7 @@ import type { GameDefinition } from "../definitionTypes";
 import { addEvent } from "../engine/events";
 import { findEnemyPath } from "../engine/navigation";
 import { createScenarioGame } from "../engine/scenarioState";
-import { type GameState, type GasAmounts, type LiquidAmounts, type TransportRunId } from "../types";
+import { type GameState, type GasAmounts, type LiquidAmounts, type ConnectionId } from "../types";
 import type {
   LegacyV10Game,
   LegacyV7Game,
@@ -11,7 +11,7 @@ import type {
   LegacyV8Game,
   LegacyV9Game,
 } from "./saveCodec";
-import { definitionTransportRun, gasConduitState, liquidConduitState } from "../world/instances";
+import { gasConduitState, liquidConduitState, processLineIds } from "../world/instances";
 
 export const LEGACY_GAS_LINE_IDS = [
   "gas_oxygen_to_furnace",
@@ -39,45 +39,54 @@ export const LEGACY_LIQUID_LINE_IDS = [
   "liquid_final_drain",
 ] as const;
 
-const GAS_LINE_MIGRATION: Record<TransportRunId, readonly (typeof LEGACY_GAS_LINE_IDS)[number][]> =
-  {
-    core_furnace: ["gas_oxygen_to_furnace", "gas_furnace_exhaust"],
-    core_switchyard: [],
-    core_reservoir: [],
-    core_gallery: [],
-    cell_furnace: ["gas_anode_to_furnace", "gas_cathode_to_furnace"],
-    core_cell: ["gas_cathode_relief"],
-    cell_absorber: ["gas_anode_to_absorber"],
-    furnace_return: ["gas_acid_return"],
-    return_final: ["gas_final_header"],
-    return_outer: ["gas_outer_bleed"],
-    core_final: ["gas_final_exhaust"],
-    absorber_final: [],
-    core_absorber: [],
-  };
+/** Legacy saves keyed transport runs by pair name; canonical line ids map back to them. */
+const LEGACY_RUN_IDS: Record<ConnectionId, string> = {
+  "gas:core__furnace": "core_furnace",
+  "gas:core__switchyard": "core_switchyard",
+  "gas:core__reservoir": "core_reservoir",
+  "gas:core__gallery": "core_gallery",
+  "gas:furnace__lower_intake": "cell_furnace",
+  "gas:core__lower_intake": "core_cell",
+  "gas:lower_intake__reservoir": "cell_absorber",
+  "gas:furnace__gallery": "furnace_return",
+  "gas:gallery__washlock": "return_final",
+  "gas:gallery__switchyard": "return_outer",
+  "gas:core__washlock": "core_final",
+  "liquid:core__lower_intake": "core_cell",
+  "liquid:lower_intake__reservoir": "cell_absorber",
+  "liquid:core__washlock": "core_final",
+  "liquid:reservoir__washlock": "absorber_final",
+  "liquid:core__reservoir": "core_absorber",
+};
+
+const GAS_LINE_MIGRATION: Record<ConnectionId, readonly (typeof LEGACY_GAS_LINE_IDS)[number][]> = {
+  "gas:core__furnace": ["gas_oxygen_to_furnace", "gas_furnace_exhaust"],
+  "gas:core__switchyard": [],
+  "gas:core__reservoir": [],
+  "gas:core__gallery": [],
+  "gas:furnace__lower_intake": ["gas_anode_to_furnace", "gas_cathode_to_furnace"],
+  "gas:core__lower_intake": ["gas_cathode_relief"],
+  "gas:lower_intake__reservoir": ["gas_anode_to_absorber"],
+  "gas:furnace__gallery": ["gas_acid_return"],
+  "gas:gallery__washlock": ["gas_final_header"],
+  "gas:gallery__switchyard": ["gas_outer_bleed"],
+  "gas:core__washlock": ["gas_final_exhaust"],
+};
 
 const LIQUID_LINE_MIGRATION: Record<
-  TransportRunId,
+  ConnectionId,
   readonly (typeof LEGACY_LIQUID_LINE_IDS)[number][]
 > = {
-  core_furnace: [],
-  core_switchyard: [],
-  core_reservoir: [],
-  core_gallery: [],
-  cell_furnace: [],
-  core_cell: [
+  "liquid:core__lower_intake": [
     "liquid_water_to_cell",
     "liquid_salt_to_cell",
     "liquid_liquor_recovery",
     "liquid_cell_drain",
   ],
-  cell_absorber: ["liquid_liquor_to_absorber", "liquid_absorber_recycle"],
-  furnace_return: [],
-  return_final: [],
-  return_outer: [],
-  core_final: ["liquid_water_to_final", "liquid_final_drain"],
-  absorber_final: ["liquid_hypochlorite_to_final"],
-  core_absorber: ["liquid_absorber_drain"],
+  "liquid:lower_intake__reservoir": ["liquid_liquor_to_absorber", "liquid_absorber_recycle"],
+  "liquid:core__washlock": ["liquid_water_to_final", "liquid_final_drain"],
+  "liquid:reservoir__washlock": ["liquid_hypochlorite_to_final"],
+  "liquid:core__reservoir": ["liquid_absorber_drain"],
 };
 
 const addGas = (target: GasAmounts, addition: GasAmounts): void => {
@@ -95,14 +104,31 @@ const gasTotal = (gas: GasAmounts): number =>
 
 const gasLinesForMigration = (
   levelId: GameState["campaign"]["levelId"],
-  runId: TransportRunId
+  connectionId: ConnectionId
 ): readonly (typeof LEGACY_GAS_LINE_IDS)[number][] => {
-  if (levelId !== "flash_point") return GAS_LINE_MIGRATION[runId] ?? [];
-  if (runId === "core_furnace") {
-    return [...(GAS_LINE_MIGRATION.core_furnace ?? []), "gas_cathode_to_furnace"];
+  if (levelId !== "flash_point") return GAS_LINE_MIGRATION[connectionId] ?? [];
+  if (connectionId === "gas:core__furnace") {
+    return [...(GAS_LINE_MIGRATION["gas:core__furnace"] ?? []), "gas_cathode_to_furnace"];
   }
-  if (runId === "cell_furnace") return ["gas_anode_to_furnace"];
-  return GAS_LINE_MIGRATION[runId] ?? [];
+  if (connectionId === "gas:furnace__lower_intake") return ["gas_anode_to_furnace"];
+  return GAS_LINE_MIGRATION[connectionId] ?? [];
+};
+
+const migrateV7LiquidConduits = (
+  state: GameState,
+  legacy: LegacyV7Game,
+  definition: GameDefinition
+): void => {
+  for (const connectionId of processLineIds(definition, "liquid_line")) {
+    const legacyRun = legacy.transportRuns[LEGACY_RUN_IDS[connectionId] ?? connectionId];
+    const liquid = emptyLiquid();
+    for (const lineId of LIQUID_LINE_MIGRATION[connectionId] ?? []) {
+      addLiquid(liquid, legacy.liquidLines[lineId].liquid);
+    }
+    liquidConduitState(state, connectionId).liquid = liquid;
+    liquidConduitState(state, connectionId).installed = Boolean(legacyRun?.liquidInstalled);
+    liquidConduitState(state, connectionId).enabled = false;
+  }
 };
 
 const migrateV7Conduits = (
@@ -111,36 +137,25 @@ const migrateV7Conduits = (
   definition: GameDefinition
 ): void => {
   const levelId = legacy.campaign.levelId;
-  for (const runId of state.world.connections) {
-    const legacyRun = legacy.transportRuns[runId];
+  for (const connectionId of processLineIds(definition, "gas_line")) {
+    const legacyRun = legacy.transportRuns[LEGACY_RUN_IDS[connectionId] ?? connectionId];
     const gas = emptyGas();
     let temperatureMass = 0;
     let temperatureAmount = 0;
-    for (const lineId of gasLinesForMigration(levelId, runId)) {
+    for (const lineId of gasLinesForMigration(levelId, connectionId)) {
       const line = legacy.gasLines[lineId];
       addGas(gas, line.gas);
       const amount = gasTotal(line.gas);
       temperatureMass += line.temperature * amount;
       temperatureAmount += amount;
     }
-    gasConduitState(state, runId).gas = gas;
-    gasConduitState(state, runId).temperature =
+    gasConduitState(state, connectionId).gas = gas;
+    gasConduitState(state, connectionId).temperature =
       temperatureAmount > 0 ? temperatureMass / temperatureAmount : 22;
-    gasConduitState(state, runId).installed = Boolean(
-      definitionTransportRun(definition, runId).gas && legacyRun?.gasInstalled
-    );
-    gasConduitState(state, runId).enabled = false;
-
-    const liquid = emptyLiquid();
-    for (const lineId of LIQUID_LINE_MIGRATION[runId] ?? []) {
-      addLiquid(liquid, legacy.liquidLines[lineId].liquid);
-    }
-    liquidConduitState(state, runId).liquid = liquid;
-    liquidConduitState(state, runId).installed = Boolean(
-      definitionTransportRun(definition, runId).liquid && legacyRun?.liquidInstalled
-    );
-    liquidConduitState(state, runId).enabled = false;
+    gasConduitState(state, connectionId).installed = Boolean(legacyRun?.gasInstalled);
+    gasConduitState(state, connectionId).enabled = false;
   }
+  migrateV7LiquidConduits(state, legacy, definition);
 };
 
 export const migrateV7Game = (legacy: LegacyV7Game, definition: GameDefinition): GameState => {
@@ -154,8 +169,8 @@ export const migrateV7Game = (legacy: LegacyV7Game, definition: GameDefinition):
   const round = definition.levels[levelId].rounds[state.campaign.roundIndex]!;
   state.availability = {
     equipment: [...round.availability.equipment],
-    gasRuns: [...round.availability.gasRuns],
-    liquidRuns: [...round.availability.liquidRuns],
+    gasLines: [...round.availability.gasLines],
+    liquidLines: [...round.availability.liquidLines],
     gasSources: [...round.availability.gasSources],
     liquidSources: [...round.availability.liquidSources],
   };

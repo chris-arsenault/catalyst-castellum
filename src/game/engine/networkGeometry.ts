@@ -1,6 +1,6 @@
 import { gridCellToWorldPoint } from "../spatial";
 import type { GameDefinition } from "../definitionTypes";
-import type { GameState, GridCell, TransportPhase, TransportRunId, WorldPoint } from "../types";
+import type { GameState, GridCell, TransportPhase, ConnectionId, WorldPoint } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
 import { maybeLineDefinition, type ProcessLineView } from "../world/instances";
 
@@ -9,23 +9,23 @@ const MINIMUM_LENGTH_FACTOR = 0.68;
 const MAXIMUM_LENGTH_FACTOR = 1.3;
 
 export const conduitDefinition = (
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   definition: GameDefinition
 ): ProcessLineView | null => maybeLineDefinition(definition, runId, phase);
 
-export const conduitState = (state: GameState, runId: TransportRunId, phase: TransportPhase) =>
+export const conduitState = (state: GameState, runId: ConnectionId, phase: TransportPhase) =>
   phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
 
 export const conduitRoute = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): readonly GridCell[] => conduitState(state, runId, phase).route;
 
 export const conduitWorldRoute = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): WorldPoint[] => conduitRoute(state, runId, phase).map(gridCellToWorldPoint);
 
@@ -41,7 +41,7 @@ export const gridRouteLength = (route: readonly GridCell[]): number => {
 
 export const conduitLength = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): number => gridRouteLength(conduitRoute(state, runId, phase));
 
@@ -53,7 +53,7 @@ const lengthFactor = (length: number): number =>
 
 export const conduitCapacity = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   definition: GameDefinition
 ): number => {
@@ -63,7 +63,7 @@ export const conduitCapacity = (
 
 export const conduitMaxFlow = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   definition: GameDefinition
 ): number => {
@@ -73,7 +73,7 @@ export const conduitMaxFlow = (
 
 export const conduitEndpoint = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   endpoint: "from" | "to"
 ): WorldPoint => {
@@ -85,7 +85,7 @@ export const conduitEndpoint = (
 
 export const conduitCrestElevation = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): number =>
   Math.max(

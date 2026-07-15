@@ -9,7 +9,7 @@ describe("explicit game definitions", () => {
   it("runs two independently scoped definitions in one process", () => {
     const alternate = deriveGame(DEFAULT_GAME_DEFINITION, {
       id: "alternate-test-facility",
-      facilityMap: { ...DEFAULT_GAME_DEFINITION.facilityMap, width: 80 },
+      map: { ...DEFAULT_GAME_DEFINITION.map, width: 80 },
       rooms: {
         ...DEFAULT_GAME_DEFINITION.rooms,
         furnace: {

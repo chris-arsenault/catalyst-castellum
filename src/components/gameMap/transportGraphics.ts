@@ -14,7 +14,7 @@ import {
   type Point,
   type SpeciesId,
   type TransportPhase,
-  type TransportRunId,
+  type ConnectionId,
 } from "../../game/types";
 import { colorNumber, worldPathToMap } from "./mapGeometry";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
@@ -229,14 +229,14 @@ interface PhaseLaneModel {
   hovered: boolean;
   offset: number;
   phase: "gas" | "liquid";
-  runId: TransportRunId;
+  runId: ConnectionId;
   selectedSpecies: SpeciesId | null;
   state: GameState;
 }
 
 const mixedPhaseColor = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   fallback: number
 ): number => {
@@ -304,14 +304,14 @@ const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
 
 const phaseRouteCells = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): readonly GridCell[] | null => {
   const definition = lineDefinition(runId, phase);
   const available =
     phase === "gas"
-      ? state.availability.gasRuns.includes(runId)
-      : state.availability.liquidRuns.includes(runId);
+      ? state.availability.gasLines.includes(runId)
+      : state.availability.liquidLines.includes(runId);
   if (!definition || !available) return null;
   const route =
     phase === "gas" ? gasConduitState(state, runId).route : liquidConduitState(state, runId).route;
@@ -349,7 +349,7 @@ const coincidentLaneOffsets = (
 export const drawTransportRun = (
   graphics: Graphics,
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   selectedSpecies: SpeciesId | null,
   hovered: boolean,
   emphasized: boolean

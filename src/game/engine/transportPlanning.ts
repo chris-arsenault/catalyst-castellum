@@ -1,7 +1,7 @@
-import type { RoomId, TransportRunId } from "../types";
+import type { RoomId, ConnectionId } from "../types";
 
 export interface TransportPlan {
-  runId: TransportRunId;
+  runId: ConnectionId;
   sourceRoomId: RoomId;
   destinationRoomId: RoomId;
   outgoingRequest: number;
@@ -31,8 +31,8 @@ export const allocateTransportPlans = <Plan extends TransportPlan>(
 
 export const reconcileTransportCapacity = <Plan extends TransportPlan>(
   plans: Plan[],
-  retained: (runId: TransportRunId) => number,
-  capacity: (runId: TransportRunId) => number
+  retained: (runId: ConnectionId) => number,
+  capacity: (runId: ConnectionId) => number
 ): void => {
   for (const plan of plans) {
     const inletHeadroom = Math.max(

@@ -4,7 +4,7 @@ import type {
   ProcessId,
   RoomId,
   TransportPhase,
-  TransportRunId,
+  ConnectionId,
 } from "../game/types";
 import { gasConduitState, liquidConduitState, roomState } from "../game/world/instances";
 
@@ -14,7 +14,7 @@ export type GuideCondition =
   | { kind: "phase_is"; phase: GamePhase }
   | { kind: "phase_is_after_build" }
   | { kind: "equipment_active"; roomId: RoomId; equipmentId: string }
-  | { kind: "transport_enabled"; runId: TransportRunId; phase: TransportPhase }
+  | { kind: "transport_enabled"; runId: ConnectionId; phase: TransportPhase }
   | { kind: "process_total"; processId: ProcessId; minimum: number }
   | { kind: "level_resolved" };
 

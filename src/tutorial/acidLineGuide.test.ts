@@ -38,8 +38,12 @@ const installAcidEquipment = (source: GameState): GameState => {
 
 const openAcidLine = (source: GameState): GameState => {
   let game = source;
-  for (const runId of ["cell_furnace", "furnace_return", "return_final"] as const) {
-    game = command(game, { type: "set_conduit", runId, phase: "gas", enabled: true });
+  for (const connectionId of [
+    "gas:furnace__lower_intake",
+    "gas:furnace__gallery",
+    "gas:gallery__washlock",
+  ] as const) {
+    game = command(game, { type: "set_conduit", connectionId, enabled: true });
   }
   return game;
 };

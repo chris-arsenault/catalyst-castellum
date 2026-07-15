@@ -6,7 +6,7 @@ import type {
   GridCell,
   LiquidSourceId,
   RoomId,
-  TransportRunId,
+  ConnectionId,
 } from "./types";
 
 export type FacilityRing = "outer" | "middle" | "inner" | "core";
@@ -142,7 +142,7 @@ export interface ConduitPhaseDefinition {
 }
 
 export interface TransportRunDefinition {
-  id: TransportRunId;
+  id: ConnectionId;
   rooms: readonly [RoomId, RoomId];
   gas: ConduitPhaseDefinition | null;
   liquid: ConduitPhaseDefinition | null;

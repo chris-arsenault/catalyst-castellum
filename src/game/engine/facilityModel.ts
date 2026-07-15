@@ -1,7 +1,5 @@
 import type {
   FacilityCellDefinition,
-  FacilityMapDefinition,
-  FacilityPortalDefinition,
   FacilityPortalState,
   FacilityRing,
   FacilityTerrainKind,
@@ -13,6 +11,7 @@ import type {
 import type { FacilityModel } from "../definitionTypes";
 import { cell, cellKey, worldPointToGridCell } from "../spatial";
 import { instance } from "../world/instances";
+import { isArchitectural, type ArchitecturalConnection, type WorldMap } from "../world/map";
 
 const STANDARD_ROOM_CELL_AREA = 14 * 8;
 const STANDARD_ROOM_VOLUME = 100;
@@ -21,7 +20,7 @@ export const ROOM_VOLUME_PER_CELL = STANDARD_ROOM_VOLUME / STANDARD_ROOM_CELL_AR
 export type { FacilityModel } from "../definitionTypes";
 export { gridCellToWorldPoint, gridPathToWorldPath, worldPointToGridCell } from "../spatial";
 
-const portalTerrain = (definition: FacilityPortalDefinition): FacilityTerrainKind => {
+const portalTerrain = (definition: ArchitecturalConnection): FacilityTerrainKind => {
   if (definition.kind === "ladder_shaft") return "ladder";
   if (definition.kind === "door" || definition.kind === "core_door") return "door";
   if (definition.kind === "trapdoor") return "trapdoor";
@@ -30,12 +29,10 @@ const portalTerrain = (definition: FacilityPortalDefinition): FacilityTerrainKin
 
 // The factory deliberately encloses all caches so two definitions never share derived topology.
 // eslint-disable-next-line max-lines-per-function
-export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel => {
+export const createFacilityModel = (map: WorldMap): FacilityModel => {
+  const portals = Object.values(map.connections).filter(isArchitectural);
   const roomForBoundsCell = (gridCell: GridCell): RoomId | null => {
-    for (const [roomId, room] of Object.entries(map.rooms) as [
-      RoomId,
-      FacilityMapDefinition["rooms"][RoomId],
-    ][]) {
+    for (const [roomId, room] of Object.entries(map.rooms)) {
       const { bounds } = room;
       if (
         gridCell.column >= bounds.column &&
@@ -55,7 +52,7 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
     Object.values(map.rooms).flatMap((room) => room.ladderCells.map(cellKey))
   );
   const portalByConnectorKey = new Map(
-    map.portals.flatMap((definition) =>
+    portals.flatMap((definition) =>
       definition.connectorCells.map((connector) => [cellKey(connector), definition] as const)
     )
   );
@@ -78,14 +75,14 @@ export const createFacilityModel = (map: FacilityMapDefinition): FacilityModel =
     coreShellKeys.add(cellKey(cell(coreBounds.column + coreBounds.width, elevation)));
   }
 
-  const portalDefinition = (portalId: string): FacilityPortalDefinition => {
-    const definition = map.portals.find((candidate) => candidate.id === portalId);
+  const portalDefinition = (portalId: string): ArchitecturalConnection => {
+    const definition = portals.find((candidate) => candidate.id === portalId);
     if (!definition) throw new Error(`Unknown facility portal: ${portalId}`);
     return definition;
   };
   const initialPortalStates = (): Record<string, FacilityPortalState> =>
     Object.fromEntries(
-      map.portals.map((definition) => [
+      portals.map((definition) => [
         definition.id,
         {
           open: definition.defaultOpen,

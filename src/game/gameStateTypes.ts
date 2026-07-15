@@ -25,8 +25,7 @@ import type {
   EquipmentSocketId,
   RoomId,
   RoomState,
-  TransportPhase,
-  TransportRunId,
+  ConnectionId,
   LevelId,
   WorldPoint,
   FacilityPortalState,
@@ -65,8 +64,8 @@ export interface CampaignProgress {
 
 export interface ScenarioAvailability {
   equipment: EquipmentId[];
-  gasRuns: TransportRunId[];
-  liquidRuns: TransportRunId[];
+  gasLines: ConnectionId[];
+  liquidLines: ConnectionId[];
   gasSources: GasSourceId[];
   liquidSources: LiquidSourceId[];
 }
@@ -165,7 +164,7 @@ export interface CombatIncident {
 /** Canonical world instance catalogs; iteration order is simulation order (ADR-0002). */
 export interface WorldCatalogs {
   rooms: readonly RoomId[];
-  connections: readonly TransportRunId[];
+  connections: readonly ConnectionId[];
 }
 
 export interface GameState {
@@ -187,8 +186,8 @@ export interface GameState {
   liquidBuffers: Record<LiquidBufferId, LiquidBufferState>;
   gasJunctions: Record<RoomId, GasJunctionState>;
   liquidJunctions: Record<RoomId, LiquidJunctionState>;
-  gasConduits: Record<TransportRunId, GasConduitState>;
-  liquidConduits: Record<TransportRunId, LiquidConduitState>;
+  gasConduits: Record<ConnectionId, GasConduitState>;
+  liquidConduits: Record<ConnectionId, LiquidConduitState>;
   portalStates: Record<string, FacilityPortalState>;
   processes: Record<ProcessId, ProcessState>;
   gasVent: GasAmounts;
@@ -245,7 +244,7 @@ export interface RoomAnalysis {
 }
 
 export type GameCommand =
-  | { type: "set_conduit"; runId: TransportRunId; phase: TransportPhase; enabled: boolean }
+  | { type: "set_conduit"; connectionId: ConnectionId; enabled: boolean }
   | {
       type: "install_equipment";
       roomId: RoomId;
@@ -255,8 +254,8 @@ export type GameCommand =
   | { type: "toggle_equipment"; roomId: RoomId; socketId: EquipmentSocketId; enabled: boolean }
   | { type: "upgrade_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
   | { type: "dismantle_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
-  | { type: "build_transport"; runId: TransportRunId; phase: TransportPhase }
-  | { type: "dismantle_transport"; runId: TransportRunId; phase: TransportPhase }
+  | { type: "build_transport"; connectionId: ConnectionId }
+  | { type: "dismantle_transport"; connectionId: ConnectionId }
   | { type: "charge_gas_source"; sourceId: GasSourceId }
   | { type: "charge_liquid_source"; sourceId: LiquidSourceId }
   | { type: "start_prime" }

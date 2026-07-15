@@ -7,7 +7,7 @@ import {
   type GasAmounts,
   type GasConduitState,
   type RoomId,
-  type TransportRunId,
+  type ConnectionId,
 } from "../types";
 import { addGas, gasAmountTotal, takeGas } from "./roomState";
 import {
@@ -29,7 +29,7 @@ import {
   type TransportPlan,
 } from "./transportPlanning";
 import { gasConduitState, gasJunctionState, roomState } from "../world/instances";
-import { definitionGasJunction, gasLineDefinition } from "../world/instances";
+import { definitionGasJunction, gasLineDefinition, processLineIds } from "../world/instances";
 
 const FULL_FLOW_DRIVE = 0.7;
 const FULL_CONDUIT_EPSILON = 1e-6;
@@ -38,7 +38,7 @@ type GasPlan = TransportPlan;
 
 const gasLinePressureRatio = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   definition: GameDefinition
 ): number => {
   const conduit = gasConduitState(state, runId);
@@ -51,13 +51,13 @@ const gasLinePressureRatio = (
 
 export const gasConduitPressure = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   definition: GameDefinition
 ): number => gasLinePressureRatio(state, runId, definition) * STANDARD_PRESSURE;
 
 const destinationHeadroom = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
   const definition = gasLineDefinition(gameDefinition, runId);
@@ -67,7 +67,7 @@ const destinationHeadroom = (
 
 const destinationPressureRatio = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   gameDefinition: GameDefinition
 ): number => {
   const definition = gasLineDefinition(gameDefinition, runId);
@@ -87,7 +87,7 @@ const sourcePressureRatio = (
 
 const desiredThroughput = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   dt: number,
   gameDefinition: GameDefinition
 ): number => {
@@ -112,7 +112,7 @@ const desiredThroughput = (
 
 const initialPlan = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   dt: number,
   gameDefinition: GameDefinition
 ): GasPlan | null => {
@@ -143,7 +143,7 @@ const initialPlan = (
 
 const deliverGas = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   packet: GasAmounts,
   packetTemperature: number,
   gameDefinition: GameDefinition
@@ -168,7 +168,7 @@ const deliverGas = (
   );
 };
 
-const clearReadout = (state: GameState, runId: TransportRunId): void => {
+const clearReadout = (state: GameState, runId: ConnectionId): void => {
   const conduit = gasConduitState(state, runId);
   conduit.lastFlow = 0;
   conduit.blocked = false;
@@ -248,8 +248,9 @@ export const simulateGasConduits = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  for (const runId of state.world.connections) clearReadout(state, runId);
-  const plans = state.world.connections.flatMap((runId) => {
+  const lineIds = processLineIds(definition, "gas_line");
+  for (const runId of lineIds) clearReadout(state, runId);
+  const plans = lineIds.flatMap((runId) => {
     const plan = initialPlan(state, runId, dt, definition);
     return plan ? [plan] : [];
   });

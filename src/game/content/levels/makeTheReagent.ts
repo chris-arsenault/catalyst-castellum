@@ -4,14 +4,14 @@ import { availability, emptyLoadout, gasRun, liquidRun } from "./helpers";
 
 const reagentRoundOne = availability({
   equipment: ["membrane_cell"],
-  gasRuns: ["cell_absorber"],
-  liquidRuns: ["core_cell"],
+  gasLines: ["gas:lower_intake__reservoir"],
+  liquidLines: ["liquid:core__lower_intake"],
   liquidSources: ["water_tank", "sodium_chloride_tank"],
 });
 
 const reagentRoundTwo = availability({
   ...reagentRoundOne,
-  gasRuns: ["cell_absorber", "core_cell"],
+  gasLines: ["gas:lower_intake__reservoir", "gas:core__lower_intake"],
 });
 
 export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
@@ -24,8 +24,11 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
-    gasConduits: { cell_absorber: gasRun(true), core_cell: gasRun(false) },
-    liquidConduits: { core_cell: liquidRun(false) },
+    gasConduits: {
+      "gas:lower_intake__reservoir": gasRun(true),
+      "gas:core__lower_intake": gasRun(false),
+    },
+    liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
     liquidSourceAmounts: { water_tank: 120, sodium_chloride_tank: 120 },
   },
   rounds: [

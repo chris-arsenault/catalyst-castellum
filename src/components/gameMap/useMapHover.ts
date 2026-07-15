@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type PointerEvent } from "react";
-import type { RoomId, TransportRunId } from "../../game/types";
+import type { RoomId, ConnectionId } from "../../game/types";
 import type { EquipmentHover } from "./EquipmentLayer";
 import type { CellOutletId } from "./cellOutletRenderModel";
 
@@ -72,9 +72,9 @@ const useHoverIntent = <T>(
 /** Map hover state; while the pipe board is open only rooms and runs stay hoverable. */
 export const useMapHover = (pipeMode: boolean, probe: AnchorProbe) => {
   // Lane glow responds instantly; only the tooltips wait for hover intent.
-  const [glowRunId, setGlowRunId] = useState<TransportRunId | null>(null);
+  const [glowRunId, setGlowRunId] = useState<ConnectionId | null>(null);
   const [tooltipAnchor, setTooltipAnchor] = useState<TooltipAnchor | null>(null);
-  const [hoveredRunId, intendRun] = useHoverIntent<TransportRunId>(probe, setTooltipAnchor);
+  const [hoveredRunId, intendRun] = useHoverIntent<ConnectionId>(probe, setTooltipAnchor);
   const [hoveredCellOutletId, intendOutlet] = useHoverIntent<CellOutletId>(probe, setTooltipAnchor);
   const [hoveredRoomId, intendRoom] = useHoverIntent<RoomId>(probe, setTooltipAnchor);
   const [hoveredEquipment, intendEquipment] = useHoverIntent<EquipmentHover>(
@@ -83,7 +83,7 @@ export const useMapHover = (pipeMode: boolean, probe: AnchorProbe) => {
   );
   const [hoveredEnemyId, intendEnemy] = useHoverIntent<number>(probe, setTooltipAnchor);
   const onHoverRun = useCallback(
-    (runId: TransportRunId | null) => {
+    (runId: ConnectionId | null) => {
       setGlowRunId(runId);
       intendRun(runId);
     },

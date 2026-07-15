@@ -51,8 +51,7 @@ describe("Make the Reagent guidance", () => {
     expect(guideStepIndexFor(game, guide)).toBe(1);
     game = command(game, {
       type: "set_conduit",
-      runId: "core_cell",
-      phase: "liquid",
+      connectionId: "liquid:core__lower_intake",
       enabled: true,
     });
     expect(guidedPhaseActionReason(game, "start_prime", [])).toBeNull();

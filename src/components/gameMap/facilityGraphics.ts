@@ -1,3 +1,5 @@
+import { architecturalConnections } from "../../game/world/map";
+import type { ArchitecturalConnection } from "../../game/world/map";
 import type { Graphics } from "pixi.js";
 import { FACILITY_MAP, facilityCells } from "../../presentation/defaultGame";
 import type { FacilityPortalState, GridCell } from "../../game/types";
@@ -11,7 +13,7 @@ import {
   gridCellMapRect,
 } from "./mapGeometry";
 
-type FacilityPortal = (typeof FACILITY_MAP.portals)[number];
+type FacilityPortal = ArchitecturalConnection;
 
 const drawGeologicalStrata = (graphics: Graphics): void => {
   for (let elevation = 7; elevation < FACILITY_MAP.height; elevation += 10) {
@@ -299,7 +301,7 @@ export const drawFacilityDoors = (
   portalStates: Readonly<Record<string, FacilityPortalState>>
 ): void => {
   graphics.clear();
-  for (const portal of FACILITY_MAP.portals) {
+  for (const portal of architecturalConnections(FACILITY_MAP)) {
     const state = portalStates[portal.id];
     if (portal.kind === "door" || portal.kind === "core_door") {
       drawDoorPortal(graphics, portal, state);
@@ -319,7 +321,7 @@ const drawPortalCut = (graphics: Graphics, gridCell: GridCell): void => {
 };
 
 const drawPortalCuts = (graphics: Graphics): void => {
-  for (const portal of FACILITY_MAP.portals) {
+  for (const portal of architecturalConnections(FACILITY_MAP)) {
     for (const connector of portal.connectorCells) drawPortalCut(graphics, connector);
   }
 };
@@ -337,7 +339,7 @@ const drawTerrainStructures = (graphics: Graphics): void => {
 };
 
 const drawPassageFrames = (graphics: Graphics): void => {
-  for (const portal of FACILITY_MAP.portals) {
+  for (const portal of architecturalConnections(FACILITY_MAP)) {
     if (portal.kind !== "passage" && portal.kind !== "floor_hole") continue;
     for (const connector of portal.connectorCells) {
       const rect = gridCellMapRect(connector);

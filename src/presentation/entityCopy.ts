@@ -9,8 +9,7 @@ import type {
   ReactionDefinition,
   RoomDefinition,
   SpeciesDefinition,
-  TransportPhase,
-  TransportRunId,
+  ConnectionId,
 } from "../game/types";
 import type { Translator } from "../localization/translator";
 import { DEFAULT_TRANSLATOR } from "../localization/translator";
@@ -88,10 +87,9 @@ export const bufferCopy = (
 });
 
 export const transportCopy = (
-  runId: TransportRunId,
-  phase: TransportPhase,
+  connectionId: ConnectionId,
   translator: Translator = DEFAULT_TRANSLATOR
 ): DescribedEntityCopy => ({
-  name: localized(translator, `entities.transport.${runId}.${phase}.name`),
-  description: localized(translator, `entities.transport.${runId}.${phase}.description`),
+  name: localized(translator, `entities.transport.${connectionId}.name`),
+  description: localized(translator, `entities.transport.${connectionId}.description`),
 });

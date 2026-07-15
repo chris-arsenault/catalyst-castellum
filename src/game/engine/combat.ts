@@ -297,7 +297,7 @@ const repathEnemy = (state: GameState, enemy: EnemyState, definition: GameDefini
       flying: enemyDefinition.flying,
       portalStates: state.portalStates,
       start: current.cell,
-      goal: definition.facilityMap.coreBreachCell,
+      goal: definition.map.coreBreachCell,
     },
     definition
   );
@@ -314,11 +314,10 @@ const isClosedCoreThresholdStep = (
   definition: GameDefinition
 ): boolean =>
   step.mode === "door" &&
-  step.cell.column === definition.facilityMap.coreBreachCell.column &&
-  step.cell.elevation === definition.facilityMap.coreBreachCell.elevation &&
+  step.cell.column === definition.map.coreBreachCell.column &&
+  step.cell.elevation === definition.map.coreBreachCell.elevation &&
   step.portalId !== null &&
-  step.portalId ===
-    definition.facility.cellDefinition(definition.facilityMap.coreBreachCell).portalId &&
+  step.portalId === definition.facility.cellDefinition(definition.map.coreBreachCell).portalId &&
   definition.facility.cellDefinition(step.cell).terrain === "door";
 
 const nextEnemySegment = (

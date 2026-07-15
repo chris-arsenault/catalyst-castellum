@@ -1,11 +1,11 @@
 import type { GameDefinition } from "../definitionTypes";
-import type { GameState, TransportPhase, TransportRunId } from "../types";
+import type { GameState, TransportPhase, ConnectionId } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
 import { maybeLineDefinition } from "../world/instances";
 
 export const transportPhaseInstalled = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): boolean =>
   phase === "gas"
@@ -14,7 +14,7 @@ export const transportPhaseInstalled = (
 
 export const transportPhaseEnabled = (
   state: GameState,
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase
 ): boolean =>
   phase === "gas"
@@ -22,7 +22,7 @@ export const transportPhaseEnabled = (
     : liquidConduitState(state, runId).enabled;
 
 export const transportPhaseExists = (
-  runId: TransportRunId,
+  runId: ConnectionId,
   phase: TransportPhase,
   definition: GameDefinition
 ): boolean => maybeLineDefinition(definition, runId, phase) !== null;

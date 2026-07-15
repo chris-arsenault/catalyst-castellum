@@ -4,13 +4,18 @@ import { availability, emptyLoadout, gasRun } from "./helpers";
 
 const flashAvailability = availability({
   equipment: ["gas_agitator"],
-  gasRuns: ["core_furnace"],
+  gasLines: ["gas:core__furnace"],
   gasSources: ["starter_gas_header"],
 });
 
 const secondChamberAvailability = availability({
   equipment: ["gas_agitator"],
-  gasRuns: ["core_furnace", "core_switchyard", "core_reservoir", "core_gallery"],
+  gasLines: [
+    "gas:core__furnace",
+    "gas:core__switchyard",
+    "gas:core__reservoir",
+    "gas:core__gallery",
+  ],
   gasSources: ["starter_gas_header"],
 });
 
@@ -24,7 +29,7 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
   assaultTheme: "standard",
   loadout: {
     ...emptyLoadout(),
-    gasConduits: { core_furnace: gasRun(false) },
+    gasConduits: { "gas:core__furnace": gasRun(false) },
   },
   rounds: [
     {

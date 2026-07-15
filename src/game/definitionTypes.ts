@@ -1,19 +1,17 @@
 import type {
+  ConnectionId,
   EnemyDefinition,
   EnemyType,
   EquipmentDefinition,
   EquipmentId,
   EquipmentInstance,
   EquipmentSocketId,
-  FacilityMapDefinition,
-  FacilityPortalDefinition,
   FacilityPortalState,
   FacilityRing,
   FacilityTerrainKind,
   GasAmounts,
   GasBufferDefinition,
   GasBufferId,
-  GasJunctionDefinition,
   GasSourceDefinition,
   GasSourceId,
   GridCell,
@@ -21,7 +19,6 @@ import type {
   LiquidAmounts,
   LiquidBufferDefinition,
   LiquidBufferId,
-  LiquidJunctionDefinition,
   LiquidSourceDefinition,
   LiquidSourceId,
   ProcessDefinition,
@@ -34,11 +31,10 @@ import type {
   ScenarioAvailability,
   SpeciesDefinition,
   SpeciesId,
-  TransportRunDefinition,
-  TransportRunId,
   WaveEntry,
   WorldPoint,
 } from "./types";
+import type { ArchitecturalConnection, WorldMap } from "./world/map";
 
 export type ScenarioRoomEquipment = Partial<
   Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
@@ -59,8 +55,8 @@ export interface LiquidConduitLoadout {
 export interface FacilityLoadout {
   equipment: ScenarioRoomEquipment;
   initialTemperatures: Partial<Record<RoomId, number>>;
-  gasConduits: Partial<Record<TransportRunId, GasConduitLoadout>>;
-  liquidConduits: Partial<Record<TransportRunId, LiquidConduitLoadout>>;
+  gasConduits: Partial<Record<ConnectionId, GasConduitLoadout>>;
+  liquidConduits: Partial<Record<ConnectionId, LiquidConduitLoadout>>;
   gasSourceGas: Partial<Record<GasSourceId, Partial<GasAmounts>>>;
   liquidSourceAmounts: Partial<Record<LiquidSourceId, number>>;
   gasBuffers: Partial<Record<GasBufferId, Partial<GasAmounts>>>;
@@ -92,9 +88,9 @@ export interface EnvironmentHazardRules {
 }
 
 export interface FacilityModel {
-  readonly map: FacilityMapDefinition;
+  readonly map: WorldMap;
   readonly roomGeometry: Record<RoomId, RoomGeometryDefinition>;
-  portalDefinition(portalId: string): FacilityPortalDefinition;
+  portalDefinition(portalId: string): ArchitecturalConnection;
   initialPortalStates(): Record<string, FacilityPortalState>;
   inBounds(gridCell: GridCell): boolean;
   cellDefinition(gridCell: GridCell): {
@@ -126,7 +122,7 @@ export interface GamePackSource {
   readonly id: string;
   readonly packId: string;
   readonly contentVersion: number;
-  readonly facilityMap: FacilityMapDefinition;
+  readonly map: WorldMap;
   readonly roomOrder: readonly RoomId[];
   readonly rooms: Readonly<Record<RoomId, RoomDefinition>>;
   readonly levelOrder: readonly LevelId[];
@@ -136,13 +132,10 @@ export interface GamePackSource {
   readonly processes: Readonly<Record<ProcessId, ProcessDefinition>>;
   readonly enemies: Readonly<Record<EnemyType, EnemyDefinition>>;
   readonly levels: Readonly<Record<LevelId, LevelDefinition>>;
-  readonly transportRuns: Readonly<Record<TransportRunId, TransportRunDefinition>>;
   readonly gasSources: Readonly<Record<GasSourceId, GasSourceDefinition>>;
   readonly liquidSources: Readonly<Record<LiquidSourceId, LiquidSourceDefinition>>;
   readonly gasBuffers: Readonly<Record<GasBufferId, GasBufferDefinition>>;
   readonly liquidBuffers: Readonly<Record<LiquidBufferId, LiquidBufferDefinition>>;
-  readonly gasJunctions: Readonly<Record<RoomId, GasJunctionDefinition>>;
-  readonly liquidJunctions: Readonly<Record<RoomId, LiquidJunctionDefinition>>;
   readonly ambientGas: GasAmounts;
   readonly environmentHazards: EnvironmentHazardRules;
 }

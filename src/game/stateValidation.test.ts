@@ -20,18 +20,18 @@ describe("semantic game-state validation", () => {
 
   it("rejects empty, disconnected, and out-of-bounds conduit routes", () => {
     const empty = createScenarioGame("flash_point");
-    gasConduitState(empty, "core_furnace").route = [];
+    gasConduitState(empty, "gas:core__furnace").route = [];
     expect(decodeGame(encodeGame(empty))).toBeNull();
 
     const disconnected = createScenarioGame("flash_point");
-    gasConduitState(disconnected, "core_furnace").route.splice(1, 0, {
+    gasConduitState(disconnected, "gas:core__furnace").route.splice(1, 0, {
       column: 0,
       elevation: 0,
     });
     expect(decodeGame(encodeGame(disconnected))).toBeNull();
 
     const outOfBounds = createScenarioGame("flash_point");
-    gasConduitState(outOfBounds, "core_furnace").route[0] = { column: -1, elevation: 0 };
+    gasConduitState(outOfBounds, "gas:core__furnace").route[0] = { column: -1, elevation: 0 };
     expect(decodeGame(encodeGame(outOfBounds))).toBeNull();
   });
 
@@ -47,8 +47,8 @@ describe("semantic game-state validation", () => {
 
   it("rejects enabled uninstalled conduits and invalid next identities", () => {
     const conduit = createScenarioGame("flash_point");
-    gasConduitState(conduit, "core_furnace").installed = false;
-    gasConduitState(conduit, "core_furnace").enabled = true;
+    gasConduitState(conduit, "gas:core__furnace").installed = false;
+    gasConduitState(conduit, "gas:core__furnace").enabled = true;
     expect(decodeGame(encodeGame(conduit))).toBeNull();
 
     const identity = createScenarioGame("flash_point");

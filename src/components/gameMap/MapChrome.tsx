@@ -7,7 +7,7 @@ import {
   type GameState,
   type RoomId,
   type SpeciesId,
-  type TransportRunId,
+  type ConnectionId,
 } from "../../game/types";
 import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import { FIT_ZOOM } from "./mapGeometry";
@@ -103,7 +103,7 @@ interface MapTooltipsProps {
   hoveredCellOutletId: CellOutletId | null;
   hoveredEquipment: EquipmentHover | null;
   hoveredEnemyId: number | null;
-  hoveredRunId: TransportRunId | null;
+  hoveredRunId: ConnectionId | null;
   hoveredRoomId: RoomId | null;
   selectedSpecies: SpeciesId | null;
   tooltipAnchor: TooltipAnchor | null;
@@ -180,7 +180,7 @@ interface MapChromeProps {
   hoveredCellOutletId: CellOutletId | null;
   hoveredEquipment: EquipmentHover | null;
   hoveredEnemyId: number | null;
-  hoveredRunId: TransportRunId | null;
+  hoveredRunId: ConnectionId | null;
   hoveredRoomId: RoomId | null;
   onResetCamera: () => void;
   onSelectSpecies: (species: SpeciesId | null) => void;

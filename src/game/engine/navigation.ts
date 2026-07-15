@@ -1,4 +1,5 @@
 import { cell, cellKey } from "../spatial";
+import { architecturalConnections } from "../world/map";
 import type { GameDefinition } from "../definitionTypes";
 import type { EnemyLocomotionMode, EnemyPathStep, FacilityPortalState, GridCell } from "../types";
 
@@ -20,7 +21,7 @@ const canEnterCell = (
   definition: GameDefinition
 ): boolean =>
   definition.facility.cellIsTraversable(target, portalStates) ||
-  (allowCoreBreach && sameCell(target, definition.facilityMap.coreBreachCell));
+  (allowCoreBreach && sameCell(target, definition.map.coreBreachCell));
 
 const connectorMode = (
   target: GridCell,
@@ -160,7 +161,7 @@ const openTopologyPortalStates = (
   definition: GameDefinition
 ): Record<string, FacilityPortalState> =>
   Object.fromEntries(
-    definition.facilityMap.portals.map((portal) => [
+    architecturalConnections(definition.map).map((portal) => [
       portal.id,
       { open: true, sealed: false, lastGasFlow: 0, lastLiquidFlow: 0 },
     ])
@@ -172,7 +173,7 @@ export const enemyPathTransitionIsLegal = (
   definition: GameDefinition
 ): boolean => {
   const portalStates = openTopologyPortalStates(definition);
-  const allowCoreBreach = sameCell(step.cell, definition.facilityMap.coreBreachCell);
+  const allowCoreBreach = sameCell(step.cell, definition.map.coreBreachCell);
   const neighbors = flying
     ? flyingNeighbors(previous.cell, portalStates, allowCoreBreach, definition)
     : groundNeighbors(previous.cell, portalStates, allowCoreBreach, definition);
@@ -193,7 +194,7 @@ const searchEnemyPath = (
   { flying, portalStates, start, goal }: EnemyPathSearchOptions,
   definition: GameDefinition
 ): EnemyPathStep[] => {
-  const allowCoreBreach = sameCell(goal, definition.facilityMap.coreBreachCell);
+  const allowCoreBreach = sameCell(goal, definition.map.coreBreachCell);
   if (!definition.facility.cellIsTraversable(start, portalStates)) return [];
   if (!canEnterCell(goal, portalStates, allowCoreBreach, definition)) return [];
   const queue: GridCell[] = [{ ...start }];
@@ -228,8 +229,8 @@ export const findEnemyPath = (
   searchEnemyPath(
     {
       ...options,
-      start: definition.facilityMap.entryCell,
-      goal: definition.facilityMap.coreBreachCell,
+      start: definition.map.entryCell,
+      goal: definition.map.coreBreachCell,
     },
     definition
   );

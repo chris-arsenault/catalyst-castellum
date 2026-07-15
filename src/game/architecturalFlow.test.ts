@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FACILITY_MAP, ROOM_ORDER } from "./config";
+import { portalDefinition, ROOM_ORDER } from "./config";
 import {
   simulateArchitecturalGas,
   simulateArchitecturalLiquid,
@@ -98,7 +98,7 @@ describe("architectural gas exchange", () => {
 
 describe("architectural liquid exchange", () => {
   it("derives gravity direction from portal endpoints even when room centers imply the opposite", () => {
-    const trapdoor = FACILITY_MAP.portals.find(({ id }) => id === "reservoir_to_gallery_trapdoor")!;
+    const trapdoor = portalDefinition("reservoir_to_gallery_trapdoor");
     expect(
       verticalPortalOrder({
         ...trapdoor,

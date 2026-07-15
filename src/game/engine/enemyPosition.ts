@@ -21,7 +21,7 @@ export const enemyRoomId = (enemy: EnemyState, definition: GameDefinition): Room
 export const enemyGasZone = (enemy: EnemyState, definition: GameDefinition): GasZone => {
   const roomId = enemyRoomId(enemy, definition);
   if (!roomId) return "lower";
-  const bounds = instance(definition.facilityMap.rooms, roomId, "map room").bounds;
+  const bounds = instance(definition.map.rooms, roomId, "map room").bounds;
   const relativeElevation =
     (enemyWorldPosition(enemy).elevation - bounds.elevation) / bounds.height;
   return relativeElevation >= 0.5 ? "upper" : "lower";

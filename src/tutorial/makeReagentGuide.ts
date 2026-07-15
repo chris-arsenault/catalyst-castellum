@@ -14,13 +14,15 @@ const membraneCellRunning = (game: GameState): boolean =>
   roomEquipmentIsActive(roomState(game, "lower_intake"), "membrane_cell");
 
 const liquidFeedEnabled = (game: GameState): boolean =>
-  liquidConduitState(game, "core_cell").installed && liquidConduitState(game, "core_cell").enabled;
+  liquidConduitState(game, "liquid:core__lower_intake").installed &&
+  liquidConduitState(game, "liquid:core__lower_intake").enabled;
 
 const coProductsEstablished = (game: GameState): boolean =>
   game.processes.chlor_alkali_cell.totalProcessed >= 0.05;
 
 const recoveryEnabled = (game: GameState): boolean =>
-  gasConduitState(game, "core_cell").installed && gasConduitState(game, "core_cell").enabled;
+  gasConduitState(game, "gas:core__lower_intake").installed &&
+  gasConduitState(game, "gas:core__lower_intake").enabled;
 
 const recoveryFlowEstablished = (game: GameState): boolean => gasAmountTotal(game.gasVent) >= 0.05;
 

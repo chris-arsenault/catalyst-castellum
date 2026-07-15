@@ -18,6 +18,7 @@ import {
   definitionLiquidJunction,
   gasLineDefinition,
   liquidLineDefinition,
+  processLineIds,
 } from "../world/instances";
 import { addGas, addLiquid, gasAmountTotal, liquidAmountTotal } from "./roomState";
 import {
@@ -72,10 +73,11 @@ const gasJunctionDemanded = (
   roomId: RoomId,
   gameDefinition: GameDefinition
 ): boolean =>
-  state.world.connections.some((runId) => {
+  processLineIds(gameDefinition, "gas_line").some((runId) => {
     const definition = gasLineDefinition(gameDefinition, runId);
+    if (definition?.direction[0] !== roomId) return false;
     const conduit = gasConduitState(state, runId);
-    return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
+    return conduit.installed && conduit.enabled;
   });
 
 const liquidJunctionDemanded = (
@@ -83,10 +85,11 @@ const liquidJunctionDemanded = (
   roomId: RoomId,
   gameDefinition: GameDefinition
 ): boolean =>
-  state.world.connections.some((runId) => {
+  processLineIds(gameDefinition, "liquid_line").some((runId) => {
     const definition = liquidLineDefinition(gameDefinition, runId);
+    if (definition?.direction[0] !== roomId) return false;
     const conduit = liquidConduitState(state, runId);
-    return definition?.direction[0] === roomId && conduit.installed && conduit.enabled;
+    return conduit.installed && conduit.enabled;
   });
 
 const gasPools = (state: GameState, roomId: RoomId, gameDefinition: GameDefinition): GasPool[] => {

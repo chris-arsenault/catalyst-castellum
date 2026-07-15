@@ -13,12 +13,15 @@ const agitatorRunning = (game: GameState): boolean => equipmentRunning(game, "ga
 
 const gasRunEnabled = (
   game: GameState,
-  runId: "cell_furnace" | "furnace_return" | "return_final"
+  runId: "gas:furnace__lower_intake" | "gas:furnace__gallery" | "gas:gallery__washlock"
 ): boolean => gasConduitState(game, runId).installed && gasConduitState(game, runId).enabled;
 
-const acidFeedEnabled = (game: GameState): boolean => gasRunEnabled(game, "cell_furnace");
-const firstReturnEnabled = (game: GameState): boolean => gasRunEnabled(game, "furnace_return");
-const finalReturnEnabled = (game: GameState): boolean => gasRunEnabled(game, "return_final");
+const acidFeedEnabled = (game: GameState): boolean =>
+  gasRunEnabled(game, "gas:furnace__lower_intake");
+const firstReturnEnabled = (game: GameState): boolean =>
+  gasRunEnabled(game, "gas:furnace__gallery");
+const finalReturnEnabled = (game: GameState): boolean =>
+  gasRunEnabled(game, "gas:gallery__washlock");
 
 const returnLineEnabled = (game: GameState): boolean =>
   firstReturnEnabled(game) && finalReturnEnabled(game);
@@ -43,9 +46,9 @@ const roomHcl = (game: GameState, roomId: RoomId): number =>
   hclAmount(roomState(game, roomId).gas.lower) + hclAmount(roomState(game, roomId).gas.upper);
 
 const downstreamHclEstablished = (game: GameState): boolean =>
-  hclAmount(gasConduitState(game, "furnace_return").gas) +
+  hclAmount(gasConduitState(game, "gas:furnace__gallery").gas) +
     roomHcl(game, "gallery") +
-    hclAmount(gasConduitState(game, "return_final").gas) +
+    hclAmount(gasConduitState(game, "gas:gallery__washlock").gas) +
     roomHcl(game, "washlock") >
   0.005;
 
