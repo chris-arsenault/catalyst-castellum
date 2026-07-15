@@ -45,7 +45,7 @@ const BriefingObjective = ({
   const round = roundDefinitionFor(game);
   const level = levelDefinitionFor(game);
   const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
-  const nextRoom = roomDefinition(nextLevel.focusRoomId);
+  const nextRoom = roomDefinition(game, nextLevel.focusRoomId);
   let detail = translator.text("ui.briefing.objective", {
     objective: localizedLevelCopy.round(level, round).objective,
     duration: formatters.duration(round.primeSeconds),
@@ -114,12 +114,12 @@ const hint = (
   const level = levelDefinitionFor(game);
   if (!offersOpeningDrill)
     return translator.text("ui.briefing.hint.checkpoint", {
-      room: roomDefinition(level.focusRoomId).code,
+      room: roomDefinition(game, level.focusRoomId).code,
       lesson,
     });
   if (!tutorialEnabled) return translator.text("ui.briefing.hint.lesson");
   return translator.text("ui.briefing.hint.drill", {
-    room: roomDefinition(level.focusRoomId).code,
+    room: roomDefinition(game, level.focusRoomId).code,
   });
 };
 

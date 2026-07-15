@@ -12,14 +12,14 @@ import {
   type RoomState,
 } from "../types";
 import { clamp } from "./math";
-import { definitionRoom } from "../world/instances";
+import { definitionRoom, type MapCarrier } from "../world/instances";
 
 export const NATURAL_REACTION_MULTIPLIER = 0.55;
 
 export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket_b: null });
 
-export const roomSocketIds = (roomId: RoomId, definition: GameDefinition): EquipmentSocketId[] =>
-  EQUIPMENT_SOCKET_IDS.slice(0, definitionRoom(definition, roomId).socketCount);
+export const roomSocketIds = (roomId: RoomId, carrier: MapCarrier): EquipmentSocketId[] =>
+  EQUIPMENT_SOCKET_IDS.slice(0, definitionRoom(carrier, roomId).socketCount);
 
 export const installedEquipment = (room: Pick<RoomState, "equipment">): EquipmentInstance[] =>
   EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
@@ -39,7 +39,7 @@ export const findEquipmentInstallation = (
   definition: GameDefinition
 ): { roomId: RoomId; socketId: EquipmentSocketId; instance: EquipmentInstance } | null => {
   for (const [roomId, room] of Object.entries(state.rooms) as [RoomId, RoomState][]) {
-    for (const socketId of roomSocketIds(roomId, definition)) {
+    for (const socketId of roomSocketIds(roomId, state)) {
       const instance = room.equipment[socketId];
       if (instance?.equipmentId === equipmentId) return { roomId, socketId, instance };
     }

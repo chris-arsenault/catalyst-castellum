@@ -206,7 +206,7 @@ const RoomExposure = ({
 export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId | null }) => {
   const { selectors, translator } = useGamePresentation();
   if (!roomId) return null;
-  const definition = roomDefinition(roomId);
+  const definition = roomDefinition(game, roomId);
   const room = roomState(game, roomId);
   const analysis = selectors.roomAnalysis(room);
   const gasInflow = roomGasInflow(game, roomId);

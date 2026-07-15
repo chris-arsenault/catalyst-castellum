@@ -25,7 +25,6 @@ import type {
   ProcessId,
   ReactionDefinition,
   ReactionId,
-  RoomDefinition,
   RoomGeometryDefinition,
   RoomId,
   ScenarioAvailability,
@@ -124,8 +123,6 @@ export interface GamePackSource {
   readonly contentVersion: number;
   readonly map: WorldMap;
   readonly lineSpecs: LineSpecs;
-  readonly roomOrder: readonly RoomId[];
-  readonly rooms: Readonly<Record<RoomId, RoomDefinition>>;
   readonly levelOrder: readonly LevelId[];
   readonly species: Readonly<Record<SpeciesId, SpeciesDefinition>>;
   readonly reactions: Readonly<Record<ReactionId, ReactionDefinition>>;

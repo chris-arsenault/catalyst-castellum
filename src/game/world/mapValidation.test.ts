@@ -5,6 +5,10 @@ import { validateWorldMap } from "./mapValidation";
 
 const room = (id: string, column: number, elevation: number): MapRoom => ({
   id,
+  code: id.toUpperCase(),
+  structure: "room",
+  ambientTemperature: 22,
+  socketCount: 2,
   bounds: { column, elevation, width: 4, height: 4 },
   socketCells: {},
   platformCells: [],

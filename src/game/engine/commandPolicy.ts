@@ -68,7 +68,7 @@ const evaluateInstallationPlacement = (
 ): CommandDecision | null => {
   const definition = gameDefinition.equipment[command.equipmentId];
   if (!equipmentAvailable(state, command.equipmentId)) return reject("unavailable", { cost });
-  if (!roomSocketIds(command.roomId, gameDefinition).includes(command.socketId))
+  if (!roomSocketIds(command.roomId, state).includes(command.socketId))
     return reject("placement", { cost });
   if (roomState(state, command.roomId).equipment[command.socketId])
     return reject("occupied_socket", { cost });

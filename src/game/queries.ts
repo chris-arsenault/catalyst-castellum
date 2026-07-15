@@ -1,6 +1,7 @@
 import { DEFAULT_GAME_DEFINITION } from "./definition";
 import type { GameDefinition } from "./definitionTypes";
-import type { EnemyState } from "./types";
+import type { EnemyState, RoomId } from "./types";
+import type { MapCarrier } from "./world/instances";
 import * as campaign from "./engine/campaign";
 import * as enemyPosition from "./engine/enemyPosition";
 import * as equipment from "./engine/equipment";
@@ -39,7 +40,8 @@ export const createGameQueries = (definition: GameDefinition) =>
     roomEquipmentIsActive: equipment.roomEquipmentIsActive,
     installedEquipment: equipment.installedEquipment,
     roomEquipmentVolume: bindDefinition(equipment.roomEquipmentVolume, definition),
-    roomSocketIds: bindDefinition(equipment.roomSocketIds, definition),
+    roomSocketIds: (roomId: RoomId, carrier: MapCarrier = definition) =>
+      equipment.roomSocketIds(roomId, carrier),
     hydrogenOxygenFlashStatus: bindDefinition(flashReaction.hydrogenOxygenFlashStatus, definition),
     hydrogenChlorineReactionStatus: bindDefinition(
       reactions.hydrogenChlorineReactionStatus,

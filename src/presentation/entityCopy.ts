@@ -15,7 +15,6 @@ import type { Translator } from "../localization/translator";
 import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
 import { instance, type MapCarrier } from "../game/world/instances";
-import { DEFAULT_GAME_DEFINITION as PACK } from "./defaultGame";
 
 const localized = (translator: Translator, key: string): string =>
   translator.text(key as LocaleKey, {} as never);
@@ -111,8 +110,8 @@ export const transportCopy = (
   const connection = instance(carrier.map.connections, connectionId, "connection definition");
   const keyRoot = connection.kind === "liquid_line" ? "generic.liquid" : "generic.gas";
   const parameters = {
-    from: instance(PACK.rooms, connection.rooms[0], "room definition").code,
-    to: instance(PACK.rooms, connection.rooms[1], "room definition").code,
+    from: instance(carrier.map.rooms, connection.rooms[0], "room definition").code,
+    to: instance(carrier.map.rooms, connection.rooms[1], "room definition").code,
   };
   return {
     name: translator.text(`entities.transport.${keyRoot}.name` as LocaleKey, parameters as never),

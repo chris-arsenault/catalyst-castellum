@@ -43,6 +43,7 @@ const socketCopyKey = (socketId: EquipmentSocketId) =>
 
 const BuildContext = ({ target }: { target: EquipmentBuildTarget | null }) => {
   const { translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
   const socketName = target ? translator.text(socketCopyKey(target.socketId)) : "";
   return (
     <header className="manual-context-bar">
@@ -51,7 +52,7 @@ const BuildContext = ({ target }: { target: EquipmentBuildTarget | null }) => {
         <strong>
           {target
             ? translator.text("ui.manual.build.target", {
-                room: roomDefinition(target.roomId).code,
+                room: roomDefinition(game, target.roomId).code,
                 socket: socketName,
               })
             : translator.text("ui.manual.build.preview")}

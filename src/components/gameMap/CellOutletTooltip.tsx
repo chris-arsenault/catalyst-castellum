@@ -15,7 +15,7 @@ export const CellOutletTooltip = ({
   const assembly = cellOutletAssemblyModel(game, translator);
   const outlet = assembly?.outlets.find((candidate) => candidate.bufferId === bufferId);
   if (!assembly || !outlet) return null;
-  const room = roomDefinition(assembly.roomId);
+  const room = roomDefinition(game, assembly.roomId);
   return (
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="cell-outlet-tooltip">
       <header>

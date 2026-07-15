@@ -42,6 +42,11 @@ export interface LiquidTapDefinition {
 
 export interface MapRoom {
   id: RoomId;
+  /** Short display code (e.g. "R-02"); grafted rooms mint theirs from the module. */
+  code: string;
+  structure: "entry" | "room" | "core";
+  ambientTemperature: number;
+  socketCount: 0 | 2;
   bounds: CellRect;
   socketCells: Partial<Record<EquipmentSocketId, GridCell>>;
   /** Cells inside the room occupied by solid walkable platforms. */

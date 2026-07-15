@@ -98,11 +98,11 @@ export const TransportRunPanel = ({ runId }: { runId: ConnectionId }) => {
         <ArrowRightLeft size={14} />
         <div>
           <strong>
-            {roomDefinition(leftRoom).code} ⇄ {roomDefinition(rightRoom).code}
+            {roomDefinition(game, leftRoom).code} ⇄ {roomDefinition(game, rightRoom).code}
           </strong>
           <small>
-            {roomCopy(roomDefinition(leftRoom), translator).name} ·{" "}
-            {roomCopy(roomDefinition(rightRoom), translator).name}
+            {roomCopy(roomDefinition(game, leftRoom), translator).name} ·{" "}
+            {roomCopy(roomDefinition(game, rightRoom), translator).name}
           </small>
         </div>
       </div>

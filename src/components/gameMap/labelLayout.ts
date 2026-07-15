@@ -1,4 +1,3 @@
-import { ROOM_ORDER } from "../../presentation/defaultGame";
 import type { GameState, RoomId } from "../../game/types";
 import { facilityModelForMap } from "../../game/world/derivedModel";
 import type { WorldMap } from "../../game/world/map";
@@ -77,8 +76,8 @@ const structureObstacles = (map: WorldMap, view: MapView): TaggedObstacle[] =>
     .filter(({ terrain }) => terrain === "platform" || terrain === "ladder")
     .map(({ cell }) => ({ ...view.gridCellMapRect(cell), labelMayOverlapForRoomId: null }));
 
-const roomObstacles = (view: MapView): TaggedObstacle[] =>
-  ROOM_ORDER.map((roomId) => ({
+const roomObstacles = (map: WorldMap, view: MapView): TaggedObstacle[] =>
+  Object.keys(map.rooms).map((roomId) => ({
     ...view.roomMapRect(roomId),
     labelMayOverlapForRoomId: roomId,
   }));
@@ -153,19 +152,19 @@ export const layoutMapLabels = (
 ): MapLabelPlacement[] => {
   const view = mapViewFor(map);
   const obstacles = [
-    ...roomObstacles(view),
+    ...roomObstacles(map, view),
     ...structureObstacles(map, view),
     ...utilityNodeObstacles(map, view),
     ...equipmentSocketObstacles(map, view),
     ...cellOutletObstacles(game),
   ];
   const placed: MapLabelPlacement[] = [];
-  const ordered = [...ROOM_ORDER].sort(
+  const ordered = [...Object.keys(map.rooms)].sort(
     (left, right) =>
       labelPriority(view, right, selectedRoomId) - labelPriority(view, left, selectedRoomId)
   );
   for (const roomId of ordered) {
-    const definition = roomDefinition(roomId);
+    const definition = roomDefinition({ map }, roomId);
     const textOptions = [
       `${definition.code} · ${roomCopy(definition, translator).name}`,
       definition.code,

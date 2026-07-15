@@ -301,7 +301,7 @@ const simulateRoomChemistry = (
     });
   }
   simulatePhaseChanges(room, dt, definition);
-  const baseline = definitionRoom(definition, room.id).ambientTemperature;
+  const baseline = definitionRoom(state, room.id).ambientTemperature;
   room.temperature += (baseline - room.temperature) * 0.03 * dt;
   room.reactionIntensity = Math.max(0, room.reactionIntensity - dt * 1.3);
   state.stats.peakHazard = Math.max(state.stats.peakHazard, analyzeRoom(room, definition).hazard);
@@ -314,7 +314,7 @@ export const simulateReactions = (
 ): HazardBurst[] => {
   const bursts: HazardBurst[] = [];
   simulateProcesses(state, dt, definition);
-  for (const roomId of definition.roomOrder)
+  for (const roomId of state.world.rooms)
     simulateRoomChemistry(state, roomState(state, roomId), dt, bursts, definition);
   return bursts;
 };

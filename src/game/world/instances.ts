@@ -58,8 +58,8 @@ export const gasJunctionState = (state: GameState, roomId: string): GasJunctionS
 export const liquidJunctionState = (state: GameState, roomId: string): LiquidJunctionState =>
   instance(state.liquidJunctions, roomId, "liquid junction");
 
-export const definitionRoom = (definition: GameDefinition, roomId: string): RoomDefinition =>
-  instance(definition.rooms, roomId, "room definition");
+export const definitionRoom = (carrier: MapCarrier, roomId: string): RoomDefinition =>
+  instance(carrier.map.rooms, roomId, "room definition");
 
 /**
  * Per-phase process-line view (ADR-0005): the Map connection itself. Every engine/UI

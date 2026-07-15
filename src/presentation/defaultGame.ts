@@ -15,14 +15,11 @@ export {
   LIQUID_SOURCES,
   PROCESS_DEFINITIONS,
   REACTION_DEFINITIONS,
-  ROOM_DEFINITIONS,
-  ROOM_ORDER,
   SPECIES_DEFINITIONS,
   equipmentGrade,
   nextLevelId,
 } from "../game/config";
 
-import { DEFAULT_GAME_DEFINITION as PACK } from "../game/config";
 import {
   instance,
   maybeLineDefinition,
@@ -33,8 +30,8 @@ import type { RoomDefinition, RoomId, TransportPhase } from "../game/types";
 import type { MapConnection } from "../game/world/map";
 
 /** Loud pack lookups for world-topology instances (ADR-0002). */
-export const roomDefinition = (roomId: string): RoomDefinition =>
-  instance(PACK.rooms, roomId, "room definition");
+export const roomDefinition = (carrier: MapCarrier, roomId: string): RoomDefinition =>
+  instance(carrier.map.rooms, roomId, "room definition");
 
 export const connectionDefinition = (carrier: MapCarrier, id: string): MapConnection =>
   instance(carrier.map.connections, id, "connection definition");

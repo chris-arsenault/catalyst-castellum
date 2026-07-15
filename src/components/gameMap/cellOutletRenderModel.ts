@@ -78,7 +78,7 @@ export const cellOutletAssemblyModel = (
 
   return {
     header: translator.text("ui.map.outlet.header", {
-      room: roomDefinition(installation.roomId).code,
+      room: roomDefinition(game, installation.roomId).code,
     }),
     installationX: installation.x,
     installationY: installation.y,

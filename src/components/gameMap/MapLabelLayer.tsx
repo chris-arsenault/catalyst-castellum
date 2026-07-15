@@ -8,7 +8,7 @@ import { useGamePresentation } from "../../application/presentationContext";
 import { roomDefinition } from "../../presentation/defaultGame";
 
 const labelAccent = (map: WorldMap, roomId: RoomId): number => {
-  if (roomDefinition(roomId).structure === "core") return 0xd2b85f;
+  if (roomDefinition({ map }, roomId).structure === "core") return 0xd2b85f;
   const ring = facilityModelForMap(map).ringForRoom(roomId);
   if (ring === "inner") return 0xc49d64;
   if (ring === "middle") return 0x629db3;

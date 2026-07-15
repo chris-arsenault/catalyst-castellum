@@ -3,18 +3,21 @@ import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
 import { executeCommand } from "./engine/commands";
 import { createScenarioGame } from "./engine/scenarioState";
 import { stepGame } from "./engine/step";
-import { definitionRoom, roomState } from "./world/instances";
+import { roomState } from "./world/instances";
 
 describe("explicit game definitions", () => {
   it("runs two independently scoped definitions in one process", () => {
     const alternate = deriveGame(DEFAULT_GAME_DEFINITION, {
       id: "alternate-test-facility",
-      map: { ...DEFAULT_GAME_DEFINITION.map, width: 80 },
-      rooms: {
-        ...DEFAULT_GAME_DEFINITION.rooms,
-        furnace: {
-          ...definitionRoom(DEFAULT_GAME_DEFINITION, "furnace"),
-          ambientTemperature: 60,
+      map: {
+        ...DEFAULT_GAME_DEFINITION.map,
+        width: 80,
+        rooms: {
+          ...DEFAULT_GAME_DEFINITION.map.rooms,
+          furnace: {
+            ...DEFAULT_GAME_DEFINITION.map.rooms.furnace!,
+            ambientTemperature: 60,
+          },
         },
       },
     });

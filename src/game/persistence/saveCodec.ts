@@ -358,6 +358,10 @@ const tapSchema = z.object({
 });
 const mapRoomSchema = z.object({
   id: roomIdSchema,
+  code: z.string().min(1),
+  structure: z.enum(["entry", "room", "core"]),
+  ambientTemperature: z.number(),
+  socketCount: z.union([z.literal(0), z.literal(2)]),
   bounds: cellRectSchema,
   socketCells: z.record(z.string(), mapGridCellSchema),
   platformCells: z.array(mapGridCellSchema),

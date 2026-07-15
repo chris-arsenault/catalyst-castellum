@@ -206,7 +206,7 @@ const validateTopology = (
   for (const runId of processLineIds(state, "liquid_line")) {
     validateRoute(state, runId, "liquid", issues, definition);
   }
-  for (const roomId of definition.roomOrder) {
+  for (const roomId of state.world.rooms) {
     if (roomState(state, roomId).id !== roomId) {
       issue(
         issues,

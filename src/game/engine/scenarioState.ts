@@ -58,7 +58,7 @@ const makeRoom = (
     }
   }
   const temperature =
-    loadout.initialTemperatures[id] ?? definitionRoom(definition, id).ambientTemperature;
+    loadout.initialTemperatures[id] ?? definitionRoom({ map }, id).ambientTemperature;
   const usableVolume = Math.max(
     8,
     facilityModelForMap(map).roomVolume(id) - roomEquipmentVolume({ equipment }, definition)

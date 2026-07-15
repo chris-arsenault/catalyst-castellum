@@ -212,7 +212,7 @@ export const refillLocalJunctions = (
   gameDefinition: GameDefinition
 ): void => {
   replenishInfiniteGasSources(state, gameDefinition);
-  for (const roomId of gameDefinition.roomOrder) {
+  for (const roomId of state.world.rooms) {
     if (gasJunctionDemanded(state, roomId, gameDefinition)) {
       const junction = gasJunctionState(state, roomId);
       const definition = definitionGasJunction(gameDefinition, roomId);

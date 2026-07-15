@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { portalDefinition, ROOM_ORDER } from "./config";
+import { portalDefinition, WORLD_MAP } from "./config";
+const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import {
   simulateArchitecturalGas,
   simulateArchitecturalLiquid,

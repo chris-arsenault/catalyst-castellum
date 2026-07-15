@@ -7,7 +7,6 @@ import { LINE_SPECS } from "./content/lineSpecs";
 import { ENVIRONMENT_HAZARD_RULES } from "./content/hazards";
 import { GAS_BUFFERS, GAS_SOURCES, LIQUID_BUFFERS, LIQUID_SOURCES } from "./content/supplies";
 import { PROCESS_DEFINITIONS } from "./content/processes";
-import { ROOM_DEFINITIONS, ROOM_ORDER } from "./content/rooms";
 import { ambientGas, SPECIES_DEFINITIONS } from "./content/substances";
 import { compileGamePack } from "./authoring/compiler";
 import type { GameDefinition, GameDefinitionSource } from "./definitionTypes";
@@ -37,8 +36,6 @@ export const deriveGame = (
     contentVersion: base.contentVersion,
     map: base.map,
     lineSpecs: base.lineSpecs,
-    roomOrder: base.roomOrder,
-    rooms: base.rooms,
     levelOrder: base.levelOrder,
     species: base.species,
     reactions: base.reactions,
@@ -63,8 +60,6 @@ export const DEFAULT_GAME_DEFINITION = defineGame({
   contentVersion: 3,
   map: WORLD_MAP,
   lineSpecs: LINE_SPECS,
-  roomOrder: ROOM_ORDER,
-  rooms: ROOM_DEFINITIONS,
   levelOrder: LEVEL_IDS,
   species: SPECIES_DEFINITIONS,
   reactions: REACTION_DEFINITIONS,

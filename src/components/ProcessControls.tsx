@@ -21,7 +21,7 @@ export const ProcessControls = () => {
   const roomId = useGameStore((state) => state.selectedRoomId);
   const setPipeMode = useGameStore((state) => state.setPipeMode);
   const room = roomState(game, roomId);
-  const socketIds = roomSocketIds(roomId);
+  const socketIds = roomSocketIds(roomId, game);
   const connectedRuns = game.world.connections.filter(
     (runId) =>
       connectionRoomPair(game, runId).includes(roomId) &&

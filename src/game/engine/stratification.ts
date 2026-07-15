@@ -110,6 +110,6 @@ export const simulateStratification = (
   dt: number,
   definition: GameDefinition
 ): void => {
-  for (const roomId of definition.roomOrder)
+  for (const roomId of state.world.rooms)
     simulateRoomStratification(roomState(state, roomId), dt, definition);
 };

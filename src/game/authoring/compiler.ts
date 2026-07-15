@@ -93,7 +93,8 @@ const validateAvailableLine = (
     return;
   }
   for (const roomId of parsed.rooms) {
-    if (!(roomId in source.rooms)) push(issues, path, `${id} references unknown room ${roomId}.`);
+    if (!(roomId in source.map.rooms))
+      push(issues, path, `${id} references unknown room ${roomId}.`);
   }
 };
 
@@ -156,7 +157,7 @@ const validateLevelDefinition = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  if (!(level.focusRoomId in source.rooms))
+  if (!(level.focusRoomId in source.map.rooms))
     push(issues, `${path}.focusRoomId`, `Unknown room ${level.focusRoomId}.`);
   for (const reactionId of level.featuredReactionIds) {
     if (!(reactionId in source.reactions))
@@ -179,7 +180,7 @@ const validateEquipmentLoadout = (
   issues: AuthoringIssue[]
 ): void => {
   for (const [roomId, equipment] of Object.entries(level.loadout.equipment)) {
-    if (!(roomId in source.rooms))
+    if (!(roomId in source.map.rooms))
       push(issues, `${path}.loadout.equipment`, `Unknown room ${roomId}.`);
     for (const instance of Object.values(equipment ?? {})) {
       if (instance && !(instance.equipmentId in source.equipment))
@@ -316,23 +317,10 @@ const validateProcesses = (source: GamePackSource, issues: AuthoringIssue[]): vo
 };
 
 const validateWorldCoverage = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  const roomIds = Object.keys(source.rooms);
-  if ([...source.roomOrder].sort().join("|") !== [...roomIds].sort().join("|")) {
-    push(issues, "roomOrder", "roomOrder must list every room exactly once.");
-  }
-  for (const [roomId, room] of Object.entries(source.rooms)) {
-    validateIdentity(issues, `rooms.${roomId}.id`, roomId, room.id);
-    if (!(roomId in source.map.rooms))
-      push(issues, `map.rooms.${roomId}`, "Every room requires map geometry.");
-  }
-  for (const roomId of Object.keys(source.map.rooms)) {
-    if (!(roomId in source.rooms))
-      push(issues, `map.rooms.${roomId}`, `Map room ${roomId} has no room definition.`);
-  }
   for (const connection of Object.values(source.map.connections)) {
     if (!isProcessLine(connection)) continue;
     for (const roomId of connection.rooms) {
-      if (!(roomId in source.rooms))
+      if (!(roomId in source.map.rooms))
         push(issues, `map.connections.${connection.id}.rooms`, `Unknown room ${roomId}.`);
     }
   }

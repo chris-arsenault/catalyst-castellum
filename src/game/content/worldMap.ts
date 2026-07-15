@@ -29,12 +29,24 @@ const liquidTap = (overrides: Partial<LiquidTapDefinition> = {}): LiquidTapDefin
   ...overrides,
 });
 
+interface RoomIdentity {
+  code: string;
+  structure: MapRoom["structure"];
+  ambientTemperature?: number;
+  socketCount?: MapRoom["socketCount"];
+}
+
 const room = (
   id: RoomId,
+  identity: RoomIdentity,
   bounds: MapRoom["bounds"],
   overrides: Partial<Omit<MapRoom, "id" | "bounds">> = {}
 ): MapRoom => ({
   id,
+  code: identity.code,
+  structure: identity.structure,
+  ambientTemperature: identity.ambientTemperature ?? 22,
+  socketCount: identity.socketCount ?? 2,
   bounds,
   socketCells: {},
   platformCells: [],
@@ -54,9 +66,14 @@ export const WORLD_MAP: WorldMap = {
   entryCell: cell(1, 4),
   coreBreachCell: cell(49, 4),
   rooms: {
-    west_intake: room("west_intake", { column: 1, elevation: 4, width: 4, height: 8 }),
+    west_intake: room(
+      "west_intake",
+      { code: "ENTRY", structure: "entry", socketCount: 0 },
+      { column: 1, elevation: 4, width: 4, height: 8 }
+    ),
     switchyard: room(
       "switchyard",
+      { code: "R-01", structure: "room" },
       { column: 6, elevation: 4, width: 22, height: 8 },
       {
         socketCells: { socket_a: cell(12, 4), socket_b: cell(22, 4) },
@@ -65,6 +82,7 @@ export const WORLD_MAP: WorldMap = {
     ),
     furnace: room(
       "furnace",
+      { code: "R-02", structure: "room" },
       { column: 6, elevation: 13, width: 15, height: 20 },
       {
         socketCells: { socket_a: cell(12, 13), socket_b: cell(18, 13) },
@@ -74,16 +92,19 @@ export const WORLD_MAP: WorldMap = {
     ),
     reservoir: room(
       "reservoir",
+      { code: "R-03", structure: "room" },
       { column: 22, elevation: 24, width: 27, height: 9 },
       { socketCells: { socket_a: cell(32, 24), socket_b: cell(43, 24) } }
     ),
     gallery: room(
       "gallery",
+      { code: "R-04", structure: "room" },
       { column: 22, elevation: 14, width: 12, height: 9 },
       { socketCells: { socket_a: cell(25, 14), socket_b: cell(31, 14) } }
     ),
     lower_intake: room(
       "lower_intake",
+      { code: "R-05", structure: "room" },
       { column: 36, elevation: 14, width: 13, height: 9 },
       {
         socketCells: { socket_a: cell(39, 14), socket_b: cell(46, 14) },
@@ -92,11 +113,13 @@ export const WORLD_MAP: WorldMap = {
     ),
     washlock: room(
       "washlock",
+      { code: "R-06", structure: "room" },
       { column: 30, elevation: 4, width: 19, height: 9 },
       { socketCells: { socket_a: cell(35, 4), socket_b: cell(45, 4) } }
     ),
     core: room(
       "core",
+      { code: "CORE", structure: "core", ambientTemperature: 26, socketCount: 0 },
       { column: 51, elevation: 4, width: 18, height: 16 },
       {
         taps: {

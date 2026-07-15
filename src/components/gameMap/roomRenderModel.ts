@@ -39,7 +39,7 @@ export const roomRenderModel = (
   selected: boolean,
   occupied: number
 ): RoomDrawModel => {
-  const definition = roomDefinition(roomId);
+  const definition = roomDefinition(game, roomId);
   const facility = facilityModelForMap(game.map);
   const view = mapViewFor(game.map);
   const room = roomState(game, roomId);

@@ -42,8 +42,8 @@ const MapStage = () => {
       if (!preview) {
         showNotice(
           translator.text("ui.pipes.noRoute", {
-            from: roomDefinition(from).code,
-            to: roomDefinition(to).code,
+            from: roomDefinition(game, from).code,
+            to: roomDefinition(game, to).code,
           })
         );
         return;

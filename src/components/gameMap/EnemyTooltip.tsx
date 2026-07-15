@@ -7,6 +7,7 @@ import {
   roomHazards,
 } from "../../game/queries";
 import type { EnemyState, GameState, HazardChannels } from "../../game/types";
+import type { WorldMap } from "../../game/world/map";
 import { DAMAGE_CHANNELS, dominantDamageChannel } from "../../presentation/damageCopy";
 import { enemyCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
@@ -40,13 +41,14 @@ const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | nul
 };
 
 const enemyPositionCopy = (
+  map: WorldMap,
   roomId: ReturnType<typeof enemyRoomId>,
   zone: ReturnType<typeof enemyGasZone>,
   translator: Translator
 ): string => {
   if (!roomId) return translator.text("ui.map.enemy.position.transit");
   return translator.text("ui.map.enemy.position.room", {
-    room: roomDefinition(roomId).code,
+    room: roomDefinition({ map }, roomId).code,
     zone: translator.text(zone === "upper" ? "ui.map.enemy.zone.upper" : "ui.map.enemy.zone.lower"),
   });
 };
@@ -150,7 +152,7 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
         </div>
         <div>
           <dt>{translator.text("ui.map.enemy.position")}</dt>
-          <dd>{enemyPositionCopy(roomId, zone, translator)}</dd>
+          <dd>{enemyPositionCopy(game.map, roomId, zone, translator)}</dd>
         </div>
         <div>
           <dt>{translator.text("ui.map.enemy.movement")}</dt>

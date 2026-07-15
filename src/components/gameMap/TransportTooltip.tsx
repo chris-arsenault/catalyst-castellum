@@ -149,8 +149,8 @@ const PhaseSection = ({
         <div>
           <strong>{transportCopy(game, runId, translator).name}</strong>
           <small>
-            {roomDefinition(definition.direction[0]).code} →{" "}
-            {roomDefinition(definition.direction[1]).code} ·{" "}
+            {roomDefinition(game, definition.direction[0]).code} →{" "}
+            {roomDefinition(game, definition.direction[1]).code} ·{" "}
             {translator.text(
               (
                 {
@@ -204,7 +204,7 @@ export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTool
         <div>
           <span>{translator.text("ui.map.transport.title")}</span>
           <strong>
-            {roomDefinition(fromRoom).code} ⇄ {roomDefinition(toRoom).code}
+            {roomDefinition(game, fromRoom).code} ⇄ {roomDefinition(game, toRoom).code}
           </strong>
         </div>
         {selectedSpecies && (

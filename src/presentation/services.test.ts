@@ -3,7 +3,7 @@ import { DEFAULT_GAME_DEFINITION, deriveGame } from "../game/definition";
 import { createGameRuntime } from "../game/runtime";
 import { TEST_LOCALE } from "../localization/locales/test";
 import { createGamePresentation } from "./services";
-import { definitionRoom, roomState } from "../game/world/instances";
+import { roomState } from "../game/world/instances";
 
 describe("bound game presentation", () => {
   it("binds an alternate definition and complete locale without component changes", () => {
@@ -11,9 +11,12 @@ describe("bound game presentation", () => {
       id: "presentation-fixture",
       packId: "presentation-fixture",
       contentVersion: 2,
-      rooms: {
-        ...DEFAULT_GAME_DEFINITION.rooms,
-        furnace: { ...definitionRoom(DEFAULT_GAME_DEFINITION, "furnace"), ambientTemperature: 51 },
+      map: {
+        ...DEFAULT_GAME_DEFINITION.map,
+        rooms: {
+          ...DEFAULT_GAME_DEFINITION.map.rooms,
+          furnace: { ...DEFAULT_GAME_DEFINITION.map.rooms.furnace!, ambientTemperature: 51 },
+        },
       },
     });
     const runtime = createGameRuntime(definition);

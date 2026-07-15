@@ -1,4 +1,4 @@
-import { ROOM_DEFINITIONS } from "../config";
+import { WORLD_MAP } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
 import type { PlaytestPlan } from "./types";
 import { LEVEL_PLAYTEST_PLANS } from "../content/playtestPlans";
@@ -19,7 +19,7 @@ export const seededRandom = (seed: number): RandomSource => {
   };
 };
 
-const PLACEMENT_ROOMS = Object.values(ROOM_DEFINITIONS)
+const PLACEMENT_ROOMS = Object.values(WORLD_MAP.rooms)
   .filter((room) => room.structure === "room")
   .map((room) => room.id);
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { ROOM_ORDER, SPECIES_DEFINITIONS, roomVolume } from "./config";
+import { WORLD_MAP, SPECIES_DEFINITIONS, roomVolume } from "./config";
+const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
 import { createGameRuntime } from "./runtime";
 import {
@@ -30,7 +31,6 @@ import {
   liquidJunctionState,
   roomState,
 } from "./world/instances";
-import { WORLD_MAP } from "./config";
 import { isProcessLine } from "./world/map";
 
 const PACK_LINE_IDS = Object.values(WORLD_MAP.connections)

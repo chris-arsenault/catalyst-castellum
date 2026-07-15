@@ -1,4 +1,4 @@
-import { EQUIPMENT_DEFINITIONS, ROOM_ORDER } from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   EQUIPMENT_SOCKET_IDS,
   type EquipmentId,
@@ -30,7 +30,7 @@ export interface EquipmentRenderModel {
 }
 
 export const equipmentRenderModels = (game: GameState): EquipmentRenderModel[] =>
-  ROOM_ORDER.flatMap((roomId) =>
+  game.world.rooms.flatMap((roomId) =>
     EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
       const instance = roomState(game, roomId).equipment[socketId];
       const cell = worldInstance(game.map.rooms, roomId, "map room").socketCells[socketId];

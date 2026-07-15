@@ -14,6 +14,7 @@ const EventEntry = ({
   onChoose: (entry: GameEvent) => void;
 }) => {
   const { eventCopy } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
   const copy = eventCopy(entry);
   return (
     <button
@@ -32,7 +33,7 @@ const EventEntry = ({
       </span>
       {entry.roomId && (
         <span className="event-room">
-          {roomDefinition(entry.roomId).code} <ChevronRight size={13} />
+          {roomDefinition(game, entry.roomId).code} <ChevronRight size={13} />
         </span>
       )}
     </button>
@@ -41,7 +42,8 @@ const EventEntry = ({
 
 export const EventLog = () => {
   const { eventCopy, translator } = useGamePresentation();
-  const events = useGameStore((state) => state.game.events);
+  const game = useGameStore((state) => state.game);
+  const events = game.events;
   const selectRoom = useGameStore((state) => state.selectRoom);
   const [open, setOpen] = useState(false);
   const latest = events[0];

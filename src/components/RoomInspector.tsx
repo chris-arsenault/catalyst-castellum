@@ -333,8 +333,9 @@ const ReactionPanel = () => {
 
 const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
   const { translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const definition = roomDefinition(roomId);
+  const definition = roomDefinition(game, roomId);
   return (
     <div className="modal-backdrop room-details-backdrop">
       <section
@@ -378,7 +379,7 @@ export const RoomInspector = () => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const definition = roomDefinition(roomId);
+  const definition = roomDefinition(game, roomId);
   const analysis = selectors.roomAnalysis(roomState(game, roomId));
   const [showDetails, setShowDetails] = useState(false);
   const closeDetails = useCallback(() => setShowDetails(false), [setShowDetails]);

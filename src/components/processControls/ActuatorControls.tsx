@@ -298,8 +298,8 @@ const InstalledConduitActuator = ({
     definition.destinationKind,
     translator
   );
-  const from = roomDefinition(definition.direction[0]).code;
-  const to = roomDefinition(definition.direction[1]).code;
+  const from = roomDefinition(game, definition.direction[0]).code;
+  const to = roomDefinition(game, definition.direction[1]).code;
   const capacity = conduitCapacity(game, runId, phase);
   const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
 

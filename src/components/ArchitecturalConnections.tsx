@@ -71,7 +71,7 @@ const ArchitecturalConnection = ({
     <article data-portal-id={portal.id}>
       <strong>{portalKindLabel(portal.kind, translator)}</strong>
       <span>
-        {roomDefinition(model.otherRoomId).code} · {portalStateLabel(model.state, translator)}
+        {roomDefinition(game, model.otherRoomId).code} · {portalStateLabel(model.state, translator)}
       </span>
       <small>
         {translator.text("ui.architecture.flow", {

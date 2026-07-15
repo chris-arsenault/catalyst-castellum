@@ -1,15 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
 import { createGameRuntime } from "./runtime";
-import { definitionRoom, roomState } from "./world/instances";
+import { roomState } from "./world/instances";
 
 describe("game runtime", () => {
   it("binds all public transitions and queries to one immutable definition", () => {
     const alternateDefinition = deriveGame(DEFAULT_GAME_DEFINITION, {
       id: "runtime-test",
-      rooms: {
-        ...DEFAULT_GAME_DEFINITION.rooms,
-        furnace: { ...definitionRoom(DEFAULT_GAME_DEFINITION, "furnace"), ambientTemperature: 44 },
+      map: {
+        ...DEFAULT_GAME_DEFINITION.map,
+        rooms: {
+          ...DEFAULT_GAME_DEFINITION.map.rooms,
+          furnace: {
+            ...DEFAULT_GAME_DEFINITION.map.rooms.furnace!,
+            ambientTemperature: 44,
+          },
+        },
       },
     });
     const runtime = createGameRuntime(alternateDefinition);
@@ -23,7 +29,7 @@ describe("game runtime", () => {
     expect(runtime.evaluate(briefing, { type: "begin_level" }).allowed).toBe(true);
     expect(runtime.execute(briefing, { type: "begin_level" }).state.phase).toBe("build");
     expect(Object.isFrozen(runtime)).toBe(true);
-    expect(Object.isFrozen(runtime.definition.rooms.furnace)).toBe(true);
+    expect(Object.isFrozen(runtime.definition.map.rooms.furnace)).toBe(true);
   });
 
   it("keeps two pack identities, queries, projections, and saves independent", () => {

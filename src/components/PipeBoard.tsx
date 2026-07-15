@@ -49,6 +49,7 @@ const PreviewOptionRow = ({
 
 const PipePreviewCard = ({ preview }: { preview: PipePreview }) => {
   const { translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const setPipePreview = useGameStore((state) => state.setPipePreview);
   const build = useCallback(
@@ -68,7 +69,8 @@ const PipePreviewCard = ({ preview }: { preview: PipePreview }) => {
     <article className="pipe-preview" data-testid="pipe-preview">
       <header>
         <strong>
-          {roomDefinition(preview.fromRoomId).code} ⇄ {roomDefinition(preview.toRoomId).code}
+          {roomDefinition(game, preview.fromRoomId).code} ⇄{" "}
+          {roomDefinition(game, preview.toRoomId).code}
         </strong>
         <button
           type="button"

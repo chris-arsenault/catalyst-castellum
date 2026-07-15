@@ -5,7 +5,6 @@ export * from "./content/equipment";
 export * from "./content/facilityGeometry";
 export * from "./content/processes";
 export * from "./content/supplies";
-export * from "./content/rooms";
 export * from "./content/scenario";
 export * from "./content/substances";
 export * from "./content/worldMap";

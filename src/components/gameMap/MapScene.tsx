@@ -1,6 +1,5 @@
 import { Application, extend } from "@pixi/react";
 import { Container, Graphics, Text } from "pixi.js";
-import { ROOM_ORDER } from "../../presentation/defaultGame";
 import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
 import type { PipePreview } from "../../application/storeTypes";
 import { GhostRouteLayer } from "./MapLayers";
@@ -74,7 +73,7 @@ export const MapScene = ({
         <MapBackdrop game={game} />
       </pixiContainer>
       <pixiContainer alpha={pipeMode ? 0.55 : 1}>
-        {ROOM_ORDER.map((roomId) => (
+        {game.world.rooms.map((roomId) => (
           <RoomNode
             key={roomId}
             game={game}

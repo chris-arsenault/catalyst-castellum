@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { GAS_SOURCES, roomRing } from "./config";
 import { createScenarioGame, executeCommand } from "./simulation";
 import { EQUIPMENT_IDS } from "./types";
-import { ROOM_ORDER } from "./config";
+import { WORLD_MAP } from "./config";
+const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import { gasConduitState } from "./world/instances";
 
 describe("simple conduit controls", () => {

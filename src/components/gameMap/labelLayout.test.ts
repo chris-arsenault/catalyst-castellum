@@ -1,6 +1,6 @@
 import { WORLD_MAP } from "../../game/content/worldMap";
 import { describe, expect, it } from "vitest";
-import { ROOM_ORDER } from "../../game/config";
+const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import { labelsOverlap, layoutMapLabels } from "./labelLayout";
 
 describe("map label layout", () => {
