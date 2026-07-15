@@ -7,6 +7,7 @@ import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/M
 import { FacilityManual } from "./components/manual/FacilityManual";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { PipeBoard } from "./components/PipeBoard";
+import { GraftBoard } from "./components/GraftBoard";
 import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
@@ -75,8 +76,15 @@ const MapStage = () => {
   );
 };
 
-const ActiveGame = () => {
+const SidePanel = () => {
   const pipeMode = useGameStore((state) => state.pipeMode);
+  const graftMode = useGameStore((state) => state.graftMode);
+  if (graftMode) return <GraftBoard />;
+  if (pipeMode) return <PipeBoard />;
+  return <RoomInspector />;
+};
+
+const ActiveGame = () => {
   return (
     <div className="app-shell" data-simulation-clock="live">
       <TopBar />
@@ -89,7 +97,7 @@ const ActiveGame = () => {
           </section>
         </section>
 
-        {pipeMode ? <PipeBoard /> : <RoomInspector />}
+        <SidePanel />
       </main>
 
       <BriefingModal />

@@ -54,6 +54,22 @@ export interface PipePreview {
   options: PipePreviewOption[];
 }
 
+/** A candidate module for a chosen hardpoint; nothing grafts until confirmed. */
+export interface GraftPreviewOption {
+  moduleId: string;
+  label: string;
+  footprint: { width: number; height: number };
+  cost: number;
+  buildable: boolean;
+  reason: CommandRejectionCode | null;
+}
+
+export interface GraftPreview {
+  hostRoomId: RoomId;
+  hardpointId: string;
+  options: GraftPreviewOption[];
+}
+
 export interface UiSlice {
   selectedRoomId: RoomId;
   acknowledgedStageIntroIds: string[];
@@ -65,10 +81,14 @@ export interface UiSlice {
   tutorialSessionRevision: number;
   pipeMode: boolean;
   pipePreview: PipePreview | null;
+  graftMode: boolean;
+  graftPreview: GraftPreview | null;
   acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
   setPipePreview: (preview: PipePreview | null) => void;
+  setGraftMode: (graftMode: boolean) => void;
+  setGraftPreview: (preview: GraftPreview | null) => void;
   showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;

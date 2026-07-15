@@ -39,6 +39,8 @@ const CLEAN_TUTORIAL_UI = {
   notice: null,
   pipeMode: false,
   pipePreview: null,
+  graftMode: false,
+  graftPreview: null,
 };
 
 const createLifecycleActions = (

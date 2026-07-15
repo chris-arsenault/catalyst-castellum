@@ -38,10 +38,29 @@ export interface DescribedEntityCopy extends NamedEntityCopy {
 export const roomCopy = (
   definition: RoomDefinition,
   translator: Translator = DEFAULT_TRANSLATOR
-): DescribedEntityCopy => ({
-  name: localized(translator, `entities.rooms.${definition.id}.name`),
-  description: localized(translator, `entities.rooms.${definition.id}.description`),
-});
+): DescribedEntityCopy => {
+  if (hasLocalized(translator, `entities.rooms.${definition.id}.name`)) {
+    return {
+      name: localized(translator, `entities.rooms.${definition.id}.name`),
+      description: localized(translator, `entities.rooms.${definition.id}.description`),
+    };
+  }
+  // Grafted rooms have no authored copy; name them by their code (e.g. "POD-1").
+  return {
+    name: translator.text(
+      "entities.rooms.generic.name" as LocaleKey,
+      {
+        code: definition.code,
+      } as never
+    ),
+    description: translator.text(
+      "entities.rooms.generic.description" as LocaleKey,
+      {
+        code: definition.code,
+      } as never
+    ),
+  };
+};
 
 export const equipmentCopy = (
   definition: EquipmentDefinition,

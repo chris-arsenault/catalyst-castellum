@@ -1,4 +1,4 @@
-import { Maximize2, Minus, Move, Plus, Spline, X } from "lucide-react";
+import { Blocks, Maximize2, Minus, Move, Plus, Spline, X } from "lucide-react";
 import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
 import type { TooltipAnchor } from "./useMapHover";
 import {
@@ -20,6 +20,8 @@ import { CellOutletTooltip } from "./CellOutletTooltip";
 import type { CellOutletId } from "./cellOutletRenderModel";
 import { speciesCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
+import { useGameStore } from "../../application/store";
+import { hullHardpoints } from "../../presentation/graftPlanning";
 
 // HTML overlays keep secondary map detail available without competing with the Pixi playfield.
 
@@ -176,6 +178,26 @@ const PipeModeToggle = ({ pipeMode, onToggle }: PipeModeToggleProps) => {
   );
 };
 
+/** Only surfaces when the hull offers a hardpoint, so the seedless tutorial stays clean. */
+const GraftModeToggle = ({ game }: { game: GameState }) => {
+  const { translator } = useGamePresentation();
+  const graftMode = useGameStore((state) => state.graftMode);
+  const setGraftMode = useGameStore((state) => state.setGraftMode);
+  if (hullHardpoints(game).length === 0) return null;
+  return (
+    <button
+      type="button"
+      className={`pipe-mode-toggle ${graftMode ? "active" : ""}`}
+      data-testid="graft-mode-toggle"
+      aria-pressed={graftMode}
+      onClick={() => setGraftMode(!graftMode)}
+    >
+      {graftMode ? <X size={14} /> : <Blocks size={14} />}
+      {translator.text(graftMode ? "ui.map.graft.exit" : "ui.map.graft.enter")}
+    </button>
+  );
+};
+
 interface MapChromeProps {
   game: GameState;
   hoveredCellOutletId: CellOutletId | null;
@@ -218,6 +240,7 @@ export const MapChrome = ({
     >
       <MaterialFlowControl selectedSpecies={selectedSpecies} onSelectSpecies={onSelectSpecies} />
       <PipeModeToggle pipeMode={pipeMode} onToggle={onTogglePipeMode} />
+      <GraftModeToggle game={game} />
       {pipeMode && (
         <p className="pipe-mode-hint" data-testid="pipe-mode-hint">
           {translator.text("ui.map.pipes.hint")}

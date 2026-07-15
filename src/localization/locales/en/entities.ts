@@ -1,4 +1,6 @@
 export const ENTITY_MESSAGES = {
+  "entities.rooms.generic.name": "Module {code}",
+  "entities.rooms.generic.description": "A grafted room annexed onto the castellum hull.",
   "entities.rooms.west_intake.name": "West Breach",
   "entities.rooms.west_intake.description":
     "Hostiles enter through this excavated breach before following the outer spiral.",

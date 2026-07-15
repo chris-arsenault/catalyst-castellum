@@ -19,11 +19,15 @@ export const createUiActions = (
   | "clearNotice"
   | "setPipeMode"
   | "setPipePreview"
+  | "setGraftMode"
+  | "setGraftPreview"
   | "showNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
-  setPipeMode: (pipeMode) => set({ pipeMode, pipePreview: null }),
+  setPipeMode: (pipeMode) => set({ pipeMode, pipePreview: null, graftMode: false }),
   setPipePreview: (pipePreview) => set({ pipePreview }),
+  setGraftMode: (graftMode) => set({ graftMode, graftPreview: null, pipeMode: false }),
+  setGraftPreview: (graftPreview) => set({ graftPreview }),
   showNotice: (notice) => set({ notice }),
   setShowHelp: (showHelp) =>
     set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),
