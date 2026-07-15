@@ -5,8 +5,8 @@ import type { GameState, RoomId, SpeciesId } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
 import { MapChrome } from "./gameMap/MapChrome";
 import { MapScene } from "./gameMap/MapScene";
-import { useMapCamera } from "./gameMap/useMapCamera";
-import { useMapHover } from "./gameMap/useMapHover";
+import { useMapCamera, useMapInteractions } from "./gameMap/useMapCamera";
+import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
 
 interface GameMapProps {
   game: GameState;
@@ -43,7 +43,8 @@ export const GameMap = ({
 }: GameMapProps) => {
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
-  const hover = useMapHover(pipeMode);
+  const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
+  const hover = useMapHover(pipeMode, probePointer);
   const camera = useMapCamera();
   const completePipeDrag = useCallback(
     (roomId: RoomId) => {
@@ -55,20 +56,11 @@ export const GameMap = ({
     [onConnectRooms]
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
-  // Pipe routing owns pointer drags while the board is open; panning would fight it.
-  const mapInteractions = pipeMode
-    ? { onWheel: camera.handleWheel, onPointerUp: clearPipeDrag, onPointerCancel: clearPipeDrag }
-    : {
-        onWheel: camera.handleWheel,
-        onPointerDown: camera.handlePointerDown,
-        onPointerMove: camera.handlePointerMove,
-        onPointerUp: camera.handlePointerUp,
-        onPointerCancel: camera.handlePointerUp,
-        onLostPointerCapture: camera.handleLostPointerCapture,
-      };
+  const mapInteractions = useMapInteractions(pipeMode, camera, trackPointer, clearPipeDrag);
 
   return (
     <div
+      ref={wrapperRef}
       className={`game-map-canvas ${pipeMode ? "pipe-mode" : ""}`}
       data-testid="game-map"
       data-tutorial-anchor="game-map"
@@ -78,7 +70,7 @@ export const GameMap = ({
       <MapScene
         camera={camera.camera}
         game={game}
-        hoveredRunId={hover.hoveredRunId}
+        hoveredRunId={hover.glowRunId}
         onHoverCellOutlet={hover.onHoverCellOutlet}
         onHoverEquipment={hover.onHoverEquipment}
         onHoverEnemy={hover.onHoverEnemy}
@@ -105,6 +97,7 @@ export const GameMap = ({
         onZoom={camera.zoomBy}
         pipeMode={pipeMode}
         selectedSpecies={selectedSpecies}
+        tooltipAnchor={hover.tooltipAnchor}
         zoom={camera.camera.zoom}
       />
     </div>

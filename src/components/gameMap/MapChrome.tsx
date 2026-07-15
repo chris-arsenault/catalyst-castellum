@@ -1,5 +1,6 @@
 import { Maximize2, Minus, Move, Plus, Spline, X } from "lucide-react";
 import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
+import type { TooltipAnchor } from "./useMapHover";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -105,7 +106,13 @@ interface MapTooltipsProps {
   hoveredRunId: TransportRunId | null;
   hoveredRoomId: RoomId | null;
   selectedSpecies: SpeciesId | null;
+  tooltipAnchor: TooltipAnchor | null;
 }
+
+const anchorClassName = (anchor: TooltipAnchor): string =>
+  ["map-tooltip-anchor", anchor.flipX ? "flip-x" : "", anchor.flipY ? "flip-y" : ""]
+    .filter(Boolean)
+    .join(" ");
 
 const MapTooltips = ({
   game,
@@ -115,11 +122,16 @@ const MapTooltips = ({
   hoveredRunId,
   hoveredRoomId,
   selectedSpecies,
+  tooltipAnchor,
 }: MapTooltipsProps) => {
+  if (!tooltipAnchor) return null;
   const blocking =
     hoveredEnemyId !== null || hoveredCellOutletId !== null || hoveredEquipment !== null;
   return (
-    <>
+    <div
+      className={anchorClassName(tooltipAnchor)}
+      style={{ left: tooltipAnchor.x, top: tooltipAnchor.y }}
+    >
       <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
       <CellOutletTooltip
         game={game}
@@ -137,7 +149,7 @@ const MapTooltips = ({
         selectedSpecies={selectedSpecies}
       />
       <RoomTooltip game={game} roomId={blocking ? null : hoveredRoomId} />
-    </>
+    </div>
   );
 };
 
@@ -176,6 +188,7 @@ interface MapChromeProps {
   onZoom: (factor: number) => void;
   pipeMode: boolean;
   selectedSpecies: SpeciesId | null;
+  tooltipAnchor: TooltipAnchor | null;
   zoom: number;
 }
 
@@ -192,6 +205,7 @@ export const MapChrome = ({
   onZoom,
   pipeMode,
   selectedSpecies,
+  tooltipAnchor,
   zoom,
 }: MapChromeProps) => {
   const { translator } = useGamePresentation();
@@ -217,6 +231,7 @@ export const MapChrome = ({
         hoveredRunId={hoveredRunId}
         hoveredRoomId={hoveredRoomId}
         selectedSpecies={selectedSpecies}
+        tooltipAnchor={tooltipAnchor}
       />
       <div className="map-material-legend" aria-label={translator.text("ui.map.legend")}>
         <span>

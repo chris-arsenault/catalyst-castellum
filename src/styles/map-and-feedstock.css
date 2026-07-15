@@ -256,10 +256,7 @@
   text-align: center;
 }
 .transport-tooltip {
-  position: absolute;
-  top: 50px;
-  left: 10px;
-  width: min(410px, calc(100% - 20px));
+  width: min(410px, 60vw);
   overflow: hidden;
   border: 1px solid #457767;
   border-radius: 5px;
@@ -381,9 +378,6 @@
 }
 
 .room-map-tooltip {
-  position: absolute;
-  top: 50px;
-  left: 10px;
   width: 270px;
   overflow: hidden;
   border: 1px solid #477968;
@@ -845,4 +839,20 @@
 .open-pipe-board:hover {
   border-color: var(--lime);
   color: #dcedc9;
+}
+
+.map-tooltip-anchor {
+  position: absolute;
+  z-index: 6;
+  pointer-events: none;
+  transform: translate(16px, 16px);
+}
+.map-tooltip-anchor.flip-x {
+  transform: translate(calc(-100% - 16px), 16px);
+}
+.map-tooltip-anchor.flip-y {
+  transform: translate(16px, calc(-100% - 16px));
+}
+.map-tooltip-anchor.flip-x.flip-y {
+  transform: translate(calc(-100% - 16px), calc(-100% - 16px));
 }

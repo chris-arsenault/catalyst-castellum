@@ -32,6 +32,43 @@ const clampCamera = (camera: CameraTransform): CameraTransform => ({
   y: clampAxis(camera.y, VIEWPORT_HEIGHT, WORLD_MAP_HEIGHT * camera.zoom),
 });
 
+type MapCamera = ReturnType<typeof useMapCamera>;
+
+/**
+ * Pointer wiring for the map wrapper. Pipe routing owns pointer drags while the
+ * board is open, so panning is suspended there; the cursor tracker always runs.
+ */
+export const useMapInteractions = (
+  pipeMode: boolean,
+  camera: MapCamera,
+  trackPointer: (event: PointerEvent<HTMLDivElement>) => void,
+  clearPipeDrag: () => void
+) => {
+  const panAndTrack = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      trackPointer(event);
+      camera.handlePointerMove(event);
+    },
+    [camera, trackPointer]
+  );
+  if (pipeMode) {
+    return {
+      onWheel: camera.handleWheel,
+      onPointerMove: trackPointer,
+      onPointerUp: clearPipeDrag,
+      onPointerCancel: clearPipeDrag,
+    };
+  }
+  return {
+    onWheel: camera.handleWheel,
+    onPointerDown: camera.handlePointerDown,
+    onPointerMove: panAndTrack,
+    onPointerUp: camera.handlePointerUp,
+    onPointerCancel: camera.handlePointerUp,
+    onLostPointerCapture: camera.handleLostPointerCapture,
+  };
+};
+
 export const useMapCamera = () => {
   const [camera, setCamera] = useState<CameraTransform>(initialCamera);
   const gesture = useRef<PointerGesture | null>(null);
