@@ -24,11 +24,15 @@ initial HTML response with crawler-readable metadata.
 | Path                        | Purpose                                                         |
 | --------------------------- | --------------------------------------------------------------- |
 | `src/game/`                 | Deterministic simulation, content definitions, state, and saves |
+| `src/game/world/`           | Hull/site world model and dock-time facility composition        |
+| `src/game/content/modules/` | Room-module templates for hull grafting                         |
+| `src/game/content/sites/`   | Authored exterior site chunks and fixed site scripts            |
 | `src/components/`           | React controls, telemetry, Pixi map, and modal UI               |
 | `tests/e2e/`                | Playwright browser flows                                        |
 | `tooling/`                  | Shared local dev-server configuration                           |
 | `infrastructure/terraform/` | Ahara website and OpenGraph deployment                          |
 | `scripts/deploy.sh`         | Parameterless local build and Terraform apply                   |
+| `docs/adr/`                 | Architecture decision records (the only home for trade-offs)    |
 
 ## Architecture patterns
 
