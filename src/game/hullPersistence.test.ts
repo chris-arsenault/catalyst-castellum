@@ -2,56 +2,55 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION } from "./config";
 import { createScenarioGame } from "./engine/scenarioState";
 import { executeCommand } from "./engine/commands";
-import { gasConduitState, roomState } from "./world/instances";
+import { roomState } from "./world/instances";
 import type { GameState } from "./types";
 
 /**
- * The walking-castellum's reason for being: crossing from one site to the next must
- * NOT wipe the player's built defenses. The hull (Core + furnace, and everything the
- * player built in them — equipment and hull-internal pipes) travels; only the site
- * changes. This is the concrete fix for the jarring OX-1 → NaCl transition.
+ * The walking-castellum's contract: only the player-owned hull travels between sites.
+ * The hull starts small — Core + R-06 washlock — so a defense built in a SITE room
+ * (the furnace's OX-1) is temporary and does not carry, while a machine placed in an
+ * OWNED room does. This is the deliberate progression: sites are disposable, the hull
+ * is what you grow (by grafting) and keep.
  */
-const armedFurnace = (): GameState => {
-  const state = createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
-  state.phase = "build";
-  state.matter = 200;
-  // Build an OX-1: an agitator in the furnace and the core→furnace gas feed installed.
-  const withAgitator = executeCommand(
-    state,
-    {
-      type: "install_equipment",
-      roomId: "furnace",
-      socketId: "socket_a",
-      equipmentId: "gas_agitator",
-    },
-    DEFAULT_GAME_DEFINITION
-  ).state;
-  gasConduitState(withAgitator, "gas:core__furnace").installed = true;
-  gasConduitState(withAgitator, "gas:core__furnace").enabled = true;
-  gasConduitState(withAgitator, "gas:core__furnace").gas.hydrogen = 6;
-  return withAgitator;
+const dockedAtSite2 = (prepareSite1: (state: GameState) => void): GameState => {
+  const site1 = createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
+  site1.phase = "build";
+  prepareSite1(site1);
+  site1.phase = "level_complete";
+  const traveling = executeCommand(site1, { type: "start_next_level" }, DEFAULT_GAME_DEFINITION);
+  return executeCommand(traveling.state, { type: "dock_at_site" }, DEFAULT_GAME_DEFINITION).state;
 };
 
-describe("the hull's built defenses persist across a site transition", () => {
-  it("carries the furnace agitator and its core→furnace feed to the next site", () => {
-    const site1 = armedFurnace();
-    site1.phase = "level_complete";
-
-    const traveling = executeCommand(site1, { type: "start_next_level" }, DEFAULT_GAME_DEFINITION);
-    const site2 = executeCommand(
-      traveling.state,
-      { type: "dock_at_site" },
-      DEFAULT_GAME_DEFINITION
-    ).state;
-
+describe("only the owned hull travels between sites", () => {
+  it("leaves a machine built in a site room (the furnace) behind at the dock", () => {
+    const site2 = dockedAtSite2((state) => {
+      state.rooms.furnace!.equipment.socket_a = {
+        equipmentId: "gas_agitator",
+        level: 1,
+        enabled: true,
+      };
+    });
     expect(site2.campaign.levelId).toBe("make_the_reagent");
-    // The furnace is hull, so its built agitator survives the dock.
-    expect(roomState(site2, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
-    // The core→furnace feed is a hull-internal pipe (both ends hull) — it survives too.
-    expect(gasConduitState(site2, "gas:core__furnace").installed).toBe(true);
-    expect(gasConduitState(site2, "gas:core__furnace").enabled).toBe(true);
-    // The Core itself carried.
+    expect(site2.map.rooms.furnace?.provenance).toBe("site");
+    // The furnace is site structure, so its agitator did not travel — the site's own
+    // authored loadout supplies the furnace afresh.
+    expect(roomState(site2, "furnace").equipment.socket_a?.equipmentId).not.toBe("gas_agitator");
+  });
+
+  it("carries a machine placed in an owned hull room (washlock) to the next site", () => {
+    const site2 = dockedAtSite2((state) => {
+      state.rooms.washlock!.equipment.socket_a = {
+        equipmentId: "gas_agitator",
+        level: 2,
+        enabled: true,
+      };
+    });
+    expect(site2.map.rooms.washlock?.provenance).toBe("hull");
     expect(site2.map.rooms.core?.provenance).toBe("hull");
-    expect(site2.map.rooms.furnace?.provenance).toBe("hull");
+    expect(roomState(site2, "washlock").equipment.socket_a).toEqual({
+      equipmentId: "gas_agitator",
+      level: 2,
+      enabled: true,
+    });
   });
 });

@@ -71,12 +71,12 @@ describe("the authored world map", () => {
     ]);
   });
 
-  it("seeds the player's hull as Core + R-02 furnace, the rest site (M6)", () => {
+  it("seeds the player's hull as Core + R-06 washlock, the rest site (M6)", () => {
     const hull = Object.values(WORLD_MAP.rooms)
       .filter((room) => room.provenance === "hull")
       .map((room) => room.id)
       .sort();
-    expect(hull).toEqual(["core", "furnace"]);
-    expect(WORLD_MAP.rooms.furnace?.hardpoints).toHaveLength(1);
+    expect(hull).toEqual(["core", "washlock"]);
+    expect(WORLD_MAP.rooms.core?.hardpoints).toHaveLength(1);
   });
 });

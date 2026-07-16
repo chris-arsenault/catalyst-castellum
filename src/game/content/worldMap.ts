@@ -89,8 +89,6 @@ export const WORLD_MAP: WorldMap = {
         socketCells: { socket_a: cell(12, 13), socket_b: cell(18, 13) },
         platformCells: horizontalCells(9, 20, 23),
         ladderCells: verticalCells(8, 13, 24),
-        provenance: "hull",
-        hardpoints: [{ id: "west_wall", cell: cell(6, 22), facing: "left" }],
       }
     ),
     reservoir: room(
@@ -118,7 +116,10 @@ export const WORLD_MAP: WorldMap = {
       "washlock",
       { code: "R-06", structure: "room" },
       { column: 30, elevation: 4, width: 19, height: 9 },
-      { socketCells: { socket_a: cell(35, 4), socket_b: cell(45, 4) } }
+      {
+        socketCells: { socket_a: cell(35, 4), socket_b: cell(45, 4) },
+        provenance: "hull",
+      }
     ),
     core: room(
       "core",
@@ -126,6 +127,7 @@ export const WORLD_MAP: WorldMap = {
       { column: 51, elevation: 4, width: 18, height: 16 },
       {
         provenance: "hull",
+        hardpoints: [{ id: "starboard", cell: cell(68, 11), facing: "right" }],
         taps: {
           gas: gasTap({
             capacity: 24,
