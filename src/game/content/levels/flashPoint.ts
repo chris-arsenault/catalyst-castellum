@@ -40,6 +40,7 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
   startingMatter: 16,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  site: null,
   loadout: {
     ...emptyLoadout(),
     gasConduits: { "gas:core__furnace": gasRun(false) },

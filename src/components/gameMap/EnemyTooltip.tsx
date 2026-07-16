@@ -16,7 +16,7 @@ import { roomState } from "../../game/world/instances";
 import { roomDefinition } from "../../presentation/defaultGame";
 
 const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | null => {
-  const roomId = enemyRoomId(enemy);
+  const roomId = enemyRoomId(enemy, game);
   if (!roomId) return null;
   const definition = ENEMY_DEFINITIONS[enemy.type];
   const footElevation = enemyWorldPosition(enemy).elevation - 0.5;
@@ -24,12 +24,13 @@ const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | nul
     !definition.flying &&
     enemy.mode !== "climbing" &&
     enemy.mode !== "falling" &&
-    liquidSurfaceElevation(roomState(game, roomId)) > footElevation;
+    liquidSurfaceElevation(roomState(game, roomId), game) > footElevation;
   const base = roomHazards(
     roomState(game, roomId),
     floorContact,
     definition.needsOxygen,
-    enemyGasZone(enemy)
+    enemyGasZone(enemy, game),
+    game
   );
   return {
     atmosphere: base.atmosphere * definition.hazardMultipliers.atmosphere,
@@ -127,8 +128,8 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
   const enemy = game.enemies.find((candidate) => candidate.id === enemyId);
   if (!enemy) return null;
   const definition = ENEMY_DEFINITIONS[enemy.type];
-  const roomId = enemyRoomId(enemy);
-  const zone = enemyGasZone(enemy);
+  const roomId = enemyRoomId(enemy, game);
+  const zone = enemyGasZone(enemy, game);
   return (
     <aside className="room-map-tooltip enemy-map-tooltip" data-testid="enemy-map-tooltip">
       <header>

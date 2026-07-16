@@ -19,7 +19,7 @@ describe("membrane-cell outlet rendering", () => {
     const model = cellOutletAssemblyModel(installed.state);
 
     expect(model?.roomId).toBe("switchyard");
-    expect(model?.header).toBe("R-01 CELL OUTPUTS");
+    expect(model?.header).toBe("CL-01 CELL OUTPUTS");
     expect(model?.outlets.map((outlet) => outlet.formula)).toEqual(["Cl₂", "H₂", "NaOH"]);
   });
 });

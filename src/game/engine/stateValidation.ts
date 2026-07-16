@@ -11,6 +11,7 @@ import {
 import { validateEnemyNavigation } from "./enemyNavigationValidation";
 import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
+import { definitionForMap } from "../world/activeDefinition";
 
 export type StateValidationCode =
   | "availability_mismatch"
@@ -354,8 +355,9 @@ export const validateGameState = (
   state: GameState,
   definition: GameDefinition
 ): StateValidationIssue[] => {
+  const activeDefinition = definitionForMap(definition, state.map);
   const issues: StateValidationIssue[] = [];
-  validateWorldCatalogs(state, issues, definition);
+  validateWorldCatalogs(state, issues, activeDefinition);
   if (
     state.pack.id !== definition.packId ||
     state.pack.contentVersion !== definition.contentVersion
@@ -367,10 +369,10 @@ export const validateGameState = (
       "Game state pack identity does not match the active definition."
     );
   }
-  validateCampaign(state, issues, definition);
-  validateTopology(state, issues, definition);
-  validateEnemyNavigation(state, issues, definition);
-  validatePhase(state, issues, definition);
+  validateCampaign(state, issues, activeDefinition);
+  validateTopology(state, issues, activeDefinition);
+  validateEnemyNavigation(state, issues, activeDefinition);
+  validatePhase(state, issues, activeDefinition);
   return issues;
 };
 

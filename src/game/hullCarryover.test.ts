@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION, deriveGame, WORLD_MAP } from "./config";
 import { createScenarioGame } from "./engine/scenarioState";
+import type { LevelDefinition } from "./definitionTypes";
 import { decodeGame, encodeGame } from "./persistence/saveCodec";
 import { extractHullFragment } from "./world/hullFragment";
 import { produceAuthoredSite } from "./world/producer";
@@ -48,7 +49,18 @@ const mapB: WorldMap = Object.freeze({
   ),
 });
 
-const definition = deriveGame(DEFAULT_GAME_DEFINITION, { map: mapA });
+const makeReagentWithoutGeneratedSite: LevelDefinition = {
+  ...DEFAULT_GAME_DEFINITION.levels.make_the_reagent,
+  site: null,
+};
+
+const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
+  map: mapA,
+  levels: {
+    ...DEFAULT_GAME_DEFINITION.levels,
+    make_the_reagent: makeReagentWithoutGeneratedSite,
+  },
+});
 
 describe("the hull fragment carries across consecutive authored maps", () => {
   it("extracts hull rooms, internal connections, and live contents from an ending state", () => {

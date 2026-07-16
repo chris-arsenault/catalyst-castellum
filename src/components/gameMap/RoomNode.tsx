@@ -29,7 +29,7 @@ export const RoomNode = ({
   pipeMode,
 }: RoomNodeProps) => {
   const geometry = mapViewFor(game.map).roomMapRect(roomId);
-  const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy) === roomId).length;
+  const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy, game) === roomId).length;
   const model = roomRenderModel(game, roomId, selected, occupied);
   const hitArea = roomHitArea(model);
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);

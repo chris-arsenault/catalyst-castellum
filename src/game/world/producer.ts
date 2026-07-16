@@ -1,8 +1,14 @@
 import type { GameDefinition, RoundDefinition } from "../definitionTypes";
 import type { LevelId } from "../types";
 import type { HullFragment, HullOffset } from "./hullFragment";
-import { embedHullFragment, shiftFragmentStateRoutes } from "./hullFragment";
+import {
+  embedHullFragment,
+  alignHullFragmentToMap,
+  hullLayoutFromMap,
+  shiftFragmentStateRoutes,
+} from "./hullFragment";
 import type { WorldMap } from "./map";
+import { generateSiteLayoutCandidate } from "./siteGenerator";
 
 /**
  * Map production is a pre-level pipeline (ADR-0001): a producer takes a site spec and
@@ -20,6 +26,7 @@ export interface SiteSpec {
 export interface ProducedSite {
   map: WorldMap;
   rounds: readonly RoundDefinition[];
+  seed: string;
   /** The embedded fragment (routes shifted) whose contents seed the scenario. */
   hull: HullFragment | null;
 }
@@ -44,13 +51,14 @@ export const produceAuthoredSite = (spec: SiteSpec, hull: HullFragment | null): 
   if (emptyHull(hull) || !hull) {
     // Identity for hull-less sites: the script's frozen map object flows through, so
     // derived-geometry caches and the determinism snapshot see the same world.
-    return { map: spec.map, rounds: spec.rounds, hull: null };
+    return { map: spec.map, rounds: spec.rounds, hull: null, seed: "authored" };
   }
   const siteSpec = siteWithoutHull(spec, hull);
   return {
     map: embedHullFragment(siteSpec.map, hull, siteSpec.hullAnchor),
     rounds: siteSpec.rounds,
     hull: shiftFragmentStateRoutes(hull, siteSpec.hullAnchor),
+    seed: "authored",
   };
 };
 
@@ -60,3 +68,30 @@ export const authoredSiteSpec = (definition: GameDefinition, levelId: LevelId): 
   rounds: definition.levels[levelId].rounds,
   hullAnchor: { columns: 0, elevations: 0 },
 });
+
+/**
+ * One production entry point for scenario creation and docking. Tutorial-generated
+ * sites use a fixed seed; an isolated scenario receives the pack's fresh seed hull.
+ */
+export const produceLevelSite = (
+  definition: GameDefinition,
+  levelId: LevelId,
+  incomingHull: HullFragment | null
+): ProducedSite => {
+  const level = definition.levels[levelId];
+  const hull = incomingHull
+    ? alignHullFragmentToMap(incomingHull, definition.map)
+    : hullLayoutFromMap(definition.map);
+  if (!level.site)
+    return produceAuthoredSite(
+      authoredSiteSpec(definition, levelId),
+      incomingHull ? hull : incomingHull
+    );
+  const candidate = generateSiteLayoutCandidate(level.site.spec, hull, level.site.seed);
+  return {
+    map: candidate.map,
+    rounds: level.rounds,
+    hull: shiftFragmentStateRoutes(hull, level.site.spec.hullAnchor),
+    seed: `${level.site.spec.id}:${candidate.seed}`,
+  };
+};

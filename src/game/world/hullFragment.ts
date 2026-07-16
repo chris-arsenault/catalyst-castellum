@@ -40,6 +40,24 @@ const extractHullMapData = (state: GameState): Pick<HullFragment, "rooms" | "con
   return { rooms, connections };
 };
 
+/**
+ * Fresh scenario/check tooling needs the authored hull geometry before live room state exists.
+ * The scenario factory fills empty state records from the destination level's loadout.
+ */
+export const hullLayoutFromMap = (map: WorldMap): HullFragment => {
+  const rooms: HullFragment["rooms"] = Object.fromEntries(
+    Object.entries(map.rooms)
+      .filter(([, room]) => room.provenance === "hull")
+      .map(([id, room]) => [id, deepCopy(room)])
+  );
+  const connections: HullFragment["connections"] = Object.fromEntries(
+    Object.entries(map.connections)
+      .filter(([, connection]) => connection.rooms.every((roomId) => roomId in rooms))
+      .map(([id, connection]) => [id, deepCopy(connection)])
+  );
+  return { rooms, connections, roomStates: {}, gasConduits: {}, liquidConduits: {} };
+};
+
 const extractConduitStates = (
   state: GameState,
   connections: HullFragment["connections"]
@@ -157,3 +175,40 @@ export const shiftFragmentStateRoutes = (
     ])
   ),
 });
+
+/** Translate the complete fragment, including geometry and live conduit routes. */
+export const translateHullFragment = (
+  fragment: HullFragment,
+  offset: HullOffset
+): HullFragment => ({
+  ...shiftFragmentStateRoutes(fragment, offset),
+  rooms: Object.fromEntries(
+    Object.entries(fragment.rooms).map(([id, room]) => [id, shiftRoom(deepCopy(room), offset)])
+  ),
+  connections: Object.fromEntries(
+    Object.entries(fragment.connections).map(([id, connection]) => [
+      id,
+      shiftConnection(deepCopy(connection), offset),
+    ])
+  ),
+});
+
+/**
+ * Producers express anchors relative to the pack's seed hull. A traveling fragment may
+ * already have been translated by a previous site, so align a shared hull room first.
+ */
+export const alignHullFragmentToMap = (
+  fragment: HullFragment,
+  reference: WorldMap
+): HullFragment => {
+  const anchorId = ["core", ...Object.keys(fragment.rooms).sort()].find(
+    (roomId) => roomId in fragment.rooms && roomId in reference.rooms
+  );
+  if (!anchorId) throw new Error("The traveling hull has no room shared with the seed hull.");
+  const actual = fragment.rooms[anchorId] as MapRoom;
+  const target = reference.rooms[anchorId] as MapRoom;
+  return translateHullFragment(fragment, {
+    columns: target.bounds.column - actual.bounds.column,
+    elevations: target.bounds.elevation - actual.bounds.elevation,
+  });
+};

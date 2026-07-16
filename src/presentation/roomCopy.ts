@@ -12,7 +12,7 @@ import type { GasZone, RoomState } from "../game/types";
 import { equipmentCopy as localizedEquipmentCopy } from "./entityCopy";
 import { DEFAULT_GAME_DEFINITION } from "./defaultGame";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
-import { definitionRoom } from "../game/world/instances";
+import { definitionRoom, type MapCarrier } from "../game/world/instances";
 
 export type HazardLabel = "CLEAR" | "LOW" | "HOSTILE" | "LETHAL";
 
@@ -106,11 +106,12 @@ const movementEffects = (
     GameQueries,
     "liquidMovementMultiplier" | "pressureMovementMultiplier" | "roomHazards"
   >,
-  translator: Translator
+  translator: Translator,
+  carrier: MapCarrier
 ): string[] => {
   const effects: string[] = [];
-  const liquidMovement = queries.liquidMovementMultiplier(room, false);
-  const pressureMovement = queries.pressureMovementMultiplier(room);
+  const liquidMovement = queries.liquidMovementMultiplier(room, false, carrier);
+  const pressureMovement = queries.pressureMovementMultiplier(room, carrier);
   if (liquidMovement < 0.99)
     effects.push(
       translator.text("presentation.room.liquid_drag", {
@@ -123,7 +124,7 @@ const movementEffects = (
         percent: Math.round((1 - pressureMovement) * 100),
       })
     );
-  const pressureHazard = queries.roomHazards(room, true, true, "lower").pressure;
+  const pressureHazard = queries.roomHazards(room, true, true, "lower", carrier).pressure;
   if (pressureHazard > 0.01)
     effects.push(
       translator.text("presentation.room.pressure_hazard", { rate: pressureHazard.toFixed(1) })
@@ -141,7 +142,8 @@ export const roomEffects = (
   room: RoomState,
   definition: GameDefinition = DEFAULT_GAME_DEFINITION,
   queries: GameQueries | null = null,
-  translator: Translator = DEFAULT_TRANSLATOR
+  translator: Translator = DEFAULT_TRANSLATOR,
+  carrier: MapCarrier = definition
 ): string[] => {
   const q = queries ?? {
     gasPartialRatio,
@@ -154,7 +156,7 @@ export const roomEffects = (
     ...zoneEffects(room, "lower", definition, q, translator),
     ...zoneEffects(room, "upper", definition, q, translator),
     ...liquidEffects(room, q, translator),
-    ...movementEffects(room, q, translator),
+    ...movementEffects(room, q, translator, carrier),
   ];
   return effects.length > 0 ? effects : [translator.text("presentation.room.safe")];
 };

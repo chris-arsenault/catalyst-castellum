@@ -30,6 +30,7 @@ import {
   setConduitCommand,
 } from "./transportCommands";
 import { roomState } from "../world/instances";
+import { definitionForMap } from "../world/activeDefinition";
 
 const startPrime = (source: GameState, definition: GameDefinition): CommandResult => {
   const state = cloneGame(source);
@@ -183,7 +184,8 @@ export const executeCommand = (
   command: GameCommand,
   definition: GameDefinition
 ): CommandResult => {
-  const decision = evaluateCommand(source, command, definition);
+  const activeDefinition = definitionForMap(definition, source.map);
+  const decision = evaluateCommand(source, command, activeDefinition);
   if (!decision.allowed) {
     return rejectCommand(source, decision.code ?? "invalid_phase", decision.parameters);
   }
@@ -199,19 +201,19 @@ export const executeCommand = (
     case "dismantle_equipment":
       return dismantleEquipment(source, command, decision);
     case "build_connection":
-      return buildConnectionCommand(source, command, decision, definition);
+      return buildConnectionCommand(source, command, decision, activeDefinition);
     case "dismantle_connection":
       return dismantleConnectionCommand(source, command, decision);
     case "graft_module":
-      return graftModuleCommand(source, command, decision, definition);
+      return graftModuleCommand(source, command, decision, activeDefinition);
     case "dismantle_module":
       return dismantleModuleCommand(source, command, decision);
     case "charge_gas_source":
-      return gasCharge(source, command.sourceId, decision, definition);
+      return gasCharge(source, command.sourceId, decision, activeDefinition);
     case "charge_liquid_source":
-      return liquidCharge(source, command.sourceId, decision, definition);
+      return liquidCharge(source, command.sourceId, decision, activeDefinition);
     case "start_prime":
-      return startPrime(source, definition);
+      return startPrime(source, activeDefinition);
     case "start_assault":
       return startAssault(source);
     case "begin_level":
@@ -219,7 +221,7 @@ export const executeCommand = (
     case "skip_tutorial":
       return skipTutorialCommand(source, definition);
     case "continue_round":
-      return continueRoundCommand(source, definition);
+      return continueRoundCommand(source, activeDefinition);
     case "start_next_level":
       return startNextLevelCommand(source, definition);
     case "dock_at_site":

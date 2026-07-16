@@ -1,34 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { DEFAULT_GAME_DEFINITION, deriveGame, WORLD_MAP } from "./config";
+import { DEFAULT_GAME_DEFINITION } from "./config";
 import { createScenarioGame } from "./engine/scenarioState";
 import { executeCommand } from "./engine/commands";
 import { graftedRoomId } from "./world/graft";
-import type { Hardpoint, WorldMap } from "./world/map";
 import { roomState } from "./world/instances";
 import type { GameState } from "./types";
 
-const HARDPOINT: Hardpoint = {
-  id: "west_wall",
-  cell: { column: 6, elevation: 22 },
-  facing: "left",
-};
+const definition = DEFAULT_GAME_DEFINITION;
 
-/** A seed hull: the furnace is the player's chamber with an open hardpoint. */
-const hullMap: WorldMap = Object.freeze({
-  ...WORLD_MAP,
-  rooms: {
-    ...WORLD_MAP.rooms,
-    furnace: {
-      ...WORLD_MAP.rooms.furnace!,
-      provenance: "hull" as const,
-      hardpoints: [HARDPOINT],
-    },
-  },
-});
-
-const definition = deriveGame(DEFAULT_GAME_DEFINITION, { map: hullMap });
-
-const graftedId = graftedRoomId("furnace", "west_wall");
+const graftedId = graftedRoomId("core", "starboard");
 
 const buildWithGraft = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
@@ -39,8 +19,8 @@ const buildWithGraft = (): GameState => {
     state,
     {
       type: "graft_module",
-      hostRoomId: "furnace",
-      hardpointId: "west_wall",
+      hostRoomId: "core",
+      hardpointId: "starboard",
       moduleId: "process_chamber",
     },
     definition
@@ -66,10 +46,10 @@ describe("the run loop carries a graft across a dock", () => {
 
     expect(next.campaign.levelId).toBe("make_the_reagent");
     expect(next.map.rooms[graftedId]?.provenance).toBe("hull");
-    expect(next.map.connections["joint:furnace:west_wall"]).toBeDefined();
+    expect(next.map.connections["joint:core:starboard"]).toBeDefined();
     expect(next.world.rooms).toContain(graftedId);
     expect(roomState(next, graftedId).gas.lower.hydrogen).toBe(5);
-    expect(next.map.rooms.furnace?.provenance).toBe("hull");
+    expect(next.map.rooms.washlock?.provenance).toBe("hull");
   });
 
   it("stamps the run outcome and refuses graft edits outside the build phase", () => {

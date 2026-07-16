@@ -8,6 +8,7 @@ import type {
 } from "../game/types";
 import { hazardLabel, roomEffects, type HazardLabel } from "./roomCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
+import type { MapCarrier } from "../game/world/instances";
 
 export interface RoomViewModel extends RoomAnalysis {
   hazardLabel: HazardLabel;
@@ -24,18 +25,18 @@ export const createPresentationSelectors = (
   const commandDecisionCache = new WeakMap<GameState, Map<string, CommandDecision>>();
 
   return Object.freeze({
-    roomAnalysis: (room: RoomState): RoomViewModel => {
+    roomAnalysis: (room: RoomState, carrier: MapCarrier = runtime.definition): RoomViewModel => {
       const cached = roomAnalysisCache.get(room);
       if (cached) return cached;
       const raw = runtime.queries.analyzeRoom
-        ? runtime.queries.analyzeRoom(room)
+        ? runtime.queries.analyzeRoom(room, carrier)
         : (() => {
             throw new Error("Runtime queries are missing room analysis");
           })();
       const analysis = {
         ...raw,
         hazardLabel: hazardLabel(raw.hazard),
-        effects: roomEffects(room, runtime.definition, runtime.queries, translator),
+        effects: roomEffects(room, runtime.definition, runtime.queries, translator, carrier),
       };
       roomAnalysisCache.set(room, analysis);
       return analysis;

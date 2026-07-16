@@ -17,6 +17,7 @@ export const ACID_LINE_LEVEL: LevelDefinition = {
   startingMatter: 42,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  site: null,
   loadout: {
     ...emptyLoadout(),
     equipment: {

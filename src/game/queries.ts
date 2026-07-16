@@ -2,6 +2,7 @@ import { DEFAULT_GAME_DEFINITION } from "./definition";
 import type { GameDefinition } from "./definitionTypes";
 import type { EnemyState, RoomId } from "./types";
 import type { MapCarrier } from "./world/instances";
+import { definitionForMap } from "./world/activeDefinition";
 import * as campaign from "./engine/campaign";
 import * as enemyPosition from "./engine/enemyPosition";
 import * as equipment from "./engine/equipment";
@@ -27,13 +28,24 @@ const bindDefinition =
     definition: GameDefinition
   ) =>
   (...args: Arguments): Result =>
-    operation(...args, definition);
+    operation(
+      ...args,
+      definitionForMap(
+        definition,
+        args.find(
+          (argument): argument is MapCarrier =>
+            typeof argument === "object" && argument !== null && "map" in argument
+        )?.map ?? definition.map
+      )
+    );
 
 /** Definition-bound, read-only engine queries for application and presentation code. */
 export const createGameQueries = (definition: GameDefinition) =>
   Object.freeze({
-    enemyGasZone: (enemy: EnemyState) => enemyPosition.enemyGasZone(enemy, definition.map),
-    enemyRoomId: (enemy: EnemyState) => enemyPosition.enemyRoomId(enemy, definition.map),
+    enemyGasZone: (enemy: EnemyState, carrier: MapCarrier = definition) =>
+      enemyPosition.enemyGasZone(enemy, carrier.map),
+    enemyRoomId: (enemy: EnemyState, carrier: MapCarrier = definition) =>
+      enemyPosition.enemyRoomId(enemy, carrier.map),
     enemyWorldPosition: enemyPosition.enemyWorldPosition,
     levelDefinitionFor: bindDefinition(campaign.levelDefinitionFor, definition),
     roundDefinitionFor: bindDefinition(campaign.roundDefinitionFor, definition),
@@ -58,12 +70,41 @@ export const createGameQueries = (definition: GameDefinition) =>
     liquidAmountTotal: physics.liquidAmountTotal,
     liquidPercent: physics.liquidPercent,
     liquidStrength: physics.liquidStrength,
-    liquidMovementMultiplier: bindDefinition(physics.liquidMovementMultiplier, definition),
-    pressureMovementMultiplier: bindDefinition(physics.pressureMovementMultiplier, definition),
-    roomHazards: bindDefinition(physics.roomHazards, definition),
-    liquidSurfaceElevation: bindDefinition(physics.liquidSurfaceElevation, definition),
-    roomStaticPressure: bindDefinition(physics.roomStaticPressure, definition),
-    analyzeRoom: bindDefinition(roomState.analyzeRoom, definition),
+    liquidMovementMultiplier: (
+      room: Parameters<typeof physics.liquidMovementMultiplier>[0],
+      flying: boolean,
+      carrier: MapCarrier = definition
+    ) => physics.liquidMovementMultiplier(room, flying, definitionForMap(definition, carrier.map)),
+    pressureMovementMultiplier: (
+      room: Parameters<typeof physics.pressureMovementMultiplier>[0],
+      carrier: MapCarrier = definition
+    ) => physics.pressureMovementMultiplier(room, definitionForMap(definition, carrier.map)),
+    roomHazards: (
+      room: Parameters<typeof physics.roomHazards>[0],
+      floorContact: boolean,
+      needsOxygen: boolean,
+      zone: Parameters<typeof physics.roomHazards>[3],
+      carrier: MapCarrier = definition
+    ) =>
+      physics.roomHazards(
+        room,
+        floorContact,
+        needsOxygen,
+        zone,
+        definitionForMap(definition, carrier.map)
+      ),
+    liquidSurfaceElevation: (
+      room: Parameters<typeof physics.liquidSurfaceElevation>[0],
+      carrier: MapCarrier = definition
+    ) => physics.liquidSurfaceElevation(room, definitionForMap(definition, carrier.map)),
+    roomStaticPressure: (
+      room: Parameters<typeof physics.roomStaticPressure>[0],
+      carrier: MapCarrier = definition
+    ) => physics.roomStaticPressure(room, definitionForMap(definition, carrier.map)),
+    analyzeRoom: (
+      room: Parameters<typeof roomState.analyzeRoom>[0],
+      carrier: MapCarrier = definition
+    ) => roomState.analyzeRoom(room, definitionForMap(definition, carrier.map)),
     transportRunChannels: bindDefinition(telemetry.transportRunChannels, definition),
     transportRunMaterialFlow: bindDefinition(telemetry.transportRunMaterialFlow, definition),
     transportRunPhaseStatus: bindDefinition(telemetry.transportRunPhaseStatus, definition),

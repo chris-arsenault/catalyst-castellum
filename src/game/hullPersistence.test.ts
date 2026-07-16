@@ -31,10 +31,9 @@ describe("only the owned hull travels between sites", () => {
       };
     });
     expect(site2.campaign.levelId).toBe("make_the_reagent");
-    expect(site2.map.rooms.furnace?.provenance).toBe("site");
-    // The furnace is site structure, so its agitator did not travel — the site's own
-    // authored loadout supplies the furnace afresh.
-    expect(roomState(site2, "furnace").equipment.socket_a?.equipmentId).not.toBe("gas_agitator");
+    // CL-1 supplies its own exterior and leaves OX-1's furnace behind in full.
+    expect(site2.map.rooms.furnace).toBeUndefined();
+    expect(site2.rooms.furnace).toBeUndefined();
   });
 
   it("carries a machine placed in an owned hull room (washlock) to the next site", () => {

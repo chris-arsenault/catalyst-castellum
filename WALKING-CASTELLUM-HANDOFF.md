@@ -7,15 +7,15 @@ this doc is the "where we are right now" layer on top of them.
 
 ## Milestone status
 
-| Milestone | State |
-| --------- | ----- |
-| M1 instance-keyed world identity | ✅ done |
-| M2 the Map contract (sim + UI run on one WorldMap) | ✅ done |
-| M3 connections as player map edits (auto-router, preview-confirm) | ✅ done |
-| M4 producers + hull fragment | ✅ done |
-| M5 run loop + grafting | ✅ done |
-| **M6 tutorial re-authored** | 🔶 **in progress** — see below |
-| M7 random/hybrid producers | ⬜ not started |
+| Milestone                                                         | State                                                  |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| M1 instance-keyed world identity                                  | ✅ done                                                |
+| M2 the Map contract (sim + UI run on one WorldMap)                | ✅ done                                                |
+| M3 connections as player map edits (auto-router, preview-confirm) | ✅ done                                                |
+| M4 producers + hull fragment                                      | ✅ done                                                |
+| M5 run loop + grafting                                            | ✅ done                                                |
+| **M6 tutorial re-authored**                                       | 🔶 **in progress** — see below                         |
+| M7 random/hybrid producers                                        | 🔶 generator foundation shipped; main game not started |
 
 `WALKING-CASTELLUM-M{1..6}-STEPS.md` hold the per-milestone step detail and execution notes.
 
@@ -33,7 +33,7 @@ this doc is the "where we are right now" layer on top of them.
   carry**. Proven by `src/game/hullPersistence.test.ts`.
 - **Grafting is a between-sites (dock) action**, NOT between rounds. It grows the hull core+1 →
   core+2. Gated to a site's **first build phase after the first site** (`phase === "build" &&
-  roundIndex === 0 && levelIndex > 0`) in `evaluateGraftModule`/`evaluateDismantleModule`
+roundIndex === 0 && levelIndex > 0`) in `evaluateGraftModule`/`evaluateDismantleModule`
   (`commandPolicy.ts`) and the graft-mode toggle (`MapChrome.tsx`). The Core carries a `starboard`
   hardpoint. Modules catalog in `src/game/content/modules.ts` (utility_pod / process_chamber /
   reservoir_stack) — an **open data catalog**; more/arbitrary types are expected.
@@ -44,6 +44,7 @@ this doc is the "where we are right now" layer on top of them.
 ## What just shipped (this session, all pushed)
 
 Pipe UX overhaul + hull model correction + visual hull cue:
+
 - **Pipes route dynamic shortest-path**, crossing rooms as a top overlay (user asked for this
   explicitly and repeatedly — **do not add room/lane avoidance back**). `src/game/world/autoRouter.ts`
   is uniform `STEP_COST` + tiny turn tie-breaker. `worldMap.ts` computes every process-line route
@@ -63,25 +64,22 @@ Pipe UX overhaul + hull model correction + visual hull cue:
   `RoomDrawModel.provenance`) so Core + R-06 read as owned.
 - Determinism snapshot regenerated for the new route lengths; balance contracts unchanged.
 
-## NEXT TASK (user chose "I take a best-shot, you react")
+## Site 2 exterior (shipped 2026-07-16; ready for user reaction)
 
-**Author a visibly distinct exterior for site 2 (`make_the_reagent`, "CL-1")** so it does not look
-identical to site 1. Root cause of the user's "giant fail": every level is produced from the SAME
-`WORLD_MAP` — there is only one authored site, reused. `authoredSiteSpec(definition, levelId)` in
-`src/game/world/producer.ts` returns `definition.map` for all levels.
-
-Approach:
-1. Give each `LevelDefinition` (or a new per-site spec) its **own exterior WorldMap** — different
-   room layout/arrangement around the carried hull — plus its own feedstock/waves. The producer
-   (`produceAuthoredSite`) already **strips the incoming hull's rooms from the site map** and embeds
-   the hull, so the site map should be authored **without** Core + washlock (they arrive with the
-   player). Route the per-level map through `authoredSiteSpec`.
-2. Keep the site's chemistry working — `make_the_reagent` is chlor-alkali (membrane cell etc.); its
-   rooms/sources must support that. Waves must stay clearable.
-3. `make ci` green (campaign-health: `make_the_reagent` needs core ≥ 40 + completion; only
-   `flash_point` is STRICT via `STRICT_HEALTH_LEVELS`). Regenerate the determinism snapshot if
-   intended behavior changes. Full e2e green.
-4. Deliver something concrete the user can play and react to; expect a redesign pass.
+- `make_the_reagent` / CL-1 now runs on a **distinct generated exterior**, selected seed
+  `20260720`: entry + CL-01 stay low while CL-02 and CL-03 form a raised chlor-alkali process deck
+  over the carried R-06 washlock. OX-1's furnace and gallery are absent from this disposable site.
+- The durable generator lives in `src/game/world/siteGenerator.ts`: deterministic authored-chunk
+  assembly, seeded chunk order/pattern/alignment draws, automatic passages/ladders, dynamic process
+  routing, validation, candidate scoring, and hull embedding. CL-1's vocabulary is
+  `src/game/content/sites/chlorAlkali.ts`.
+- `pnpm site:candidates -- --count 5 --seed 20260700` writes scored SVG candidates plus a manifest
+  under ignored `outputs/site-candidates/make_the_reagent/`.
+- Runtime topology reads the produced `state.map`; save decode accepts valid generated/grafted room
+  catalogs; hull geometry rebases between shifted generated sites and later authored sites.
+- Generator tests lock same-seed replay, multi-candidate uniqueness, shared map validation, ground
+  and flying navigation, save round-trip, and generated→authored hull rebasing. Campaign health
+  completes CL-1 with Core 50.
 
 ## Also open in M6 (tutorial content, tied to the new model)
 
@@ -98,10 +96,12 @@ Approach:
 
 ## Conventions / gotchas
 
-- **Verify:** `make ci` MUST be green before committing (architecture-check, copy-check, lint,
-  format, typecheck, vitest, build, campaign-health, terraform fmt). `pnpm test:e2e` (Playwright,
-  ~2.3 min, 29 tests) for browser flows. `pnpm vitest run` (~263 unit tests). Regenerate the
-  behavior lock with `pnpm determinism:snapshot` **only** for intended changes.
+- **Verify locally:** use `make quick-ci` for normal iteration (architecture-check, copy-check,
+  lint, format, typecheck, and Vitest without coverage). `make ci` remains the full
+  GitHub-equivalent gate with coverage, build, performance, campaign-health, and Terraform checks;
+  run it occasionally before releases or when those areas change. Run `pnpm test:e2e` (Playwright,
+  ~2.3 min, 29 tests) when browser flows change. Regenerate the behavior lock with
+  `pnpm determinism:snapshot` **only** for intended changes.
 - **Commit straight to `main`, never branch** (user's standing rule). End commit messages with a
   `Co-Authored-By:` trailer (match the repo's recent commits).
 - **`deriveGame(def, { map: {...} })`** is how you override the world now — room identity (code,

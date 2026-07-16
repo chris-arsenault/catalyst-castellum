@@ -23,7 +23,7 @@ import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
 import { worldCatalogsForMap } from "../world/catalogs";
 import type { HullFragment } from "../world/hullFragment";
-import { authoredSiteSpec, produceAuthoredSite, type ProducedSite } from "../world/producer";
+import { produceLevelSite, type ProducedSite } from "../world/producer";
 import type { RoundDefinition } from "../definitionTypes";
 import type { WorldMap } from "../world/map";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
@@ -266,7 +266,7 @@ export const createScenarioGame = (
   levelId: LevelId,
   completedLevelIds: LevelId[] = [],
   definition: GameDefinition,
-  site: ProducedSite = produceAuthoredSite(authoredSiteSpec(definition, levelId), null)
+  site: ProducedSite = produceLevelSite(definition, levelId, null)
 ): GameState => {
   const level = definition.levels[levelId];
   const round = site.rounds[0];
@@ -286,7 +286,7 @@ export const createScenarioGame = (
     map,
     mapRevision: 0,
     world: worldCatalogsForMap(map),
-    run: { seed: "authored", position: definition.levelOrder.indexOf(levelId), outcome: "active" },
+    run: { seed: site.seed, position: definition.levelOrder.indexOf(levelId), outcome: "active" },
     availability: copyAvailability(round.availability),
     phaseTime: 0,
     elapsed: 0,

@@ -35,6 +35,7 @@ import type {
 } from "./types";
 import type { ArchitecturalConnection, LineSpecs, WorldMap } from "./world/map";
 import type { ModuleId, ModuleTemplate } from "./world/modules";
+import type { GeneratedLevelSite } from "./world/siteGeneratorTypes";
 
 export type ScenarioRoomEquipment = Partial<
   Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
@@ -80,6 +81,8 @@ export interface LevelDefinition {
   assaultTheme: "standard" | "boss";
   loadout: FacilityLoadout;
   rounds: RoundDefinition[];
+  /** Null levels use the pack's authored map; generated sites use a fixed tutorial seed. */
+  site: GeneratedLevelSite | null;
 }
 
 export interface EnvironmentHazardRules {

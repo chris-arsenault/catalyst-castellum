@@ -530,8 +530,6 @@ const catalogsForMap = (map: GameState["map"]): GameState["world"] => ({
 /** v13: the save owns the map (player edits diverge it from the pack). */
 const validGame = (game: GameState, definition: GameDefinition): GameState | null => {
   if (validateWorldMap(game.map).length > 0) return null;
-  const packRooms = Object.keys(definition.map.rooms).sort().join("|");
-  if (Object.keys(game.map.rooms).sort().join("|") !== packRooms) return null;
   const withCatalogs: GameState = { ...game, world: catalogsForMap(game.map) };
   return gameStateIsValid(withCatalogs, definition) ? withCatalogs : null;
 };

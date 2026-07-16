@@ -208,11 +208,11 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
   if (!roomId) return null;
   const definition = roomDefinition(game, roomId);
   const room = roomState(game, roomId);
-  const analysis = selectors.roomAnalysis(room);
+  const analysis = selectors.roomAnalysis(room, game);
   const gasInflow = roomGasInflow(game, roomId);
   const openGasPortals = activeRoomGasPortals(game, roomId);
-  const lowerHazards = roomHazards(room, true, true, "lower");
-  const upperHazards = roomHazards(room, false, true, "upper");
+  const lowerHazards = roomHazards(room, true, true, "lower", game);
+  const upperHazards = roomHazards(room, false, true, "upper", game);
   const passageLabel = translator.text(
     openGasPortals.length === 1 ? "ui.map.room.passage.one" : "ui.map.room.passage.other"
   );

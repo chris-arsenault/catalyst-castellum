@@ -6,7 +6,10 @@ import type {
 } from "../definitionTypes";
 import type { ScenarioAvailability, SpeciesId } from "../types";
 import { isProcessLine, parseProcessLineId } from "../world/map";
+import type { WorldMap } from "../world/map";
+import { hullLayoutFromMap } from "../world/hullFragment";
 import { validateWorldMap } from "../world/mapValidation";
+import { generateSiteLayoutCandidate } from "../world/siteGenerator";
 
 export interface AuthoringIssue {
   path: string;
@@ -50,6 +53,7 @@ const validateIdentity = (
 
 const validateAvailability = (
   source: GamePackSource,
+  map: WorldMap,
   availability: ScenarioAvailability,
   path: string,
   issues: AuthoringIssue[]
@@ -71,18 +75,18 @@ const validateAvailability = (
     const ids = availability[field];
     if (new Set(ids).size !== ids.length)
       push(issues, `${path}.${field}`, "Identifiers must be unique.");
-    for (const id of ids) validateAvailableLine(source, id, kind, `${path}.${field}`, issues);
+    for (const id of ids) validateAvailableLine(map, id, kind, `${path}.${field}`, issues);
   }
 };
 
 const validateAvailableLine = (
-  source: GamePackSource,
+  map: WorldMap,
   id: string,
   kind: "gas_line" | "liquid_line",
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  const authored = source.map.connections[id];
+  const authored = map.connections[id];
   if (authored) {
     if (authored.kind !== kind) push(issues, path, `${id} is not a ${kind}.`);
     return;
@@ -93,8 +97,7 @@ const validateAvailableLine = (
     return;
   }
   for (const roomId of parsed.rooms) {
-    if (!(roomId in source.map.rooms))
-      push(issues, path, `${id} references unknown room ${roomId}.`);
+    if (!(roomId in map.rooms)) push(issues, path, `${id} references unknown room ${roomId}.`);
   }
 };
 
@@ -115,6 +118,7 @@ const isSuperset = (next: readonly string[], previous: readonly string[]): boole
 
 const validateRound = (
   source: GamePackSource,
+  map: WorldMap,
   round: RoundDefinition,
   previous: RoundDefinition | undefined,
   path: string,
@@ -129,7 +133,7 @@ const validateRound = (
       push(issues, `${path}.wave.${index}.type`, `Unknown enemy ${entry.type}.`);
     if (entry.at < 0) push(issues, `${path}.wave.${index}.at`, "Spawn time must be nonnegative.");
   }
-  validateAvailability(source, round.availability, `${path}.availability`, issues);
+  validateAvailability(source, map, round.availability, `${path}.availability`, issues);
   if (previous) {
     const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
     for (const field of fields) {
@@ -146,18 +150,43 @@ const validateLevel = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  validateLevelDefinition(source, level, path, issues);
-  validateEquipmentLoadout(source, level, path, issues);
-  validateConduitLoadout(source, level, path, issues);
+  const map = mapForLevel(source, level, path, issues);
+  validateLevelDefinition(source, map, level, path, issues);
+  validateEquipmentLoadout(source, map, level, path, issues);
+  validateConduitLoadout(map, level, path, issues);
 };
 
-const validateLevelDefinition = (
+const mapForLevel = (
   source: GamePackSource,
   level: LevelDefinition,
   path: string,
   issues: AuthoringIssue[]
+): WorldMap => {
+  if (!level.site) return source.map;
+  try {
+    return generateSiteLayoutCandidate(
+      level.site.spec,
+      hullLayoutFromMap(source.map),
+      level.site.seed
+    ).map;
+  } catch (error) {
+    push(
+      issues,
+      `${path}.site`,
+      error instanceof Error ? error.message : "Generated site production failed."
+    );
+    return source.map;
+  }
+};
+
+const validateLevelDefinition = (
+  source: GamePackSource,
+  map: WorldMap,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
 ): void => {
-  if (!(level.focusRoomId in source.map.rooms))
+  if (!(level.focusRoomId in map.rooms))
     push(issues, `${path}.focusRoomId`, `Unknown room ${level.focusRoomId}.`);
   for (const reactionId of level.featuredReactionIds) {
     if (!(reactionId in source.reactions))
@@ -169,18 +198,19 @@ const validateLevelDefinition = (
   if (new Set(roundIds).size !== roundIds.length)
     push(issues, `${path}.rounds`, "Round IDs must be unique within a level.");
   level.rounds.forEach((round, index) =>
-    validateRound(source, round, level.rounds[index - 1], `${path}.rounds.${index}`, issues)
+    validateRound(source, map, round, level.rounds[index - 1], `${path}.rounds.${index}`, issues)
   );
 };
 
 const validateEquipmentLoadout = (
   source: GamePackSource,
+  map: WorldMap,
   level: LevelDefinition,
   path: string,
   issues: AuthoringIssue[]
 ): void => {
   for (const [roomId, equipment] of Object.entries(level.loadout.equipment)) {
-    if (!(roomId in source.map.rooms))
+    if (!(roomId in map.rooms))
       push(issues, `${path}.loadout.equipment`, `Unknown room ${roomId}.`);
     for (const instance of Object.values(equipment ?? {})) {
       if (instance && !(instance.equipmentId in source.equipment))
@@ -190,7 +220,7 @@ const validateEquipmentLoadout = (
 };
 
 const validateConduitLoadout = (
-  source: GamePackSource,
+  map: WorldMap,
   level: LevelDefinition,
   path: string,
   issues: AuthoringIssue[]
@@ -201,7 +231,7 @@ const validateConduitLoadout = (
   ] as const;
   for (const [field, loadouts, kind] of conduitLoadouts) {
     for (const id of Object.keys(loadouts)) {
-      if (source.map.connections[id]?.kind !== kind)
+      if (map.connections[id]?.kind !== kind)
         push(issues, `${path}.loadout.${field}`, `${id} is not an authored ${kind}.`);
     }
   }

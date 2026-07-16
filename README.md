@@ -29,9 +29,18 @@ Port `26007` is only a published development slot. The project does not integrat
 ## Verify
 
 ```bash
+make quick-ci
+```
+
+`make quick-ci` is the normal local iteration gate: architecture and copy ownership, linting,
+formatting, type checking, and the unit suite without coverage instrumentation.
+
+Run the full GitHub-equivalent gate and browser integration suite when preparing a release or when
+the changed area needs their coverage:
+
+```bash
 make ci
 pnpm test:e2e
-pnpm build
 ```
 
 The unit suite covers elemental conservation, finite-volume shared conduits, route-volume priming,
@@ -51,8 +60,9 @@ pnpm campaign:health
 ```
 
 It runs the pure engine without React or Pixi, compares do-nothing and intended reference policies,
-then groups seeded randomized policies by action count, pass rate, and remaining core. `make ci`
-includes a bounded deterministic health assertion; exploratory randomized runs remain opt-in.
+then groups seeded randomized policies by action count, pass rate, and remaining core. The full
+`make ci` gate includes a bounded deterministic health assertion; exploratory randomized runs
+remain opt-in.
 
 ## How to play
 

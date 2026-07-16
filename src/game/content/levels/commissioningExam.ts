@@ -17,6 +17,7 @@ export const COMMISSIONING_EXAM_LEVEL: LevelDefinition = {
   startingMatter: 58,
   startingCoreIntegrity: 100,
   assaultTheme: "boss",
+  site: null,
   loadout: {
     ...emptyLoadout(),
     equipment: TUTORIAL_EQUIPMENT,

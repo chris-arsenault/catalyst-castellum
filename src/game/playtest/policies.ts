@@ -1,23 +1,10 @@
 import { WORLD_MAP } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
+import type { RandomSource } from "../world/seededRandom";
 import type { PlaytestPlan } from "./types";
 import { LEVEL_PLAYTEST_PLANS } from "../content/playtestPlans";
 
-export interface RandomSource {
-  next: () => number;
-}
-
-export const seededRandom = (seed: number): RandomSource => {
-  let value = seed >>> 0 || 1;
-  return {
-    next: () => {
-      value ^= value << 13;
-      value ^= value >>> 17;
-      value ^= value << 5;
-      return (value >>> 0) / 4_294_967_296;
-    },
-  };
-};
+export { seededRandom } from "../world/seededRandom";
 
 const PLACEMENT_ROOMS = Object.values(WORLD_MAP.rooms)
   .filter((room) => room.structure === "room")

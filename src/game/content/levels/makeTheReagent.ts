@@ -1,6 +1,7 @@
 import type { LevelDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { availability, emptyLoadout, gasRun, liquidRun } from "./helpers";
+import { CHLOR_ALKALI_SITE, CHLOR_ALKALI_TUTORIAL_SEED } from "../sites/chlorAlkali";
 
 const reagentRoundOne = availability({
   equipment: ["membrane_cell"],
@@ -31,6 +32,7 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
     liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
     liquidSourceAmounts: { water_tank: 120, sodium_chloride_tank: 120 },
   },
+  site: { kind: "generated", seed: CHLOR_ALKALI_TUTORIAL_SEED, spec: CHLOR_ALKALI_SITE },
   rounds: [
     {
       id: "co_products",

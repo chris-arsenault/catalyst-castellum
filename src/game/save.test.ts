@@ -95,7 +95,7 @@ describe("v12 persistence", () => {
 
 describe("legacy compatibility decoding", () => {
   it("migrates a structurally current v10 snapshot to v11", () => {
-    const game = createScenarioGame("make_the_reagent");
+    const game = createScenarioGame("flash_point");
     const envelope = JSON.parse(encodeGame(game)) as {
       game: Omit<GameState, "version"> & { version: number };
     };
@@ -117,7 +117,7 @@ describe("legacy compatibility decoding", () => {
     const decoded = decodeGame(JSON.stringify(envelope));
 
     expect(decoded?.version).toBe(13);
-    expect(decoded?.campaign.levelId).toBe("make_the_reagent");
+    expect(decoded?.campaign.levelId).toBe("flash_point");
     expect(
       roomState(decoded!, "furnace").reactions.hydrogen_oxygen_combustion.limitingFactor
     ).toEqual({

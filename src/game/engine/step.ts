@@ -9,6 +9,7 @@ import { cloneGame } from "./roomState";
 import { simulateStratification } from "./stratification";
 import { roundDefinitionFor } from "./campaign";
 import { phaseIsStatic } from "./phaseModel";
+import { definitionForMap } from "../world/activeDefinition";
 
 const finishAssaultStep = (state: GameState, dt: number, definition: GameDefinition): void => {
   moveEnemies(state, dt, definition);
@@ -46,10 +47,11 @@ export const stepGame = (
 ): GameState => {
   if (!shouldStep(source, realDt)) return source;
   const state = cloneGame(source);
+  const activeDefinition = definitionForMap(definition, state.map);
   let remaining = Math.min(realDt * source.speed, 2);
   while (remaining > 0) {
     const dt = Math.min(remaining, 0.1);
-    stepMutable(state, dt, definition);
+    stepMutable(state, dt, activeDefinition);
     remaining -= dt;
     if (phaseIsStatic(state.phase)) break;
   }

@@ -43,7 +43,7 @@ export const roomRenderModel = (
   const facility = facilityModelForMap(game.map);
   const view = mapViewFor(game.map);
   const room = roomState(game, roomId);
-  const analysis = roomAnalysis(room);
+  const analysis = roomAnalysis(room, game);
   const dimensions = view.roomMapRect(roomId);
   const gasColor = (zone: GasZone): number => weightedGasColor(room.gas[zone]);
   const liquidColor = analysis.dominantLiquid

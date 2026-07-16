@@ -6,6 +6,7 @@ import { graftedRoomId } from "./world/graft";
 import type { Hardpoint, WorldMap } from "./world/map";
 import { roomState } from "./world/instances";
 import type { GameState } from "./types";
+import type { LevelDefinition } from "./definitionTypes";
 
 /**
  * Hull test content: the furnace is the player's chamber, with a hardpoint on its
@@ -31,7 +32,18 @@ const hullMap: WorldMap = Object.freeze({
   },
 });
 
-const definition = deriveGame(DEFAULT_GAME_DEFINITION, { map: hullMap });
+const makeReagentWithoutGeneratedSite: LevelDefinition = {
+  ...DEFAULT_GAME_DEFINITION.levels.make_the_reagent,
+  site: null,
+};
+
+const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
+  map: hullMap,
+  levels: {
+    ...DEFAULT_GAME_DEFINITION.levels,
+    make_the_reagent: makeReagentWithoutGeneratedSite,
+  },
+});
 
 const buildPhase = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);

@@ -16,7 +16,7 @@ export const RoomRail = () => {
       {game.world.rooms.map((roomId) => {
         const definition = roomDefinition(game, roomId);
         const ring = facilityModelForMap(game.map).ringForRoom(roomId);
-        const analysis = selectors.roomAnalysis(roomState(game, roomId));
+        const analysis = selectors.roomAnalysis(roomState(game, roomId), game);
         return (
           <button
             key={roomId}

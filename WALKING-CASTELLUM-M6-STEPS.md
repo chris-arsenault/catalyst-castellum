@@ -30,6 +30,11 @@ core+1 → core+2 rooms — that is how the player builds something permanent.
 3. **Grafting gated to the dock** (committed): `graft_module`/`dismantle_module` require
    a site's first build phase (`roundIndex === 0`); the graft-mode toggle only shows at
    the dock. Faithful to grafting being between sites, not between rounds.
+4. **CL-1 owns a generated exterior** (committed): `make_the_reagent` uses the seeded
+   authored-chunk layout engine instead of OX-1's map. The selected raised-reservoir
+   candidate places CL-02/CL-03 on an elevated process deck, carries Core + washlock
+   into the dock, preserves the chlor-alkali lines, and supports both ground and flying
+   breach paths. `pnpm site:candidates` generates further scored SVG candidates.
 
 ## Remaining (design-sensitive — needs user direction)
 
@@ -49,8 +54,7 @@ architecture:
 - **Grafting availability at site 1**: currently the Core hardpoint makes grafting
   reachable at every dock including site 1; the lesson is meant for dock 1 (site 1→2).
   Whether to hide grafting until dock 1 is a tutorial-pacing choice.
-- **Per-site authoring** if a site needs its exterior re-expressed so the hull carries
-  cleanly (most is already handled by the producer's hull-strip).
+- **Remaining site exteriors** for the HCl stages still use the OX-1 authored map.
 
 Exit gate (unchanged): `make ci` green; full e2e tutorial suite green; balance contract
 tests green — re-run once the graft lesson and multi-site verification land.

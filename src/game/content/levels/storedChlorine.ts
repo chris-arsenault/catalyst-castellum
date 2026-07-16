@@ -11,6 +11,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   startingMatter: 42,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  site: null,
   loadout: {
     ...emptyLoadout(),
     equipment: {
