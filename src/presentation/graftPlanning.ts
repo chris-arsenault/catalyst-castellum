@@ -1,6 +1,7 @@
 import type { GraftPreview, GraftPreviewOption } from "../application/storeTypes";
-import type { GameState, RoomId } from "../game/types";
-import { evaluateCommand } from "../game/simulation";
+import type { EnemyPathStep, FacilityPortalState, GameState, RoomId } from "../game/types";
+import { evaluateCommand, findEnemyPathOnMap } from "../game/simulation";
+import type { WorldMap } from "../game/world/map";
 import { DEFAULT_GAME_DEFINITION as PACK } from "./defaultGame";
 
 /**
@@ -69,3 +70,8 @@ export const hullHardpoints = (game: GameState): HardpointRef[] => {
   }
   return refs;
 };
+
+export const hullEnemyRoute = (
+  map: WorldMap,
+  portalStates: Readonly<Record<string, FacilityPortalState>>
+): EnemyPathStep[] => findEnemyPathOnMap({ flying: false, portalStates }, map);

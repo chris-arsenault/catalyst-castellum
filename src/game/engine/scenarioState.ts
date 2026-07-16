@@ -248,17 +248,29 @@ const scenarioStartedEvent = (levelId: LevelId): GameState["events"][number] => 
   incidentId: null,
 });
 
-/** Overlay the embedded hull's live contents onto freshly made records. */
+/**
+ * Carry durable hull installations into a fresh site. Atmosphere, liquids, heat,
+ * reaction residue, conduit contents, and damage telemetry reset during travel.
+ */
 const seedHullContents = (state: GameState, hull: HullFragment | null): void => {
   if (!hull) return;
   for (const [roomId, roomState] of Object.entries(hull.roomStates)) {
-    state.rooms[roomId] = structuredClone(roomState);
+    const destination = state.rooms[roomId];
+    if (destination) destination.equipment = structuredClone(roomState.equipment);
   }
   for (const [id, conduit] of Object.entries(hull.gasConduits)) {
-    state.gasConduits[id] = structuredClone(conduit);
+    const destination = state.gasConduits[id];
+    if (destination) {
+      destination.installed = conduit.installed;
+      destination.enabled = conduit.enabled;
+    }
   }
   for (const [id, conduit] of Object.entries(hull.liquidConduits)) {
-    state.liquidConduits[id] = structuredClone(conduit);
+    const destination = state.liquidConduits[id];
+    if (destination) {
+      destination.installed = conduit.installed;
+      destination.enabled = conduit.enabled;
+    }
   }
 };
 

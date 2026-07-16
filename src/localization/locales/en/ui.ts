@@ -29,6 +29,8 @@ export const UI_MESSAGES = {
   "ui.architecture.flow": "Gas {gasDirection} {gasFlow} · liquid {liquidDirection} {liquidFlow}",
   "ui.architecture.title": "Architectural openings",
   "ui.architecture.kicker": "NATURAL FLOW",
+  "ui.architecture.action.open": "Open route",
+  "ui.architecture.action.close": "Close route",
   "ui.eventLog.open": "Open battle log",
   "ui.eventLog.recent": "Recent",
   "ui.eventLog.ready": "Event log ready",

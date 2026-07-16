@@ -31,6 +31,7 @@ import {
 } from "./transportCommands";
 import { roomState } from "../world/instances";
 import { definitionForMap } from "../world/activeDefinition";
+import { configureHullPortalCommand, editHullCellCommand, setPortalCommand } from "./hullCommands";
 
 const startPrime = (source: GameState, definition: GameDefinition): CommandResult => {
   const state = cloneGame(source);
@@ -208,6 +209,12 @@ export const executeCommand = (
       return graftModuleCommand(source, command, decision, activeDefinition);
     case "dismantle_module":
       return dismantleModuleCommand(source, command, decision);
+    case "edit_hull_cell":
+      return editHullCellCommand(source, command);
+    case "configure_hull_portal":
+      return configureHullPortalCommand(source, command);
+    case "set_portal":
+      return setPortalCommand(source, command, activeDefinition);
     case "charge_gas_source":
       return gasCharge(source, command.sourceId, decision, activeDefinition);
     case "charge_liquid_source":

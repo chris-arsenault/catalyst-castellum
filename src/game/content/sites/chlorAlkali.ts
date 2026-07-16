@@ -72,7 +72,6 @@ export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
   hullAnchor: { columns: 30, elevations: 0 },
   coreAnchor: { ...WORLD_MAP.coreAnchor },
   coreBreachCell: { ...WORLD_MAP.coreBreachCell },
-  dockRoomId: "washlock",
   chunks: [
     chunk("west_intake", "ENTRY", "entry", 4, 8),
     chunk("switchyard", "CL-01", "room", 14, 8),

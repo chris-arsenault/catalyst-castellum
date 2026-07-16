@@ -73,13 +73,10 @@ export const graftPlacement = (hardpoint: Hardpoint, template: ModuleTemplate): 
   let origin: GridCell;
   switch (hardpoint.facing) {
     case "right":
-      origin = cell(moduleAttachCell.column, moduleAttachCell.elevation - Math.floor(height / 2));
+      origin = cell(moduleAttachCell.column, moduleAttachCell.elevation);
       break;
     case "left":
-      origin = cell(
-        moduleAttachCell.column - (width - 1),
-        moduleAttachCell.elevation - Math.floor(height / 2)
-      );
+      origin = cell(moduleAttachCell.column - (width - 1), moduleAttachCell.elevation);
       break;
     case "up":
       origin = cell(moduleAttachCell.column - Math.floor(width / 2), moduleAttachCell.elevation);
@@ -113,6 +110,7 @@ export const instantiateModuleRoom = (
   code: string
 ): MapRoom => {
   const { origin } = graftPlacement(hardpoint, template);
+  const ladderColumn = origin.column + Math.floor(template.footprint.width / 2);
   return {
     id: graftedRoomId(hostRoomId, hardpoint.id),
     code,
@@ -131,7 +129,9 @@ export const instantiateModuleRoom = (
       )
     ),
     platformCells: [],
-    ladderCells: [],
+    ladderCells: Array.from({ length: template.footprint.height }, (_, index) =>
+      cell(ladderColumn, origin.elevation + index)
+    ),
     taps: structuredClone(template.taps),
     hardpoints: template.hardpoints.map((hardpointSpec) => ({
       id: hardpointSpec.id,
@@ -152,7 +152,7 @@ export const instantiateJoint = (
   const placement = graftPlacement(hardpoint, template);
   return {
     id: graftedJointId(hostRoomId, hardpoint.id),
-    kind: template.joint.kind,
+    kind: placement.orientation === "vertical" ? "ladder_shaft" : template.joint.kind,
     rooms: [hostRoomId, moduleRoomId],
     connectorCells: [placement.connectorCell],
     endpoints: [hardpoint.cell, placement.moduleAttachCell],

@@ -77,6 +77,7 @@ describe("the authored world map", () => {
       .map((room) => room.id)
       .sort();
     expect(hull).toEqual(["core", "washlock"]);
-    expect(WORLD_MAP.rooms.core?.hardpoints).toHaveLength(1);
+    expect(WORLD_MAP.rooms.core?.hardpoints).toHaveLength(0);
+    expect(WORLD_MAP.rooms.washlock?.hardpoints).toHaveLength(2);
   });
 });

@@ -2,6 +2,7 @@ import type { GameDefinition } from "../definitionTypes";
 import type { RoomId } from "../types";
 import { routeConnection } from "./autoRouter";
 import type {
+  ArchitecturalConnection,
   LineSpec,
   MapConnection,
   MapRoom,
@@ -9,8 +10,11 @@ import type {
   ProcessLineKind,
   WorldMap,
 } from "./map";
-import { processLineId } from "./map";
+import { isArchitectural, processLineId } from "./map";
 import { validateWorldMap } from "./mapValidation";
+import type { GridCell } from "../types";
+import { cellKey } from "../spatial";
+import { hullPlanningMap } from "./hullFragment";
 
 /**
  * In-play map edits (ADR-0001): every edit produces a new frozen map object — the
@@ -92,6 +96,81 @@ export const withoutGraft = (map: WorldMap, roomId: string, jointId: string): Wo
   delete rooms[roomId];
   delete connections[jointId];
   return validated({ ...map, rooms, connections }, "Graft removal");
+};
+
+export type HullCellTerrain = "platform" | "ladder";
+
+const roomContainsCell = (room: MapRoom, target: GridCell): boolean =>
+  target.column >= room.bounds.column &&
+  target.column < room.bounds.column + room.bounds.width &&
+  target.elevation >= room.bounds.elevation &&
+  target.elevation < room.bounds.elevation + room.bounds.height;
+
+const updateCellList = (
+  cells: readonly GridCell[],
+  target: GridCell,
+  present: boolean
+): readonly GridCell[] => {
+  const retained = cells.filter((candidate) => cellKey(candidate) !== cellKey(target));
+  return present ? [...retained, { ...target }] : retained;
+};
+
+/** Add or remove a walkable platform or ladder cell inside the persistent hull. */
+export const withHullCellEdit = (
+  source: WorldMap,
+  roomId: RoomId,
+  target: GridCell,
+  terrain: HullCellTerrain,
+  present: boolean
+): WorldMap => {
+  const map = hullPlanningMap(source);
+  const room = map.rooms[roomId];
+  if (!room || room.provenance !== "hull" || !roomContainsCell(room, target))
+    throw new Error("Hull cell edit is outside a persistent room.");
+  let platformCells = room.platformCells;
+  let ladderCells = room.ladderCells;
+  if (terrain === "platform") {
+    platformCells = updateCellList(platformCells, target, present);
+    if (present) ladderCells = updateCellList(ladderCells, target, false);
+  } else {
+    ladderCells = updateCellList(ladderCells, target, present);
+    if (present) platformCells = updateCellList(platformCells, target, false);
+  }
+  const editedRoom: MapRoom = {
+    ...room,
+    platformCells,
+    ladderCells,
+  };
+  return validated({ ...map, rooms: { ...map.rooms, [roomId]: editedRoom } }, "Hull cell edit");
+};
+
+/** Install a door at a hull joint, or remove it to restore an open passage. */
+export const withHullPortalConfiguration = (
+  source: WorldMap,
+  connectionId: string,
+  kind: "passage" | "door",
+  open: boolean
+): WorldMap => {
+  const map = hullPlanningMap(source);
+  const connection = map.connections[connectionId];
+  if (
+    !connection ||
+    !isArchitectural(connection) ||
+    connection.kind === "core_door" ||
+    connection.orientation !== "horizontal" ||
+    !connection.rooms.every((roomId) => map.rooms[roomId]?.provenance === "hull")
+  )
+    throw new Error("Portal configuration requires a player-built hull joint.");
+  const edited: ArchitecturalConnection = {
+    ...connection,
+    kind,
+    defaultOpen: kind === "passage" ? true : open,
+    defaultSealed: false,
+  };
+  return validated(
+    { ...map, connections: { ...map.connections, [connectionId]: edited } },
+    "Hull portal edit"
+  );
 };
 
 /** Route and parameterize a new player line; null when no legal route exists. */

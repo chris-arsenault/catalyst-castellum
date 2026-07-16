@@ -638,3 +638,483 @@
     animation: none;
   }
 }
+
+/* The graft builder is a blueprint workspace, visually separate from combat. */
+.graft-stage {
+  background: radial-gradient(circle at 35% 28%, rgba(52, 143, 230, 0.2), transparent 38%), #06111f;
+}
+
+.graft-screen {
+  width: min(1440px, 100%);
+  min-height: min(780px, 100%);
+  border-color: #2b73b7;
+  background: #07182a;
+  box-shadow: 0 34px 110px rgba(0, 10, 24, 0.72);
+}
+
+.graft-screen-header {
+  border-bottom-color: #245a8c;
+  background: linear-gradient(90deg, rgba(39, 127, 211, 0.22), rgba(5, 22, 39, 0.78));
+}
+
+.graft-title > span,
+.graft-back-button {
+  border-color: #3d88ca;
+  background: #0b2a46;
+  color: #a8d9ff;
+}
+
+.graft-title > span {
+  color: #55bcff;
+}
+
+.graft-matter {
+  color: #76d7ff;
+}
+
+.graft-builder-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  min-height: 0;
+}
+
+.graft-blueprint {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  padding: 18px;
+  background: #061728;
+}
+
+.hull-builder-canvas {
+  position: relative;
+  min-height: 540px;
+  overflow: hidden;
+  border: 1px solid #2e70aa;
+  border-radius: 8px;
+  background: #071d33;
+  box-shadow: inset 0 0 70px rgba(0, 36, 74, 0.65);
+}
+
+.hull-builder-canvas svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 540px;
+}
+
+.hull-blueprint-field {
+  fill: #082541;
+}
+
+.hull-grid-line {
+  fill: none;
+  stroke: rgba(99, 177, 235, 0.11);
+  stroke-width: 1;
+}
+
+.hull-blueprint-room rect {
+  fill: rgba(22, 75, 116, 0.8);
+  stroke: #4ba2df;
+  stroke-width: 2;
+}
+
+.hull-blueprint-room.core rect {
+  fill: rgba(29, 109, 137, 0.9);
+  stroke: #7ce7ff;
+  stroke-width: 3;
+}
+
+.hull-blueprint-room.candidate rect {
+  fill: rgba(46, 154, 218, 0.38);
+  stroke: #8ee6ff;
+  stroke-dasharray: 7 4;
+  animation: candidate-pulse 0.8s ease-in-out infinite alternate;
+}
+
+.hull-blueprint-room text {
+  fill: #d2efff;
+  font: 700 11px/1 var(--mono);
+  letter-spacing: 0.08em;
+}
+
+.hull-platform-cell {
+  fill: #80c7ef;
+  stroke: #d5f3ff;
+  stroke-width: 1;
+}
+
+.hull-persistent-pipe {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.92;
+}
+
+.hull-persistent-pipe.gas_line {
+  stroke: #70e8ff;
+}
+
+.hull-persistent-pipe.liquid_line {
+  stroke: #73a7ff;
+}
+
+.hull-persistent-machine path {
+  fill: #13394f;
+  stroke: #a9efff;
+  stroke-width: 1.5;
+}
+
+.hull-persistent-machine circle {
+  fill: #ffd879;
+}
+
+.hull-ladder-cell path {
+  fill: none;
+  stroke: #ffd272;
+  stroke-width: 2;
+}
+
+.hull-enemy-route {
+  fill: none;
+  stroke: #ffb451;
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 7 5;
+  filter: drop-shadow(0 0 5px rgba(255, 169, 64, 0.7));
+}
+
+#route-arrow path {
+  fill: #ffb451;
+}
+
+.hull-portal rect {
+  fill: #133c5d;
+  stroke: #77c5f4;
+  stroke-width: 1.5;
+}
+
+.hull-portal path {
+  fill: none;
+  stroke: #aee5ff;
+  stroke-width: 3;
+}
+
+.hull-portal.closed rect {
+  fill: #6a2632;
+  stroke: #ff737d;
+}
+
+.hull-portal.closed path {
+  stroke: #ffb0b5;
+}
+
+.hull-hardpoint {
+  outline: none;
+}
+
+.hull-hardpoint circle {
+  fill: #0b2740;
+  stroke: #81d7ff;
+  stroke-width: 2;
+}
+
+.hull-hardpoint.available {
+  cursor: pointer;
+}
+
+.hull-hardpoint.available:hover circle,
+.hull-hardpoint.available:focus circle {
+  fill: #218dc4;
+  stroke: #e3f8ff;
+}
+
+.hull-hardpoint path {
+  stroke: #d8f4ff;
+  stroke-width: 2;
+}
+
+.hull-hardpoint.occupied circle {
+  fill: #4f91ac;
+}
+
+.hull-cell-target rect {
+  fill: rgba(82, 188, 255, 0.05);
+  stroke: rgba(125, 213, 255, 0.2);
+  stroke-width: 1;
+}
+
+.hull-cell-target.editable {
+  cursor: crosshair;
+}
+
+.hull-cell-target.editable:hover rect,
+.hull-cell-target.editable:focus rect {
+  fill: rgba(106, 210, 255, 0.38);
+  stroke: #d2f4ff;
+}
+
+.hull-route-entry path {
+  stroke: #ffb451;
+  stroke-width: 3;
+}
+
+.hull-route-entry text {
+  fill: #ffd69b;
+  font: 750 9px/1 var(--mono);
+  letter-spacing: 0.1em;
+}
+
+.hull-route-status {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 9px;
+  border: 1px solid #347bb2;
+  border-radius: 4px;
+  background: rgba(5, 22, 38, 0.9);
+  color: #b8ddf4;
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.hull-route-status span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #55e5a5;
+  box-shadow: 0 0 8px #55e5a5;
+}
+
+.hull-route-status.blocked span {
+  background: #ff6666;
+  box-shadow: 0 0 8px #ff6666;
+}
+
+.graft-builder-sidebar {
+  display: flex;
+  min-height: 0;
+  padding: 18px;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  border-left: 1px solid #245a8c;
+  background: #091d30;
+}
+
+.graft-tool-palette,
+.graft-portal-palette,
+.graft-room-palette {
+  display: grid;
+  gap: 9px;
+  padding: 12px;
+  border: 1px solid #285f8c;
+  border-radius: 7px;
+  background: rgba(7, 35, 58, 0.78);
+}
+
+.graft-tool-palette > strong,
+.graft-portal-palette > strong,
+.graft-room-palette > strong {
+  color: #8fcdf1;
+  font: 750 9px/1 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.graft-tool-palette > div,
+.graft-portal-palette article > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.graft-tool-palette button,
+.graft-portal-palette button,
+.graft-room-palette button,
+.graft-icon-button,
+.graft-build-button {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #356f9b;
+  border-radius: 4px;
+  background: #0b2942;
+  color: #a9d5ee;
+  font: 700 9px/1 var(--mono);
+  cursor: pointer;
+}
+
+.graft-tool-palette button.active,
+.graft-portal-palette button.active {
+  border-color: #83d9ff;
+  background: #175f8e;
+  color: #fff;
+  box-shadow: 0 0 12px rgba(75, 185, 237, 0.25);
+}
+
+.graft-portal-palette article {
+  display: grid;
+  gap: 7px;
+  padding-top: 8px;
+  border-top: 1px solid #204e71;
+}
+
+.graft-portal-palette article > span,
+.graft-room-palette button span {
+  color: #d0eafa;
+  font: 700 10px/1 var(--mono);
+}
+
+.graft-portal-palette article > div {
+  grid-template-columns: 1fr;
+}
+
+.graft-room-palette button {
+  justify-content: flex-start;
+}
+
+.graft-room-palette button span {
+  margin-right: auto;
+}
+
+.graft-module-palette {
+  position: absolute;
+  right: 34px;
+  bottom: 48px;
+  left: 34px;
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #65bfe9;
+  border-radius: 7px;
+  background: rgba(5, 24, 42, 0.96);
+  box-shadow: 0 16px 50px rgba(0, 8, 20, 0.66);
+}
+
+.graft-module-palette > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.graft-module-palette > header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.graft-module-palette header strong {
+  color: #d8f3ff;
+  font-size: 12px;
+}
+
+.graft-module-palette header small {
+  color: #79aeca;
+  font-size: 9px;
+}
+
+.graft-module-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.graft-module-options article {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  overflow: hidden;
+  border: 1px solid #2d668f;
+  border-radius: 5px;
+  background: #0a263d;
+}
+
+.graft-module-options article.selected {
+  border-color: #7edcff;
+  box-shadow: 0 0 15px rgba(73, 190, 239, 0.25);
+}
+
+.graft-module-select {
+  display: grid;
+  padding: 10px;
+  gap: 4px;
+  border: 0;
+  background: transparent;
+  color: #d4efff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.graft-module-select small {
+  color: #73a9c7;
+  font: 700 9px/1 var(--mono);
+}
+
+.graft-build-button {
+  min-width: 84px;
+  border-width: 0 0 0 1px;
+  border-radius: 0;
+  color: #83e4ff;
+}
+
+.graft-module-select:disabled,
+.graft-build-button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+
+.graft-footer {
+  border-top-color: #245a8c;
+  background: #081a2b;
+}
+
+.graft-footer > span {
+  color: #7da9c4;
+}
+
+@keyframes candidate-pulse {
+  to {
+    fill: rgba(69, 189, 239, 0.55);
+  }
+}
+
+@media (max-width: 1000px) {
+  .graft-builder-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .graft-builder-sidebar {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid #245a8c;
+    border-left: 0;
+  }
+
+  .graft-module-options {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 650px) {
+  .graft-builder-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .hull-builder-canvas,
+  .hull-builder-canvas svg {
+    min-height: 420px;
+  }
+
+  .graft-module-palette {
+    position: static;
+    margin-top: 10px;
+  }
+}

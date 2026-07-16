@@ -22,7 +22,14 @@ import { phaseAllowsCommand } from "./phaseModel";
 import { conduitState, gasConduitState, liquidConduitState, roomState } from "../world/instances";
 import { isProcessLine, processLineId } from "../world/map";
 import { plannedLineConnection } from "../world/mapEdits";
-import { graftedJointId, plannedGraft } from "../world/graft";
+import { graftParentJoint, plannedGraft } from "../world/graft";
+import {
+  evaluateHullCellEdit,
+  evaluateHullPortalConfiguration,
+  evaluateSetPortal,
+  portalStatesForMap,
+  topologyHasRoutes,
+} from "./hullCommandPolicy";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -181,7 +188,10 @@ const evaluateBuildConnection = (
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
   const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
-  if (!connectionAvailable(state, connectionId)) return reject("unavailable");
+  const hullInternal = [command.fromRoomId, command.toRoomId].every(
+    (roomId) => state.map.rooms[roomId]?.provenance === "hull"
+  );
+  if (!connectionAvailable(state, connectionId) && !hullInternal) return reject("unavailable");
   const line = buildableLineFor(state, command, gameDefinition);
   if (!line) return reject("route_unavailable");
   if (connectionId in state.map.connections && conduitState(state, connectionId).installed)
@@ -207,6 +217,8 @@ const evaluateGraftModule = (
     command.moduleId
   );
   if (!plan) return reject("placement");
+  if (!topologyHasRoutes(state, plan.map, portalStatesForMap(state, plan.map), gameDefinition))
+    return reject("route_unavailable");
   if (state.matter < plan.cost) return reject("insufficient_matter", { cost: plan.cost });
   return allow({ cost: plan.cost });
 };
@@ -235,9 +247,10 @@ const evaluateDismantleModule = (
   if (!atGraftIntermission(state)) return reject("invalid_phase");
   const room = state.map.rooms[command.roomId];
   if (!room || !command.roomId.startsWith("graft:")) return reject("placement");
-  const jointId = graftedJointId(...graftRef(command.roomId));
+  const parentJoint = graftParentJoint(state.map, command.roomId);
+  if (!parentJoint) return reject("placement");
   const attached = Object.values(state.map.connections).filter(
-    (connection) => connection.rooms.includes(command.roomId) && connection.id !== jointId
+    (connection) => connection.rooms.includes(command.roomId) && connection.id !== parentJoint.id
   );
   if (attached.length > 0) return reject("capacity");
   if (!graftedRoomIsClear(state, gameDefinition, command.roomId)) return reject("capacity");
@@ -249,11 +262,6 @@ const evaluateDismantleModule = (
 };
 
 const ROOM_CLEAR_EPSILON = 0.5;
-
-const graftRef = (roomId: string): [string, string] => {
-  const [, host = "", hardpoint = ""] = roomId.split(":");
-  return [host, hardpoint];
-};
 
 /** Recover the template from the grafted room's shape (code prefix). */
 const graftModuleIdFor = (
@@ -371,6 +379,12 @@ export const evaluateCommand = (
       return evaluateGraftModule(state, command, definition);
     case "dismantle_module":
       return evaluateDismantleModule(state, command, definition);
+    case "edit_hull_cell":
+      return evaluateHullCellEdit(state, command, definition);
+    case "configure_hull_portal":
+      return evaluateHullPortalConfiguration(state, command, definition);
+    case "set_portal":
+      return evaluateSetPortal(state, command, definition);
     case "charge_gas_source":
       return evaluateGasCharge(state, command, definition);
     case "charge_liquid_source":

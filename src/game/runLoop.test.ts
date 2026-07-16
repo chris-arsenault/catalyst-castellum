@@ -8,7 +8,7 @@ import type { GameState } from "./types";
 
 const definition = DEFAULT_GAME_DEFINITION;
 
-const graftedId = graftedRoomId("core", "starboard");
+const graftedId = graftedRoomId("washlock", "forward");
 
 const buildWithGraft = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
@@ -18,8 +18,8 @@ const buildWithGraft = (): GameState => {
     state,
     {
       type: "graft_module",
-      hostRoomId: "core",
-      hardpointId: "starboard",
+      hostRoomId: "washlock",
+      hardpointId: "forward",
       moduleId: "process_chamber",
     },
     definition
@@ -42,9 +42,9 @@ describe("the run loop carries a graft across a dock", () => {
 
     expect(next.campaign.levelId).toBe("make_the_reagent");
     expect(next.map.rooms[graftedId]?.provenance).toBe("hull");
-    expect(next.map.connections["joint:core:starboard"]).toBeDefined();
+    expect(next.map.connections["joint:washlock:forward"]).toBeDefined();
     expect(next.world.rooms).toContain(graftedId);
-    expect(roomState(next, graftedId).gas.lower.hydrogen).toBe(5);
+    expect(roomState(next, graftedId).gas.lower.hydrogen).toBe(0);
     expect(next.map.rooms.washlock?.provenance).toBe("hull");
   });
 

@@ -1,7 +1,13 @@
+/* eslint-disable max-lines -- Candidate assembly remains one readable pipeline of pure stages. */
 import { cell } from "../spatial";
 import type { GridCell, RoomId } from "../types";
 import { routeConnection } from "./autoRouter";
-import { embedHullFragment, type HullFragment, type HullOffset } from "./hullFragment";
+import {
+  embedHullFragment,
+  hullDockRoomId,
+  type HullFragment,
+  type HullOffset,
+} from "./hullFragment";
 import type {
   ArchitecturalConnection,
   MapRoom,
@@ -221,14 +227,15 @@ const assertSpec = (spec: GeneratedSiteSpec): void => {
 const placeChunks = (
   spec: GeneratedSiteSpec,
   hullMap: WorldMap,
+  dockRoomId: RoomId,
   order: readonly string[],
   pattern: SiteRoutePattern,
   random: RandomSource
 ): Record<RoomId, MapRoom> => {
   const catalog = new Map(spec.chunks.map((chunk) => [chunk.id, chunk]));
   const placed: Record<RoomId, MapRoom> = {};
-  let next = hullMap.rooms[spec.dockRoomId];
-  if (!next) throw new Error(`${spec.id} hull is missing dock room ${spec.dockRoomId}.`);
+  let next = hullMap.rooms[dockRoomId];
+  if (!next) throw new Error(`${spec.id} hull is missing dock room ${dockRoomId}.`);
   for (let index = order.length - 1; index >= 0; index -= 1) {
     const chunk = catalog.get(order[index] as string);
     if (!chunk) throw new Error(`${spec.id} references unknown chunk ${order[index]}.`);
@@ -246,6 +253,7 @@ const placeChunks = (
 
 const assembleRoute = (
   spec: GeneratedSiteSpec,
+  dockRoomId: RoomId,
   hullRooms: Readonly<Record<RoomId, MapRoom>>,
   siteRooms: Record<RoomId, MapRoom>,
   order: readonly string[],
@@ -257,7 +265,7 @@ const assembleRoute = (
   const connections: Record<string, ArchitecturalConnection> = {};
   for (let index = 0; index < routeRoomIds.length; index += 1) {
     const currentId = routeRoomIds[index] as RoomId;
-    const nextId = routeRoomIds[index + 1] ?? spec.dockRoomId;
+    const nextId = routeRoomIds[index + 1] ?? dockRoomId;
     const joined = joinRooms(
       rooms[currentId] as MapRoom,
       (rooms[nextId] ?? hullRooms[nextId]) as MapRoom,
@@ -365,8 +373,9 @@ export const generateSiteLayoutCandidate = (
     utilityNodes: translatedUtilityNodes,
   };
   const hullMap = embedHullFragment(emptyMap, hull, spec.hullAnchor);
-  const placed = placeChunks(spec, hullMap, order, pattern, random);
-  const route = assembleRoute(spec, hullMap.rooms, placed, order, pattern);
+  const dockRoomId = hullDockRoomId(hullMap);
+  const placed = placeChunks(spec, hullMap, dockRoomId, order, pattern, random);
+  const route = assembleRoute(spec, dockRoomId, hullMap.rooms, placed, order, pattern);
   const entryRoomId = spec.chunks.find((chunk) => chunk.room.structure === "entry")?.room.id;
   const entryRoom = entryRoomId ? route.rooms[entryRoomId] : undefined;
   if (!entryRoom) throw new Error(`${spec.id} has no placed Entry chunk.`);

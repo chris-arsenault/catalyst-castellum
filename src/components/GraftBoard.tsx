@@ -1,126 +1,245 @@
-import { ArrowLeft, ArrowRight, Blocks, Check, Coins, Trash2, X } from "lucide-react";
-import { useCallback } from "react";
+/* eslint-disable max-lines-per-function -- The builder controller keeps one coherent edit session. */
+import {
+  ArrowLeft,
+  ArrowRight,
+  Blocks,
+  Check,
+  Coins,
+  DoorClosed,
+  DoorOpen,
+  Eraser,
+  Rows3,
+  Trash2,
+  Waypoints,
+} from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { GraftPreview, GraftPreviewOption } from "../application/storeTypes";
-import { hullHardpoints, planGraftPreview, type HardpointRef } from "../presentation/graftPlanning";
-import { roomDefinition } from "../presentation/defaultGame";
+import type { GridCell, RoomId } from "../game/types";
+import { DEFAULT_GAME_DEFINITION as PACK } from "../game/definition";
+import { plannedGraft } from "../game/world/graft";
+import { hullPlanningMap } from "../game/world/hullFragment";
+import { architecturalConnections } from "../game/world/map";
+import { planGraftPreview } from "../presentation/graftPlanning";
+import { HullBuilderCanvas, type HullBuildTool } from "./HullBuilderCanvas";
 
-const GraftPreviewCard = ({ preview }: { preview: GraftPreview }) => {
+interface PreviewCardProps {
+  preview: GraftPreview;
+  selectedModuleId: string | null;
+  onSelect: (moduleId: string) => void;
+  onClose: () => void;
+}
+
+const GraftPreviewCard = ({ preview, selectedModuleId, onSelect, onClose }: PreviewCardProps) => {
   const { commandCopy, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
   const setGraftPreview = useGameStore((state) => state.setGraftPreview);
   const graft = useCallback(
     (option: GraftPreviewOption) => {
-      dispatch({
-        type: "graft_module",
-        hostRoomId: preview.hostRoomId,
-        hardpointId: preview.hardpointId,
-        moduleId: option.moduleId,
-      });
-      setGraftPreview(null);
+      if (
+        dispatch({
+          type: "graft_module",
+          hostRoomId: preview.hostRoomId,
+          hardpointId: preview.hardpointId,
+          moduleId: option.moduleId,
+        })
+      ) {
+        setGraftPreview(null);
+        onClose();
+      }
     },
-    [dispatch, preview.hostRoomId, preview.hardpointId, setGraftPreview]
+    [dispatch, onClose, preview.hardpointId, preview.hostRoomId, setGraftPreview]
   );
-  const cancel = useCallback(() => setGraftPreview(null), [setGraftPreview]);
   return (
-    <article className="pipe-preview" data-testid="graft-preview">
+    <section className="graft-module-palette" data-testid="graft-preview">
       <header>
-        <strong>{translator.text("ui.graft.preview.title")}</strong>
+        <div>
+          <strong>{translator.text("ui.graft.preview.title")}</strong>
+          <small>{translator.text("ui.graft.preview.hint")}</small>
+        </div>
         <button
           type="button"
-          className="room-details-button"
+          className="graft-icon-button"
           data-testid="graft-preview-cancel"
-          onClick={cancel}
+          onClick={onClose}
         >
-          <X size={13} /> {translator.text("ui.graft.preview.cancel")}
+          <Eraser size={14} /> {translator.text("ui.graft.preview.cancel")}
         </button>
       </header>
-      <p className="pipe-board-intro">{translator.text("ui.graft.preview.hint")}</p>
-      {preview.options.map((option) => (
-        <div
-          key={option.moduleId}
-          className="pipe-preview-option"
-          data-testid={`graft-preview-option-${option.moduleId}`}
-        >
-          <div>
-            <strong>{option.label}</strong>
-            <small>
-              {translator.text("ui.graft.preview.footprint", {
-                width: String(option.footprint.width),
-                height: String(option.footprint.height),
-              })}{" "}
-              · {translator.text("ui.graft.preview.cost", { cost: String(option.cost) })}
-            </small>
-          </div>
-          <button
-            type="button"
-            className="room-details-button"
-            data-testid={`graft-preview-build-${option.moduleId}`}
-            disabled={!option.buildable}
-            title={
-              option.buildable
-                ? undefined
-                : (commandCopy({ code: option.reason, cost: option.cost }) ?? undefined)
-            }
-            onClick={() => graft(option)}
+      <div className="graft-module-options">
+        {preview.options.map((option) => (
+          <article
+            key={option.moduleId}
+            className={selectedModuleId === option.moduleId ? "selected" : ""}
+            data-testid={`graft-preview-option-${option.moduleId}`}
           >
-            <Check size={13} /> {translator.text("ui.graft.preview.build")}
-          </button>
-        </div>
-      ))}
-    </article>
+            <button
+              type="button"
+              className="graft-module-select"
+              disabled={!option.buildable}
+              onClick={() => onSelect(option.moduleId)}
+            >
+              <strong>{option.label}</strong>
+              <small>
+                {translator.text("ui.graft.preview.footprint", {
+                  width: String(option.footprint.width),
+                  height: String(option.footprint.height),
+                })}
+              </small>
+            </button>
+            <button
+              type="button"
+              className="graft-build-button"
+              data-testid={`graft-preview-build-${option.moduleId}`}
+              disabled={!option.buildable || selectedModuleId !== option.moduleId}
+              title={
+                option.buildable
+                  ? undefined
+                  : (commandCopy({ code: option.reason, cost: option.cost }) ?? undefined)
+              }
+              onClick={() => graft(option)}
+            >
+              <Check size={13} />
+              {translator.text("ui.graft.preview.cost", { cost: String(option.cost) })}
+            </button>
+          </article>
+        ))}
+      </div>
+    </section>
   );
 };
 
-const HardpointRow = ({ hardpoint }: { hardpoint: HardpointRef }) => {
+const ToolPalette = ({
+  tool,
+  onTool,
+}: {
+  tool: HullBuildTool;
+  onTool: (tool: HullBuildTool) => void;
+}) => {
+  const { translator } = useGamePresentation();
+  const tools = [
+    { id: "select" as const, icon: Blocks, label: "ui.graft.tool.rooms" as const },
+    { id: "platform" as const, icon: Rows3, label: "ui.graft.tool.platform" as const },
+    { id: "ladder" as const, icon: Waypoints, label: "ui.graft.tool.ladder" as const },
+    { id: "erase" as const, icon: Eraser, label: "ui.graft.tool.erase" as const },
+  ];
+  return (
+    <section className="graft-tool-palette">
+      <strong>{translator.text("ui.graft.tool.title")}</strong>
+      <div>
+        {tools.map(({ id, icon: Icon, label }) => (
+          <button
+            key={id}
+            type="button"
+            className={tool === id ? "active" : ""}
+            aria-pressed={tool === id}
+            data-testid={`graft-tool-${id}`}
+            onClick={() => onTool(id)}
+          >
+            <Icon size={15} /> {translator.text(label)}
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const PortalPalette = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
-  const setGraftPreview = useGameStore((state) => state.setGraftPreview);
-  const open = useCallback(
-    () => setGraftPreview(planGraftPreview(game, hardpoint.hostRoomId, hardpoint.hardpointId)),
-    [game, hardpoint.hostRoomId, hardpoint.hardpointId, setGraftPreview]
+  const map = useMemo(() => hullPlanningMap(game.map), [game.map]);
+  const portals = architecturalConnections(map).filter(
+    (portal) =>
+      portal.id.startsWith("joint:") &&
+      portal.kind !== "core_door" &&
+      portal.orientation === "horizontal"
   );
-  const dismantle = useCallback(() => {
-    if (hardpoint.occupiedByRoomId)
-      dispatch({ type: "dismantle_module", roomId: hardpoint.occupiedByRoomId });
-  }, [dispatch, hardpoint.occupiedByRoomId]);
-  const label = `${hardpoint.hostCode} · ${hardpoint.hardpointId}`;
-  if (hardpoint.occupiedByRoomId) {
-    return (
-      <div className="transport-run-control" data-testid={`graft-slot-${hardpoint.hardpointId}`}>
-        <div className="transport-run-heading">
-          <Blocks size={14} />
-          <strong>
-            {label} → {roomDefinition(game, hardpoint.occupiedByRoomId).code}
-          </strong>
-        </div>
+  if (portals.length === 0) return null;
+  return (
+    <section className="graft-portal-palette">
+      <strong>{translator.text("ui.graft.portal.title")}</strong>
+      {portals.map((portal) => {
+        const state = game.portalStates[portal.id];
+        return (
+          <article key={portal.id}>
+            <span>
+              {map.rooms[portal.rooms[0]]?.code} → {map.rooms[portal.rooms[1]]?.code}
+            </span>
+            <div>
+              <button
+                type="button"
+                className={portal.kind === "passage" ? "active" : ""}
+                onClick={() =>
+                  dispatch({
+                    type: "configure_hull_portal",
+                    connectionId: portal.id,
+                    kind: "passage",
+                    open: true,
+                  })
+                }
+              >
+                <Waypoints size={13} /> {translator.text("ui.graft.portal.passage")}
+              </button>
+              <button
+                type="button"
+                className={portal.kind === "door" && state?.open ? "active" : ""}
+                onClick={() =>
+                  dispatch({
+                    type: "configure_hull_portal",
+                    connectionId: portal.id,
+                    kind: "door",
+                    open: true,
+                  })
+                }
+              >
+                <DoorOpen size={13} /> {translator.text("ui.graft.portal.openDoor")}
+              </button>
+              <button
+                type="button"
+                className={portal.kind === "door" && !state?.open ? "active" : ""}
+                onClick={() =>
+                  dispatch({
+                    type: "configure_hull_portal",
+                    connectionId: portal.id,
+                    kind: "door",
+                    open: false,
+                  })
+                }
+              >
+                <DoorClosed size={13} /> {translator.text("ui.graft.portal.closedDoor")}
+              </button>
+            </div>
+          </article>
+        );
+      })}
+    </section>
+  );
+};
+
+const RoomPalette = () => {
+  const { translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const rooms = Object.values(game.map.rooms).filter((room) => room.id.startsWith("graft:"));
+  if (rooms.length === 0) return null;
+  return (
+    <section className="graft-room-palette">
+      <strong>{translator.text("ui.graft.rooms.title")}</strong>
+      {rooms.map((room) => (
         <button
+          key={room.id}
           type="button"
-          className="room-details-button"
-          data-testid={`graft-dismantle-${hardpoint.hardpointId}`}
-          onClick={dismantle}
+          data-testid={`graft-dismantle-${room.id}`}
+          onClick={() => dispatch({ type: "dismantle_module", roomId: room.id })}
         >
+          <span>{room.code}</span>
           <Trash2 size={13} /> {translator.text("ui.graft.dismantle")}
         </button>
-      </div>
-    );
-  }
-  return (
-    <button
-      type="button"
-      className="transport-run-control graft-open"
-      data-testid={`graft-hardpoint-${hardpoint.hardpointId}`}
-      onClick={open}
-    >
-      <div className="transport-run-heading">
-        <Blocks size={14} />
-        <strong>{label}</strong>
-      </div>
-      <small>{translator.text("ui.graft.available")}</small>
-    </button>
+      ))}
+    </section>
   );
 };
 
@@ -153,81 +272,140 @@ const GraftHeader = ({ matter, onClose }: { matter: number; onClose: () => void 
   );
 };
 
-const GraftWorkspace = ({
-  hardpoints,
-  preview,
-}: {
-  hardpoints: HardpointRef[];
-  preview: GraftPreview | null;
-}) => {
-  const { translator } = useGamePresentation();
-  return (
-    <div className="graft-workspace">
-      <section className="graft-hardpoints">
-        <p>{translator.text("ui.graft.intro")}</p>
-        {hardpoints.length === 0 && (
-          <p className="pipe-board-intro" data-testid="graft-board-empty">
-            {translator.text("ui.graft.empty")}
-          </p>
-        )}
-        <div className="transport-run-list">
-          {hardpoints.map((hardpoint) => (
-            <HardpointRow
-              key={`${hardpoint.hostRoomId}:${hardpoint.hardpointId}`}
-              hardpoint={hardpoint}
-            />
-          ))}
-        </div>
-      </section>
-      <section className="graft-selection">
-        {preview ? (
-          <GraftPreviewCard preview={preview} />
-        ) : (
-          <div className="graft-selection-empty">
-            <Blocks size={34} />
-            <strong>{translator.text("ui.graft.selection.title")}</strong>
-            <p>{translator.text("ui.graft.selection.detail")}</p>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-};
-
-const GraftFooter = ({ onTravel }: { onTravel: () => void }) => {
-  const { translator } = useGamePresentation();
-  return (
-    <footer className="graft-footer">
-      <span>{translator.text("ui.graft.footer")}</span>
-      <button
-        type="button"
-        className="travel-choice compact"
-        data-testid="graft-travel-to-next-site"
-        onClick={onTravel}
-      >
-        {translator.text("ui.intermission.travel.action")} <ArrowRight size={18} />
-      </button>
-    </footer>
-  );
-};
-
 export const GraftBoard = () => {
+  const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const graftPreview = useGameStore((state) => state.graftPreview);
   const setGraftMode = useGameStore((state) => state.setGraftMode);
-  const close = useCallback(() => setGraftMode(false), [setGraftMode]);
-  const travel = useCallback(() => {
+  const setGraftPreview = useGameStore((state) => state.setGraftPreview);
+  const [tool, setTool] = useState<HullBuildTool>("select");
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const planningMap = useMemo(() => hullPlanningMap(game.map), [game.map]);
+  const previewPlan = useMemo(
+    () =>
+      graftPreview && selectedModuleId
+        ? plannedGraft(
+            PACK,
+            game.map,
+            graftPreview.hostRoomId,
+            graftPreview.hardpointId,
+            selectedModuleId
+          )
+        : null,
+    [game.map, graftPreview, selectedModuleId]
+  );
+  const displayMap = tool === "select" && previewPlan ? previewPlan.map : planningMap;
+  const closePreview = useCallback(() => {
+    setGraftPreview(null);
+    setSelectedModuleId(null);
+  }, [setGraftPreview]);
+  const close = useCallback(() => {
+    closePreview();
     setGraftMode(false);
-    if (dispatch({ type: "start_next_level" })) dispatch({ type: "dock_at_site" });
-  }, [dispatch, setGraftMode]);
-  const hardpoints = hullHardpoints(game);
+  }, [closePreview, setGraftMode]);
+  const travel = useCallback(() => {
+    closePreview();
+    setGraftMode(false);
+    dispatch({ type: "start_next_level" });
+  }, [closePreview, dispatch, setGraftMode]);
+  const chooseTool = useCallback(
+    (nextTool: HullBuildTool) => {
+      closePreview();
+      setTool(nextTool);
+    },
+    [closePreview]
+  );
+  const chooseHardpoint = useCallback(
+    (roomId: RoomId, hardpointId: string) => {
+      const preview = planGraftPreview(game, roomId, hardpointId);
+      setTool("select");
+      setGraftPreview(preview);
+      setSelectedModuleId(preview.options.find((option) => option.buildable)?.moduleId ?? null);
+    },
+    [game, setGraftPreview]
+  );
+  const editCell = useCallback(
+    (roomId: RoomId, target: GridCell) => {
+      const room = planningMap.rooms[roomId];
+      if (!room || tool === "select") return;
+      if (tool === "erase") {
+        if (
+          room.platformCells.some(
+            (candidate) =>
+              candidate.column === target.column && candidate.elevation === target.elevation
+          )
+        ) {
+          dispatch({
+            type: "edit_hull_cell",
+            roomId,
+            cell: target,
+            terrain: "platform",
+            present: false,
+          });
+          return;
+        }
+        if (
+          room.ladderCells.some(
+            (candidate) =>
+              candidate.column === target.column && candidate.elevation === target.elevation
+          )
+        )
+          dispatch({
+            type: "edit_hull_cell",
+            roomId,
+            cell: target,
+            terrain: "ladder",
+            present: false,
+          });
+        return;
+      }
+      dispatch({ type: "edit_hull_cell", roomId, cell: target, terrain: tool, present: true });
+    },
+    [dispatch, planningMap.rooms, tool]
+  );
+
   return (
     <main className="graft-stage" data-testid="graft-board">
       <section className="graft-screen">
         <GraftHeader matter={game.matter} onClose={close} />
-        <GraftWorkspace hardpoints={hardpoints} preview={graftPreview} />
-        <GraftFooter onTravel={travel} />
+        <div className="graft-builder-workspace">
+          <section className="graft-blueprint">
+            <HullBuilderCanvas
+              game={game}
+              map={displayMap}
+              candidateRoomId={previewPlan?.room.id ?? null}
+              tool={tool}
+              onCell={editCell}
+              onHardpoint={chooseHardpoint}
+            />
+            {graftPreview && (
+              <GraftPreviewCard
+                preview={graftPreview}
+                selectedModuleId={selectedModuleId}
+                onSelect={setSelectedModuleId}
+                onClose={closePreview}
+              />
+            )}
+          </section>
+          <aside className="graft-builder-sidebar">
+            <ToolPalette tool={tool} onTool={chooseTool} />
+            <PortalPalette />
+            <RoomPalette />
+          </aside>
+        </div>
+        <footer className="graft-footer">
+          <span>{translator.text("ui.graft.footer")}</span>
+          <button
+            type="button"
+            className="travel-choice compact"
+            data-testid="graft-travel-to-next-site"
+            onClick={travel}
+          >
+            {translator.text("ui.intermission.travel.action")}
+            <ArrowRight size={18} />
+          </button>
+        </footer>
       </section>
     </main>
   );

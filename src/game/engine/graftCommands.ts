@@ -3,8 +3,11 @@ import type { CommandDecision, CommandResult, GameCommand, GameState } from "../
 import { acceptCommand } from "./commandResult";
 import { cloneGame } from "./roomState";
 import { freshRoomState } from "./scenarioState";
-import { graftedJointId, plannedGraft } from "../world/graft";
+import { graftParentJoint, plannedGraft } from "../world/graft";
 import { withoutGraft } from "../world/mapEdits";
+import { worldCatalogsForMap } from "../world/catalogs";
+import { hullPlanningMap } from "../world/hullFragment";
+import { replaceStateMap } from "./mapEditState";
 
 export const graftModuleCommand = (
   source: GameState,
@@ -21,12 +24,8 @@ export const graftModuleCommand = (
     command.moduleId
   );
   if (!plan) throw new Error(`Graft plan vanished for ${command.hostRoomId}.`);
-  state.map = plan.map;
-  state.mapRevision += 1;
-  state.world = {
-    rooms: [...state.world.rooms, plan.room.id],
-    connections: [...state.world.connections, plan.joint.id],
-  };
+  replaceStateMap(state, plan.map);
+  state.world = worldCatalogsForMap(state.map);
   state.rooms[plan.room.id] = freshRoomState(plan.room.id, definition, state.map);
   state.gasJunctions[plan.room.id] = { gas: emptyGasRecord(state), temperature: 22 };
   state.liquidJunctions[plan.room.id] = { liquid: emptyLiquidRecord(state) };
@@ -61,18 +60,13 @@ export const dismantleModuleCommand = (
   decision: CommandDecision
 ): CommandResult => {
   const state = cloneGame(source);
-  const [, hostRoomId = "", hardpointId = ""] = command.roomId.split(":");
-  const jointId = graftedJointId(hostRoomId, hardpointId);
-  state.map = withoutGraft(state.map, command.roomId, jointId);
-  state.mapRevision += 1;
-  state.world = {
-    rooms: state.world.rooms.filter((roomId) => roomId !== command.roomId),
-    connections: state.world.connections.filter((connectionId) => connectionId !== jointId),
-  };
+  const parentJoint = graftParentJoint(state.map, command.roomId);
+  if (!parentJoint) throw new Error(`Graft ${command.roomId} lost its parent joint.`);
+  replaceStateMap(state, hullPlanningMap(withoutGraft(state.map, command.roomId, parentJoint.id)));
   delete state.rooms[command.roomId];
   delete state.gasJunctions[command.roomId];
   delete state.liquidJunctions[command.roomId];
-  delete state.portalStates[jointId];
+  delete state.portalStates[parentJoint.id];
   state.matter += decision.refund;
   return acceptCommand(state);
 };

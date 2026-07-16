@@ -2,13 +2,13 @@ import type { GameDefinition, RoundDefinition } from "../definitionTypes";
 import type { LevelId } from "../types";
 import type { HullFragment, HullOffset } from "./hullFragment";
 import {
-  embedHullFragment,
   alignHullFragmentToMap,
   hullLayoutFromMap,
   shiftFragmentStateRoutes,
 } from "./hullFragment";
 import type { WorldMap } from "./map";
-import { generateSiteLayoutCandidate } from "./siteGenerator";
+import { generateSiteLayoutCandidates } from "./siteGenerator";
+import { layoutHullAtAuthoredSite } from "./authoredHullLayout";
 
 /**
  * Map production is a pre-level pipeline (ADR-0001): a producer takes a site spec and
@@ -54,10 +54,11 @@ export const produceAuthoredSite = (spec: SiteSpec, hull: HullFragment | null): 
     return { map: spec.map, rounds: spec.rounds, hull: null, seed: "authored" };
   }
   const siteSpec = siteWithoutHull(spec, hull);
+  const layout = layoutHullAtAuthoredSite(siteSpec.map, hull, siteSpec.hullAnchor);
   return {
-    map: embedHullFragment(siteSpec.map, hull, siteSpec.hullAnchor),
+    map: layout.map,
     rounds: siteSpec.rounds,
-    hull: shiftFragmentStateRoutes(hull, siteSpec.hullAnchor),
+    hull: layout.hull,
     seed: "authored",
   };
 };
@@ -87,7 +88,11 @@ export const produceLevelSite = (
       authoredSiteSpec(definition, levelId),
       incomingHull ? hull : incomingHull
     );
-  const candidate = generateSiteLayoutCandidate(level.site.spec, hull, level.site.seed);
+  const candidate = generateSiteLayoutCandidates(level.site.spec, hull, {
+    seed: level.site.seed,
+    count: 1,
+  })[0];
+  if (!candidate) throw new Error(`${level.site.spec.id} produced no dockable site candidate.`);
   return {
     map: candidate.map,
     rounds: level.rounds,

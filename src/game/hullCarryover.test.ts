@@ -81,7 +81,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
     expect(fragment.roomStates.switchyard?.liquid.water).toBe(4);
   });
 
-  it("plays two sites in sequence with the hull and all its contents intact", () => {
+  it("plays two sites in sequence with hull installations intact and fresh interiors", () => {
     const ending = createScenarioGame("flash_point", [], definition);
     roomState(ending, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
@@ -106,8 +106,8 @@ describe("the hull fragment carries across consecutive authored maps", () => {
     expect(next.map.rooms.furnace?.provenance).toBe("hull");
     expect(next.map.connections.switchyard_to_furnace_shaft).toBeDefined();
     expect(roomState(next, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
-    expect(roomState(next, "furnace").gas.lower.hydrogen).toBe(9);
-    expect(roomState(next, "switchyard").liquid.water).toBe(4);
+    expect(roomState(next, "furnace").gas.lower.hydrogen).toBe(0);
+    expect(roomState(next, "switchyard").liquid.water).toBe(0);
     expect(next.run.position).toBe(definition.levelOrder.indexOf("make_the_reagent"));
   });
 });
@@ -130,7 +130,7 @@ describe("the carried hull persists and translates", () => {
     expect(decoded).not.toBeNull();
     if (!decoded) return;
     expect(decoded.map.rooms.furnace?.provenance).toBe("hull");
-    expect(roomState(decoded, "furnace").gas.lower.hydrogen).toBe(9);
+    expect(roomState(decoded, "furnace").gas.lower.hydrogen).toBe(0);
     expect(decoded.run).toEqual(next.run);
   });
 

@@ -141,7 +141,7 @@ const IntermissionSummary = () => {
   const nextText = nextLevel ? levelCopy.level(nextLevel) : null;
   const travel = useCallback(() => {
     setGraftMode(false);
-    if (dispatch({ type: "start_next_level" })) dispatch({ type: "dock_at_site" });
+    dispatch({ type: "start_next_level" });
   }, [dispatch, setGraftMode]);
   const graft = useCallback(() => setGraftMode(true), [setGraftMode]);
 

@@ -120,6 +120,11 @@ const WORLD_MAP_BASE: WorldMap = {
       { column: 30, elevation: 4, width: 19, height: 9 },
       {
         socketCells: { socket_a: cell(35, 4), socket_b: cell(45, 4) },
+        ladderCells: verticalCells(39, 4, 12),
+        hardpoints: [
+          { id: "forward", cell: cell(30, 4), facing: "left" },
+          { id: "upper", cell: cell(39, 12), facing: "up" },
+        ],
         provenance: "hull",
       }
     ),
@@ -129,7 +134,7 @@ const WORLD_MAP_BASE: WorldMap = {
       { column: 51, elevation: 4, width: 18, height: 16 },
       {
         provenance: "hull",
-        hardpoints: [{ id: "starboard", cell: cell(68, 11), facing: "right" }],
+        hardpoints: [],
         taps: {
           gas: gasTap({
             capacity: 24,

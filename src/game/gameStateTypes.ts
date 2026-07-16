@@ -12,6 +12,7 @@ import type {
   GasSourceState,
   GasType,
   GasZone,
+  GridCell,
   LiquidAmounts,
   LiquidBufferId,
   LiquidBufferState,
@@ -270,6 +271,20 @@ export type GameCommand =
   | { type: "dismantle_connection"; connectionId: ConnectionId }
   | { type: "graft_module"; hostRoomId: RoomId; hardpointId: string; moduleId: string }
   | { type: "dismantle_module"; roomId: RoomId }
+  | {
+      type: "edit_hull_cell";
+      roomId: RoomId;
+      cell: GridCell;
+      terrain: "platform" | "ladder";
+      present: boolean;
+    }
+  | {
+      type: "configure_hull_portal";
+      connectionId: ConnectionId;
+      kind: "passage" | "door";
+      open: boolean;
+    }
+  | { type: "set_portal"; connectionId: ConnectionId; open: boolean }
   | { type: "charge_gas_source"; sourceId: GasSourceId }
   | { type: "charge_liquid_source"; sourceId: LiquidSourceId }
   | { type: "start_prime" }

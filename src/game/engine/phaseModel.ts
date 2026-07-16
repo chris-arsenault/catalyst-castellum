@@ -26,6 +26,7 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
       "dismantle_connection",
       "graft_module",
       "dismantle_module",
+      "set_portal",
       "charge_gas_source",
       "charge_liquid_source",
       "start_prime",
@@ -37,6 +38,7 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
     allowedCommands: [
       "toggle_equipment",
       "set_conduit",
+      "set_portal",
       "start_assault",
       "toggle_pause",
       "set_pause",
@@ -46,7 +48,7 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
   },
   assault: {
     stepMode: "live",
-    allowedCommands: ["toggle_pause", "set_pause", "set_speed"],
+    allowedCommands: ["set_portal", "toggle_pause", "set_pause", "set_speed"],
     legalTransitions: ["round_result", "level_complete", "victory", "defeat"],
   },
   round_result: {
@@ -56,7 +58,13 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
   },
   level_complete: {
     stepMode: "static",
-    allowedCommands: ["graft_module", "dismantle_module", "start_next_level"],
+    allowedCommands: [
+      "graft_module",
+      "dismantle_module",
+      "edit_hull_cell",
+      "configure_hull_portal",
+      "start_next_level",
+    ],
     legalTransitions: ["travel"],
   },
   travel: {

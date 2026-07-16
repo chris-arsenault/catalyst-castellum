@@ -45,7 +45,6 @@ export interface GeneratedSiteSpec {
   /** Fixed cells are expressed in the incoming hull's coordinate system and translated. */
   coreAnchor: GridCell;
   coreBreachCell: GridCell;
-  dockRoomId: RoomId;
   chunks: readonly SiteRoomChunk[];
   /** Each order includes every chunk id exactly once and begins with the entry chunk. */
   chunkOrders: readonly (readonly string[])[];

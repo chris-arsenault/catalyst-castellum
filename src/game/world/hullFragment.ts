@@ -8,7 +8,7 @@ import type {
   ConnectionId,
 } from "../types";
 import type { MapConnection, MapRoom, WorldMap } from "./map";
-import { isProcessLine } from "./map";
+import { architecturalConnections, isProcessLine } from "./map";
 import { validateWorldMap } from "./mapValidation";
 
 /**
@@ -27,16 +27,78 @@ export interface HullFragment {
 
 const deepCopy = <Value>(value: Value): Value => structuredClone(value);
 
+const hullRoomRecords = (map: WorldMap): Record<RoomId, MapRoom> =>
+  Object.fromEntries(
+    Object.entries(map.rooms)
+      .filter(([, room]) => room.provenance === "hull")
+      .map(([roomId, room]) => [roomId, deepCopy(room)])
+  );
+
+const hullConnectionRecords = (
+  map: WorldMap,
+  rooms: Readonly<Record<RoomId, MapRoom>>
+): Record<ConnectionId, MapConnection> =>
+  Object.fromEntries(
+    Object.entries(map.connections)
+      .filter(([, connection]) => connection.rooms.every((roomId) => roomId in rooms))
+      .map(([connectionId, connection]) => [connectionId, deepCopy(connection)])
+  );
+
+/**
+ * The room where a generated site meets the traveling hull. Choosing the room with the
+ * greatest architectural distance from Core makes every linear graft part of the final
+ * enemy route; geometry and id provide deterministic branch tie-breakers.
+ */
+// eslint-disable-next-line complexity -- Graph distance and deterministic geometry resolve one dock.
+export const hullDockRoomId = (map: WorldMap): RoomId => {
+  const hullRooms = hullRoomRecords(map);
+  if (!("core" in hullRooms)) throw new Error("The traveling hull has no Core room.");
+  const neighbors = new Map<RoomId, RoomId[]>();
+  for (const connection of architecturalConnections(map)) {
+    const [left, right] = connection.rooms;
+    if (!(left in hullRooms) || !(right in hullRooms)) continue;
+    neighbors.set(left, [...(neighbors.get(left) ?? []), right]);
+    neighbors.set(right, [...(neighbors.get(right) ?? []), left]);
+  }
+  const distance = new Map<RoomId, number>([["core", 0]]);
+  const queue: RoomId[] = ["core"];
+  for (let cursor = 0; cursor < queue.length; cursor += 1) {
+    const roomId = queue[cursor] as RoomId;
+    for (const neighbor of neighbors.get(roomId) ?? []) {
+      if (distance.has(neighbor)) continue;
+      distance.set(neighbor, (distance.get(roomId) ?? 0) + 1);
+      queue.push(neighbor);
+    }
+  }
+  return Object.keys(hullRooms)
+    .filter((roomId) => distance.has(roomId))
+    .sort((left, right) => {
+      const distanceOrder = (distance.get(right) ?? 0) - (distance.get(left) ?? 0);
+      if (distanceOrder !== 0) return distanceOrder;
+      const columnOrder = hullRooms[left]!.bounds.column - hullRooms[right]!.bounds.column;
+      return columnOrder !== 0 ? columnOrder : left.localeCompare(right);
+    })[0] as RoomId;
+};
+
+/** A site-free map for the blue grafting workspace and validated hull edits. */
+export const hullPlanningMap = (map: WorldMap): WorldMap => {
+  const rooms = hullRoomRecords(map);
+  const connections = hullConnectionRecords(map, rooms);
+  const dock = rooms[hullDockRoomId({ ...map, rooms, connections })] as MapRoom;
+  return Object.freeze({
+    ...map,
+    entryCell: { column: dock.bounds.column, elevation: dock.bounds.elevation },
+    rooms,
+    connections,
+    utilityNodes: Object.fromEntries(
+      Object.entries(map.utilityNodes).filter(([, node]) => node && node.hostRoomId in rooms)
+    ),
+  });
+};
+
 const extractHullMapData = (state: GameState): Pick<HullFragment, "rooms" | "connections"> => {
-  const rooms: HullFragment["rooms"] = {};
-  for (const room of Object.values(state.map.rooms)) {
-    if (room.provenance === "hull") rooms[room.id] = deepCopy(room);
-  }
-  const connections: HullFragment["connections"] = {};
-  for (const connection of Object.values(state.map.connections)) {
-    if (connection.rooms.every((roomId) => roomId in rooms))
-      connections[connection.id] = deepCopy(connection);
-  }
+  const rooms = hullRoomRecords(state.map);
+  const connections = hullConnectionRecords(state.map, rooms);
   return { rooms, connections };
 };
 
@@ -45,16 +107,8 @@ const extractHullMapData = (state: GameState): Pick<HullFragment, "rooms" | "con
  * The scenario factory fills empty state records from the destination level's loadout.
  */
 export const hullLayoutFromMap = (map: WorldMap): HullFragment => {
-  const rooms: HullFragment["rooms"] = Object.fromEntries(
-    Object.entries(map.rooms)
-      .filter(([, room]) => room.provenance === "hull")
-      .map(([id, room]) => [id, deepCopy(room)])
-  );
-  const connections: HullFragment["connections"] = Object.fromEntries(
-    Object.entries(map.connections)
-      .filter(([, connection]) => connection.rooms.every((roomId) => roomId in rooms))
-      .map(([id, connection]) => [id, deepCopy(connection)])
-  );
+  const rooms = hullRoomRecords(map);
+  const connections = hullConnectionRecords(map, rooms);
   return { rooms, connections, roomStates: {}, gasConduits: {}, liquidConduits: {} };
 };
 

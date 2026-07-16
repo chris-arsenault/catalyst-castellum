@@ -45,7 +45,11 @@ export const transportPhaseAvailable = (
 
 export const connectionAvailable = (state: GameState, connectionId: ConnectionId): boolean =>
   state.availability.gasLines.includes(connectionId) ||
-  state.availability.liquidLines.includes(connectionId);
+  state.availability.liquidLines.includes(connectionId) ||
+  (state.map.connections[connectionId]?.rooms.every(
+    (roomId) => state.map.rooms[roomId]?.provenance === "hull"
+  ) ??
+    false);
 
 export const gasSourceAvailable = (state: GameState, sourceId: GasSourceId): boolean =>
   state.availability.gasSources.includes(sourceId);

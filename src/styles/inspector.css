@@ -407,6 +407,35 @@
   border-radius: 3px;
   background: #0e1d19;
 }
+
+.architectural-connection-list article.portal-open {
+  border-left: 4px solid #78e0b0;
+  background: rgba(62, 145, 108, 0.13);
+}
+
+.architectural-connection-list article.portal-closed {
+  border-left: 4px solid #ff625f;
+  background: rgba(170, 45, 48, 0.16);
+}
+
+.portal-state-control {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid currentColor;
+  border-radius: 4px;
+  background: rgba(4, 10, 9, 0.66);
+  color: #ccebdd;
+  font: 750 9px/1 var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.portal-closed .portal-state-control {
+  color: #ffaaa6;
+}
 .architectural-connection-list strong,
 .architectural-connection-list span,
 .architectural-connection-list small {

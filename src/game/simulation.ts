@@ -67,6 +67,7 @@ export const resolveEnemyCombat = bindDefinition(combat.resolveEnemyCombat);
 export const spawnEnemies = bindDefinition(combat.spawnEnemies);
 export const findEnemyPath = (options: Parameters<typeof navigation.findEnemyPath>[0]) =>
   navigation.findEnemyPath(options, DEFAULT_GAME_DEFINITION.map);
+export const findEnemyPathOnMap = navigation.findEnemyPath;
 export const findEnemyPathBetween = (
   options: Parameters<typeof navigation.findEnemyPathBetween>[0]
 ) => navigation.findEnemyPathBetween(options, DEFAULT_GAME_DEFINITION.map);

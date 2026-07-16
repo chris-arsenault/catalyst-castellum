@@ -2,7 +2,7 @@ import { cell } from "../spatial";
 import type { ModuleTemplate } from "../world/modules";
 
 const standardJoint = {
-  kind: "passage" as const,
+  kind: "door" as const,
   aperture: 1,
   gasConductance: 0.2,
   liquidConductance: 0.2,
@@ -25,7 +25,10 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 14, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 14, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [],
+    hardpoints: [
+      { id: "forward", cell: cell(0, 0), facing: "left" },
+      { id: "upper", cell: cell(2, 5), facing: "up" },
+    ],
     joint: standardJoint,
     graftCost: 14,
   },
@@ -40,7 +43,10 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [{ id: "outboard", cell: cell(11, 4), facing: "right" }],
+    hardpoints: [
+      { id: "forward", cell: cell(0, 0), facing: "left" },
+      { id: "upper", cell: cell(6, 7), facing: "up" },
+    ],
     joint: standardJoint,
     graftCost: 26,
   },
@@ -55,7 +61,10 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 26, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [],
+    hardpoints: [
+      { id: "forward", cell: cell(0, 0), facing: "left" },
+      { id: "upper", cell: cell(5, 11), facing: "up" },
+    ],
     joint: { ...standardJoint, liquidMode: "drain", liquidConductance: 0.35 },
     graftCost: 30,
   },

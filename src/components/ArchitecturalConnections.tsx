@@ -1,3 +1,5 @@
+/* eslint-disable complexity -- Portal state, phase, and flow shape one compact control. */
+import { DoorClosed, DoorOpen } from "lucide-react";
 import { architecturalConnections } from "../game/world/map";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
@@ -60,7 +62,12 @@ const ArchitecturalConnection = ({
   roomId: RoomId;
 }) => {
   const { formatters, translator } = useGamePresentation();
+  const dispatch = useGameStore((state) => state.dispatch);
   const model = architecturalConnectionModel(game, roomId, portal);
+  const controllable =
+    (portal.kind === "door" || portal.kind === "trapdoor") &&
+    !model.state.sealed &&
+    (game.phase === "build" || game.phase === "prime" || game.phase === "assault");
   const gasDirection = translator.text(
     model.gasFlow >= 0 ? "ui.architecture.direction.out" : "ui.architecture.direction.in"
   );
@@ -68,7 +75,10 @@ const ArchitecturalConnection = ({
     model.liquidFlow >= 0 ? "ui.architecture.direction.out" : "ui.architecture.direction.in"
   );
   return (
-    <article data-portal-id={portal.id}>
+    <article
+      className={model.state.open ? "portal-open" : "portal-closed"}
+      data-portal-id={portal.id}
+    >
       <strong>{portalKindLabel(portal.kind, translator)}</strong>
       <span>
         {roomDefinition(game, model.otherRoomId).code} · {portalStateLabel(model.state, translator)}
@@ -81,6 +91,20 @@ const ArchitecturalConnection = ({
           liquidFlow: formatters.measurement(Math.abs(model.liquidFlow), "mol-eq/s", 2),
         })}
       </small>
+      {controllable && (
+        <button
+          type="button"
+          className="portal-state-control"
+          onClick={() =>
+            dispatch({ type: "set_portal", connectionId: portal.id, open: !model.state.open })
+          }
+        >
+          {model.state.open ? <DoorClosed size={14} /> : <DoorOpen size={14} />}
+          {translator.text(
+            model.state.open ? "ui.architecture.action.close" : "ui.architecture.action.open"
+          )}
+        </button>
+      )}
     </article>
   );
 };
