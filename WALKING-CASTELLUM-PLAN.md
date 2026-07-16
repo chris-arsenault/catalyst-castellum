@@ -220,5 +220,10 @@ The main game: randomized maps, no tutorial.
 | M5    | Run shape v1: tutorial run length; fixed-length vs endless main-game runs                                                                 |
 | M7    | Chunk vocabulary v1: site archetypes and feedstock spread for the first generator                                                         |
 
+**M6 decisions (2026-07-15):** seed hull = Core + R-02 furnace (furnace carries one
+hardpoint); everything else is site structure left at each dock. Tutorial keeps its
+tuned 5-round flow but round 3 becomes a real graft: the player grafts a second chamber
+onto the furnace hardpoint and arms it (bare single chamber still dies in round 3).
+
 This plan is the single source of truth for the walking-castellum work. Execute a phase
 by running `plan-phase` on it to expand milestone items into steps.

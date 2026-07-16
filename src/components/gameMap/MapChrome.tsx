@@ -187,7 +187,7 @@ const GraftModeToggle = ({ game }: { game: GameState }) => {
   return (
     <button
       type="button"
-      className={`pipe-mode-toggle ${graftMode ? "active" : ""}`}
+      className={`pipe-mode-toggle graft-mode-toggle ${graftMode ? "active" : ""}`}
       data-testid="graft-mode-toggle"
       aria-pressed={graftMode}
       onClick={() => setGraftMode(!graftMode)}

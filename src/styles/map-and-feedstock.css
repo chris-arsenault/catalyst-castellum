@@ -785,6 +785,9 @@
   background: rgba(48, 66, 24, 0.85);
   color: #eef7bf;
 }
+.pipe-mode-toggle.graft-mode-toggle {
+  top: 88px;
+}
 .pipe-mode-hint {
   position: absolute;
   z-index: 4;

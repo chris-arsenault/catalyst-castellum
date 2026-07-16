@@ -90,6 +90,10 @@ const shiftRoom = (room: MapRoom, offset: HullOffset): MapRoom => ({
   ),
   platformCells: room.platformCells.map((cell) => shiftCell(cell, offset)),
   ladderCells: room.ladderCells.map((cell) => shiftCell(cell, offset)),
+  hardpoints: room.hardpoints.map((hardpoint) => ({
+    ...hardpoint,
+    cell: shiftCell(hardpoint.cell, offset),
+  })),
 });
 
 const shiftConnection = (connection: MapConnection, offset: HullOffset): MapConnection =>

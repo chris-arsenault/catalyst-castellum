@@ -89,6 +89,8 @@ export const WORLD_MAP: WorldMap = {
         socketCells: { socket_a: cell(12, 13), socket_b: cell(18, 13) },
         platformCells: horizontalCells(9, 20, 23),
         ladderCells: verticalCells(8, 13, 24),
+        provenance: "hull",
+        hardpoints: [{ id: "west_wall", cell: cell(6, 22), facing: "left" }],
       }
     ),
     reservoir: room(
@@ -123,6 +125,7 @@ export const WORLD_MAP: WorldMap = {
       { code: "CORE", structure: "core", ambientTemperature: 26, socketCount: 0 },
       { column: 51, elevation: 4, width: 18, height: 16 },
       {
+        provenance: "hull",
         taps: {
           gas: gasTap({
             capacity: 24,

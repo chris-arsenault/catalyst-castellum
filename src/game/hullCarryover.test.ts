@@ -9,15 +9,19 @@ import { roomState } from "./world/instances";
 
 const HULL_ROOMS = ["switchyard", "furnace"] as const;
 
-/** Site A: today's world with the player's two-room castellum tagged as hull. */
+const isHull = (roomId: string): boolean =>
+  HULL_ROOMS.includes(roomId as (typeof HULL_ROOMS)[number]);
+
+/**
+ * Site A normalizes provenance so the test owns its hull set exactly (independent of
+ * the pack's own seed hull): every room site except the two the player carries.
+ */
 const mapA: WorldMap = Object.freeze({
   ...WORLD_MAP,
   rooms: Object.fromEntries(
     Object.entries(WORLD_MAP.rooms).map(([roomId, room]) => [
       roomId,
-      HULL_ROOMS.includes(roomId as (typeof HULL_ROOMS)[number])
-        ? ({ ...room, provenance: "hull" } as MapRoom)
-        : room,
+      { ...room, provenance: isHull(roomId) ? "hull" : "site" } as MapRoom,
     ])
   ),
 });
@@ -33,9 +37,9 @@ const hullInternal = (connectionRooms: readonly string[]): boolean =>
 const mapB: WorldMap = Object.freeze({
   ...WORLD_MAP,
   rooms: Object.fromEntries(
-    Object.entries(WORLD_MAP.rooms).filter(
-      ([roomId]) => !HULL_ROOMS.includes(roomId as (typeof HULL_ROOMS)[number])
-    )
+    Object.entries(WORLD_MAP.rooms)
+      .filter(([roomId]) => !isHull(roomId))
+      .map(([roomId, room]) => [roomId, { ...room, provenance: "site" } as MapRoom])
   ),
   connections: Object.fromEntries(
     Object.entries(WORLD_MAP.connections).filter(

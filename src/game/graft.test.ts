@@ -136,7 +136,7 @@ describe("dismantling and carrying grafted modules", () => {
     const roomId = graftedRoomId("furnace", "west_wall");
     roomState(grafted, roomId).gas.lower.hydrogen = 3;
     const fragment = extractHullFragment(grafted);
-    expect(Object.keys(fragment.rooms).sort()).toEqual([roomId, "furnace"].sort());
+    expect(Object.keys(fragment.rooms).sort()).toEqual([roomId, "core", "furnace"].sort());
     expect(Object.keys(fragment.connections)).toContain("joint:furnace:west_wall");
     expect(fragment.roomStates[roomId]?.gas.lower.hydrogen).toBe(3);
   });

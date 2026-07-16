@@ -71,9 +71,12 @@ describe("the authored world map", () => {
     ]);
   });
 
-  it("authors every room as site provenance until hull extraction lands (plan M4)", () => {
-    for (const room of Object.values(WORLD_MAP.rooms)) {
-      expect(room.provenance).toBe("site");
-    }
+  it("seeds the player's hull as Core + R-02 furnace, the rest site (M6)", () => {
+    const hull = Object.values(WORLD_MAP.rooms)
+      .filter((room) => room.provenance === "hull")
+      .map((room) => room.id)
+      .sort();
+    expect(hull).toEqual(["core", "furnace"]);
+    expect(WORLD_MAP.rooms.furnace?.hardpoints).toHaveLength(1);
   });
 });
