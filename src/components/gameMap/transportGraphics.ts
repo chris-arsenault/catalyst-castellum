@@ -309,14 +309,12 @@ const phaseRouteCells = (
   phase: TransportPhase
 ): readonly GridCell[] | null => {
   const definition = lineDefinition(state, runId, phase);
-  const available =
-    phase === "gas"
-      ? state.availability.gasLines.includes(runId)
-      : state.availability.liquidLines.includes(runId);
-  if (!definition || !available) return null;
-  const route =
-    phase === "gas" ? gasConduitState(state, runId).route : liquidConduitState(state, runId).route;
-  return route.length > 0 ? route : definition.route;
+  if (!definition) return null;
+  const conduit =
+    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
+  // Only pipes the player has actually built appear on the map.
+  if (!conduit.installed) return null;
+  return conduit.route.length > 0 ? conduit.route : definition.route;
 };
 
 const routesMatch = (

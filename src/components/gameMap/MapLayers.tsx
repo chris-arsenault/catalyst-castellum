@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
 import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
-import { transportPhaseAvailable } from "../../game/queries";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun } from "./transportGraphics";
@@ -110,8 +109,8 @@ export const TransportNetwork = ({
     {game.world.connections
       .filter(
         (runId) =>
-          transportPhaseAvailable(game, runId, "gas") ||
-          transportPhaseAvailable(game, runId, "liquid")
+          Boolean(game.gasConduits[runId]?.installed) ||
+          Boolean(game.liquidConduits[runId]?.installed)
       )
       .map((runId) => (
         <TransportRunNode

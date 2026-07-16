@@ -1,7 +1,6 @@
 import type { GridCell, RoomId } from "../types";
 import { cell } from "../spatial";
 import type { ProcessLineKind, WorldMap } from "./map";
-import { isProcessLine } from "./map";
 
 /**
  * Deterministic orthogonal auto-router (ADR-0005): same map + same request ⇒ the same
@@ -11,10 +10,7 @@ import { isProcessLine } from "./map";
  */
 
 const STEP_COST = 1;
-const TURN_COST = 0.4;
-const FOREIGN_ROOM_COST = 8;
-const ENDPOINT_ROOM_COST = 0.5;
-const OCCUPIED_LANE_COST = 3;
+const TURN_COST = 0.05;
 
 /** Gas taps sit high in a room, liquid taps low — endpoints mirror the tap physics. */
 const ENDPOINT_HEIGHT: Record<ProcessLineKind, number> = {
@@ -38,31 +34,6 @@ export const lineEndpointCell = (
   return cell(bounds.column + Math.floor(bounds.width / 2), elevation);
 };
 
-const roomAt = (map: WorldMap, target: GridCell): RoomId | null => {
-  for (const room of Object.values(map.rooms)) {
-    const { bounds } = room;
-    if (
-      target.column >= bounds.column &&
-      target.column < bounds.column + bounds.width &&
-      target.elevation >= bounds.elevation &&
-      target.elevation < bounds.elevation + bounds.height
-    )
-      return room.id;
-  }
-  return null;
-};
-
-const occupiedLaneKeys = (map: WorldMap): Set<number> => {
-  const keys = new Set<number>();
-  for (const connection of Object.values(map.connections)) {
-    if (!isProcessLine(connection)) continue;
-    for (const routeCell of connection.route) {
-      keys.add(routeCell.elevation * map.width + routeCell.column);
-    }
-  }
-  return keys;
-};
-
 interface SearchNode {
   cost: number;
   column: number;
@@ -77,26 +48,8 @@ const compareNodes = (left: SearchNode, right: SearchNode): number =>
   left.column - right.column ||
   left.direction - right.direction;
 
-const endpointRoomCost = (room: RoomId, fromRoomId: RoomId, toRoomId: RoomId): number => {
-  if (room === fromRoomId || room === toRoomId) return ENDPOINT_ROOM_COST;
-  return FOREIGN_ROOM_COST;
-};
-
-const makeCellCost = (
-  map: WorldMap,
-  fromRoomId: RoomId,
-  toRoomId: RoomId
-): ((target: GridCell) => number) => {
-  const lanes = occupiedLaneKeys(map);
-  return (target) => {
-    const room = roomAt(map, target);
-    const roomCost = room === null ? 0 : endpointRoomCost(room, fromRoomId, toRoomId);
-    const laneCost = lanes.has(target.elevation * map.width + target.column)
-      ? OCCUPIED_LANE_COST
-      : 0;
-    return STEP_COST + roomCost + laneCost;
-  };
-};
+/** Shortest orthogonal path: every in-bounds cell costs the same. */
+const makeCellCost = (): ((target: GridCell) => number) => () => STEP_COST;
 
 /** Deterministic pop: full ordering makes the frontier drain identically on every run. */
 const popBestNode = (frontier: SearchNode[]): SearchNode => {
@@ -150,7 +103,7 @@ export const routeConnection = (
   const goal = lineEndpointCell(map, toRoomId, kind);
   const search: Search = {
     map,
-    cellCost: makeCellCost(map, fromRoomId, toRoomId),
+    cellCost: makeCellCost(),
     best: new Map(),
     previous: new Map(),
     frontier: [],

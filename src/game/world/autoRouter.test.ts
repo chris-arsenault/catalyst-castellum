@@ -55,19 +55,15 @@ describe("deterministic orthogonal auto-router", () => {
     expect(gas.elevation).toBeGreaterThan(liquid.elevation);
   });
 
-  it("prefers open terrain over cutting through a third room", () => {
-    const route = routeConnection(WORLD_MAP, "liquid_line", "west_intake", "furnace");
+  it("takes the shortest orthogonal path (Manhattan length between endpoints)", () => {
+    const route = routeConnection(WORLD_MAP, "gas_line", "reservoir", "washlock");
     expect(route).not.toBeNull();
     if (!route) return;
-    const switchyard = WORLD_MAP.rooms.switchyard!.bounds;
-    const cutsSwitchyard = route.filter(
-      (step) =>
-        step.column >= switchyard.column &&
-        step.column < switchyard.column + switchyard.width &&
-        step.elevation >= switchyard.elevation &&
-        step.elevation < switchyard.elevation + switchyard.height
-    );
-    expect(cutsSwitchyard).toHaveLength(0);
+    const from = lineEndpointCell(WORLD_MAP, "reservoir", "gas_line");
+    const to = lineEndpointCell(WORLD_MAP, "washlock", "gas_line");
+    const manhattan = Math.abs(from.column - to.column) + Math.abs(from.elevation - to.elevation);
+    // route includes both endpoints, so cell count = manhattan distance + 1.
+    expect(route).toHaveLength(manhattan + 1);
   });
 
   it("rejects a self-pair and unknown rooms", () => {

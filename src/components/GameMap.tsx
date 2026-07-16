@@ -5,6 +5,7 @@ import type { GameState, RoomId, SpeciesId } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
 import { MapChrome } from "./gameMap/MapChrome";
 import { MapScene } from "./gameMap/MapScene";
+import { PipePreviewPopup } from "./gameMap/PipePreviewPopup";
 import { useGameStore } from "../application/store";
 import { useMapCamera, useMapInteractions } from "./gameMap/useMapCamera";
 import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
@@ -13,7 +14,7 @@ interface GameMapProps {
   game: GameState;
   selectedRoomId: RoomId;
   onSelectRoom: (roomId: RoomId) => void;
-  onConnectRooms: (from: RoomId, to: RoomId) => void;
+  onConnectRooms: (from: RoomId, to: RoomId, anchor: { x: number; y: number }) => void;
   onTogglePipeMode: () => void;
   pipeMode: boolean;
 }
@@ -50,12 +51,13 @@ export const GameMap = ({
   const camera = useMapCamera(game.map);
   const completePipeDrag = useCallback(
     (roomId: RoomId) => {
+      const anchor = probePointer();
       setPipeDragSourceRoomId((source) => {
-        if (source && source !== roomId) onConnectRooms(source, roomId);
+        if (source && source !== roomId) onConnectRooms(source, roomId, anchor ?? { x: 0, y: 0 });
         return null;
       });
     },
-    [onConnectRooms]
+    [onConnectRooms, probePointer]
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
   const mapInteractions = useMapInteractions(pipeMode, camera, trackPointer, clearPipeDrag);
@@ -87,6 +89,7 @@ export const GameMap = ({
         selectedRoomId={selectedRoomId}
         selectedSpecies={selectedSpecies}
       />
+      <PipePreviewPopup />
       <MapChrome
         game={game}
         hoveredCellOutletId={hover.hoveredCellOutletId}

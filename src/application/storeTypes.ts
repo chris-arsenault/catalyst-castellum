@@ -51,6 +51,8 @@ export interface PipePreviewOption {
 export interface PipePreview {
   fromRoomId: RoomId;
   toRoomId: RoomId;
+  /** Screen point (relative to the map canvas) the confirm popup anchors to. */
+  anchor: { x: number; y: number };
   options: PipePreviewOption[];
 }
 

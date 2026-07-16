@@ -44,7 +44,8 @@ const previewOption = (
 export const planPipePreview = (
   game: GameState,
   fromRoomId: RoomId,
-  toRoomId: RoomId
+  toRoomId: RoomId,
+  anchor: { x: number; y: number }
 ): PipePreview | null => {
   if (fromRoomId === toRoomId) return null;
   const options = KINDS.flatMap((kind) => {
@@ -52,5 +53,5 @@ export const planPipePreview = (
     return option ? [option] : [];
   });
   if (options.length === 0) return null;
-  return { fromRoomId, toRoomId, options };
+  return { fromRoomId, toRoomId, anchor, options };
 };

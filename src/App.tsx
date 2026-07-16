@@ -38,8 +38,8 @@ const MapStage = () => {
   const setPipePreview = useGameStore((state) => state.setPipePreview);
   const togglePipeMode = useCallback(() => setPipeMode(!pipeMode), [pipeMode, setPipeMode]);
   const connectRooms = useCallback(
-    (from: RoomId, to: RoomId) => {
-      const preview = planPipePreview(game, from, to);
+    (from: RoomId, to: RoomId, anchor: { x: number; y: number }) => {
+      const preview = planPipePreview(game, from, to, anchor);
       if (!preview) {
         showNotice(
           translator.text("ui.pipes.noRoute", {

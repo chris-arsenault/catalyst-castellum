@@ -53,10 +53,10 @@ test("pipe mode dims the plant and drag-connecting rooms reports the routed stat
   await page.mouse.down();
   await page.mouse.move(furnace.x, furnace.y, { steps: 8 });
   await page.mouse.up();
-  await expect(page.getByTestId("pipe-preview")).toContainText("CORE ⇄ R-02");
-  await expect(page.getByTestId("pipe-preview-build-gas_line")).toBeDisabled();
-  await page.getByTestId("pipe-preview-cancel").click();
-  await expect(page.getByTestId("pipe-preview")).toHaveCount(0);
+  await expect(page.getByTestId("pipe-confirm-popup")).toContainText("CORE ⇄ R-02");
+  await expect(page.getByTestId("pipe-confirm-gas_line")).toBeDisabled();
+  await page.getByTestId("pipe-confirm-cancel").click();
+  await expect(page.getByTestId("pipe-confirm-popup")).toHaveCount(0);
 
   await page.getByTestId("pipe-board-close").click();
   await expect(page.getByTestId("game-map")).toHaveAttribute("data-pipe-mode", "false");
@@ -103,8 +103,8 @@ test("planning uses the same equipment and physical-conduit construction rules",
   await page.mouse.down();
   await page.mouse.move(furnace.x, furnace.y, { steps: 8 });
   await page.mouse.up();
-  await expect(page.getByTestId("pipe-preview")).toBeVisible();
-  await page.getByTestId("pipe-preview-build-gas_line").click();
+  await expect(page.getByTestId("pipe-confirm-popup")).toBeVisible();
+  await page.getByTestId("pipe-confirm-gas_line").click();
   await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toBeVisible();
   await page.getByTestId("pipe-board-close").click();
 
@@ -159,11 +159,11 @@ test("an unauthored pair routes through preview and confirm at the corridor exam
   await page.mouse.move(washlock.x, washlock.y, { steps: 8 });
   await page.mouse.up();
 
-  await expect(page.getByTestId("pipe-preview")).toContainText("R-03 ⇄ R-06");
-  const buildGas = page.getByTestId("pipe-preview-build-gas_line");
+  await expect(page.getByTestId("pipe-confirm-popup")).toContainText("R-03 ⇄ R-06");
+  const buildGas = page.getByTestId("pipe-confirm-gas_line");
   await expect(buildGas).toBeEnabled();
   await buildGas.click();
-  await expect(page.getByTestId("pipe-preview")).toHaveCount(0);
+  await expect(page.getByTestId("pipe-confirm-popup")).toHaveCount(0);
   await expect(page.getByTestId("conduit-panel-gas:reservoir__washlock")).toBeVisible();
   await expect(page.getByTestId("conduit-control-gas:reservoir__washlock")).toBeVisible();
 });
