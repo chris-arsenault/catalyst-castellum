@@ -48,6 +48,8 @@ describe("incident map aggregation", () => {
     const aggregates = incidentMapAggregates(
       {
         elapsed: 14,
+        phase: "assault",
+        campaign: { levelId: "flash_point", roundIndex: 0 },
         incidents: [
           incident(1, 12, 17, true),
           incident(2, 10, 9, false),
@@ -66,5 +68,33 @@ describe("incident map aggregation", () => {
       pressureDamage: 26,
       heatDamage: 0,
     });
+  });
+
+  it("clears transient overlays when the round result freezes the map", () => {
+    const aggregates = incidentMapAggregates(
+      {
+        elapsed: 14,
+        phase: "round_result",
+        campaign: { levelId: "flash_point", roundIndex: 0 },
+        incidents: [incident(1, 13.5, 17, true)],
+      },
+      WORLD_MAP
+    );
+
+    expect(aggregates).toEqual([]);
+  });
+
+  it("keeps prior-round incidents out of the next live round", () => {
+    const aggregates = incidentMapAggregates(
+      {
+        elapsed: 14,
+        phase: "prime",
+        campaign: { levelId: "flash_point", roundIndex: 1 },
+        incidents: [incident(1, 13.5, 17, true)],
+      },
+      WORLD_MAP
+    );
+
+    expect(aggregates).toEqual([]);
   });
 });

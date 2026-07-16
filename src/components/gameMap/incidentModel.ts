@@ -18,14 +18,33 @@ export interface IncidentAggregate {
   y: number;
 }
 
-type IncidentTimeline = Pick<GameState, "elapsed" | "incidents">;
+type IncidentTimeline = Pick<GameState, "elapsed" | "incidents" | "phase"> & {
+  campaign: Pick<GameState["campaign"], "levelId" | "roundIndex">;
+};
+
+export const transientCombatIndicatorsVisible = (game: Pick<GameState, "phase">): boolean =>
+  game.phase === "prime" || game.phase === "assault";
+
+export const transientIncidentVisible = (
+  game: IncidentTimeline,
+  incident: CombatIncident,
+  visibleSeconds: number
+): boolean => {
+  const age = game.elapsed - incident.elapsed;
+  return (
+    transientCombatIndicatorsVisible(game) &&
+    incident.levelId === game.campaign.levelId &&
+    incident.round === game.campaign.roundIndex + 1 &&
+    age >= 0 &&
+    age <= visibleSeconds
+  );
+};
 
 const recentCombustionIncidents = (game: IncidentTimeline): CombatIncident[] =>
   game.incidents.filter(
     (incident) =>
       incident.sourceId === "hydrogen_oxygen_combustion" &&
-      game.elapsed - incident.elapsed >= 0 &&
-      game.elapsed - incident.elapsed <= INCIDENT_VISIBLE_SECONDS
+      transientIncidentVisible(game, incident, INCIDENT_VISIBLE_SECONDS)
   );
 
 export const incidentMapAggregates = (
