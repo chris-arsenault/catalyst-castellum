@@ -14,6 +14,7 @@ import {
   FacilityDoors,
   IncidentLayer,
   ProcessNodes,
+  PipeHitLayer,
   TransportNetwork,
 } from "./MapLayers";
 import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH, type CameraTransform } from "./mapGeometry";
@@ -72,6 +73,7 @@ export const MapScene = ({
       <pixiContainer alpha={pipeMode ? 0.32 : 1}>
         <MapBackdrop game={game} />
       </pixiContainer>
+      <PipeHitLayer game={game} onHover={onHoverRun} />
       <pixiContainer alpha={pipeMode ? 0.55 : 1}>
         {game.world.rooms.map((roomId) => (
           <RoomNode
@@ -95,7 +97,6 @@ export const MapScene = ({
       <TransportNetwork
         game={game}
         hoveredRunId={hoveredRunId}
-        onHover={onHoverRun}
         pipeDragSourceRoomId={pipeDragSourceRoomId}
         pipeMode={pipeMode}
         selectedSpecies={selectedSpecies}

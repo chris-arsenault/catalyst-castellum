@@ -24,7 +24,8 @@ const hullMap: WorldMap = {
 };
 
 const seededSave = (): string => {
-  const state = createScenarioGame("flash_point");
+  // Site 2 is a real dock (levelIndex 1), where grafting is available.
+  const state = createScenarioGame("make_the_reagent", ["flash_point"]);
   state.phase = "build";
   state.matter = 100;
   state.map = hullMap;
@@ -41,13 +42,14 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
         version: 1,
         savedAt: Date.now(),
         game: serialized,
-        dismissedGuideIds: ["flash_point_ox1"],
+        dismissedGuideIds: ["flash_point:field_guidance:v5"],
       })
     );
   }, save);
   await page.goto("/");
   await page.getByTestId("load-save-slot-1").click();
-  await page.getByTestId("enter-stage-controls").click();
+  const stageIntro = page.getByTestId("enter-stage-controls");
+  if (await stageIntro.isVisible().catch(() => false)) await stageIntro.click();
   await page.getByTestId("game-map").waitFor({ state: "visible" });
 
   await page.getByTestId("graft-mode-toggle").click();

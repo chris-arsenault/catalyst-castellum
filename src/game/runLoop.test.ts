@@ -34,6 +34,7 @@ const buildWithGraft = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
   state.phase = "build";
   state.matter = 100;
+  state.campaign.levelIndex = 1;
   const grafted = executeCommand(
     state,
     {

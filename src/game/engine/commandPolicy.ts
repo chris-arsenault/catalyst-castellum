@@ -190,9 +190,12 @@ const evaluateBuildConnection = (
   return allow({ cost: line.buildCost });
 };
 
-/** Grafting is a between-sites (dock) action: only the site's first build phase. */
+/**
+ * Grafting is a between-sites (dock) action, and the run starts docked at site 1 with
+ * the bare hull. So a graft dock is the first build phase of any site after the first.
+ */
 const atDock = (state: GameState): boolean =>
-  state.phase === "build" && state.campaign.roundIndex === 0;
+  state.phase === "build" && state.campaign.roundIndex === 0 && state.campaign.levelIndex > 0;
 
 const evaluateGraftModule = (
   state: GameState,

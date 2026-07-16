@@ -37,6 +37,7 @@ const buildPhase = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
   state.phase = "build";
   state.matter = 100;
+  state.campaign.levelIndex = 1; // grafting happens at a dock after the first site
   return state;
 };
 

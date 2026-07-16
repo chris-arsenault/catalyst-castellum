@@ -2,6 +2,8 @@ import type { GridCell, RoomId } from "../types";
 import { cell } from "../spatial";
 import type { GasTapDefinition, LiquidTapDefinition, MapRoom, WorldMap } from "../world/map";
 import { WORLD_MAP_CONNECTIONS } from "./worldMapConnections";
+import { isProcessLine } from "../world/map";
+import { routeConnection } from "../world/autoRouter";
 
 const horizontalCells = (fromColumn: number, toColumn: number, elevation: number): GridCell[] =>
   Array.from({ length: toColumn - fromColumn + 1 }, (_, index) =>
@@ -58,7 +60,7 @@ const room = (
 });
 
 /** Compact, room-dominant side-view platform world authored in exact grid cells. */
-export const WORLD_MAP: WorldMap = {
+const WORLD_MAP_BASE: WorldMap = {
   width: 76,
   height: 40,
   cellSize: 16,
@@ -153,4 +155,29 @@ export const WORLD_MAP: WorldMap = {
     gas_vent: { cell: cell(64, 16), hostRoomId: "core" },
     liquid_drain: { cell: cell(64, 6), hostRoomId: "core" },
   },
+};
+
+/**
+ * Process-line routes are computed shortest-path from the room layout, not hand-drawn.
+ * The layout owns the geometry; a line is just its endpoints and parameters, and the
+ * router (a pure overlay, so it may cross rooms) draws the direct path both the map and
+ * the physics use. Authoring never maintains a route by hand.
+ */
+const routedConnections = (map: WorldMap): WorldMap["connections"] =>
+  Object.fromEntries(
+    Object.entries(map.connections).map(([id, connection]) => {
+      if (!isProcessLine(connection)) return [id, connection];
+      const route = routeConnection(
+        map,
+        connection.kind,
+        connection.direction[0],
+        connection.direction[1]
+      );
+      return [id, { ...connection, route: route ?? connection.route }];
+    })
+  );
+
+export const WORLD_MAP: WorldMap = {
+  ...WORLD_MAP_BASE,
+  connections: routedConnections(WORLD_MAP_BASE),
 };

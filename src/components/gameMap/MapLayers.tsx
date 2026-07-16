@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useGameStore } from "../../application/store";
 import type { Graphics } from "pixi.js";
 import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
@@ -68,30 +69,91 @@ const TransportRunNode = ({
   emphasized,
   game,
   hovered,
-  onHover,
   runId,
   selectedSpecies,
-}: TransportRunNodeProps) => {
+}: Omit<TransportRunNodeProps, "onHover">) => {
   const draw = useCallback(
     (graphics: Graphics) =>
       drawTransportRun(graphics, game, runId, selectedSpecies, hovered, emphasized),
     [emphasized, game, hovered, runId, selectedSpecies]
   );
+  // Pure overlay: drawn on top of the rooms, but not interactive — the hit line under
+  // the rooms owns hover and toggle, so room clicks are never stolen by a pipe crossing.
+  return <pixiGraphics draw={draw} eventMode="none" />;
+};
+
+const installedPipePaths = (game: GameState, runId: ConnectionId): number[][] => {
+  const view = mapViewFor(game.map);
+  const paths: number[][] = [];
+  for (const conduit of [game.gasConduits[runId], game.liquidConduits[runId]]) {
+    if (!conduit?.installed || conduit.route.length < 2) continue;
+    paths.push(view.worldPathToMap(gridPathToWorldPath(conduit.route)).flatMap((p) => [p.x, p.y]));
+  }
+  return paths;
+};
+
+/** A wide, invisible hit line beneath the rooms: room clicks win, pipe clicks toggle. */
+const PipeHitNode = ({
+  game,
+  runId,
+  onHover,
+}: {
+  game: GameState;
+  runId: ConnectionId;
+  onHover: (runId: ConnectionId | null) => void;
+}) => {
+  const dispatch = useGameStore((state) => state.dispatch);
+  const draw = useCallback(
+    (graphics: Graphics) => {
+      graphics.clear();
+      for (const flat of installedPipePaths(game, runId)) {
+        graphics.poly(flat, false).stroke({ width: 12, color: 0xffffff, alpha: 0.001 });
+      }
+    },
+    [game, runId]
+  );
+  const toggle = useCallback(() => {
+    const gas = game.gasConduits[runId];
+    const liquid = game.liquidConduits[runId];
+    const anyOn = Boolean((gas?.installed && gas.enabled) || (liquid?.installed && liquid.enabled));
+    if (gas?.installed) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
+    if (liquid?.installed) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
+  }, [dispatch, game.gasConduits, game.liquidConduits, runId]);
   return (
     <pixiGraphics
       draw={draw}
       eventMode="static"
-      cursor="help"
+      cursor="pointer"
       onPointerOver={() => onHover(runId)}
       onPointerOut={() => onHover(null)}
+      onPointerTap={toggle}
     />
   );
 };
 
+const installedConnectionIds = (game: GameState): ConnectionId[] =>
+  game.world.connections.filter(
+    (runId) =>
+      Boolean(game.gasConduits[runId]?.installed) || Boolean(game.liquidConduits[runId]?.installed)
+  );
+
+export const PipeHitLayer = ({
+  game,
+  onHover,
+}: {
+  game: GameState;
+  onHover: (runId: ConnectionId | null) => void;
+}) => (
+  <>
+    {installedConnectionIds(game).map((runId) => (
+      <PipeHitNode key={runId} game={game} runId={runId} onHover={onHover} />
+    ))}
+  </>
+);
+
 interface TransportNetworkProps {
   game: GameState;
   hoveredRunId: ConnectionId | null;
-  onHover: (runId: ConnectionId | null) => void;
   pipeDragSourceRoomId: RoomId | null;
   pipeMode: boolean;
   selectedSpecies: SpeciesId | null;
@@ -100,33 +162,25 @@ interface TransportNetworkProps {
 export const TransportNetwork = ({
   game,
   hoveredRunId,
-  onHover,
   pipeDragSourceRoomId,
   pipeMode,
   selectedSpecies,
 }: TransportNetworkProps) => (
   <>
-    {game.world.connections
-      .filter(
-        (runId) =>
-          Boolean(game.gasConduits[runId]?.installed) ||
-          Boolean(game.liquidConduits[runId]?.installed)
-      )
-      .map((runId) => (
-        <TransportRunNode
-          key={runId}
-          emphasized={pipeMode}
-          game={game}
-          hovered={
-            hoveredRunId === runId ||
-            (pipeDragSourceRoomId !== null &&
-              connectionRoomPair(game, runId).includes(pipeDragSourceRoomId))
-          }
-          onHover={onHover}
-          runId={runId}
-          selectedSpecies={selectedSpecies}
-        />
-      ))}
+    {installedConnectionIds(game).map((runId) => (
+      <TransportRunNode
+        key={runId}
+        emphasized={pipeMode}
+        game={game}
+        hovered={
+          hoveredRunId === runId ||
+          (pipeDragSourceRoomId !== null &&
+            connectionRoomPair(game, runId).includes(pipeDragSourceRoomId))
+        }
+        runId={runId}
+        selectedSpecies={selectedSpecies}
+      />
+    ))}
   </>
 );
 
