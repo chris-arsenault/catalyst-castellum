@@ -151,11 +151,19 @@ test("hovering a shared conduit exposes all measured species on that physical ro
   await skipGuidance(page);
   const connection = instance(FACILITY_MAP.connections, "gas:core__furnace", "connection");
   if (!isProcessLine(connection)) throw new Error("Flash Point gas route is not authored.");
-  const route = connection.route;
-  const routePoint = await worldClientPoint(
-    page,
-    gridCellToWorldPoint(route[Math.floor(route.length / 2)]!)
-  );
+  // Hover an open-space segment of the route: the pipe hit layer sits beneath the
+  // rooms, so a route cell that crosses a room body shows the room, not the pipe.
+  const inAnyRoom = (cell: { column: number; elevation: number }) =>
+    Object.values(FACILITY_MAP.rooms).some(
+      (room) =>
+        cell.column >= room.bounds.column &&
+        cell.column < room.bounds.column + room.bounds.width &&
+        cell.elevation >= room.bounds.elevation &&
+        cell.elevation < room.bounds.elevation + room.bounds.height
+    );
+  const openCell = connection.route.find((cell) => !inAnyRoom(cell));
+  if (!openCell) throw new Error("Flash Point gas route has no open-space segment.");
+  const routePoint = await worldClientPoint(page, gridCellToWorldPoint(openCell));
   await page.mouse.move(routePoint.x, routePoint.y);
   const tooltip = page.getByTestId("transport-tooltip");
   await expect(tooltip).toContainText("CORE ⇄ R-02");
