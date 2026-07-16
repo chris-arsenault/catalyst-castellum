@@ -4,9 +4,8 @@ import { createScenarioGame } from "../../src/game/simulation";
 import { encodeGame } from "../../src/game/persistence/saveCodec";
 
 const seededSave = (): string => {
-  // Site 2 is a real dock (levelIndex 1), where grafting is available.
-  const state = createScenarioGame("make_the_reagent", ["flash_point"]);
-  state.phase = "build";
+  const state = createScenarioGame("flash_point", ["flash_point"]);
+  state.phase = "level_complete";
   state.matter = 100;
   return encodeGame(state, DEFAULT_GAME_DEFINITION);
 };
@@ -27,12 +26,11 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   }, save);
   await page.goto("/");
   await page.getByTestId("load-save-slot-1").click();
-  const stageIntro = page.getByTestId("enter-stage-controls");
-  if (await stageIntro.isVisible().catch(() => false)) await stageIntro.click();
-  await page.getByTestId("game-map").waitFor({ state: "visible" });
-
-  await page.getByTestId("graft-mode-toggle").click();
+  await expect(page.getByTestId("level-intermission")).toBeVisible();
+  await expect(page.getByTestId("game-map")).toHaveCount(0);
+  await page.getByTestId("intermission-graft").click();
   await expect(page.getByTestId("graft-board")).toBeVisible();
+  await expect(page.getByTestId("game-map")).toHaveCount(0);
   await page.getByTestId("graft-hardpoint-starboard").click();
   await expect(page.getByTestId("graft-preview")).toBeVisible();
 

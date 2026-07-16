@@ -24,6 +24,7 @@ import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
 import { connectionRoomPair, lineDefinition, roomDefinition } from "../../presentation/defaultGame";
+import { CircleAlert, CirclePower, PowerOff } from "lucide-react";
 
 const FLOW_EPSILON = 0.005;
 
@@ -74,14 +75,27 @@ const flowCauseLabel = (cause: FlowCause, translator: Translator): string => {
   return translator.text(keys[cause]).toLocaleUpperCase(translator.locale);
 };
 
-const conduitStateLabel = (
+const conduitState = (
   conduit: GasConduitState | LiquidConduitState,
   translator: Translator
-): string => {
-  if (!conduit.installed) return translator.text("ui.process.buildReady");
-  if (conduit.blocked) return translator.text("ui.map.transport.state.stalled");
-  if (!conduit.enabled) return translator.text("ui.map.transport.state.off");
-  return flowCauseLabel(conduit.flowCause, translator);
+): { className: string; icon: "blocked" | "closed" | "open"; label: string } => {
+  if (conduit.blocked)
+    return {
+      className: "blocked",
+      icon: "blocked",
+      label: translator.text("ui.map.transport.state.stalled"),
+    };
+  if (!conduit.enabled)
+    return {
+      className: "closed",
+      icon: "closed",
+      label: translator.text("ui.map.transport.state.closed"),
+    };
+  return {
+    className: "open",
+    icon: "open",
+    label: translator.text("ui.map.transport.state.open"),
+  };
 };
 
 const conduitMixtureSummary = (
@@ -117,6 +131,12 @@ const conduitMixtureSummary = (
     : translator.text("ui.map.transport.empty");
 };
 
+const ConduitStateIcon = ({ icon }: { icon: "blocked" | "closed" | "open" }) => {
+  if (icon === "blocked") return <CircleAlert size={17} />;
+  if (icon === "closed") return <PowerOff size={17} />;
+  return <CirclePower size={17} />;
+};
+
 const PhaseSection = ({
   channel,
   game,
@@ -135,15 +155,16 @@ const PhaseSection = ({
   const amount = phaseAmount(game, runId, phase);
   const capacity = conduitCapacity(game, runId, phase);
   const fill = capacity > 0 ? amount / capacity : 0;
+  const state = conduitState(conduit, translator);
   return (
-    <section className={`transport-phase transport-phase-${phase}`}>
+    <section className={`transport-phase transport-phase-${phase} state-${state.className}`}>
       <header>
         <span>{phaseName(phase, translator)}</span>
-        <small>
-          {translator.text("ui.map.transport.physical", {
-            state: conduitStateLabel(conduit, translator),
-          })}
-        </small>
+        <div className={`transport-state-badge ${state.className}`}>
+          <ConduitStateIcon icon={state.icon} />
+          <strong>{state.label}</strong>
+          {state.icon === "open" && <small>{flowCauseLabel(conduit.flowCause, translator)}</small>}
+        </div>
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>

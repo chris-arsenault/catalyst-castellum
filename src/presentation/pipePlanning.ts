@@ -53,5 +53,6 @@ export const planPipePreview = (
     return option ? [option] : [];
   });
   if (options.length === 0) return null;
-  return { fromRoomId, toRoomId, anchor, options };
+  const selectedKind = options.find((option) => option.buildable)?.kind ?? options[0]!.kind;
+  return { fromRoomId, toRoomId, anchor, options, selectedKind };
 };

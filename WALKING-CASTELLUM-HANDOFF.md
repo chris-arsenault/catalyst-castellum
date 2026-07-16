@@ -31,10 +31,9 @@ this doc is the "where we are right now" layer on top of them.
   every process room are `site`**. Only machines placed in **owned/hull** rooms carry to the next
   site; a defense the player builds in the site furnace (the OX-1) is **temporary and does not
   carry**. Proven by `src/game/hullPersistence.test.ts`.
-- **Grafting is a between-sites (dock) action**, NOT between rounds. It grows the hull core+1 →
-  core+2. Gated to a site's **first build phase after the first site** (`phase === "build" &&
-roundIndex === 0 && levelIndex > 0`) in `evaluateGraftModule`/`evaluateDismantleModule`
-  (`commandPolicy.ts`) and the graft-mode toggle (`MapChrome.tsx`). The Core carries a `starboard`
+- **Grafting is a between-sites action**, NOT between rounds. It grows the hull core+1 → core+2.
+  `graft_module` / `dismantle_module` are available only during `level_complete`, and grafting has a
+  dedicated full-workspace screen reached from the level summary. The Core carries a `starboard`
   hardpoint. Modules catalog in `src/game/content/modules.ts` (utility_pod / process_chamber /
   reservoir_stack) — an **open data catalog**; more/arbitrary types are expected.
 - **Main-game run shape is deliberately UNCOMMITTED** (fixed-length vs endless). Build for the
@@ -64,6 +63,20 @@ Pipe UX overhaul + hull model correction + visual hull cue:
   `RoomDrawModel.provenance`) so Core + R-06 read as owned.
 - Determinism snapshot regenerated for the new route lengths; balance contracts unchanged.
 
+Latest feedback pass:
+
+- **Pipe state is explicit on the map and in controls.** Open lines are bright with repeated flow
+  arrows; closed lines turn red and carry repeated gate bars. Pipe tooltips use large OPEN / CLOSED
+  badges, and the pipe-board actuator is a larger high-contrast control.
+- **Pipe preview matches the selected build.** Hover/focus on Gas or Liquid selects that exact
+  route and draws it with the same shell/core geometry and color as the installed line.
+- **Level completion replaces the map.** `CampaignIntermission.tsx` owns a dedicated level summary
+  with results, next-site details, and an animated spider-legged castellum. The player chooses Hull
+  grafting or Travel to next site; only Travel produces and reveals the next map.
+- **Grafting is a dedicated between-level workspace.** It is no longer a map toggle or side panel.
+  The screen lists hull hardpoints, module choices, matter, return-to-summary, and travel actions.
+  Outboard grafts may expand the temporary cleared-site map bounds before the hull is extracted.
+
 ## Site 2 exterior (shipped 2026-07-16; ready for user reaction)
 
 - `make_the_reagent` / CL-1 now runs on a **distinct generated exterior**, selected seed
@@ -90,7 +103,8 @@ Pipe UX overhaul + hull model correction + visual hull cue:
 - **#5 build availability opaque/restrictive** — per-round `availability.{equipment,gasLines,...}`
   gates what can be built; the user had lots of matter but couldn't build (nothing available) and
   it wasn't explained. Loosen and/or communicate.
-- **Grafting is not taught yet** — the graft lesson at the first dock (site 1 → site 2) is unwritten.
+- **Grafting guidance is not taught yet** — the between-level graft screen now exists, while the
+  guided lesson explaining the hull/site distinction and recommended first module is unwritten.
 - **Guides/copy/anchors** (`src/tutorial/*`) broadly still assume furnace-central; re-point at Map
   instance predicates and the hull model.
 
@@ -110,9 +124,10 @@ Pipe UX overhaul + hull model correction + visual hull cue:
   `MapCarrier` (the GameState at runtime, the definition at creation).
 - **Save is v13** (`saveCodec.ts`): serializes `map` + `mapRevision` + `run` ({seed, position,
   outcome}). Decode validates the stored map + room coverage. Legacy saves inject the pack map.
-- **Level transition** routes `level_complete → travel → dock_at_site → level_briefing`
-  (`campaignCommands.ts`, `TravelModal` in `Modals.tsx`). `dock_at_site` extracts the hull and
-  re-produces the next site.
+- **Level transition** presents `level_complete` through `CampaignIntermission.tsx`; its Travel to
+  next site action drives `level_complete → travel → dock_at_site → level_briefing` in one player
+  action. A recovered save in `travel` gets a dedicated travel recovery screen. `dock_at_site`
+  extracts the hull and produces the next site.
 - **Playtest harness** plays each level in ISOLATION to `level_complete` (not a connected run);
   `runLoop.test.ts` / `hullCarryover.test.ts` prove the connected loop instead.
 - E2e that need a specific state seed a save into `localStorage`

@@ -56,7 +56,7 @@ export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
   },
   level_complete: {
     stepMode: "static",
-    allowedCommands: ["start_next_level"],
+    allowedCommands: ["graft_module", "dismantle_module", "start_next_level"],
     legalTransitions: ["travel"],
   },
   travel: {

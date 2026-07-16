@@ -54,6 +54,8 @@ export interface PipePreview {
   /** Screen point (relative to the map canvas) the confirm popup anchors to. */
   anchor: { x: number; y: number };
   options: PipePreviewOption[];
+  /** The option whose exact routed appearance is currently drawn on the map. */
+  selectedKind: ProcessLineKind;
 }
 
 /** A candidate module for a chosen hardpoint; nothing grafts until confirmed. */

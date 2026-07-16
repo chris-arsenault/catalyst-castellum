@@ -1,4 +1,4 @@
-import { Blocks, Check, Trash2, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Blocks, Check, Coins, Trash2, X } from "lucide-react";
 import { useCallback } from "react";
 
 import { useGameStore } from "../application/store";
@@ -124,35 +124,47 @@ const HardpointRow = ({ hardpoint }: { hardpoint: HardpointRef }) => {
   );
 };
 
-export const GraftBoard = () => {
+const GraftHeader = ({ matter, onClose }: { matter: number; onClose: () => void }) => {
   const { translator } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
-  const graftPreview = useGameStore((state) => state.graftPreview);
-  const setGraftMode = useGameStore((state) => state.setGraftMode);
-  const close = useCallback(() => setGraftMode(false), [setGraftMode]);
-  const hardpoints = hullHardpoints(game);
   return (
-    <aside className="room-inspector pipe-board" data-testid="graft-board">
-      <div className="inspector-header">
-        <div className="inspector-room-code">
-          <span>
-            <Blocks size={14} />
-          </span>
+    <header className="graft-screen-header">
+      <button
+        className="graft-back-button"
+        type="button"
+        data-testid="graft-board-close"
+        onClick={onClose}
+      >
+        <ArrowLeft size={16} /> {translator.text("ui.graft.close")}
+      </button>
+      <div className="graft-title">
+        <span>
+          <Blocks size={22} />
+        </span>
+        <div>
           <em>{translator.text("ui.graft.subtitle")}</em>
+          <h1>{translator.text("ui.graft.title")}</h1>
         </div>
-        <h2>{translator.text("ui.graft.title")}</h2>
-        <button
-          className="room-details-button"
-          type="button"
-          data-testid="graft-board-close"
-          onClick={close}
-        >
-          <X size={14} /> {translator.text("ui.graft.close")}
-        </button>
       </div>
-      <div className="inspector-scroll">
-        <p className="pipe-board-intro">{translator.text("ui.graft.intro")}</p>
-        {graftPreview && <GraftPreviewCard preview={graftPreview} />}
+      <div className="graft-matter">
+        <Coins size={17} />
+        <strong>{translator.text("ui.graft.matter", { matter: String(matter) })}</strong>
+      </div>
+    </header>
+  );
+};
+
+const GraftWorkspace = ({
+  hardpoints,
+  preview,
+}: {
+  hardpoints: HardpointRef[];
+  preview: GraftPreview | null;
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="graft-workspace">
+      <section className="graft-hardpoints">
+        <p>{translator.text("ui.graft.intro")}</p>
         {hardpoints.length === 0 && (
           <p className="pipe-board-intro" data-testid="graft-board-empty">
             {translator.text("ui.graft.empty")}
@@ -166,7 +178,57 @@ export const GraftBoard = () => {
             />
           ))}
         </div>
-      </div>
-    </aside>
+      </section>
+      <section className="graft-selection">
+        {preview ? (
+          <GraftPreviewCard preview={preview} />
+        ) : (
+          <div className="graft-selection-empty">
+            <Blocks size={34} />
+            <strong>{translator.text("ui.graft.selection.title")}</strong>
+            <p>{translator.text("ui.graft.selection.detail")}</p>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+};
+
+const GraftFooter = ({ onTravel }: { onTravel: () => void }) => {
+  const { translator } = useGamePresentation();
+  return (
+    <footer className="graft-footer">
+      <span>{translator.text("ui.graft.footer")}</span>
+      <button
+        type="button"
+        className="travel-choice compact"
+        data-testid="graft-travel-to-next-site"
+        onClick={onTravel}
+      >
+        {translator.text("ui.intermission.travel.action")} <ArrowRight size={18} />
+      </button>
+    </footer>
+  );
+};
+
+export const GraftBoard = () => {
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const graftPreview = useGameStore((state) => state.graftPreview);
+  const setGraftMode = useGameStore((state) => state.setGraftMode);
+  const close = useCallback(() => setGraftMode(false), [setGraftMode]);
+  const travel = useCallback(() => {
+    setGraftMode(false);
+    if (dispatch({ type: "start_next_level" })) dispatch({ type: "dock_at_site" });
+  }, [dispatch, setGraftMode]);
+  const hardpoints = hullHardpoints(game);
+  return (
+    <main className="graft-stage" data-testid="graft-board">
+      <section className="graft-screen">
+        <GraftHeader matter={game.matter} onClose={close} />
+        <GraftWorkspace hardpoints={hardpoints} preview={graftPreview} />
+        <GraftFooter onTravel={travel} />
+      </section>
+    </main>
   );
 };

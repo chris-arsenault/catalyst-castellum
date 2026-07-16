@@ -10,6 +10,7 @@ import { gasConduitState, liquidConduitState } from "../../game/world/instances"
 import { connectionRoomPair, lineDefinition, roomDefinition } from "../../presentation/defaultGame";
 
 interface PhaseModel {
+  enabled: boolean;
   installed: boolean;
 }
 
@@ -20,12 +21,10 @@ const phaseModel = (
 ): PhaseModel | null => {
   const definition = lineDefinition(game, runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
-  const installed =
-    phase === "gas"
-      ? gasConduitState(game, runId).installed
-      : liquidConduitState(game, runId).installed;
+  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
   return {
-    installed,
+    enabled: conduit.enabled,
+    installed: conduit.installed,
   };
 };
 
@@ -68,8 +67,9 @@ const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: C
   if (!model?.installed) return null;
   return (
     <div
-      className={`transport-phase-control ${phase} installed`}
+      className={`transport-phase-control ${phase} installed ${model.enabled ? "active" : "inactive"}`}
       data-testid={`conduit-panel-${runId}`}
+      data-conduit-state={model.enabled ? "open" : "closed"}
     >
       <header>
         <span>
@@ -78,7 +78,11 @@ const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: C
         <strong>
           {translator.text(phase === "gas" ? "ui.process.gasDuct" : "ui.process.liquidPipe")}
         </strong>
-        <em>{translator.text("ui.process.ready")}</em>
+        <em>
+          {translator.text(
+            model.enabled ? "ui.map.transport.state.open" : "ui.map.transport.state.closed"
+          )}
+        </em>
         <DismantleAction phase={phase} runId={runId} />
       </header>
       <div className="actuator-list">

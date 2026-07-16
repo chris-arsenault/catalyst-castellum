@@ -4,7 +4,7 @@ import type { Graphics } from "pixi.js";
 import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
 import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
-import { drawTransportRun } from "./transportGraphics";
+import { drawTransportRun, GAS_RUN_COLOR, LIQUID_RUN_COLOR } from "./transportGraphics";
 import { connectionRoomPair } from "../../presentation/defaultGame";
 import type { PipePreview } from "../../application/storeTypes";
 import { gridPathToWorldPath } from "../../game/spatial";
@@ -18,17 +18,24 @@ export const GhostRouteLayer = ({ game, preview }: { game: GameState; preview: P
     (graphics: Graphics) => {
       graphics.clear();
       const view = mapViewFor(game.map);
-      for (const [index, option] of preview.options.entries()) {
-        const points = view.worldPathToMap(gridPathToWorldPath(option.route));
-        const first = points[0];
-        if (!first) continue;
-        const color = option.kind === "gas_line" ? 0x6ad9b4 : 0x50b7f6;
-        graphics.moveTo(first.x, first.y + index * 3);
-        for (const point of points.slice(1)) graphics.lineTo(point.x, point.y + index * 3);
-        graphics.stroke({ color, width: 2.5, alpha: option.buildable ? 0.55 : 0.22 });
-        const last = points.at(-1);
-        if (last) graphics.circle(last.x, last.y + index * 3, 4).fill({ color, alpha: 0.6 });
-      }
+      const option =
+        preview.options.find(({ kind }) => kind === preview.selectedKind) ?? preview.options[0];
+      if (!option) return;
+      const points = view.worldPathToMap(gridPathToWorldPath(option.route));
+      const first = points[0];
+      if (!first) return;
+      const color = option.kind === "gas_line" ? GAS_RUN_COLOR : LIQUID_RUN_COLOR;
+      const trace = () => {
+        graphics.moveTo(first.x, first.y);
+        for (const point of points.slice(1)) graphics.lineTo(point.x, point.y);
+      };
+      trace();
+      graphics.stroke({ color: 0x020705, width: 7, alpha: option.buildable ? 0.82 : 0.4 });
+      trace();
+      graphics.stroke({ color, width: 3, alpha: option.buildable ? 0.95 : 0.32 });
+      graphics.circle(first.x, first.y, 5).stroke({ color, width: 2, alpha: 0.9 });
+      const last = points.at(-1);
+      if (last) graphics.circle(last.x, last.y, 5).stroke({ color, width: 2, alpha: 0.9 });
     },
     [game.map, preview]
   );

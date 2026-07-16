@@ -12,9 +12,8 @@ const graftedId = graftedRoomId("core", "starboard");
 
 const buildWithGraft = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
-  state.phase = "build";
+  state.phase = "level_complete";
   state.matter = 100;
-  state.campaign.levelIndex = 1;
   const grafted = executeCommand(
     state,
     {
@@ -33,9 +32,6 @@ describe("the run loop carries a graft across a dock", () => {
   it("travels and docks, embedding the grafted room on the next site", () => {
     const site = buildWithGraft();
     roomState(site, graftedId).gas.lower.hydrogen = 5;
-    // Reach the between-sites decision, then drive the real loop commands.
-    site.phase = "level_complete";
-
     const traveling = executeCommand(site, { type: "start_next_level" }, definition);
     expect(traveling.accepted).toBe(true);
     expect(traveling.state.phase).toBe("travel");
@@ -52,7 +48,7 @@ describe("the run loop carries a graft across a dock", () => {
     expect(next.map.rooms.washlock?.provenance).toBe("hull");
   });
 
-  it("stamps the run outcome and refuses graft edits outside the build phase", () => {
+  it("refuses graft edits outside the level intermission", () => {
     const site = buildWithGraft();
     site.phase = "assault";
     const rejected = executeCommand(

@@ -20,9 +20,16 @@ import {
 import { colorNumber, mapViewFor } from "./mapGeometry";
 import { gasConduitState, liquidConduitState } from "../../game/world/instances";
 import { lineDefinition } from "../../presentation/defaultGame";
+import {
+  drawArrow,
+  drawClosedMarkers,
+  drawOpenMarkers,
+  drawStopMarker,
+  samplePath,
+} from "./transportPathGraphics";
 
-const GAS_RUN_COLOR = 0x58aab3;
-const LIQUID_RUN_COLOR = 0x3f76ba;
+export const GAS_RUN_COLOR = 0x58aab3;
+export const LIQUID_RUN_COLOR = 0x3f76ba;
 const FLOW_EPSILON = 0.002;
 
 const tracePath = (graphics: Graphics, points: readonly Point[]): void => {
@@ -46,61 +53,6 @@ const offsetPath = (points: readonly Point[], offset: number): Point[] =>
     const normal = pointNormal(points, index);
     return { x: point.x + normal.x * offset, y: point.y + normal.y * offset };
   });
-
-interface PathSample {
-  point: Point;
-  angle: number;
-}
-
-const samplePath = (points: readonly Point[], progress: number): PathSample => {
-  const lengths = points.slice(1).map((point, index) => {
-    const previous = points[index] as Point;
-    return Math.hypot(point.x - previous.x, point.y - previous.y);
-  });
-  let remaining = lengths.reduce((total, length) => total + length, 0) * progress;
-  for (let index = 0; index < lengths.length; index += 1) {
-    const length = lengths[index] as number;
-    const from = points[index] as Point;
-    const to = points[index + 1] as Point;
-    if (remaining <= length) {
-      const ratio = length > 0 ? remaining / length : 0;
-      return {
-        point: { x: from.x + (to.x - from.x) * ratio, y: from.y + (to.y - from.y) * ratio },
-        angle: Math.atan2(to.y - from.y, to.x - from.x),
-      };
-    }
-    remaining -= length;
-  }
-  const last = points.at(-1) ?? { x: 0, y: 0 };
-  const previous = points.at(-2) ?? last;
-  return { point: last, angle: Math.atan2(last.y - previous.y, last.x - previous.x) };
-};
-
-const drawArrow = (
-  graphics: Graphics,
-  sample: PathSample,
-  size: number,
-  color: number,
-  alpha: number,
-  hollow: boolean
-): void => {
-  const directionX = Math.cos(sample.angle);
-  const directionY = Math.sin(sample.angle);
-  const normalX = -directionY;
-  const normalY = directionX;
-  const backX = sample.point.x - directionX * size;
-  const backY = sample.point.y - directionY * size;
-  const wing = size * 0.52;
-  const left = { x: backX + normalX * wing, y: backY + normalY * wing };
-  const right = { x: backX - normalX * wing, y: backY - normalY * wing };
-  if (!hollow) {
-    graphics
-      .moveTo(backX - directionX * size * 0.65, backY - directionY * size * 0.65)
-      .lineTo(sample.point.x, sample.point.y);
-  }
-  graphics.moveTo(left.x, left.y).lineTo(sample.point.x, sample.point.y).lineTo(right.x, right.y);
-  graphics.stroke({ color, width: hollow ? 1.25 : 1.75, alpha });
-};
 
 const drawFlowArrows = (
   graphics: Graphics,
@@ -140,21 +92,11 @@ const drawArrivalPulse = (
   graphics.circle(destination.x, destination.y, 3).fill({ color, alpha: 0.9 });
 };
 
-const drawStopMarker = (graphics: Graphics, points: readonly Point[]): void => {
-  const { point } = samplePath(points, 0.5);
-  graphics.circle(point.x, point.y, 6).fill({ color: 0x170b09, alpha: 0.92 });
-  graphics
-    .moveTo(point.x - 4, point.y - 4)
-    .lineTo(point.x + 4, point.y + 4)
-    .moveTo(point.x + 4, point.y - 4)
-    .lineTo(point.x - 4, point.y + 4)
-    .stroke({ color: 0xf6644c, width: 1.5, alpha: 0.95 });
-};
-
 interface LaneModel {
   color: number;
   elapsed: number;
   emphasized: boolean;
+  enabled: boolean;
   flow: MaterialRunFlow | null;
   hovered: boolean;
   points: readonly Point[];
@@ -167,11 +109,10 @@ const laneAlpha = (model: LaneModel): number => {
     if (model.hovered) return 0.24;
     return 0.08;
   }
-  if (model.emphasized) return model.hovered ? 1 : 0.85;
-  if (model.hovered) return 0.9;
-  if (model.status.active) return 0.68;
-  if (model.status.configured) return 0.42;
-  return 0.24;
+  if (!model.enabled) return model.hovered ? 0.78 : 0.5;
+  if (model.emphasized) return 1;
+  if (model.hovered) return 1;
+  return model.status.active ? 1 : 0.88;
 };
 
 const laneShellWidth = (model: LaneModel): number => {
@@ -182,21 +123,31 @@ const laneShellWidth = (model: LaneModel): number => {
 
 const laneCoreWidth = (model: LaneModel): number => {
   if (!model.status.installed) return model.emphasized ? 1.8 : 1;
-  if (model.emphasized) return model.hovered ? 3.4 : 2.8;
-  return model.hovered ? 3 : 2;
+  if (!model.enabled) return model.hovered ? 3.5 : 3;
+  if (model.emphasized) return model.hovered ? 4 : 3.4;
+  return model.hovered ? 3.7 : 3.1;
 };
 
 const laneColor = (model: LaneModel): number => {
-  if (model.status.blocked && model.hovered) return 0xc74e41;
+  if (model.status.blocked) return 0xf0644c;
+  if (model.status.installed && !model.enabled) return 0xb65a45;
   return model.color;
 };
 
 const laneShellAlpha = (model: LaneModel): number => {
-  if (model.status.installed) return 0.72;
+  if (model.status.installed) return model.enabled ? 0.9 : 0.78;
   return model.emphasized ? 0.5 : 0.28;
 };
 
 const drawLane = (graphics: Graphics, model: LaneModel): void => {
+  if (model.enabled) {
+    tracePath(graphics, model.points);
+    graphics.stroke({
+      color: model.color,
+      width: laneShellWidth(model) + 5,
+      alpha: 0.14,
+    });
+  }
   tracePath(graphics, model.points);
   graphics.stroke({
     color: 0x020705,
@@ -218,8 +169,12 @@ const drawLane = (graphics: Graphics, model: LaneModel): void => {
     });
     drawFlowArrows(graphics, model.points, model.flow, model.elapsed, model.color);
     drawArrivalPulse(graphics, model.points, model.flow, model.elapsed, model.color);
+  } else if (model.enabled) {
+    drawOpenMarkers(graphics, model.points, model.color);
+  } else {
+    drawClosedMarkers(graphics, model.points);
   }
-  if (model.status.blocked && model.hovered) drawStopMarker(graphics, model.points);
+  if (model.status.blocked) drawStopMarker(graphics, model.points);
 };
 
 interface PhaseLaneModel {
@@ -266,6 +221,10 @@ const mixedPhaseColor = (
 
 const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
   const points = offsetPath(model.basePath, model.offset);
+  const conduit =
+    model.phase === "gas"
+      ? gasConduitState(model.state, model.runId)
+      : liquidConduitState(model.state, model.runId);
   let color = mixedPhaseColor(model.state, model.runId, model.phase, model.baseColor);
   let flow: MaterialRunFlow | null = null;
   let status = transportRunPhaseStatus(model.state, model.runId, model.phase);
@@ -299,6 +258,7 @@ const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
     flow,
     elapsed: model.elapsed,
     emphasized: model.emphasized,
+    enabled: conduit.enabled,
     hovered: model.hovered,
   });
 };

@@ -190,19 +190,15 @@ const evaluateBuildConnection = (
   return allow({ cost: line.buildCost });
 };
 
-/**
- * Grafting is a between-sites (dock) action, and the run starts docked at site 1 with
- * the bare hull. So a graft dock is the first build phase of any site after the first.
- */
-const atDock = (state: GameState): boolean =>
-  state.phase === "build" && state.campaign.roundIndex === 0 && state.campaign.levelIndex > 0;
+/** Grafting belongs to the cleared-site intermission, before the next site is revealed. */
+const atGraftIntermission = (state: GameState): boolean => state.phase === "level_complete";
 
 const evaluateGraftModule = (
   state: GameState,
   command: Extract<GameCommand, { type: "graft_module" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
-  if (!atDock(state)) return reject("invalid_phase");
+  if (!atGraftIntermission(state)) return reject("invalid_phase");
   const plan = plannedGraft(
     gameDefinition,
     state.map,
@@ -236,7 +232,7 @@ const evaluateDismantleModule = (
   command: Extract<GameCommand, { type: "dismantle_module" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
-  if (!atDock(state)) return reject("invalid_phase");
+  if (!atGraftIntermission(state)) return reject("invalid_phase");
   const room = state.map.rooms[command.roomId];
   if (!room || !command.roomId.startsWith("graft:")) return reject("placement");
   const jointId = graftedJointId(...graftRef(command.roomId));

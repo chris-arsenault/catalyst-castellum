@@ -7,7 +7,7 @@ import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/M
 import { FacilityManual } from "./components/manual/FacilityManual";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { PipeBoard } from "./components/PipeBoard";
-import { GraftBoard } from "./components/GraftBoard";
+import { CampaignIntermission } from "./components/CampaignIntermission";
 import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
@@ -78,13 +78,22 @@ const MapStage = () => {
 
 const SidePanel = () => {
   const pipeMode = useGameStore((state) => state.pipeMode);
-  const graftMode = useGameStore((state) => state.graftMode);
-  if (graftMode) return <GraftBoard />;
   if (pipeMode) return <PipeBoard />;
   return <RoomInspector />;
 };
 
 const ActiveGame = () => {
+  const phase = useGameStore((state) => state.game.phase);
+  if (phase === "level_complete" || phase === "travel") {
+    return (
+      <div className="app-shell intermission-shell" data-simulation-clock="static">
+        <TopBar />
+        <CampaignIntermission />
+        <FacilityManual />
+        <NoticeToast />
+      </div>
+    );
+  }
   return (
     <div className="app-shell" data-simulation-clock="live">
       <TopBar />

@@ -304,7 +304,10 @@ const InstalledConduitActuator = ({
   const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
 
   return (
-    <div className={`actuator-row ${conduit.blocked ? "blocked" : ""}`}>
+    <div
+      className={`actuator-row ${active ? "active" : "inactive"} ${conduit.blocked ? "blocked" : ""}`}
+      data-conduit-state={active ? "open" : "closed"}
+    >
       <div className="actuator-copy">
         <strong>{transportCopy(game, runId, translator).name}</strong>
         <small>

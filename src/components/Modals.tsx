@@ -1,6 +1,5 @@
 import { ArrowRight, Biohazard, CheckCircle2, Gauge, LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback } from "react";
-import { LEVEL_DEFINITIONS, nextLevelId } from "../presentation/defaultGame";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
@@ -108,66 +107,9 @@ const RoundProgressModal = () => {
   );
 };
 
-const LevelProgressModal = () => {
-  const {
-    levelCopy: localizedLevelCopy,
-    roundReportCopy: localizedReport,
-    translator,
-  } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const level = levelDefinitionFor(game);
-  const report = game.lastReport ? localizedReport(game.lastReport) : null;
-  const nextId = nextLevelId(level.id);
-  const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
-  const levelText = localizedLevelCopy.level(level);
-  const nextLevelText = nextLevel ? localizedLevelCopy.level(nextLevel) : null;
-  const advance = useCallback(() => dispatch({ type: "start_next_level" }), [dispatch]);
-  return (
-    <ProgressFrame
-      actionLabel={translator.text("ui.progress.level.action", {
-        name: nextLevelText?.name ?? translator.text("ui.progress.level.campaign"),
-      })}
-      detail={report?.detail ?? translator.text("ui.progress.level.securedRecord")}
-      eyebrow={translator.text("ui.progress.level.eyebrow")}
-      nextDetail={nextLevelText?.briefing ?? translator.text("ui.progress.level.curriculum")}
-      nextLabel={translator.text("ui.progress.level.next")}
-      onAdvance={advance}
-      testId="next-level"
-      title={translator.text("ui.progress.level.complete", { name: levelText.name })}
-    />
-  );
-};
-
-const TravelModal = () => {
-  const { levelCopy: localizedLevelCopy, translator } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const nextId = nextLevelId(game.campaign.levelId);
-  const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
-  const nextLevelText = nextLevel ? localizedLevelCopy.level(nextLevel) : null;
-  const dock = useCallback(() => dispatch({ type: "dock_at_site" }), [dispatch]);
-  return (
-    <ProgressFrame
-      actionLabel={translator.text("ui.progress.travel.action")}
-      detail={translator.text("ui.progress.travel.detail")}
-      eyebrow={translator.text("ui.progress.travel.eyebrow")}
-      nextDetail={nextLevelText?.briefing ?? translator.text("ui.progress.level.curriculum")}
-      nextLabel={translator.text("ui.progress.travel.next")}
-      onAdvance={dock}
-      testId="dock-at-site"
-      title={translator.text("ui.progress.travel.title", {
-        name: nextLevelText?.name ?? translator.text("ui.progress.level.campaign"),
-      })}
-    />
-  );
-};
-
 export const CampaignProgressModal = () => {
   const phase = useGameStore((state) => state.game.phase);
   if (phase === "round_result") return <RoundProgressModal />;
-  if (phase === "level_complete") return <LevelProgressModal />;
-  if (phase === "travel") return <TravelModal />;
   return null;
 };
 

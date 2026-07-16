@@ -45,11 +45,10 @@ const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
   },
 });
 
-const buildPhase = (): GameState => {
+const intermissionState = (): GameState => {
   const state = createScenarioGame("flash_point", [], definition);
-  state.phase = "build";
+  state.phase = "level_complete";
   state.matter = 100;
-  state.campaign.levelIndex = 1; // grafting happens at a dock after the first site
   return state;
 };
 
@@ -62,7 +61,7 @@ const graft = (state: GameState, moduleId = "utility_pod") =>
 
 describe("grafting modules onto hull hardpoints", () => {
   it("grafts a module as a validated map edit with live records", () => {
-    const state = buildPhase();
+    const state = intermissionState();
     const result = graft(state);
     expect(result.accepted).toBe(true);
     const next = result.state;
@@ -79,8 +78,8 @@ describe("grafting modules onto hull hardpoints", () => {
   });
 
   it("is deterministic and rejects a second graft on the occupied hardpoint", () => {
-    const first = graft(buildPhase()).state;
-    const second = graft(buildPhase()).state;
+    const first = graft(intermissionState()).state;
+    const second = graft(intermissionState()).state;
     expect(second.map.rooms[graftedRoomId("furnace", "west_wall")]).toEqual(
       first.map.rooms[graftedRoomId("furnace", "west_wall")]
     );
@@ -90,7 +89,7 @@ describe("grafting modules onto hull hardpoints", () => {
   });
 
   it("rejects grafts from non-hull rooms and unknown hardpoints", () => {
-    const state = buildPhase();
+    const state = intermissionState();
     const siteHost = executeCommand(
       state,
       {
@@ -118,7 +117,7 @@ describe("grafting modules onto hull hardpoints", () => {
 
 describe("dismantling and carrying grafted modules", () => {
   it("dismantles a clear grafted module for a refund and removes its records", () => {
-    const grafted = graft(buildPhase()).state;
+    const grafted = graft(intermissionState()).state;
     const roomId = graftedRoomId("furnace", "west_wall");
     const matterBefore = grafted.matter;
     const result = executeCommand(grafted, { type: "dismantle_module", roomId }, definition);
@@ -132,7 +131,7 @@ describe("dismantling and carrying grafted modules", () => {
   });
 
   it("refuses to dismantle a grafted room holding equipment", () => {
-    const grafted = graft(buildPhase(), "process_chamber").state;
+    const grafted = graft(intermissionState(), "process_chamber").state;
     const roomId = graftedRoomId("furnace", "west_wall");
     roomState(grafted, roomId).equipment.socket_a = {
       equipmentId: "gas_agitator",
@@ -145,7 +144,7 @@ describe("dismantling and carrying grafted modules", () => {
 
   it("carries a grafted room across sites inside the hull fragment", async () => {
     const { extractHullFragment } = await import("./world/hullFragment");
-    const grafted = graft(buildPhase(), "process_chamber").state;
+    const grafted = graft(intermissionState(), "process_chamber").state;
     const roomId = graftedRoomId("furnace", "west_wall");
     roomState(grafted, roomId).gas.lower.hydrogen = 3;
     const fragment = extractHullFragment(grafted);

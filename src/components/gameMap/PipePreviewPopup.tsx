@@ -17,6 +17,13 @@ export const PipePreviewPopup = () => {
   const dispatch = useGameStore((state) => state.dispatch);
   const setPipePreview = useGameStore((state) => state.setPipePreview);
   const cancel = useCallback(() => setPipePreview(null), [setPipePreview]);
+  const select = useCallback(
+    (option: PipePreviewOption) => {
+      if (preview?.selectedKind !== option.kind)
+        setPipePreview(preview ? { ...preview, selectedKind: option.kind } : null);
+    },
+    [preview, setPipePreview]
+  );
   const build = useCallback(
     (option: PipePreviewOption) => {
       if (!preview) return;
@@ -59,9 +66,11 @@ export const PipePreviewPopup = () => {
           <button
             key={option.kind}
             type="button"
-            className={`pipe-confirm-button ${option.kind === "gas_line" ? "gas" : "liquid"}`}
+            className={`pipe-confirm-button ${option.kind === "gas_line" ? "gas" : "liquid"} ${preview.selectedKind === option.kind ? "selected" : ""}`}
             data-testid={`pipe-confirm-${option.kind}`}
             disabled={!option.buildable}
+            onFocus={() => select(option)}
+            onPointerEnter={() => select(option)}
             onClick={() => build(option)}
           >
             {option.kind === "gas_line" ? <Wind size={13} /> : <Droplets size={13} />}{" "}
