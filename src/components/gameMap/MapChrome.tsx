@@ -183,7 +183,8 @@ const GraftModeToggle = ({ game }: { game: GameState }) => {
   const { translator } = useGamePresentation();
   const graftMode = useGameStore((state) => state.graftMode);
   const setGraftMode = useGameStore((state) => state.setGraftMode);
-  if (hullHardpoints(game).length === 0) return null;
+  const atDock = game.phase === "build" && game.campaign.roundIndex === 0;
+  if (!atDock || hullHardpoints(game).length === 0) return null;
   return (
     <button
       type="button"
