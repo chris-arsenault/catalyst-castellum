@@ -63,6 +63,7 @@ export const roomRenderModel = (
     width: dimensions.width,
     height: dimensions.height,
     structure: definition.structure,
+    provenance: instance(game.map.rooms, roomId, "map room").provenance,
     selected,
     analysis,
     ring: facility.ringForRoom(roomId),

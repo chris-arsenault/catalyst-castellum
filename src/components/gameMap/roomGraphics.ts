@@ -11,6 +11,7 @@ export interface RoomDrawModel {
   height: number;
   cells: readonly RoomDrawCell[];
   structure: RoomDefinition["structure"];
+  provenance: "site" | "hull";
   liquidColor: number;
   liquidInflowRate: number;
   lowerGasColor: number;
@@ -73,6 +74,30 @@ const chamberPath = (left: number, top: number, width: number, height: number, c
   left,
   top + cut,
 ];
+
+const HULL_ACCENT = 0x7be0ff;
+
+/** Owned hull rooms wear a bright bracketed frame so the player reads them as theirs. */
+const drawHullFrame = (graphics: Graphics, model: RoomDrawModel): void => {
+  if (model.provenance !== "hull") return;
+  const left = -model.width / 2 - 3;
+  const top = -model.height / 2 - 3;
+  const right = model.width / 2 + 3;
+  const bottom = model.height / 2 + 3;
+  const arm = 12;
+  for (const [x, y, dx, dy] of [
+    [left, top, 1, 1],
+    [right, top, -1, 1],
+    [left, bottom, 1, -1],
+    [right, bottom, -1, -1],
+  ] as const) {
+    graphics
+      .moveTo(x, y + dy * arm)
+      .lineTo(x, y)
+      .lineTo(x + dx * arm, y)
+      .stroke({ color: HULL_ACCENT, width: 2, alpha: 0.9 });
+  }
+};
 
 const drawHazardGlow = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.analysis.hazard < 32) return;
@@ -269,6 +294,7 @@ const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
 export const drawRoom = (graphics: Graphics, model: RoomDrawModel): void => {
   graphics.clear();
   drawHazardGlow(graphics, model);
+  drawHullFrame(graphics, model);
   drawRoomShell(graphics, model);
   drawRoomAtmosphere(graphics, model);
   drawRoomLiquid(graphics, model);
