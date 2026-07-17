@@ -464,13 +464,24 @@
   display: grid;
   gap: 3px;
   padding: 8px 9px;
-  border: 1px solid #7b4f2a;
+  border: 1px solid #276052;
   border-radius: 3px;
   background: linear-gradient(135deg, #1d1812, #111a16);
 }
+.recent-incident-list article.impact {
+  border-color: #7b4f2a;
+  background: linear-gradient(135deg, #1d1812, #111a16);
+}
+.recent-incident-list article.continuous {
+  border-color: #276a72;
+  background: linear-gradient(135deg, #102126, #111a16);
+}
 .recent-incident-list strong {
-  color: #f7b467;
+  color: #83d7d8;
   font: 700 10px/1.2 var(--mono);
+}
+.recent-incident-list article.impact strong {
+  color: #f7b467;
 }
 .recent-incident-list span,
 .recent-incident-list small {
@@ -479,6 +490,9 @@
 }
 .recent-incident-list small {
   color: #658b7b;
+}
+.recent-incident-list .incident-channels {
+  color: #bdd8ce;
 }
 .flash-counter {
   display: flex;

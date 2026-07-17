@@ -3,6 +3,11 @@ import { useGamePresentation } from "../../application/presentationContext";
 import { useGameStore } from "../../application/store";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
 import type { RoomId } from "../../game/types";
+import {
+  DAMAGE_CHANNELS,
+  damageSourceDisplay,
+  formatDamageAmount,
+} from "../../presentation/damageCopy";
 
 const incidentsTutorialAnchor = (roomId: RoomId | null): TutorialAnchorId | undefined => {
   if (roomId === "furnace") return TUTORIAL_ANCHORS.furnaceIncidents;
@@ -11,10 +16,13 @@ const incidentsTutorialAnchor = (roomId: RoomId | null): TutorialAnchorId | unde
 };
 
 export const RecentIncidents = () => {
-  const { formatters, translator } = useGamePresentation();
+  const { damage, formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const incidents = game.incidents.filter((incident) => incident.roomId === roomId).slice(0, 1);
+  const incidents = game.incidents
+    .filter((incident) => incident.roomId === roomId)
+    .sort((left, right) => right.elapsed - left.elapsed || right.id - left.id)
+    .slice(0, 4);
   return (
     <section
       className="effects-panel recent-incidents"
@@ -31,22 +39,35 @@ export const RecentIncidents = () => {
         <div className="recent-incident-list">
           {incidents.map((incident) => {
             const killed = incident.targets.filter((target) => target.killed).length;
+            const totalDamage = DAMAGE_CHANNELS.reduce(
+              (total, channel) => total + incident.damageByChannel[channel],
+              0
+            );
+            const channelSummary = DAMAGE_CHANNELS.filter(
+              (channel) => incident.damageByChannel[channel] > 0
+            )
+              .map(
+                (channel) =>
+                  `${damage.channelStyle[channel].label} ${formatDamageAmount(
+                    incident.damageByChannel[channel]
+                  )}`
+              )
+              .join(" · ");
             return (
-              <article key={incident.id}>
+              <article key={incident.id} className={damageSourceDisplay[incident.sourceId]}>
                 <strong>
                   {translator.text("ui.room.incident.title", {
-                    id: incident.id,
-                    targets: incident.targets.length,
-                    killed,
+                    source: damage.sourceLabel[incident.sourceId],
+                    damage: formatDamageAmount(totalDamage),
                   })}
                 </strong>
                 <span>
-                  {translator.text("ui.room.incident.damage", {
-                    impulse: formatters.number(incident.pressureImpulse, 0),
-                    pressure: formatters.number(incident.damageByChannel.pressure, 0),
-                    heat: formatters.number(incident.damageByChannel.heat, 0),
+                  {translator.text("ui.room.incident.targets", {
+                    targets: incident.targets.length,
+                    killed,
                   })}
                 </span>
+                <span className="incident-channels">{channelSummary}</span>
                 <small>
                   {translator.text("ui.room.incident.recorded", {
                     phase: translator.text(

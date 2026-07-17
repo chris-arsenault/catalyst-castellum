@@ -19,75 +19,24 @@ import {
   emptyHazardChannels,
   type AppliedDamagePacket,
   type DamageApplication,
-  type DamagePacket,
   type HazardBurst,
 } from "./damage";
 import { addCombatIncident, addEvent } from "./events";
+import {
+  collectExposureIncidents,
+  environmentalDamagePackets,
+  recordExposureIncidents,
+  type ExposureIncidentBuilders,
+} from "./exposureIncidents";
 import { clamp } from "./math";
 import { findEnemyPath, findEnemyPathBetween } from "./navigation";
-import { liquidSurfaceElevation } from "./physics";
-import { roomHazards, roomMovementMultiplier } from "./roomState";
+import { roomMovementMultiplier } from "./roomState";
 import { enemyGasZone, enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 import type { WorldMap } from "../world/map";
 import { ENEMY_WORLD_SPEED_SCALE, LOCOMOTION_SPEED } from "./enemyMovementRules";
 import { roomState } from "../world/instances";
 
 export { enemyRoomId, enemyWorldPosition } from "./enemyPosition";
-
-const channelsWith = (channel: keyof HazardChannels, amount: number): HazardChannels => ({
-  ...emptyHazardChannels(),
-  [channel]: amount,
-});
-
-const environmentalDamagePackets = (
-  room: RoomState,
-  enemy: EnemyState,
-  dt: number,
-  map: WorldMap,
-  gameDefinition: GameDefinition
-): DamagePacket[] => {
-  const definition = gameDefinition.enemies[enemy.type];
-  const footElevation = enemyWorldPosition(enemy).elevation - 0.5;
-  const floorContact =
-    !definition.flying &&
-    enemy.mode !== "climbing" &&
-    enemy.mode !== "falling" &&
-    liquidSurfaceElevation(room, gameDefinition) > footElevation;
-  const hazards = roomHazards(
-    room,
-    floorContact,
-    definition.needsOxygen,
-    enemyGasZone(enemy, map),
-    gameDefinition
-  );
-  return [
-    {
-      key: "environment:atmospheric_exposure",
-      sourceId: "atmospheric_exposure",
-      channels: channelsWith("atmosphere", hazards.atmosphere * dt),
-    },
-    {
-      key: "environment:surface_corrosion",
-      sourceId: "surface_corrosion",
-      channels: channelsWith("corrosion", hazards.corrosion * dt),
-    },
-    {
-      key: "environment:thermal_exposure",
-      sourceId: "thermal_exposure",
-      channels: channelsWith("heat", hazards.heat * dt),
-    },
-    {
-      key: "environment:catastrophic_overpressure",
-      sourceId: "catastrophic_overpressure",
-      channels: channelsWith("pressure", hazards.pressure * dt),
-    },
-    {
-      key: "environment:radiation_field",
-      sourceId: "radiation_field",
-      channels: channelsWith("radiation", hazards.radiation * dt),
-    },
-  ];
-};
 
 const burstPacket = (
   burst: HazardBurst,
@@ -231,6 +180,7 @@ const resolveCombatForEnemy = (
   dt: number,
   bursts: HazardBurst[],
   builders: IncidentBuilder[],
+  exposureBuilders: ExposureIncidentBuilders,
   definition: GameDefinition
 ): boolean => {
   const position = enemyWorldPosition(enemy);
@@ -249,6 +199,9 @@ const resolveCombatForEnemy = (
   ];
   const application = applyDamagePackets(state, enemy, packets, definition);
   const lethalPacket = dominantAppliedDamagePacket(application.packets);
+  if (roomId) {
+    collectExposureIncidents(exposureBuilders, roomId, enemy, position, application, lethalPacket);
+  }
   for (const index of matchingBurstIndices) {
     const packet = appliedPacketFor(application, `burst:${index}`);
     if (!packet || packet.amount <= 0) continue;
@@ -284,9 +237,11 @@ export const resolveEnemyCombat = (
     targets: [],
     damageByChannel: emptyHazardChannels(),
   }));
+  const exposureBuilders: ExposureIncidentBuilders = new Map();
   state.enemies = state.enemies.filter((enemy) =>
-    resolveCombatForEnemy(state, enemy, dt, bursts, builders, definition)
+    resolveCombatForEnemy(state, enemy, dt, bursts, builders, exposureBuilders, definition)
   );
+  recordExposureIncidents(state, exposureBuilders);
   recordBurstIncidents(state, builders);
 };
 

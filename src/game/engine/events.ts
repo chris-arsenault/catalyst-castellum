@@ -1,6 +1,7 @@
 import {
   DAMAGE_SOURCE_IDS,
   type CombatIncident,
+  type CombatIncidentTarget,
   type EventTone,
   type GameEventCode,
   type GameEventParameterMap,
@@ -8,7 +9,7 @@ import {
   type RoundStats,
   type RoomId,
 } from "../types";
-import { emptyHazardChannels } from "./damage";
+import { addChannels, emptyHazardChannels } from "./damage";
 
 const emptySourceTotals = (): RoundStats["damageBySource"] =>
   Object.fromEntries(
@@ -63,4 +64,50 @@ export const addCombatIncident = (
   state.incidents.unshift(recorded);
   if (state.incidents.length > 64) state.incidents.length = 64;
   return recorded;
+};
+
+const CONTINUOUS_INCIDENT_WINDOW = 0.75;
+
+const mergeIncidentTarget = (
+  targets: CombatIncidentTarget[],
+  incoming: CombatIncidentTarget
+): void => {
+  const existing = targets.find((target) => target.enemyId === incoming.enemyId);
+  if (!existing) {
+    targets.push(incoming);
+    return;
+  }
+  existing.worldPosition = incoming.worldPosition;
+  existing.healthAfter = incoming.healthAfter;
+  existing.killed ||= incoming.killed;
+  addChannels(existing.damageByChannel, incoming.damageByChannel);
+};
+
+/** Coalesces sustained room exposure into readable damage activity instead of one row per tick. */
+export const upsertContinuousCombatIncident = (
+  state: GameState,
+  incident: Omit<CombatIncident, "id">
+): CombatIncident => {
+  const existingIndex = state.incidents.findIndex(
+    (candidate) =>
+      candidate.sourceId === incident.sourceId &&
+      candidate.roomId === incident.roomId &&
+      candidate.levelId === incident.levelId &&
+      candidate.round === incident.round &&
+      candidate.phase === incident.phase &&
+      incident.elapsed >= candidate.elapsed &&
+      incident.elapsed - candidate.elapsed <= CONTINUOUS_INCIDENT_WINDOW
+  );
+  if (existingIndex < 0) return addCombatIncident(state, incident);
+
+  const existing = state.incidents[existingIndex] as CombatIncident;
+  existing.elapsed = incident.elapsed;
+  addChannels(existing.damageByChannel, incident.damageByChannel);
+  for (const target of incident.targets) mergeIncidentTarget(existing.targets, target);
+
+  if (existingIndex > 0) {
+    state.incidents.splice(existingIndex, 1);
+    state.incidents.unshift(existing);
+  }
+  return existing;
 };

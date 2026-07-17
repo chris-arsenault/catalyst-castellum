@@ -230,6 +230,28 @@ describe("damage attribution", () => {
     expect(target.damageBySource.hydrogen_oxygen_combustion.pressure).toBe(0);
     expect(state.stats.damageBySource.catastrophic_overpressure).toBeCloseTo(target.damageTaken, 8);
   });
+
+  it("records and coalesces sustained room damage by source", () => {
+    const hostileRoom = room();
+    hostileRoom.gas.lower.chlorine = 35;
+    const target = enemy(200);
+    const state = stateFor(hostileRoom, [target]);
+
+    resolveEnemyCombat(state, 0.1, []);
+    const first = state.incidents.find((incident) => incident.sourceId === "atmospheric_exposure");
+    expect(first?.damageByChannel.atmosphere).toBeGreaterThan(0);
+    expect(first?.targets).toHaveLength(1);
+    const firstDamage = first?.damageByChannel.atmosphere ?? 0;
+
+    state.elapsed += 0.1;
+    resolveEnemyCombat(state, 0.1, []);
+
+    const atmosphericIncidents = state.incidents.filter(
+      (incident) => incident.sourceId === "atmospheric_exposure"
+    );
+    expect(atmosphericIncidents).toHaveLength(1);
+    expect(atmosphericIncidents[0]?.damageByChannel.atmosphere).toBeGreaterThan(firstDamage);
+  });
 });
 
 describe("cell locomotion integration", () => {
