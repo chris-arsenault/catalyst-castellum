@@ -37,7 +37,7 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
     {
       id: "co_products",
       primeSeconds: 25,
-      wave: enemySequence(5, "crawler", 10.5, 2),
+      wave: enemySequence(5, "crawler", 10.5, 2, 0.2),
       availability: reagentRoundOne,
     },
     {

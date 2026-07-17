@@ -100,6 +100,7 @@ export const graftParentJoint = (map: WorldMap, roomId: RoomId): ArchitecturalCo
     (connection) =>
       isArchitectural(connection) &&
       connection.id.startsWith("joint:") &&
+      !connection.id.startsWith("joint:bridge:") &&
       connection.rooms[1] === roomId
   ) as ArchitecturalConnection | undefined) ?? null;
 

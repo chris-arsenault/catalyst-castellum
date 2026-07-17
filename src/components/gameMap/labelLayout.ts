@@ -3,8 +3,6 @@ import { facilityModelForMap } from "../../game/world/derivedModel";
 import type { WorldMap } from "../../game/world/map";
 import { cellOutletAssemblyModel } from "./cellOutletRenderModel";
 import { mapViewFor, type MapRect, type MapView } from "./mapGeometry";
-import { roomCopy } from "../../presentation/entityCopy";
-import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 import { roomDefinition } from "../../presentation/defaultGame";
 
 const EDGE_PADDING = 8;
@@ -147,8 +145,7 @@ const labelPriority = (view: MapView, roomId: RoomId, selectedRoomId: RoomId): n
 export const layoutMapLabels = (
   map: WorldMap,
   selectedRoomId: RoomId,
-  game?: GameState,
-  translator: Translator = DEFAULT_TRANSLATOR
+  game?: GameState
 ): MapLabelPlacement[] => {
   const view = mapViewFor(map);
   const obstacles = [
@@ -165,37 +162,31 @@ export const layoutMapLabels = (
   );
   for (const roomId of ordered) {
     const definition = roomDefinition({ map }, roomId);
-    const textOptions = [
-      `${definition.code} · ${roomCopy(definition, translator).name}`,
-      definition.code,
-    ];
+    const text = definition.code;
     let accepted: MapLabelPlacement | null = null;
-    for (const text of textOptions) {
-      for (const fontSize of [17, 14, 12]) {
-        const size = estimateLabelSize(text, fontSize);
-        const candidate = candidatesFor(view, roomId, size.width, size.height).find((position) =>
-          placementIsFree(
-            view,
-            { left: position.left, top: position.top, ...size },
-            roomId,
-            position.allowOwnRoom,
-            obstacles,
-            placed
-          )
-        );
-        if (!candidate) continue;
-        accepted = {
-          left: candidate.left,
-          top: candidate.top,
-          ...size,
-          fontSize,
+    for (const fontSize of [13, 11]) {
+      const size = estimateLabelSize(text, fontSize);
+      const candidate = candidatesFor(view, roomId, size.width, size.height).find((position) =>
+        placementIsFree(
+          view,
+          { left: position.left, top: position.top, ...size },
           roomId,
-          selected: roomId === selectedRoomId,
-          text,
-        };
-        break;
-      }
-      if (accepted) break;
+          position.allowOwnRoom,
+          obstacles,
+          placed
+        )
+      );
+      if (!candidate) continue;
+      accepted = {
+        left: candidate.left,
+        top: candidate.top,
+        ...size,
+        fontSize,
+        roomId,
+        selected: roomId === selectedRoomId,
+        text,
+      };
+      break;
     }
     if (accepted) placed.push(accepted);
   }

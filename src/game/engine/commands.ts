@@ -31,7 +31,14 @@ import {
 } from "./transportCommands";
 import { roomState } from "../world/instances";
 import { definitionForMap } from "../world/activeDefinition";
-import { configureHullPortalCommand, editHullCellCommand, setPortalCommand } from "./hullCommands";
+import {
+  configureHullPortalCommand,
+  connectHullRoomsCommand,
+  editHullCellCommand,
+  editHullCellsCommand,
+  removeHullConnectionCommand,
+  setPortalCommand,
+} from "./hullCommands";
 
 const startPrime = (source: GameState, definition: GameDefinition): CommandResult => {
   const state = cloneGame(source);
@@ -211,6 +218,12 @@ export const executeCommand = (
       return dismantleModuleCommand(source, command, decision);
     case "edit_hull_cell":
       return editHullCellCommand(source, command);
+    case "edit_hull_cells":
+      return editHullCellsCommand(source, command);
+    case "connect_hull_rooms":
+      return connectHullRoomsCommand(source, command);
+    case "remove_hull_connection":
+      return removeHullConnectionCommand(source, command);
     case "configure_hull_portal":
       return configureHullPortalCommand(source, command);
     case "set_portal":

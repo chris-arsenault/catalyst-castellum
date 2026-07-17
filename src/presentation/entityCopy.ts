@@ -119,14 +119,21 @@ export const transportCopy = (
   connectionId: ConnectionId,
   translator: Translator = DEFAULT_TRANSLATOR
 ): DescribedEntityCopy => {
-  if (hasLocalized(translator, `entities.transport.${connectionId}.name`)) {
+  const connection = instance(carrier.map.connections, connectionId, "connection definition");
+  const usesAuthoredRoomCodes = connection.rooms.every((roomId) => {
+    const code = instance(carrier.map.rooms, roomId, "room definition").code;
+    return code === "CORE" || /^R-\d+$/.test(code);
+  });
+  if (
+    usesAuthoredRoomCodes &&
+    hasLocalized(translator, `entities.transport.${connectionId}.name`)
+  ) {
     return {
       name: localized(translator, `entities.transport.${connectionId}.name`),
       description: localized(translator, `entities.transport.${connectionId}.description`),
     };
   }
   // Player-built lines have no authored copy; name them from their room pair.
-  const connection = instance(carrier.map.connections, connectionId, "connection definition");
   const keyRoot = connection.kind === "liquid_line" ? "generic.liquid" : "generic.gas";
   const parameters = {
     from: instance(carrier.map.rooms, connection.rooms[0], "room definition").code,

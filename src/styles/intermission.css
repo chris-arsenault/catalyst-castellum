@@ -733,6 +733,24 @@
   animation: candidate-pulse 0.8s ease-in-out infinite alternate;
 }
 
+.hull-blueprint-room.connectable,
+.hull-blueprint-room.connection-selected {
+  cursor: crosshair;
+  outline: none;
+}
+
+.hull-blueprint-room.connectable rect {
+  stroke: #78f0c4;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 6px rgba(85, 229, 165, 0.65));
+}
+
+.hull-blueprint-room.connection-selected rect {
+  fill: rgba(67, 174, 212, 0.66);
+  stroke: #fff1a8;
+  stroke-width: 4;
+}
+
 .hull-blueprint-room text {
   fill: #d2efff;
   font: 700 11px/1 var(--mono);
@@ -851,6 +869,29 @@
   cursor: crosshair;
 }
 
+.hull-builder-canvas.tool-connection .hull-hardpoint {
+  pointer-events: none;
+}
+
+.hull-builder-canvas.tool-platform svg,
+.hull-builder-canvas.tool-ladder svg,
+.hull-builder-canvas.tool-erase svg {
+  touch-action: none;
+  user-select: none;
+}
+
+.hull-stroke-preview {
+  pointer-events: none;
+  fill: rgba(255, 239, 144, 0.5);
+  stroke: #fff3a6;
+  stroke-width: 2;
+}
+
+.hull-stroke-preview.erase {
+  fill: rgba(255, 91, 112, 0.45);
+  stroke: #ff9cab;
+}
+
 .hull-cell-target.editable:hover rect,
 .hull-cell-target.editable:focus rect {
   fill: rgba(106, 210, 255, 0.38);
@@ -935,6 +976,11 @@
   gap: 6px;
 }
 
+.graft-tool-palette > small {
+  color: #79aeca;
+  font: 650 9px/1.35 var(--mono);
+}
+
 .graft-tool-palette button,
 .graft-portal-palette button,
 .graft-room-palette button,
@@ -976,6 +1022,19 @@
 
 .graft-portal-palette article > div {
   grid-template-columns: 1fr;
+}
+
+.graft-portal-kind {
+  display: inline-flex;
+  min-height: 32px;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #83d9ff;
+  border-radius: 4px;
+  background: #175f8e;
+  color: #fff;
+  font: 700 9px/1 var(--mono);
 }
 
 .graft-room-palette button {

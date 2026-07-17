@@ -8,7 +8,7 @@ export const LEVEL_MESSAGES = {
   "levels.make_the_reagent.name": "Make the Reagent",
   "levels.make_the_reagent.kicker": "Lesson 02 · One reaction, one junction",
   "levels.make_the_reagent.briefing":
-    "A Core–R-05 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The cell brings separated product buffers into R-05’s gas and liquid junctions.",
+    "A Core–CL-02 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The cell brings separated product buffers into CL-02’s gas and liquid junctions.",
   "levels.make_the_reagent.lesson":
     "The membrane cell produces Cl₂, H₂, and NaOH together. Outlet pressure and shared-junction flow determine how long the cell can sustain production.",
   "levels.acid_line.name": "Acid Line",
@@ -56,14 +56,14 @@ export const LEVEL_MESSAGES = {
     "Run both OX-1 chambers at full cadence through the entire assault.",
   "levels.make_the_reagent.rounds.co_products.title": "Co-products",
   "levels.make_the_reagent.rounds.co_products.detail":
-    "A crawler column will cross R-03 as the R-05 gas stream arrives.",
+    "A crawler column crosses CL-02 and CL-03 as the chlorine stream arrives.",
   "levels.make_the_reagent.rounds.co_products.objective":
     "Install the Membrane Cell and observe all three conserved outputs.",
   "levels.make_the_reagent.rounds.shared_relief.title": "Shared relief",
   "levels.make_the_reagent.rounds.shared_relief.detail":
-    "The R-05 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
+    "The CL-02 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
   "levels.make_the_reagent.rounds.shared_relief.objective":
-    "Use the R-05 recovery fan when shared outlet pressure stalls the cell.",
+    "Use the CL-02 recovery fan when shared outlet pressure stalls the cell.",
   "levels.acid_line.rounds.hot_mix.title": "Hot mix",
   "levels.acid_line.rounds.hot_mix.detail":
     "Armored shells demand a concentrated corrosive or thermal exposure.",

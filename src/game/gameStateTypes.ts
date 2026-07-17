@@ -279,6 +279,14 @@ export type GameCommand =
       present: boolean;
     }
   | {
+      type: "edit_hull_cells";
+      roomId: RoomId;
+      cells: readonly GridCell[];
+      terrain: "platform" | "ladder" | "clear";
+    }
+  | { type: "connect_hull_rooms"; fromRoomId: RoomId; toRoomId: RoomId }
+  | { type: "remove_hull_connection"; connectionId: ConnectionId }
+  | {
       type: "configure_hull_portal";
       connectionId: ConnectionId;
       kind: "passage" | "door";

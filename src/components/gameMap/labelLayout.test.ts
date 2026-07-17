@@ -11,10 +11,10 @@ describe("map label layout", () => {
     expect(labels).toHaveLength(ROOM_ORDER.length);
   });
 
-  it("adapts text or size when a full label cannot fit", () => {
+  it("uses only the compact room code", () => {
     const labels = layoutMapLabels(WORLD_MAP, "west_intake");
     const narrow = labels.find(({ roomId }) => roomId === "west_intake");
     expect(narrow).toBeDefined();
-    expect((narrow?.fontSize ?? 99) <= 17).toBe(true);
+    expect(narrow?.text).toBe(WORLD_MAP.rooms.west_intake?.code);
   });
 });

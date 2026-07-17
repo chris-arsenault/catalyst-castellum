@@ -1,17 +1,5 @@
 /* eslint-disable max-lines-per-function -- The builder controller keeps one coherent edit session. */
-import {
-  ArrowLeft,
-  ArrowRight,
-  Blocks,
-  Check,
-  Coins,
-  DoorClosed,
-  DoorOpen,
-  Eraser,
-  Rows3,
-  Trash2,
-  Waypoints,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Blocks, Check, Coins, Eraser, Trash2 } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 
 import { useGameStore } from "../application/store";
@@ -21,9 +9,10 @@ import type { GridCell, RoomId } from "../game/types";
 import { DEFAULT_GAME_DEFINITION as PACK } from "../game/definition";
 import { plannedGraft } from "../game/world/graft";
 import { hullPlanningMap } from "../game/world/hullFragment";
-import { architecturalConnections } from "../game/world/map";
+import { plannedHullConnection } from "../game/world/mapEdits";
 import { planGraftPreview } from "../presentation/graftPlanning";
 import { HullBuilderCanvas, type HullBuildTool } from "./HullBuilderCanvas";
+import { GraftPortalPalette, GraftToolPalette } from "./GraftBuilderPalettes";
 
 interface PreviewCardProps {
   preview: GraftPreview;
@@ -111,114 +100,6 @@ const GraftPreviewCard = ({ preview, selectedModuleId, onSelect, onClose }: Prev
   );
 };
 
-const ToolPalette = ({
-  tool,
-  onTool,
-}: {
-  tool: HullBuildTool;
-  onTool: (tool: HullBuildTool) => void;
-}) => {
-  const { translator } = useGamePresentation();
-  const tools = [
-    { id: "select" as const, icon: Blocks, label: "ui.graft.tool.rooms" as const },
-    { id: "platform" as const, icon: Rows3, label: "ui.graft.tool.platform" as const },
-    { id: "ladder" as const, icon: Waypoints, label: "ui.graft.tool.ladder" as const },
-    { id: "erase" as const, icon: Eraser, label: "ui.graft.tool.erase" as const },
-  ];
-  return (
-    <section className="graft-tool-palette">
-      <strong>{translator.text("ui.graft.tool.title")}</strong>
-      <div>
-        {tools.map(({ id, icon: Icon, label }) => (
-          <button
-            key={id}
-            type="button"
-            className={tool === id ? "active" : ""}
-            aria-pressed={tool === id}
-            data-testid={`graft-tool-${id}`}
-            onClick={() => onTool(id)}
-          >
-            <Icon size={15} /> {translator.text(label)}
-          </button>
-        ))}
-      </div>
-    </section>
-  );
-};
-
-const PortalPalette = () => {
-  const { translator } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
-  const dispatch = useGameStore((state) => state.dispatch);
-  const map = useMemo(() => hullPlanningMap(game.map), [game.map]);
-  const portals = architecturalConnections(map).filter(
-    (portal) =>
-      portal.id.startsWith("joint:") &&
-      portal.kind !== "core_door" &&
-      portal.orientation === "horizontal"
-  );
-  if (portals.length === 0) return null;
-  return (
-    <section className="graft-portal-palette">
-      <strong>{translator.text("ui.graft.portal.title")}</strong>
-      {portals.map((portal) => {
-        const state = game.portalStates[portal.id];
-        return (
-          <article key={portal.id}>
-            <span>
-              {map.rooms[portal.rooms[0]]?.code} → {map.rooms[portal.rooms[1]]?.code}
-            </span>
-            <div>
-              <button
-                type="button"
-                className={portal.kind === "passage" ? "active" : ""}
-                onClick={() =>
-                  dispatch({
-                    type: "configure_hull_portal",
-                    connectionId: portal.id,
-                    kind: "passage",
-                    open: true,
-                  })
-                }
-              >
-                <Waypoints size={13} /> {translator.text("ui.graft.portal.passage")}
-              </button>
-              <button
-                type="button"
-                className={portal.kind === "door" && state?.open ? "active" : ""}
-                onClick={() =>
-                  dispatch({
-                    type: "configure_hull_portal",
-                    connectionId: portal.id,
-                    kind: "door",
-                    open: true,
-                  })
-                }
-              >
-                <DoorOpen size={13} /> {translator.text("ui.graft.portal.openDoor")}
-              </button>
-              <button
-                type="button"
-                className={portal.kind === "door" && !state?.open ? "active" : ""}
-                onClick={() =>
-                  dispatch({
-                    type: "configure_hull_portal",
-                    connectionId: portal.id,
-                    kind: "door",
-                    open: false,
-                  })
-                }
-              >
-                <DoorClosed size={13} /> {translator.text("ui.graft.portal.closedDoor")}
-              </button>
-            </div>
-          </article>
-        );
-      })}
-    </section>
-  );
-};
-
 const RoomPalette = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
@@ -280,6 +161,7 @@ export const GraftBoard = () => {
   const setGraftMode = useGameStore((state) => state.setGraftMode);
   const setGraftPreview = useGameStore((state) => state.setGraftPreview);
   const [tool, setTool] = useState<HullBuildTool>("select");
+  const [connectionStartRoomId, setConnectionStartRoomId] = useState<RoomId | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
   const planningMap = useMemo(() => hullPlanningMap(game.map), [game.map]);
   const previewPlan = useMemo(
@@ -296,6 +178,17 @@ export const GraftBoard = () => {
     [game.map, graftPreview, selectedModuleId]
   );
   const displayMap = tool === "select" && previewPlan ? previewPlan.map : planningMap;
+  const connectionTargetRoomIds = useMemo(
+    () =>
+      connectionStartRoomId
+        ? Object.keys(planningMap.rooms).filter(
+            (roomId) =>
+              roomId !== connectionStartRoomId &&
+              plannedHullConnection(planningMap, connectionStartRoomId, roomId) !== null
+          )
+        : Object.keys(planningMap.rooms),
+    [connectionStartRoomId, planningMap]
+  );
   const closePreview = useCallback(() => {
     setGraftPreview(null);
     setSelectedModuleId(null);
@@ -312,6 +205,7 @@ export const GraftBoard = () => {
   const chooseTool = useCallback(
     (nextTool: HullBuildTool) => {
       closePreview();
+      setConnectionStartRoomId(null);
       setTool(nextTool);
     },
     [closePreview]
@@ -325,44 +219,35 @@ export const GraftBoard = () => {
     },
     [game, setGraftPreview]
   );
-  const editCell = useCallback(
-    (roomId: RoomId, target: GridCell) => {
-      const room = planningMap.rooms[roomId];
-      if (!room || tool === "select") return;
-      if (tool === "erase") {
-        if (
-          room.platformCells.some(
-            (candidate) =>
-              candidate.column === target.column && candidate.elevation === target.elevation
-          )
-        ) {
-          dispatch({
-            type: "edit_hull_cell",
-            roomId,
-            cell: target,
-            terrain: "platform",
-            present: false,
-          });
-          return;
-        }
-        if (
-          room.ladderCells.some(
-            (candidate) =>
-              candidate.column === target.column && candidate.elevation === target.elevation
-          )
-        )
-          dispatch({
-            type: "edit_hull_cell",
-            roomId,
-            cell: target,
-            terrain: "ladder",
-            present: false,
-          });
+  const editCells = useCallback(
+    (roomId: RoomId, cells: readonly GridCell[]) => {
+      if (tool === "select" || tool === "connection") return;
+      dispatch({
+        type: "edit_hull_cells",
+        roomId,
+        cells,
+        terrain: tool === "erase" ? "clear" : tool,
+      });
+    },
+    [dispatch, tool]
+  );
+  const chooseConnectionRoom = useCallback(
+    (roomId: RoomId) => {
+      if (tool !== "connection") return;
+      if (!connectionStartRoomId || connectionStartRoomId === roomId) {
+        setConnectionStartRoomId(connectionStartRoomId === roomId ? null : roomId);
         return;
       }
-      dispatch({ type: "edit_hull_cell", roomId, cell: target, terrain: tool, present: true });
+      if (
+        dispatch({
+          type: "connect_hull_rooms",
+          fromRoomId: connectionStartRoomId,
+          toRoomId: roomId,
+        })
+      )
+        setConnectionStartRoomId(null);
     },
-    [dispatch, planningMap.rooms, tool]
+    [connectionStartRoomId, dispatch, tool]
   );
 
   return (
@@ -376,7 +261,10 @@ export const GraftBoard = () => {
               map={displayMap}
               candidateRoomId={previewPlan?.room.id ?? null}
               tool={tool}
-              onCell={editCell}
+              connectionStartRoomId={connectionStartRoomId}
+              connectionTargetRoomIds={connectionTargetRoomIds}
+              onStroke={editCells}
+              onRoom={chooseConnectionRoom}
               onHardpoint={chooseHardpoint}
             />
             {graftPreview && (
@@ -389,8 +277,8 @@ export const GraftBoard = () => {
             )}
           </section>
           <aside className="graft-builder-sidebar">
-            <ToolPalette tool={tool} onTool={chooseTool} />
-            <PortalPalette />
+            <GraftToolPalette tool={tool} onTool={chooseTool} />
+            <GraftPortalPalette />
             <RoomPalette />
           </aside>
         </div>

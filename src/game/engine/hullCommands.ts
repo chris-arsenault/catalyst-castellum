@@ -1,7 +1,13 @@
 import type { GameDefinition } from "../definitionTypes";
 import type { CommandResult, FacilityPortalState, GameCommand, GameState } from "../types";
 import { isArchitectural } from "../world/map";
-import { withHullCellEdit, withHullPortalConfiguration } from "../world/mapEdits";
+import {
+  plannedHullConnection,
+  withHullCellEdit,
+  withHullCellEdits,
+  withHullPortalConfiguration,
+  withoutHullConnection,
+} from "../world/mapEdits";
 import { acceptCommand } from "./commandResult";
 import { replaceStateMap } from "./mapEditState";
 import { findEnemyPathBetween } from "./navigation";
@@ -37,6 +43,44 @@ export const editHullCellCommand = (
     state,
     withHullCellEdit(state.map, command.roomId, command.cell, command.terrain, command.present)
   );
+  return acceptCommand(state);
+};
+
+export const editHullCellsCommand = (
+  source: GameState,
+  command: Extract<GameCommand, { type: "edit_hull_cells" }>
+): CommandResult => {
+  const state = cloneGame(source);
+  replaceStateMap(
+    state,
+    withHullCellEdits(state.map, command.roomId, command.cells, command.terrain)
+  );
+  return acceptCommand(state);
+};
+
+export const connectHullRoomsCommand = (
+  source: GameState,
+  command: Extract<GameCommand, { type: "connect_hull_rooms" }>
+): CommandResult => {
+  const state = cloneGame(source);
+  const plan = plannedHullConnection(state.map, command.fromRoomId, command.toRoomId);
+  if (!plan) throw new Error("Hull connection plan vanished before execution.");
+  replaceStateMap(state, plan.map);
+  state.portalStates[plan.connection.id] = {
+    open: true,
+    sealed: false,
+    lastGasFlow: 0,
+    lastLiquidFlow: 0,
+  };
+  return acceptCommand(state);
+};
+
+export const removeHullConnectionCommand = (
+  source: GameState,
+  command: Extract<GameCommand, { type: "remove_hull_connection" }>
+): CommandResult => {
+  const state = cloneGame(source);
+  replaceStateMap(state, withoutHullConnection(state.map, command.connectionId));
   return acceptCommand(state);
 };
 

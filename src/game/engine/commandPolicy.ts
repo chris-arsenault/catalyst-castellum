@@ -25,6 +25,9 @@ import { plannedLineConnection } from "../world/mapEdits";
 import { graftParentJoint, plannedGraft } from "../world/graft";
 import {
   evaluateHullCellEdit,
+  evaluateHullCellEdits,
+  evaluateConnectHullRooms,
+  evaluateRemoveHullConnection,
   evaluateHullPortalConfiguration,
   evaluateSetPortal,
   portalStatesForMap,
@@ -381,6 +384,12 @@ export const evaluateCommand = (
       return evaluateDismantleModule(state, command, definition);
     case "edit_hull_cell":
       return evaluateHullCellEdit(state, command, definition);
+    case "edit_hull_cells":
+      return evaluateHullCellEdits(state, command, definition);
+    case "connect_hull_rooms":
+      return evaluateConnectHullRooms(state, command, definition);
+    case "remove_hull_connection":
+      return evaluateRemoveHullConnection(state, command, definition);
     case "configure_hull_portal":
       return evaluateHullPortalConfiguration(state, command, definition);
     case "set_portal":

@@ -8,7 +8,13 @@ import type {
   GameState,
 } from "../types";
 import { architecturalConnections, isArchitectural, type WorldMap } from "../world/map";
-import { withHullCellEdit, withHullPortalConfiguration } from "../world/mapEdits";
+import {
+  plannedHullConnection,
+  withHullCellEdit,
+  withHullCellEdits,
+  withHullPortalConfiguration,
+  withoutHullConnection,
+} from "../world/mapEdits";
 import { findEnemyPath, findEnemyPathBetween } from "./navigation";
 
 const decision = (allowed: boolean, code: CommandRejectionCode | null): CommandDecision => ({
@@ -84,6 +90,51 @@ export const evaluateHullCellEdit = (
       command.terrain,
       command.present
     );
+    return topologyHasRoutes(state, map, portalStatesForMap(state, map), definition)
+      ? allow()
+      : reject("route_unavailable");
+  } catch {
+    return reject("placement");
+  }
+};
+
+export const evaluateHullCellEdits = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "edit_hull_cells" }>,
+  definition: GameDefinition
+): CommandDecision => {
+  if (state.phase !== "level_complete") return reject("invalid_phase");
+  try {
+    const map = withHullCellEdits(state.map, command.roomId, command.cells, command.terrain);
+    return topologyHasRoutes(state, map, portalStatesForMap(state, map), definition)
+      ? allow()
+      : reject("route_unavailable");
+  } catch {
+    return reject("placement");
+  }
+};
+
+export const evaluateConnectHullRooms = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "connect_hull_rooms" }>,
+  definition: GameDefinition
+): CommandDecision => {
+  if (state.phase !== "level_complete") return reject("invalid_phase");
+  const plan = plannedHullConnection(state.map, command.fromRoomId, command.toRoomId);
+  if (!plan) return reject("placement");
+  return topologyHasRoutes(state, plan.map, portalStatesForMap(state, plan.map), definition)
+    ? allow()
+    : reject("route_unavailable");
+};
+
+export const evaluateRemoveHullConnection = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "remove_hull_connection" }>,
+  definition: GameDefinition
+): CommandDecision => {
+  if (state.phase !== "level_complete") return reject("invalid_phase");
+  try {
+    const map = withoutHullConnection(state.map, command.connectionId);
     return topologyHasRoutes(state, map, portalStatesForMap(state, map), definition)
       ? allow()
       : reject("route_unavailable");

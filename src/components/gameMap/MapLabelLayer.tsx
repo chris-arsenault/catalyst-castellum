@@ -4,7 +4,6 @@ import { facilityModelForMap } from "../../game/world/derivedModel";
 import type { WorldMap } from "../../game/world/map";
 import type { GameState, RoomId } from "../../game/types";
 import { layoutMapLabels, type MapLabelPlacement } from "./labelLayout";
-import { useGamePresentation } from "../../application/presentationContext";
 import { roomDefinition } from "../../presentation/defaultGame";
 
 const labelAccent = (map: WorldMap, roomId: RoomId): number => {
@@ -61,10 +60,9 @@ export const MapLabelLayer = ({
   game: GameState;
   selectedRoomId: RoomId;
 }) => {
-  const { translator } = useGamePresentation();
   const labels = useMemo(
-    () => layoutMapLabels(game.map, selectedRoomId, game, translator),
-    [game, selectedRoomId, translator]
+    () => layoutMapLabels(game.map, selectedRoomId, game),
+    [game, selectedRoomId]
   );
   const draw = useCallback(
     (graphics: Graphics) => drawLabels(graphics, game.map, labels),
