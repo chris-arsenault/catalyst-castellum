@@ -26,7 +26,10 @@ describe("simple conduit controls", () => {
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
-    const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
+    const state = executeCommand(createScenarioGame("make_the_reagent"), {
+      type: "begin_level",
+    }).state;
+    state.availability.gasLines.push("gas:furnace__gallery");
     gasConduitState(state, "gas:furnace__gallery").installed = false;
     const built = executeCommand(state, {
       type: "build_connection",
@@ -44,7 +47,10 @@ describe("simple conduit controls", () => {
   });
 
   it("rejects dismantling conserved retained material", () => {
-    const state = executeCommand(createScenarioGame("acid_line"), { type: "begin_level" }).state;
+    const state = executeCommand(createScenarioGame("make_the_reagent"), {
+      type: "begin_level",
+    }).state;
+    state.availability.gasLines.push("gas:furnace__lower_intake");
     gasConduitState(state, "gas:furnace__lower_intake").gas.hydrogen = 1;
     const result = executeCommand(state, {
       type: "dismantle_connection",

@@ -19,6 +19,7 @@ import {
   emptyHazardChannels,
   type AppliedDamagePacket,
   type DamageApplication,
+  type DamagePacket,
   type HazardBurst,
 } from "./damage";
 import { addCombatIncident, addEvent } from "./events";

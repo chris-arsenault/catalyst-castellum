@@ -21,7 +21,10 @@ export const roundDefinitionFor = (state: GameState, definition: GameDefinition)
 export const nextLevelIdFor = (
   levelId: GameState["campaign"]["levelId"],
   definition: GameDefinition
-) => definition.levelOrder[definition.levelOrder.indexOf(levelId) + 1] ?? null;
+) => {
+  const index = definition.levelOrder.indexOf(levelId);
+  return definition.levelOrder[index + 1] ?? null;
+};
 
 export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailability => ({
   equipment: [...source.equipment],

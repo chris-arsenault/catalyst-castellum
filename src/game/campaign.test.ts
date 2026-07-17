@@ -58,6 +58,12 @@ describe("Flash Point scenario truth", () => {
 });
 
 describe("campaign checkpoints", () => {
+  it("authors at least five waves for every campaign site", () => {
+    for (const level of Object.values(LEVEL_DEFINITIONS)) {
+      expect(level.rounds.length, level.id).toBeGreaterThanOrEqual(5);
+    }
+  });
+
   it("skips the guided opening directly into Level 2", () => {
     const skipped = command(createInitialGame(), { type: "skip_tutorial" });
     expect(skipped.phase).toBe("build");

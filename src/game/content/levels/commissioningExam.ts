@@ -6,7 +6,7 @@ import { emptyLoadout } from "./helpers";
 
 export const COMMISSIONING_EXAM_LEVEL: LevelDefinition = {
   id: "commissioning_exam",
-  number: 5,
+  number: 4,
   focusRoomId: "lower_intake",
   featuredReactionIds: [
     "chlor_alkali_electrolysis",

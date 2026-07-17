@@ -190,7 +190,7 @@ export const UI_MESSAGES = {
   "ui.outcome.victory.title": "Castellum holds",
   "ui.outcome.defeat.title": "Catalyst core lost",
   "ui.outcome.victory.detail":
-    "All five checkpoints and the commissioning exam are complete. The final core retained {integrity}% integrity.",
+    "All four sites are secure. The final core retained {integrity}% integrity.",
   "ui.outcome.defeat.detail":
     "The core fell during {level}, round {round}. The trace preserves the immediate cause and supports the next attempt.",
   "ui.outcome.levels": "Levels cleared",

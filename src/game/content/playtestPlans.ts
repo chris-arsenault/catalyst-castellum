@@ -39,11 +39,6 @@ export const LEVEL_PLAYTEST_PLANS: Record<LevelId, LevelPlaytestPlan> = {
       },
       { type: "set_conduit", connectionId: "liquid:core__lower_intake", enabled: true },
       { type: "set_conduit", connectionId: "gas:lower_intake__reservoir", enabled: true },
-    ],
-  },
-  acid_line: {
-    levelId: "acid_line",
-    commands: [
       {
         type: "install_equipment",
         roomId: "furnace",

@@ -22,7 +22,7 @@ const dockedAtSite2 = (prepareSite1: (state: GameState) => void): GameState => {
 };
 
 describe("only the owned hull travels between sites", () => {
-  it("leaves a machine built in a site room (the furnace) behind at the dock", () => {
+  it("leaves a machine in site 1 and initializes site 2's reactor as a fresh room", () => {
     const site2 = dockedAtSite2((state) => {
       state.rooms.furnace!.equipment.socket_a = {
         equipmentId: "gas_agitator",
@@ -31,9 +31,9 @@ describe("only the owned hull travels between sites", () => {
       };
     });
     expect(site2.campaign.levelId).toBe("make_the_reagent");
-    // CL-1 supplies its own exterior and leaves OX-1's furnace behind in full.
-    expect(site2.map.rooms.furnace).toBeUndefined();
-    expect(site2.rooms.furnace).toBeUndefined();
+    expect(site2.map.rooms.furnace?.code).toBe("CL-04");
+    expect(site2.map.rooms.furnace?.provenance).toBe("site");
+    expect(roomState(site2, "furnace").equipment.socket_a).toBeNull();
   });
 
   it("carries a machine placed in an owned hull room (washlock) to the next site", () => {

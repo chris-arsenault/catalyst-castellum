@@ -194,6 +194,8 @@ const validateLevelDefinition = (
   }
   if (level.rounds.length === 0)
     push(issues, `${path}.rounds`, "A level must contain at least one round.");
+  if (level.rounds.length < 5)
+    push(issues, `${path}.rounds`, "A site must contain at least five rounds.");
   const roundIds = level.rounds.map(({ id }) => id);
   if (new Set(roundIds).size !== roundIds.length)
     push(issues, `${path}.rounds`, "Round IDs must be unique within a level.");

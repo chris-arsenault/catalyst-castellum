@@ -3,6 +3,7 @@ import { useCallback } from "react";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
+import { CAMPAIGN_LEVELS } from "../presentation/defaultGame";
 
 interface ProgressFrameProps {
   actionLabel: string;
@@ -113,6 +114,9 @@ export const CampaignProgressModal = () => {
   return null;
 };
 
+const completedCampaignSites = (completedLevelIds: readonly string[]): number =>
+  CAMPAIGN_LEVELS.filter(({ id }) => completedLevelIds.includes(id)).length;
+
 export const OutcomeModal = () => {
   const { formatters, levelCopy: localizedLevelCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
@@ -152,7 +156,9 @@ export const OutcomeModal = () => {
         <div className="outcome-stats">
           <div>
             <span>{translator.text("ui.outcome.levels")}</span>
-            <strong>{game.campaign.completedLevelIds.length} / 5</strong>
+            <strong>
+              {completedCampaignSites(game.campaign.completedLevelIds)} / {CAMPAIGN_LEVELS.length}
+            </strong>
           </div>
           <div>
             <span>{translator.text("ui.outcome.core")}</span>

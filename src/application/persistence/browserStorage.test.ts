@@ -24,7 +24,7 @@ afterEach(() => {
 
 describe("browser save-slot persistence", () => {
   it("round-trips and clears three isolated game-and-tutorial records", () => {
-    const first = DEFAULT_GAME_RUNTIME.createScenario("acid_line");
+    const first = DEFAULT_GAME_RUNTIME.createScenario("commissioning_exam");
     const second = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
     saveGameSlot("slot-1", first, ["guide-a"]);
     saveGameSlot("slot-2", second, []);
@@ -33,7 +33,7 @@ describe("browser save-slot persistence", () => {
       id: "slot-1",
       dismissedGuideIds: ["guide-a"],
     });
-    expect(loadSaveSlot("slot-1")?.game.campaign.levelId).toBe("acid_line");
+    expect(loadSaveSlot("slot-1")?.game.campaign.levelId).toBe("commissioning_exam");
     expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("flash_point");
 
     clearSaveSlot("slot-1");
@@ -76,7 +76,7 @@ describe("browser save-slot persistence", () => {
 
   it("cancels stale pending state before a slot reset", () => {
     vi.useFakeTimers();
-    scheduleGameSave("slot-1", DEFAULT_GAME_RUNTIME.createScenario("acid_line"), ["old"]);
+    scheduleGameSave("slot-1", DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent"), ["old"]);
     cancelScheduledGameSave("slot-1");
     clearSaveSlot("slot-1");
     vi.advanceTimersByTime(1000);

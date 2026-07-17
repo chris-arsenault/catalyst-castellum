@@ -97,10 +97,12 @@ export type GuideRegistry = Partial<Record<GameState["campaign"]["levelId"], Gui
 export const GUIDE_REGISTRATIONS: GuideRegistry = {
   flash_point: { guideFor: flashPointGuideFor, phaseActionReason: flashPointPhaseActionReason },
   make_the_reagent: {
-    guideFor: makeReagentGuideFor,
-    phaseActionReason: makeReagentPhaseActionReason,
+    guideFor: (game) => makeReagentGuideFor(game) ?? acidLineGuideFor(game),
+    phaseActionReason: (game, action) =>
+      game.campaign.roundIndex < 2
+        ? makeReagentPhaseActionReason(game, action)
+        : acidLinePhaseActionReason(game, action),
   },
-  acid_line: { guideFor: acidLineGuideFor, phaseActionReason: acidLinePhaseActionReason },
 };
 
 export const guideStepIndexFor = (

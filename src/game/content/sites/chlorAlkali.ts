@@ -59,17 +59,16 @@ const utilityNodes = Object.fromEntries(
 );
 
 /**
- * CL-1's chunk vocabulary: a compact brine receiving hall, membrane-cell bay, and
- * co-product reservoir. The fixed tutorial seed selects one generated candidate;
- * tooling can draw further candidates from the same vocabulary.
+ * The chlor-alkali site's chunk vocabulary carries one continuous process train from
+ * membrane electrolysis through heated HCl production and the final hull return.
  */
 export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
   id: "chlor_alkali_exterior",
-  width: 112,
+  width: 148,
   height: 40,
   cellSize: WORLD_MAP.cellSize,
   ringRadii: { inner: 24, middle: 46 },
-  hullAnchor: { columns: 30, elevations: 0 },
+  hullAnchor: { columns: 60, elevations: 0 },
   coreAnchor: { ...WORLD_MAP.coreAnchor },
   coreBreachCell: { ...WORLD_MAP.coreBreachCell },
   chunks: [
@@ -79,16 +78,30 @@ export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
       taps: { gas: gasTap({ capacity: 22 }), liquid: liquidTap({ capacity: 24 }) },
     }),
     chunk("reservoir", "CL-03", "room", 18, 12),
+    chunk("furnace", "CL-04", "room", 15, 12),
+    chunk("gallery", "CL-05", "room", 12, 9),
   ],
   chunkOrders: [
-    ["west_intake", "switchyard", "lower_intake", "reservoir"],
-    ["west_intake", "switchyard", "reservoir", "lower_intake"],
+    ["west_intake", "switchyard", "reservoir", "lower_intake", "furnace", "gallery"],
+    ["west_intake", "switchyard", "lower_intake", "reservoir", "furnace", "gallery"],
   ],
   patterns: [
-    { id: "process_train", directions: ["right", "right", "right", "right"] },
-    { id: "raised_reservoir", directions: ["right", "up", "right", "down"] },
-    { id: "split_level", directions: ["right", "right", "up", "down"] },
-    { id: "suspended_cell", directions: ["right", "up", "down", "right"] },
+    {
+      id: "process_train",
+      directions: ["right", "right", "right", "right", "right", "right"],
+    },
+    {
+      id: "raised_reactor",
+      directions: ["right", "right", "right", "right", "up", "down"],
+    },
+    {
+      id: "raised_reservoir",
+      directions: ["right", "right", "right", "up", "right", "down"],
+    },
+    {
+      id: "suspended_cell",
+      directions: ["right", "right", "up", "right", "right", "down"],
+    },
   ],
   processLines: [
     {
@@ -124,9 +137,42 @@ export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
       volumePerCell: 0.26,
       buildCost: 10,
     },
+    {
+      kind: "gas_line",
+      rooms: ["furnace", "lower_intake"],
+      direction: ["lower_intake", "furnace"],
+      destinationKind: "room",
+      actuator: "fan",
+      actuatorHead: 1.55,
+      maxFlow: 1.15,
+      volumePerCell: 0.22,
+      buildCost: 8,
+    },
+    {
+      kind: "gas_line",
+      rooms: ["furnace", "gallery"],
+      direction: ["furnace", "gallery"],
+      destinationKind: "room",
+      actuator: "fan",
+      actuatorHead: 1.5,
+      maxFlow: 1.2,
+      volumePerCell: 0.22,
+      buildCost: 8,
+    },
+    {
+      kind: "gas_line",
+      rooms: ["gallery", "washlock"],
+      direction: ["gallery", "washlock"],
+      destinationKind: "room",
+      actuator: "fan",
+      actuatorHead: 1.45,
+      maxFlow: 1.15,
+      volumePerCell: 0.22,
+      buildCost: 8,
+    },
   ],
   utilityNodes,
 };
 
 /** Selected from the generated candidate sheet; stable so tutorial guidance is reproducible. */
-export const CHLOR_ALKALI_TUTORIAL_SEED = 20_260_720;
+export const CHLOR_ALKALI_TUTORIAL_SEED = 20_260_737;

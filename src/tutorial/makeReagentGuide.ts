@@ -29,8 +29,11 @@ const recoveryFlowEstablished = (game: GameState): boolean => gasAmountTotal(gam
 const firstRoundResolved = (game: GameState): boolean =>
   game.phase === "round_result" || game.campaign.roundIndex > 0;
 
-const levelResolved = (game: GameState): boolean =>
-  game.phase === "level_complete" || game.phase === "victory";
+const sharedReliefResolved = (game: GameState): boolean =>
+  game.phase === "round_result" ||
+  game.campaign.roundIndex > 1 ||
+  game.phase === "level_complete" ||
+  game.phase === "victory";
 
 const coProductsGuide: GuideDefinition = {
   completion: {
@@ -203,7 +206,7 @@ const sharedReliefGuide: GuideDefinition = {
       {
         id: "hold-relief-wave",
         label: "tutorial.reagent.sharedRelief.task.holdWave",
-        completed: levelResolved,
+        completed: sharedReliefResolved,
       },
     ],
   },
@@ -250,7 +253,7 @@ const sharedReliefGuide: GuideDefinition = {
       explanation: "tutorial.reagent.sharedRelief.step.startAssault.explanation",
       instruction: "tutorial.reagent.sharedRelief.step.startAssault.instruction",
       result: "tutorial.reagent.sharedRelief.step.startAssault.result",
-      completed: (game) => game.phase === "assault" || levelResolved(game),
+      completed: (game) => game.phase === "assault" || sharedReliefResolved(game),
     },
     {
       id: "observe-relief-wave",
@@ -261,7 +264,7 @@ const sharedReliefGuide: GuideDefinition = {
       explanation: "tutorial.reagent.sharedRelief.step.observeWave.explanation",
       instruction: "tutorial.reagent.sharedRelief.step.observeWave.instruction",
       result: "tutorial.reagent.sharedRelief.step.observeWave.result",
-      completed: levelResolved,
+      completed: sharedReliefResolved,
     },
   ],
 };

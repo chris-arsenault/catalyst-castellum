@@ -80,4 +80,16 @@ describe("Make the Reagent guidance", () => {
       "hold-relief-wave",
     ]);
   });
+
+  it("continues into the acid-line lesson on the same generated site", () => {
+    const game = command(createScenarioGame("make_the_reagent"), { type: "begin_level" });
+    game.campaign.roundIndex = 2;
+    const guide = guideDefinitionFor(game);
+    if (!guide) throw new Error("Hot Mix guide missing");
+
+    expect(guide.id).toContain("hot_mix");
+    expect(game.map.rooms.furnace?.code).toBe("CL-04");
+    expect(game.map.rooms.gallery?.code).toBe("CL-05");
+    expect(guidedPhaseActionReason(game, "start_prime", [])).toBe("tutorial.acid.reason.coil");
+  });
 });

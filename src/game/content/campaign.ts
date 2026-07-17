@@ -1,6 +1,5 @@
 import type { LevelDefinition, RoundDefinition } from "../definitionTypes";
 import { LEVEL_IDS, type LevelId } from "../types";
-import { ACID_LINE_LEVEL } from "./levels/acidLine";
 import { COMMISSIONING_EXAM_LEVEL } from "./levels/commissioningExam";
 import { FLASH_POINT_LEVEL } from "./levels/flashPoint";
 import { MAKE_THE_REAGENT_LEVEL } from "./levels/makeTheReagent";
@@ -19,7 +18,6 @@ export type {
 export const LEVEL_DEFINITIONS: Record<LevelId, LevelDefinition> = {
   flash_point: FLASH_POINT_LEVEL,
   make_the_reagent: MAKE_THE_REAGENT_LEVEL,
-  acid_line: ACID_LINE_LEVEL,
   stored_chlorine: STORED_CHLORINE_LEVEL,
   commissioning_exam: COMMISSIONING_EXAM_LEVEL,
 };

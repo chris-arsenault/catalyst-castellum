@@ -6,29 +6,23 @@ export const LEVEL_MESSAGES = {
   "levels.flash_point.lesson":
     "Install agitation in R-02, start its gas fan, and use transport delay to charge a repeating combustion attack.",
   "levels.make_the_reagent.name": "Make the Reagent",
-  "levels.make_the_reagent.kicker": "Lesson 02 · One reaction, one junction",
+  "levels.make_the_reagent.kicker": "Lesson 02 · Build the chlor-alkali process train",
   "levels.make_the_reagent.briefing":
-    "A Core–CL-02 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The cell brings separated product buffers into CL-02’s gas and liquid junctions.",
+    "A Core–CL-02 feed pipe carries mixed water and brine to a socket-mounted Membrane Cell. The same hostile route continues through CL-04’s heated reactor and CL-05’s acid return.",
   "levels.make_the_reagent.lesson":
-    "The membrane cell produces Cl₂, H₂, and NaOH together. Outlet pressure and shared-junction flow determine how long the cell can sustain production.",
-  "levels.acid_line.name": "Acid Line",
-  "levels.acid_line.kicker": "Lesson 03 · Turn a mixed output into a second reaction",
-  "levels.acid_line.briefing":
-    "R-05 stores Cl₂ and H₂ in separated buffers, then combines them at its gas junction for routing. R-02 and the R-04 return await commissioning.",
-  "levels.acid_line.lesson":
-    "Heat and agitation turn the transported H₂/Cl₂ mixture into HCl. Route length and shared inventory determine when it reaches the wave.",
+    "Produce Cl₂, H₂, and NaOH together, then heat and mix the gas co-products into an HCl front across five assaults.",
   "levels.stored_chlorine.name": "Stored Chlorine",
-  "levels.stored_chlorine.kicker": "Lesson 04 · Build a delayed second-order weapon",
+  "levels.stored_chlorine.kicker": "Lesson 03 · Build a delayed second-order weapon",
   "levels.stored_chlorine.briefing":
     "The acid line is commissioned. R-03 can bind chlorine as NaOCl, then transfer its stored liquid to R-06.",
   "levels.stored_chlorine.lesson":
     "A wet contactor forms NaOCl in R-03. Pumping that stored liquid into acidic R-06 releases Cl₂ and leaves its byproducts in the chamber.",
   "levels.commissioning_exam.name": "Commissioning Exam",
-  "levels.commissioning_exam.kicker": "Checkpoint 05 · Full process plant",
+  "levels.commissioning_exam.kicker": "Checkpoint 04 · Full process plant",
   "levels.commissioning_exam.briefing":
     "The full plant is commissioned: rooms, junctions, and conduits follow their physical routes and carry mixed inventories.",
   "levels.commissioning_exam.lesson":
-    "Balance finite feedstocks, mixed junctions, conduit capacity, acid production, stored oxidizer, relief, and persistent waste over three assaults.",
+    "Balance finite feedstocks, mixed junctions, conduit capacity, acid production, stored oxidizer, relief, and persistent waste over five assaults.",
   "levels.flash_point.rounds.first_spark.title": "First spark",
   "levels.flash_point.rounds.first_spark.detail":
     "Ten crawlers are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
@@ -64,16 +58,21 @@ export const LEVEL_MESSAGES = {
     "The CL-02 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
   "levels.make_the_reagent.rounds.shared_relief.objective":
     "Use the CL-02 recovery fan when shared outlet pressure stalls the cell.",
-  "levels.acid_line.rounds.hot_mix.title": "Hot mix",
-  "levels.acid_line.rounds.hot_mix.detail":
-    "Armored shells demand a concentrated corrosive or thermal exposure.",
-  "levels.acid_line.rounds.hot_mix.objective":
-    "Equip R-02, start the mixed-gas feed, and build the downstream return.",
-  "levels.acid_line.rounds.residence_time.title": "Residence time",
-  "levels.acid_line.rounds.residence_time.detail":
-    "Skimmers race the inventory retained in the physical headers.",
-  "levels.acid_line.rounds.residence_time.objective":
-    "Read conduit fill and room conditions; adjust the limiting run.",
+  "levels.make_the_reagent.rounds.hot_mix.title": "Hot mix",
+  "levels.make_the_reagent.rounds.hot_mix.detail":
+    "Armored shells enter the expanded process train as CL-02 feeds its gas co-products into heated CL-04.",
+  "levels.make_the_reagent.rounds.hot_mix.objective":
+    "Equip CL-04, start the mixed-gas feed, and open the downstream acid return.",
+  "levels.make_the_reagent.rounds.residence_time.title": "Residence time",
+  "levels.make_the_reagent.rounds.residence_time.detail":
+    "Skimmers race the HCl inventory retained inside CL-04, CL-05, and the hull return.",
+  "levels.make_the_reagent.rounds.residence_time.objective":
+    "Read conduit fill and chamber conditions, then adjust the limiting run.",
+  "levels.make_the_reagent.rounds.full_chain.title": "Full-chain defense",
+  "levels.make_the_reagent.rounds.full_chain.detail":
+    "A mixed formation tests continuous electrolysis, CL-2 conversion, and downstream acid exposure together.",
+  "levels.make_the_reagent.rounds.full_chain.objective":
+    "Run the complete chlor-alkali and acid train through the fifth assault.",
   "levels.stored_chlorine.rounds.store.title": "Store the oxidizer",
   "levels.stored_chlorine.rounds.store.detail":
     "A slow armored wave crosses R-03 while its first NaOCl inventory forms.",
@@ -84,6 +83,21 @@ export const LEVEL_MESSAGES = {
     "The R-03–R-06 pipe now carries the persisted stored mixture into acid.",
   "levels.stored_chlorine.rounds.release.objective":
     "Build and enable the transfer, then inspect delayed Cl₂ release in R-06.",
+  "levels.stored_chlorine.rounds.recirculate.title": "Recirculation",
+  "levels.stored_chlorine.rounds.recirculate.detail":
+    "A fast mixed-height wave tests whether stored liquid and released chlorine remain available between arrivals.",
+  "levels.stored_chlorine.rounds.recirculate.objective":
+    "Sustain the contactor feed and the delayed release path through the full wave.",
+  "levels.stored_chlorine.rounds.armored_storage.title": "Armored storage",
+  "levels.stored_chlorine.rounds.armored_storage.detail":
+    "Shells and bellows demand sustained corrosive inventory across the storage and release chambers.",
+  "levels.stored_chlorine.rounds.armored_storage.objective":
+    "Build NaOCl inventory during prime and meter its release across the armored column.",
+  "levels.stored_chlorine.rounds.release_exam.title": "Release exam",
+  "levels.stored_chlorine.rounds.release_exam.detail":
+    "A mixed final formation tests production, storage, transfer, and acid-triggered chlorine release together.",
+  "levels.stored_chlorine.rounds.release_exam.objective":
+    "Run the complete stored-chlorine defense through the fifth assault.",
   "levels.commissioning_exam.rounds.commissioning_1.title": "Chlorine contact trial",
   "levels.commissioning_exam.rounds.commissioning_1.detail":
     "Eight crawlers test whether acid and hypochlorite reach R-06 early enough to establish chlorine evolution.",
@@ -99,4 +113,14 @@ export const LEVEL_MESSAGES = {
     "Gas-resistant bellows and armored shells require useful HCl, NaOH, and NaOCl exposure as well as Cl₂.",
   "levels.commissioning_exam.rounds.commissioning_3.objective":
     "Tune the plant’s coupled flows, then lock it for assault.",
+  "levels.commissioning_exam.rounds.commissioning_4.title": "Mixed-route trial",
+  "levels.commissioning_exam.rounds.commissioning_4.detail":
+    "Fast, armored, and airborne enemies test every occupied layer and process-room residence time.",
+  "levels.commissioning_exam.rounds.commissioning_4.objective":
+    "Tune the plant’s coupled flows, then lock it for assault.",
+  "levels.commissioning_exam.rounds.commissioning_5.title": "Continuous-operation exam",
+  "levels.commissioning_exam.rounds.commissioning_5.detail":
+    "The final mixed column tests feedstock balance, waste headroom, reaction continuity, and retained hazards.",
+  "levels.commissioning_exam.rounds.commissioning_5.objective":
+    "Run the complete plant through the fifth assault.",
 } as const;

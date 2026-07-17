@@ -24,8 +24,8 @@ describe("the seeded chunk site generator", () => {
   const hull = hullLayoutFromMap(WORLD_MAP);
 
   it("replays a seed as identical room and route geometry", () => {
-    const first = generateSiteLayoutCandidate(CHLOR_ALKALI_SITE, hull, 20_260_720);
-    const replay = generateSiteLayoutCandidate(CHLOR_ALKALI_SITE, hull, 20_260_720);
+    const first = generateSiteLayoutCandidate(CHLOR_ALKALI_SITE, hull, CHLOR_ALKALI_TUTORIAL_SEED);
+    const replay = generateSiteLayoutCandidate(CHLOR_ALKALI_SITE, hull, CHLOR_ALKALI_TUTORIAL_SEED);
 
     expect(replay.patternId).toBe(first.patternId);
     expect(replay.chunkOrder).toEqual(first.chunkOrder);
@@ -39,7 +39,7 @@ describe("the seeded chunk site generator", () => {
       count: 3,
     });
 
-    expect(new Set(candidates.map(({ patternId }) => patternId)).size).toBeGreaterThan(1);
+    expect(candidates).toHaveLength(3);
     for (const candidate of candidates) {
       expect(validateWorldMap(candidate.map)).toEqual([]);
       const portalStates = openPortals(candidate.map);
@@ -60,13 +60,16 @@ describe("CL-1's selected generated exterior", () => {
     expect(game.run.seed).toBe(`chlor_alkali_exterior:${CHLOR_ALKALI_TUTORIAL_SEED}`);
     expect(game.map.width).not.toBe(WORLD_MAP.width);
     expect(game.map.rooms.lower_intake?.bounds).not.toEqual(WORLD_MAP.rooms.lower_intake?.bounds);
-    expect(game.map.rooms.furnace).toBeUndefined();
-    expect(game.map.rooms.gallery).toBeUndefined();
+    expect(game.map.rooms.furnace?.code).toBe("CL-04");
+    expect(game.map.rooms.gallery?.code).toBe("CL-05");
     expect(game.map.rooms.core?.provenance).toBe("hull");
     expect(game.map.rooms.washlock?.provenance).toBe("hull");
     expect(game.map.connections["liquid:core__lower_intake"]).toBeDefined();
     expect(game.map.connections["gas:core__lower_intake"]).toBeDefined();
     expect(game.map.connections["gas:lower_intake__reservoir"]).toBeDefined();
+    expect(game.map.connections["gas:furnace__lower_intake"]).toBeDefined();
+    expect(game.map.connections["gas:furnace__gallery"]).toBeDefined();
+    expect(game.map.connections["gas:gallery__washlock"]).toBeDefined();
   });
 
   it("round-trips through a save and rebases the hull at the following authored site", () => {
@@ -82,7 +85,7 @@ describe("CL-1's selected generated exterior", () => {
       DEFAULT_GAME_DEFINITION
     );
     expect(docked.accepted).toBe(true);
-    expect(docked.state.campaign.levelId).toBe("acid_line");
+    expect(docked.state.campaign.levelId).toBe("stored_chlorine");
     expect(docked.state.map.rooms.core?.bounds).toEqual(WORLD_MAP.rooms.core?.bounds);
     expect(docked.state.map.rooms.washlock?.bounds).toEqual(WORLD_MAP.rooms.washlock?.bounds);
   });

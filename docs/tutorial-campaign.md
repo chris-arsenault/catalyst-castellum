@@ -20,14 +20,15 @@ The current authored sequence is:
 1. **Flash Point** — install gas agitation in R-02 and switch on the one Core–R-02 gas fan. Core's
    visible starter header contains the complete finite H₂/O₂ mixture; the initially dry routed duct
    must sweep its physical hold-up before accumulation produces repeating OX-1 attacks.
-2. **Make the Reagent** — install the membrane cell, feed water and brine, and learn that useful Cl₂
-   cannot be separated from H₂ and NaOH outlet pressure.
-3. **Acid Line** — place heat and agitation, connect two room pairs, and convert balanced H₂/Cl₂ into
-   an HCl corridor.
-4. **Stored Chlorine** — store Cl₂ as NaOCl in R-03, preserve that inventory across the round gate,
+2. **Make the Reagent** — install the membrane cell, feed water and brine, manage all three
+   co-products, then place heat and agitation to convert balanced H₂/Cl₂ into an HCl corridor on
+   the same generated site.
+3. **Stored Chlorine** — store Cl₂ as NaOCl in R-03, preserve that inventory across the round gate,
    then move it into acid at R-06 for a delayed second-order release.
-5. **Commissioning Exam** — retain the former MVP's fully installed plant as a medium-complexity
+4. **Commissioning Exam** — retain the former MVP's fully installed plant as a medium-complexity
    whole-system scenario.
+
+Every campaign site contains at least five waves.
 
 Ordinary rooms remain blank shells with generic sockets. A tutorial level may preinstall ordinary
 player-owned equipment as scaffolding, but it may not create hidden room types.
@@ -44,7 +45,8 @@ level_briefing
   -> round_result
        -> build (next round, exact facility state preserved)
        -> level_complete (final round)
-            -> level_briefing (next clean checkpoint loadout)
+            -> travel
+                 -> level_briefing (next clean checkpoint loadout)
 ```
 
 The initial Flash Point briefing has one additional authoritative edge:
@@ -56,7 +58,7 @@ flash_point level_briefing
 ```
 
 That transition records Flash Point in `completedLevelIds` and makes Make the Reagent the retry
-checkpoint. It does not simulate or silently award either Flash Point round.
+checkpoint. It does not simulate or silently award any Flash Point round.
 
 Core loss enters `defeat`; retry reconstructs the current checkpoint's authored starting state.
 Completing the final Commissioning Exam enters `victory`.

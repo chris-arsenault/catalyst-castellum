@@ -9,7 +9,6 @@ describe("semantic game-state validation", () => {
     const levelIds = [
       "flash_point",
       "make_the_reagent",
-      "acid_line",
       "stored_chlorine",
       "commissioning_exam",
     ] as const;
@@ -37,7 +36,7 @@ describe("semantic game-state validation", () => {
 
   it("rejects cross-field campaign and room identity mismatches", () => {
     const campaign = createScenarioGame("flash_point");
-    campaign.campaign.levelIndex = 4;
+    campaign.campaign.levelIndex = 3;
     expect(decodeGame(encodeGame(campaign))).toBeNull();
 
     const room = createScenarioGame("flash_point");

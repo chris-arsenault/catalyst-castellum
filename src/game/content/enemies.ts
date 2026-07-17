@@ -120,4 +120,15 @@ export const COMMISSIONING_WAVES: WaveEntry[][] = [
   [...enemySequence(2, "bellows", 0.5, 4), ...enemySequence(3, "shell", 2, 3.2)].sort(
     (left, right) => left.at - right.at
   ),
+  [
+    ...enemySequence(7, "skimmer", 0.5, 1.8),
+    ...enemySequence(3, "shell", 2, 3),
+    ...enemySequence(2, "floater", 4, 3.4),
+  ].sort((left, right) => left.at - right.at),
+  [
+    ...enemySequence(5, "crawler", 0.5, 2),
+    ...enemySequence(4, "shell", 1.5, 2.8),
+    ...enemySequence(3, "bellows", 3, 3.2),
+    ...enemySequence(3, "floater", 4.5, 3),
+  ].sort((left, right) => left.at - right.at),
 ];

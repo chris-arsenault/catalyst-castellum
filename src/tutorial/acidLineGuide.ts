@@ -35,7 +35,7 @@ const acidEquipmentRunning = (game: GameState): boolean =>
 const hclProductionEstablished = (game: GameState): boolean =>
   game.events.some(
     (event) =>
-      event.levelId === "acid_line" &&
+      event.levelId === game.campaign.levelId &&
       event.roomId === "furnace" &&
       event.code === "hcl_production_started"
   );
@@ -52,11 +52,15 @@ const downstreamHclEstablished = (game: GameState): boolean =>
     roomHcl(game, "washlock") >
   0.005;
 
-const firstRoundResolved = (game: GameState): boolean =>
-  game.phase === "round_result" || game.campaign.roundIndex > 0;
+const roundResolved = (game: GameState, roundIndex: number): boolean =>
+  game.phase === "round_result" ||
+  game.campaign.roundIndex > roundIndex ||
+  game.phase === "level_complete" ||
+  game.phase === "victory";
 
-const levelResolved = (game: GameState): boolean =>
-  game.phase === "level_complete" || game.phase === "victory";
+const hotMixResolved = (game: GameState): boolean => roundResolved(game, 2);
+
+const residenceTimeResolved = (game: GameState): boolean => roundResolved(game, 3);
 
 const hotMixGuide: GuideDefinition = {
   completion: {
@@ -64,7 +68,7 @@ const hotMixGuide: GuideDefinition = {
     explanation: "tutorial.acid.hotMix.completion.explanation",
     instruction: "tutorial.acid.hotMix.completion.instruction",
   },
-  id: "acid_line:hot_mix:v1",
+  id: "make_the_reagent:hot_mix:v1",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.acid.hotMix.label",
   firstFlashTeachingBreak: false,
@@ -106,7 +110,7 @@ const hotMixGuide: GuideDefinition = {
       {
         id: "hold-hot-mix",
         label: "tutorial.acid.hotMix.task.holdWave",
-        completed: firstRoundResolved,
+        completed: hotMixResolved,
       },
     ],
   },
@@ -208,7 +212,7 @@ const hotMixGuide: GuideDefinition = {
       explanation: "tutorial.acid.hotMix.step.startAssault.explanation",
       instruction: "tutorial.acid.hotMix.step.startAssault.instruction",
       result: "tutorial.acid.hotMix.step.startAssault.result",
-      completed: (game) => game.phase === "assault" || firstRoundResolved(game),
+      completed: (game) => game.phase === "assault" || hotMixResolved(game),
     },
     {
       id: "observe-hot-mix-wave",
@@ -219,7 +223,7 @@ const hotMixGuide: GuideDefinition = {
       explanation: "tutorial.acid.hotMix.step.observeWave.explanation",
       instruction: "tutorial.acid.hotMix.step.observeWave.instruction",
       result: "tutorial.acid.hotMix.step.observeWave.result",
-      completed: firstRoundResolved,
+      completed: hotMixResolved,
     },
   ],
 };
@@ -230,7 +234,7 @@ const residenceTimeGuide: GuideDefinition = {
     explanation: "tutorial.acid.residence.completion.explanation",
     instruction: "tutorial.acid.residence.completion.instruction",
   },
-  id: "acid_line:residence_time:v1",
+  id: "make_the_reagent:residence_time:v1",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.acid.residence.label",
   firstFlashTeachingBreak: false,
@@ -267,7 +271,7 @@ const residenceTimeGuide: GuideDefinition = {
       {
         id: "hold-residence-wave",
         label: "tutorial.acid.residence.task.holdWave",
-        completed: levelResolved,
+        completed: residenceTimeResolved,
       },
     ],
   },
@@ -303,15 +307,15 @@ const residenceTimeGuide: GuideDefinition = {
       explanation: "tutorial.acid.residence.step.observeAssault.explanation",
       instruction: "tutorial.acid.residence.step.observeAssault.instruction",
       result: "tutorial.acid.residence.step.observeAssault.result",
-      completed: levelResolved,
+      completed: residenceTimeResolved,
     },
   ],
 };
 
 export const acidLineGuideFor = (game: GameState): GuideDefinition | null => {
-  if (game.campaign.levelId !== "acid_line") return null;
-  if (game.campaign.roundIndex === 0) return hotMixGuide;
-  if (game.campaign.roundIndex === 1) return residenceTimeGuide;
+  if (game.campaign.levelId !== "make_the_reagent") return null;
+  if (game.campaign.roundIndex === 2) return hotMixGuide;
+  if (game.campaign.roundIndex === 3) return residenceTimeGuide;
   return null;
 };
 

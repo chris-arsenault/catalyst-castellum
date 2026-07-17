@@ -5,7 +5,7 @@ import { emptyLoadout, gasRun, liquidRun } from "./helpers";
 
 export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   id: "stored_chlorine",
-  number: 4,
+  number: 3,
   focusRoomId: "reservoir",
   featuredReactionIds: ["hypochlorite_formation", "acid_chlorine_release"],
   startingMatter: 42,
@@ -52,6 +52,32 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
       wave: [...enemySequence(2, "bellows", 4, 4), ...enemySequence(3, "shell", 6, 4)].sort(
         (left, right) => left.at - right.at
       ),
+      availability: ALL_AVAILABILITY,
+    },
+    {
+      id: "recirculate",
+      primeSeconds: 18,
+      wave: [...enemySequence(6, "skimmer", 1, 2), ...enemySequence(2, "floater", 4, 3)].sort(
+        (left, right) => left.at - right.at
+      ),
+      availability: ALL_AVAILABILITY,
+    },
+    {
+      id: "armored_storage",
+      primeSeconds: 22,
+      wave: [...enemySequence(4, "shell", 1, 3.4), ...enemySequence(3, "bellows", 3, 3.8)].sort(
+        (left, right) => left.at - right.at
+      ),
+      availability: ALL_AVAILABILITY,
+    },
+    {
+      id: "release_exam",
+      primeSeconds: 20,
+      wave: [
+        ...enemySequence(8, "skimmer", 0.5, 1.6),
+        ...enemySequence(3, "shell", 2.5, 3.2),
+        ...enemySequence(2, "floater", 5, 3.6),
+      ].sort((left, right) => left.at - right.at),
       availability: ALL_AVAILABILITY,
     },
   ],

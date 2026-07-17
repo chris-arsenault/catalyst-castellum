@@ -29,7 +29,7 @@ const command = (source: GameState, value: GameCommand): GameState => {
   return result.state;
 };
 
-const enter = (level: "flash_point" | "make_the_reagent" | "acid_line") =>
+const enter = (level: "flash_point" | "make_the_reagent") =>
   command(createScenarioGame(level), { type: "begin_level" });
 
 const advance = (source: GameState, seconds: number): GameState => {
@@ -108,7 +108,7 @@ describe("shared conserved mixture transport", () => {
   });
 
   it("allocates a shared junction to branches without starving the later run ID", () => {
-    const state = enter("acid_line");
+    const state = enter("make_the_reagent");
     gasConduitState(state, "gas:furnace__lower_intake").enabled = true;
     gasConduitState(state, "gas:lower_intake__reservoir").installed = true;
     gasConduitState(state, "gas:lower_intake__reservoir").enabled = true;

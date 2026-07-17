@@ -60,7 +60,6 @@ export const REACTION_IDS = [
 export const LEVEL_IDS = [
   "flash_point",
   "make_the_reagent",
-  "acid_line",
   "stored_chlorine",
   "commissioning_exam",
 ] as const;

@@ -7,6 +7,7 @@ import { TUTORIAL_ANCHORS } from "./anchors";
 import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
 import { tutorialText } from "./tutorialCopy";
 import { roomState } from "../game/world/instances";
+import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -17,6 +18,28 @@ const command = (source: GameState, value: GameCommand): GameState => {
 const advance = (source: GameState, seconds: number): GameState => {
   let game = source;
   for (let elapsed = 0; elapsed < seconds; elapsed += 0.1) game = stepGame(game, 0.1);
+  return game;
+};
+
+const enterAcidRound = (roundIndex: 2 | 3): GameState => {
+  const game = command(createScenarioGame("make_the_reagent"), { type: "begin_level" });
+  game.campaign.roundIndex = roundIndex;
+  const availability =
+    DEFAULT_GAME_DEFINITION.levels.make_the_reagent.rounds[roundIndex]!.availability;
+  game.availability = {
+    equipment: [...availability.equipment],
+    gasLines: [...availability.gasLines],
+    liquidLines: [...availability.liquidLines],
+    gasSources: [...availability.gasSources],
+    liquidSources: [...availability.liquidSources],
+  };
+  game.gasBuffers.anode_header.gas.chlorine = 16;
+  game.gasBuffers.cathode_header.gas.hydrogen = 16;
+  roomState(game, "lower_intake").equipment.socket_a = {
+    equipmentId: "membrane_cell",
+    level: 1,
+    enabled: true,
+  };
   return game;
 };
 
@@ -48,11 +71,11 @@ const openAcidLine = (source: GameState): GameState => {
   return game;
 };
 
-describe("Acid Line guidance", () => {
+describe("acid-line round guidance", () => {
   it("teaches Thermal Coil activation, CL-2 conversion, and the complete return route", () => {
-    let game = command(createScenarioGame("acid_line"), { type: "begin_level" });
+    let game = enterAcidRound(2);
     const guide = guideDefinitionFor(game);
-    if (!guide) throw new Error("Acid Line guide missing");
+    if (!guide) throw new Error("Hot Mix guide missing");
 
     expect(guide.id).toContain("hot_mix");
     expect(guide.showStageIntro).toBe(true);
@@ -63,7 +86,7 @@ describe("Acid Line guidance", () => {
       "1 H₂ : 1 Cl₂ · 1.15 mol-eq/s",
       "68°C target · 38→66°C activation",
       "1 H₂ + 1 Cl₂ → 2 HCl",
-      "R-02→R-04 1.2 · R-04→R-06 1.15 mol-eq/s",
+      "CL-04→CL-05 1.2 · CL-05→R-06 1.15 mol-eq/s",
     ]);
     expect(guide.steps.map((step) => step.target)).toEqual(
       expect.arrayContaining([
@@ -91,8 +114,7 @@ describe("Acid Line guidance", () => {
   });
 
   it("continues with retained-inventory guidance in Residence Time", () => {
-    const game = command(createScenarioGame("acid_line"), { type: "begin_level" });
-    game.campaign.roundIndex = 1;
+    const game = enterAcidRound(3);
     const guide = guideDefinitionFor(game);
     if (!guide) throw new Error("Residence Time guide missing");
 
@@ -111,7 +133,7 @@ describe("Acid Line guidance", () => {
 
 describe("CL-2 live reaction status", () => {
   it("reports the simulator's temperature ramp, reactant batch, and agitation multiplier", () => {
-    let game = command(createScenarioGame("acid_line"), { type: "begin_level" });
+    let game = enterAcidRound(2);
     game = command(game, {
       type: "install_equipment",
       roomId: "furnace",

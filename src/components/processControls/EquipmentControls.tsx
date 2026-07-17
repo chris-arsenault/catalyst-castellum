@@ -44,7 +44,7 @@ const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnc
     return TUTORIAL_ANCHORS.galleryAgitator;
   if (roomId !== "furnace") return null;
   if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
-  if (game.campaign.levelId === "acid_line") {
+  if (game.campaign.levelId === "make_the_reagent" && game.campaign.roundIndex >= 2) {
     const thermalInstalled = Object.values(roomState(game, "furnace").equipment).some(
       (instance) => instance?.equipmentId === "thermal_coil"
     );

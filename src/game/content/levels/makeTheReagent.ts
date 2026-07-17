@@ -15,11 +15,24 @@ const reagentRoundTwo = availability({
   gasLines: ["gas:lower_intake__reservoir", "gas:core__lower_intake"],
 });
 
+const acidRounds = availability({
+  equipment: ["membrane_cell", "thermal_coil", "gas_agitator"],
+  gasLines: [
+    "gas:lower_intake__reservoir",
+    "gas:core__lower_intake",
+    "gas:furnace__lower_intake",
+    "gas:furnace__gallery",
+    "gas:gallery__washlock",
+  ],
+  liquidLines: ["liquid:core__lower_intake"],
+  liquidSources: ["water_tank", "sodium_chloride_tank"],
+});
+
 export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   id: "make_the_reagent",
   number: 2,
   focusRoomId: "lower_intake",
-  featuredReactionIds: ["chlor_alkali_electrolysis"],
+  featuredReactionIds: ["chlor_alkali_electrolysis", "hydrogen_chlorine_recombination"],
   startingMatter: 28,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
@@ -28,6 +41,9 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
     gasConduits: {
       "gas:lower_intake__reservoir": gasRun(true),
       "gas:core__lower_intake": gasRun(false),
+      "gas:furnace__lower_intake": gasRun(false),
+      "gas:furnace__gallery": gasRun(false),
+      "gas:gallery__washlock": gasRun(false),
     },
     liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
     liquidSourceAmounts: { water_tank: 120, sodium_chloride_tank: 120 },
@@ -45,6 +61,30 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
       primeSeconds: 14,
       wave: enemySequence(9, "skimmer", 0.5, 1.45),
       availability: reagentRoundTwo,
+    },
+    {
+      id: "hot_mix",
+      primeSeconds: 30,
+      wave: enemySequence(5, "shell", 0.5, 3.2),
+      availability: acidRounds,
+    },
+    {
+      id: "residence_time",
+      primeSeconds: 14,
+      wave: [...enemySequence(6, "skimmer", 0.5, 1.6), ...enemySequence(2, "floater", 2, 2.5)].sort(
+        (left, right) => left.at - right.at
+      ),
+      availability: acidRounds,
+    },
+    {
+      id: "full_chain",
+      primeSeconds: 18,
+      wave: [
+        ...enemySequence(8, "skimmer", 0.5, 1.4),
+        ...enemySequence(4, "shell", 2, 2.8),
+        ...enemySequence(3, "floater", 4, 2.6),
+      ].sort((left, right) => left.at - right.at),
+      availability: acidRounds,
     },
   ],
 };
