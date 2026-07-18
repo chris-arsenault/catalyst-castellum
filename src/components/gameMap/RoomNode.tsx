@@ -6,6 +6,8 @@ import { mapViewFor } from "./mapGeometry";
 import { drawRoom } from "./roomGraphics";
 import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
+import { coreIntegrityColor } from "./coreDamageModel";
+import { CoreSprite } from "./CoreSprite";
 
 interface RoomNodeProps {
   game: GameState;
@@ -35,6 +37,7 @@ export const RoomNode = ({
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);
   return (
     <pixiContainer x={geometry.center.x} y={geometry.center.y} eventMode="passive">
+      {model.structure === "core" && <CoreSprite integrity={game.coreIntegrity} />}
       <pixiGraphics
         draw={draw}
         hitArea={hitArea}
@@ -55,8 +58,14 @@ export const RoomNode = ({
           text={`${Math.round(game.coreIntegrity)}%`}
           eventMode="none"
           anchor={{ x: 0.5, y: 0.5 }}
-          y={10}
-          style={{ fontFamily: "IBM Plex Sans", fontSize: 16, fontWeight: "600", fill: "#eef3c2" }}
+          x={model.width / 2 - 55}
+          y={-model.height / 2 + 36}
+          style={{
+            fontFamily: "IBM Plex Mono",
+            fontSize: 13,
+            fontWeight: "700",
+            fill: coreIntegrityColor(game.coreIntegrity),
+          }}
         />
       )}
       {occupied > 0 && (

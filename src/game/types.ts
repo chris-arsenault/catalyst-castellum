@@ -251,8 +251,7 @@ export interface ReactionTelemetry {
 
 export type LimitingFactor =
   | { kind: "species"; speciesId: SpeciesId; zone: GasZone | null }
-  | { kind: "condition"; code: LimitConditionCode; zone: GasZone | null }
-  | { kind: "legacy"; label: string };
+  | { kind: "condition"; code: LimitConditionCode; zone: GasZone | null };
 
 export interface RoomState {
   id: RoomId;
@@ -348,18 +347,71 @@ export interface EnemyDefinition {
   color: string;
   residueOnDeath: number;
   matterYield: number;
+  behavior: EnemyBehaviorDefinition;
   presentation: {
     appearance: EnemyAppearanceArchetype;
-    manualIcon: EnemyManualIcon;
   };
 }
 
-export type EnemyAppearanceArchetype = "crawler" | "skimmer" | "floater" | "shell" | "bellows";
-export type EnemyManualIcon = "bug" | "wind" | "bird" | "shield" | "snail";
+export type EnemyBehaviorDefinition =
+  | { kind: "standard" }
+  | {
+      kind: "ladder_runner";
+      locomotionMultipliers: Record<EnemyLocomotionMode, number>;
+    }
+  | {
+      kind: "armored_molt";
+      shellHealth: number;
+      exposedSpeedMultiplier: number;
+      exposedLocomotionMultipliers: Record<EnemyLocomotionMode, number>;
+    }
+  | {
+      kind: "shared_field";
+      capacity: number;
+      rechargePerSecond: number;
+      activationFraction: number;
+    }
+  | {
+      kind: "gas_emitter";
+      species: GasType;
+      reservoir: number;
+      emissionRate: number;
+    };
+
+export type EnemyAppearanceArchetype =
+  | "deckmouth"
+  | "flintjack"
+  | "shear_jelly"
+  | "splitback"
+  | "redlung"
+  | "clatter"
+  | "anchor"
+  | "glowbag";
+
+export type EnemyBehaviorState =
+  | { kind: "standard" }
+  | { kind: "ladder_runner" }
+  | {
+      kind: "armored_molt";
+      phase: "armored" | "exposed";
+      transitionHealth: number;
+    }
+  | {
+      kind: "shared_field";
+      charge: number;
+      maximumCharge: number;
+      active: boolean;
+    }
+  | {
+      kind: "gas_emitter";
+      reservoir: number;
+      initialReservoir: number;
+    };
 
 export interface EnemyState {
   id: number;
   type: EnemyType;
+  level: number;
   health: number;
   maxHealth: number;
   routeId: EnemyRouteId;
@@ -372,6 +424,7 @@ export interface EnemyState {
   damageTaken: number;
   damageBySource: DamageLedger;
   lastDamage: DamageReceipt | null;
+  behavior: EnemyBehaviorState;
 }
 
 export type EnemyLocomotionMode = (typeof ENEMY_LOCOMOTION_MODES)[number];
@@ -386,6 +439,6 @@ export interface WaveEntry {
   at: number;
   type: EnemyType;
   routeId: EnemyRouteId;
-  /** Multiplies the enemy's base health at spawn; 1 is a standard unit, above 1 is a veteran. */
-  healthScale: number;
+  /** Added to the site's authored base level; positive values create veterans. */
+  levelOffset: number;
 }

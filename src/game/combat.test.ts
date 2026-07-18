@@ -77,7 +77,8 @@ const enemy = (health = 200): EnemyState => {
   );
   return {
     id: 41,
-    type: "crawler",
+    type: "deckmouth",
+    level: 20,
     health,
     maxHealth: health,
     routeId: "entry_to_core",
@@ -90,6 +91,7 @@ const enemy = (health = 200): EnemyState => {
     damageTaken: 0,
     damageBySource: emptyDamageLedger(),
     lastDamage: null,
+    behavior: { kind: "standard" },
   };
 };
 

@@ -113,7 +113,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
 });
 
 describe("the carried hull persists and translates", () => {
-  it("round-trips the carried hull through the v13 save on the second site", () => {
+  it("round-trips the carried hull through the current save on the second site", () => {
     const ending = createScenarioGame("flash_point", [], definition);
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     const fragment = extractHullFragment(ending);

@@ -1,13 +1,19 @@
 import { ArrowLeft, ArrowRight, Biohazard, Droplets, Gauge } from "lucide-react";
-import { useState } from "react";
-import { LEVEL_DEFINITIONS } from "../presentation/defaultGame";
+import { useCallback, useState } from "react";
+import {
+  LEVEL_DEFINITIONS,
+  narrativeSiteForLevel,
+  narrativeSiteOpensAct,
+  roomDefinition,
+  type NarrativeSiteDefinition,
+} from "../presentation/defaultGame";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { GameState } from "../game/types";
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import type { Translator } from "../localization/translator";
-import { roomDefinition } from "../presentation/defaultGame";
+import { NarrativeDialogue } from "./NarrativeDialogue";
 
 const BriefingGraphic = () => {
   const { translator } = useGamePresentation();
@@ -123,27 +129,175 @@ const hint = (
   });
 };
 
+interface MechanicalBriefingCopy {
+  readonly briefing: string;
+  readonly kicker: string;
+  readonly lesson: string;
+  readonly name: string;
+}
+
+const ActIntroduction = ({
+  actName,
+  introduction,
+  onContinue,
+  onExit,
+  summary,
+}: {
+  actName: string;
+  introduction: readonly [string, string];
+  onContinue: () => void;
+  onExit: () => void;
+  summary: string;
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="briefing-content act-introduction">
+      <div className="eyebrow">
+        <span /> {translator.text("narrative.ui.act.eyebrow")}
+      </div>
+      <h1 id="briefing-title">{actName}</h1>
+      <strong className="act-summary">{summary}</strong>
+      <div className="act-setting">
+        {introduction.map((paragraph) => (
+          <p key={paragraph}>{paragraph}</p>
+        ))}
+      </div>
+      <div className="briefing-actions">
+        <button className="menu-return-button" type="button" onClick={onExit}>
+          <ArrowLeft size={16} /> {translator.text("ui.topbar.saveSlots")}
+        </button>
+        <button className="enter-button" type="button" onClick={onContinue}>
+          {translator.text("narrative.ui.act.continue")} <ArrowRight size={18} />
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const ContractConversation = ({
+  actName,
+  onComplete,
+  onExit,
+  site,
+}: {
+  actName: string;
+  onComplete: () => void;
+  onExit: () => void;
+  site: NarrativeSiteDefinition;
+}) => {
+  const { narrativeCopy, translator } = useGamePresentation();
+  const copy = narrativeCopy.site(site);
+  return (
+    <div className="briefing-content contract-conversation">
+      <div className="eyebrow">
+        <span /> {actName} · {copy.code}
+      </div>
+      <h1 id="briefing-title">{copy.name}</h1>
+      <div className="contract-context">
+        <span>{copy.contract}</span>
+        <strong>{copy.region}</strong>
+      </div>
+      <p className="briefing-lede">{copy.briefing}</p>
+      <NarrativeDialogue phase="briefing" site={site} onComplete={onComplete} />
+      <button className="dialogue-menu-return" type="button" onClick={onExit}>
+        <ArrowLeft size={15} /> {translator.text("ui.topbar.saveSlots")}
+      </button>
+    </div>
+  );
+};
+
+const MissionBriefing = ({
+  copy,
+  game,
+  levelNumber,
+  offersOpeningDrill,
+  onBegin,
+  onExit,
+  onTutorialChange,
+  tutorialEnabled,
+}: {
+  copy: MechanicalBriefingCopy;
+  game: GameState;
+  levelNumber: number;
+  offersOpeningDrill: boolean;
+  onBegin: () => void;
+  onExit: () => void;
+  onTutorialChange: (enabled: boolean) => void;
+  tutorialEnabled: boolean;
+}) => {
+  const { translator } = useGamePresentation();
+  const tutorialSkipped = offersOpeningDrill && !tutorialEnabled;
+  return (
+    <div className="briefing-content mission-briefing">
+      <div className="eyebrow">
+        <span /> {copy.kicker}
+      </div>
+      <h1 id="briefing-title">
+        <span>
+          {translator.text("ui.briefing.checkpoint", {
+            number: String(levelNumber).padStart(2, "0"),
+          })}
+        </span>{" "}
+        {copy.name}
+      </h1>
+      <p className="briefing-lede">{copy.briefing}</p>
+      <BriefingObjective game={game} tutorialSkipped={tutorialSkipped} />
+      {offersOpeningDrill && (
+        <TutorialStartChoice enabled={tutorialEnabled} onChange={onTutorialChange} />
+      )}
+      <div className="briefing-actions">
+        <button
+          className="menu-return-button"
+          type="button"
+          data-testid="briefing-main-menu"
+          onClick={onExit}
+        >
+          <ArrowLeft size={16} /> {translator.text("ui.topbar.saveSlots")}
+        </button>
+        <button
+          className="enter-button"
+          type="button"
+          data-testid="enter-control-room"
+          onClick={onBegin}
+        >
+          {actionLabel(offersOpeningDrill, tutorialEnabled, translator)} <ArrowRight size={18} />
+        </button>
+      </div>
+      <small className="briefing-hint">
+        {hint(game, offersOpeningDrill, tutorialEnabled, translator, copy.lesson)}
+      </small>
+    </div>
+  );
+};
+
+type BriefingStage = "act" | "dialogue" | "mission";
+
 const BriefingContent = ({ game }: { game: GameState }) => {
-  const { levelCopy: localizedLevelCopy, translator } = useGamePresentation();
+  const { levelCopy, narrativeCopy } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
   const dismissTutorialGuide = useGameStore((state) => state.dismissTutorialGuide);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
-  const [tutorialEnabled, setTutorialEnabled] = useState(true);
   const level = levelDefinitionFor(game);
-  const copy = localizedLevelCopy.level(level);
-  const guide = guideDefinitionFor(game);
-  const offersOpeningDrill = game.campaign.levelId === "flash_point" && Boolean(guide);
-  const tutorialSkipped = offersOpeningDrill && !tutorialEnabled;
-  const begin = () => {
-    if (tutorialSkipped) {
+  const site = narrativeSiteForLevel(level.id);
+  const actCopy = narrativeCopy.act({ id: site.actId });
+  const offersOpeningDrill =
+    game.campaign.levelId === "flash_point" && Boolean(guideDefinitionFor(game));
+  const [tutorialEnabled, setTutorialEnabled] = useState(true);
+  const [stage, setStage] = useState<BriefingStage>(
+    narrativeSiteOpensAct(site) ? "act" : "dialogue"
+  );
+  const openDialogue = useCallback(() => setStage("dialogue"), []);
+  const openMission = useCallback(() => setStage("mission"), []);
+  const begin = useCallback(() => {
+    if (offersOpeningDrill && !tutorialEnabled) {
       dismissTutorialGuide();
       dispatch({ type: "skip_tutorial" });
       return;
     }
     if (offersOpeningDrill) restartTutorialGuide();
     dispatch({ type: "begin_level" });
-  };
+  }, [dismissTutorialGuide, dispatch, offersOpeningDrill, restartTutorialGuide, tutorialEnabled]);
 
   return (
     <div
@@ -152,48 +306,37 @@ const BriefingContent = ({ game }: { game: GameState }) => {
       aria-modal="true"
       aria-labelledby="briefing-title"
     >
-      <div className="briefing-modal">
+      <div className={`briefing-modal briefing-stage-${stage}`}>
         <BriefingGraphic />
-        <div className="briefing-content">
-          <div className="eyebrow">
-            <span /> {copy.kicker}
-          </div>
-          <h1 id="briefing-title">
-            <span>
-              {translator.text("ui.briefing.checkpoint", {
-                number: String(level.number).padStart(2, "0"),
-              })}
-            </span>{" "}
-            {copy.name}
-          </h1>
-          <p className="briefing-lede">{copy.briefing}</p>
-          <BriefingObjective game={game} tutorialSkipped={tutorialSkipped} />
-          {offersOpeningDrill && (
-            <TutorialStartChoice enabled={tutorialEnabled} onChange={setTutorialEnabled} />
-          )}
-          <div className="briefing-actions">
-            <button
-              className="menu-return-button"
-              type="button"
-              data-testid="briefing-main-menu"
-              onClick={returnToMainMenu}
-            >
-              <ArrowLeft size={16} /> {translator.text("ui.topbar.saveSlots")}
-            </button>
-            <button
-              className="enter-button"
-              type="button"
-              data-testid="enter-control-room"
-              onClick={begin}
-            >
-              {actionLabel(offersOpeningDrill, tutorialEnabled, translator)}{" "}
-              <ArrowRight size={18} />
-            </button>
-          </div>
-          <small className="briefing-hint">
-            {hint(game, offersOpeningDrill, tutorialEnabled, translator, copy.lesson)}
-          </small>
-        </div>
+        {stage === "act" && (
+          <ActIntroduction
+            actName={actCopy.name}
+            introduction={actCopy.introduction}
+            onContinue={openDialogue}
+            onExit={returnToMainMenu}
+            summary={actCopy.summary}
+          />
+        )}
+        {stage === "dialogue" && (
+          <ContractConversation
+            actName={actCopy.name}
+            onComplete={openMission}
+            onExit={returnToMainMenu}
+            site={site}
+          />
+        )}
+        {stage === "mission" && (
+          <MissionBriefing
+            copy={levelCopy.level(level)}
+            game={game}
+            levelNumber={level.number}
+            offersOpeningDrill={offersOpeningDrill}
+            onBegin={begin}
+            onExit={returnToMainMenu}
+            onTutorialChange={setTutorialEnabled}
+            tutorialEnabled={tutorialEnabled}
+          />
+        )}
       </div>
     </div>
   );

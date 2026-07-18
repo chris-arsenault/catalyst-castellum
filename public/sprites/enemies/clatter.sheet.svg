@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="768" height="96"
+    viewBox="0 0 768 96"
+    role="img" aria-label="Clatter sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#d2ef93"/>
+    <stop offset="0.48" stop-color="#82ad4f"/>
+    <stop offset="1" stop-color="#456531"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#d2ef93"/>
+    <stop offset="0.22" stop-color="#82ad4f"/>
+    <stop offset="0.7" stop-color="#456531"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#efffa0" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#9abd59" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="96" height="96"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(0.00 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L17.00 34 L6.00 23 L11.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L17.00 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L24.00 64 L13.00 77 L18.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L24.00 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L68.00 34 L79.00 23 L74.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L68.00 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L75.00 64 L86.00 77 L81.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L75.00 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(96 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(2.12 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L14.53 34 L-1.07 23 L3.93 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L14.53 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L26.47 64 L20.07 77 L25.07 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L26.47 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L70.47 34 L86.07 23 L81.07 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L70.47 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L72.53 64 L78.93 77 L73.93 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L72.53 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(192 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(3.00 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L13.50 34 L-4.00 23 L1.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L13.50 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L27.50 64 L23.00 77 L28.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L27.50 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L71.50 34 L89.00 23 L84.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L71.50 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L71.50 64 L76.00 77 L71.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L71.50 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(288 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(2.12 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L14.53 34 L-1.07 23 L3.93 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L14.53 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L26.47 64 L20.07 77 L25.07 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L26.47 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L70.47 34 L86.07 23 L81.07 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L70.47 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L72.53 64 L78.93 77 L73.93 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L72.53 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(384 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(0.00 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L17.00 34 L6.00 23 L11.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L17.00 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L24.00 64 L13.00 77 L18.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L24.00 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L68.00 34 L79.00 23 L74.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L68.00 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L75.00 64 L86.00 77 L81.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L75.00 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(480 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(-2.12 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L19.47 34 L13.07 23 L18.07 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L19.47 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L21.53 64 L5.93 77 L10.93 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L21.53 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L65.53 34 L71.93 23 L66.93 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L65.53 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L77.47 64 L93.07 77 L88.07 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L77.47 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(576 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(-3.00 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L20.50 34 L16.00 23 L21.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L20.50 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L20.50 64 L3.00 77 L8.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L20.50 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L64.50 34 L69.00 23 L64.00 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L64.50 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L78.50 64 L96.00 77 L91.00 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L78.50 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+<g transform="translate(672 0)" clip-path="url(#frame-clip)">
+      <g transform="rotate(-2.12 48 49)" filter="url(#shadow)">
+    <path d="M30 45 L19.47 34 L13.07 23 L18.07 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M30 45 L19.47 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M37 51 L21.53 64 L5.93 77 L10.93 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M37 51 L21.53 64" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M55 51 L65.53 34 L71.93 23 L66.93 28" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M55 51 L65.53 34" stroke="#d6f194" stroke-width="1" opacity=".55"/><path d="M62 44 L77.47 64 L93.07 77 L88.07 72" fill="none" stroke="#4f793a" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M62 44 L77.47 64" stroke="#d6f194" stroke-width="1" opacity=".55"/>
+    <path d="M26 47 Q29 31 45 28 Q64 29 70 46 L62 62 Q45 69 29 58Z" fill="url(#body)" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M31 42 Q45 28 63 39 L55 45 L36 48Z" fill="#def6a5" opacity=".38"/>
+    <path d="M31 37 L28 25 L38 33 M58 34 L65 23 L64 39" fill="#789f48" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M61 38 L77 43 L72 55 L60 57Z" fill="#89b656" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="69" cy="44" r="2.2" fill="#ffe780" stroke="#1d291a" stroke-width="1"/>
+    <path d="M70 48 L83 42 M70 51 L83 55" stroke="#99c568" stroke-width="1.4" stroke-linecap="round"/>
+  </g>
+    </g>
+  </svg>

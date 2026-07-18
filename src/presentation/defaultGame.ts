@@ -14,11 +14,26 @@ export {
   LIQUID_COLORS,
   LIQUID_LABELS,
   LIQUID_SOURCES,
+  NARRATIVE_ACTS,
+  NARRATIVE_ROUTE_EDGES,
+  NARRATIVE_SITES,
+  NARRATIVE_SITES_BY_ID,
   PROCESS_DEFINITIONS,
   REACTION_DEFINITIONS,
   SPECIES_DEFINITIONS,
   equipmentGrade,
+  narrativeSiteAfter,
+  narrativeSiteForLevel,
+  narrativeSiteOpensAct,
   nextLevelId,
+} from "../game/config";
+export type {
+  NarrativeActDefinition,
+  NarrativeActId,
+  NarrativeDialogueLineDefinition,
+  NarrativeSiteDefinition,
+  NarrativeSiteId,
+  NarrativeSpeakerId,
 } from "../game/config";
 
 import {

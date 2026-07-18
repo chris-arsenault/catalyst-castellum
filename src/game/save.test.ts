@@ -1,22 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { emptyGas, emptyLiquid } from "./config";
 import { emptyDamageLedger, emptyHazardChannels } from "./engine/damage";
 import { decodeGame, encodeGame } from "./save";
 import { createScenarioGame, findEnemyPath } from "./simulation";
 import { type EnemyState, type GameState } from "./types";
-import { gasConduitState, liquidConduitState, roomState } from "./world/instances";
-import { WORLD_MAP } from "./config";
-import { isProcessLine } from "./world/map";
-
-const PACK_LINE_IDS = Object.values(WORLD_MAP.connections)
-  .filter(isProcessLine)
-  .map(({ id }) => id);
+import { gasConduitState } from "./world/instances";
+import { DEFAULT_GAME_DEFINITION } from "./definition";
+import { initialEnemyBehaviorState } from "./engine/enemyBehaviors";
 
 const persistedEnemy = (game: GameState): EnemyState => {
   const path = findEnemyPath({ flying: false, portalStates: game.portalStates });
   return {
     id: 9,
-    type: "crawler",
+    type: "deckmouth",
+    level: 20,
     health: 21,
     maxHealth: 74,
     routeId: "entry_to_core",
@@ -34,10 +30,11 @@ const persistedEnemy = (game: GameState): EnemyState => {
       amount: 53,
       elapsed: 11,
     },
+    behavior: { kind: "standard" },
   };
 };
 
-describe("v12 persistence", () => {
+describe("current persistence", () => {
   it("round-trips conduit routes, damage ledgers, and structured incidents", () => {
     const game = createScenarioGame("flash_point");
     game.phase = "assault";
@@ -62,7 +59,7 @@ describe("v12 persistence", () => {
       targets: [
         {
           enemyId: 9,
-          enemyType: "crawler",
+          enemyType: "deckmouth",
           worldPosition: { x: 98, elevation: 14 },
           healthBefore: 74,
           healthAfter: 21,
@@ -75,14 +72,15 @@ describe("v12 persistence", () => {
 
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
-    if (!decoded) throw new Error("Expected the v11 save to decode.");
-    expect(decoded.version).toBe(13);
+    if (!decoded) throw new Error("Expected the current save to decode.");
+    expect(decoded.version).toBe(14);
     expect(gasConduitState(decoded, "gas:core__furnace").route).toEqual(
       gasConduitState(game, "gas:core__furnace").route
     );
     expect(decoded.enemies[0]?.damageBySource.hydrogen_oxygen_combustion.pressure).toBe(53);
     expect(decoded.enemies[0]?.path).toEqual(game.enemies[0]?.path);
     expect(decoded.enemies[0]).toMatchObject({
+      level: 20,
       pathIndex: 12,
       progress: 0.2,
       mode: game.enemies[0]?.mode,
@@ -93,41 +91,46 @@ describe("v12 persistence", () => {
   });
 });
 
-describe("legacy compatibility decoding", () => {
-  it("migrates a structurally current v10 snapshot to v11", () => {
+describe("enemy behavior persistence", () => {
+  it("round-trips special enemy resources", () => {
+    const game = createScenarioGame("flash_point");
+    game.phase = "assault";
+    const anchor: EnemyState = {
+      ...persistedEnemy(game),
+      type: "anchor",
+      health: 75,
+      maxHealth: 75,
+      damageTaken: 0,
+      damageBySource: emptyDamageLedger(),
+      lastDamage: null,
+      behavior: initialEnemyBehaviorState(DEFAULT_GAME_DEFINITION.enemies.anchor, 20),
+    };
+    if (anchor.behavior.kind !== "shared_field") throw new Error("Expected Anchor field state.");
+    anchor.behavior.charge = 42.5;
+    anchor.behavior.active = false;
+    game.enemies = [anchor];
+    game.nextEnemyId = 10;
+
+    const decoded = decodeGame(encodeGame(game));
+
+    expect(decoded?.enemies[0]?.behavior).toEqual({
+      kind: "shared_field",
+      charge: 42.5,
+      maximumCharge: 170,
+      active: false,
+    });
+  });
+});
+
+describe("save decoding", () => {
+  it("rejects saves from earlier schema versions", () => {
     const game = createScenarioGame("flash_point");
     const envelope = JSON.parse(encodeGame(game)) as {
       game: Omit<GameState, "version"> & { version: number };
     };
-    envelope.game.version = 10;
-    const legacyShape = envelope.game as unknown as {
-      rooms: Record<string, { reactions: Record<string, Record<string, unknown>> }>;
-      processes: Record<string, Record<string, unknown>>;
-    };
-    const legacyRoom = legacyShape.rooms.furnace!;
-    const legacyReaction = legacyRoom.reactions.hydrogen_oxygen_combustion! as Record<
-      string,
-      unknown
-    >;
-    delete legacyReaction.limitingFactor;
-    legacyReaction.limitingReactant = "legacy reaction feed";
-    const legacyProcess = legacyShape.processes.chlor_alkali_cell!;
-    delete legacyProcess.limitingFactor;
-    legacyProcess.limitingReactant = "legacy process feed";
-    const decoded = decodeGame(JSON.stringify(envelope));
+    envelope.game.version = 13;
 
-    expect(decoded?.version).toBe(13);
-    expect(decoded?.campaign.levelId).toBe("flash_point");
-    expect(
-      roomState(decoded!, "furnace").reactions.hydrogen_oxygen_combustion.limitingFactor
-    ).toEqual({
-      kind: "legacy",
-      label: "legacy reaction feed",
-    });
-    expect(decoded?.processes.chlor_alkali_cell.limitingFactor).toEqual({
-      kind: "legacy",
-      label: "legacy process feed",
-    });
+    expect(decodeGame(JSON.stringify(envelope))).toBeNull();
   });
 
   it("rejects malformed state", () => {
@@ -136,23 +139,17 @@ describe("legacy compatibility decoding", () => {
   });
 });
 
-describe("v11 canonical portal persistence", () => {
+describe("canonical portal persistence", () => {
   it("rejects state missing any canonical portal state", () => {
     const game = createScenarioGame("flash_point");
-    const malformed = { ...game, portalStates: {} };
-    expect(
-      decodeGame(
-        JSON.stringify({
-          format: "catalyst-castellum-save",
-          savedAt: new Date(0).toISOString(),
-          game: malformed,
-        })
-      )
-    ).toBeNull();
+    const envelope = JSON.parse(encodeGame(game)) as { game: GameState };
+    envelope.game.portalStates = {};
+
+    expect(decodeGame(JSON.stringify(envelope))).toBeNull();
   });
 });
 
-describe("v11 enemy navigation persistence", () => {
+describe("enemy navigation persistence", () => {
   it("rejects an out-of-range path cursor", () => {
     const game = createScenarioGame("flash_point");
     game.enemies.push(persistedEnemy(game));
@@ -216,160 +213,5 @@ describe("v11 enemy navigation persistence", () => {
     game.enemies.push(enemy);
 
     expect(decodeGame(encodeGame(game))).toBeNull();
-  });
-});
-
-describe("v8 spatial migration", () => {
-  it("converts room-segment enemies into cell navigation and initializes portal state", () => {
-    const current = createScenarioGame("flash_point");
-    const { portalStates: omittedPortalStates, ...legacyBase } = current;
-    expect(omittedPortalStates.washlock_to_core_door?.sealed).toBe(true);
-    const legacy = {
-      ...legacyBase,
-      version: 8,
-      phase: "assault",
-      events: current.events.map(({ code: _code, parameters: _parameters, ...event }) => ({
-        ...event,
-        title: "Legacy scenario",
-        detail: "Legacy event detail",
-      })),
-      enemies: [
-        {
-          id: 7,
-          type: "crawler",
-          health: 60,
-          maxHealth: 74,
-          route: [
-            "west_intake",
-            "switchyard",
-            "furnace",
-            "reservoir",
-            "gallery",
-            "lower_intake",
-            "washlock",
-            "core",
-          ],
-          segment: 2,
-          progress: 0.4,
-          spawnAge: 3,
-          damageTaken: 14,
-          damageBySource: emptyDamageLedger(),
-          lastDamage: null,
-        },
-      ],
-    };
-    const decoded = decodeGame(
-      JSON.stringify({
-        format: "catalyst-castellum-save",
-        savedAt: new Date(0).toISOString(),
-        game: legacy,
-      })
-    );
-
-    expect(decoded).not.toBeNull();
-    if (!decoded) throw new Error("Expected the v8 save to migrate.");
-    expect(decoded.version).toBe(13);
-    expect(decoded.enemies[0]?.routeId).toBe("entry_to_core");
-    expect(decoded.enemies[0]?.path.length).toBeGreaterThan(1);
-    expect(decoded.portalStates.switchyard_to_furnace_shaft?.open).toBe(true);
-    expect(decoded.portalStates.washlock_to_core_door?.sealed).toBe(true);
-  });
-});
-
-const legacyGasIds = [
-  "gas_oxygen_to_furnace",
-  "gas_anode_to_furnace",
-  "gas_cathode_to_furnace",
-  "gas_cathode_relief",
-  "gas_anode_to_absorber",
-  "gas_acid_return",
-  "gas_final_header",
-  "gas_outer_bleed",
-  "gas_furnace_exhaust",
-  "gas_final_exhaust",
-] as const;
-const legacyLiquidIds = [
-  "liquid_water_to_cell",
-  "liquid_salt_to_cell",
-  "liquid_liquor_to_absorber",
-  "liquid_liquor_recovery",
-  "liquid_water_to_final",
-  "liquid_hypochlorite_to_final",
-  "liquid_absorber_recycle",
-  "liquid_cell_drain",
-  "liquid_absorber_drain",
-  "liquid_final_drain",
-] as const;
-
-describe("conserving v7 migration", () => {
-  it("merges hidden sub-lines by run+phase without discarding material and leaves them off", () => {
-    const baseline = createScenarioGame("flash_point");
-    const gasLines = Object.fromEntries(
-      legacyGasIds.map((id) => [id, { setting: 1, gas: emptyGas(), temperature: 20 }])
-    ) as Record<
-      (typeof legacyGasIds)[number],
-      { setting: number; gas: ReturnType<typeof emptyGas>; temperature: number }
-    >;
-    gasLines.gas_oxygen_to_furnace.gas.oxygen = 7;
-    gasLines.gas_cathode_to_furnace.gas.hydrogen = 5;
-    gasLines.gas_cathode_to_furnace.temperature = 60;
-    gasLines.gas_furnace_exhaust.gas.nitrogen = 3;
-    const liquidLines = Object.fromEntries(
-      legacyLiquidIds.map((id) => [id, { setting: 1, liquid: emptyLiquid() }])
-    ) as Record<
-      (typeof legacyLiquidIds)[number],
-      { setting: number; liquid: ReturnType<typeof emptyLiquid> }
-    >;
-    liquidLines.liquid_water_to_cell.liquid.water = 4;
-    liquidLines.liquid_salt_to_cell.liquid.sodium_chloride = 6;
-    const transportRuns = Object.fromEntries(
-      PACK_LINE_IDS.map((id) => [id, { gasInstalled: true, liquidInstalled: true }])
-    );
-    const gasBuffers = {
-      ...baseline.gasBuffers,
-      cathode_header: { gas: { ...emptyGas(), hydrogen: 13 } },
-    };
-    const legacy = {
-      format: "catalyst-castellum-save",
-      savedAt: new Date().toISOString(),
-      game: {
-        version: 7,
-        campaign: { ...baseline.campaign, roundIndex: 99 },
-        rooms: baseline.rooms,
-        gasSources: { oxygen_tank: { gas: { ...emptyGas(), oxygen: 11, nitrogen: 2 } } },
-        liquidSources: baseline.liquidSources,
-        gasBuffers,
-        liquidBuffers: baseline.liquidBuffers,
-        gasLines,
-        liquidLines,
-        transportRuns,
-        processes: baseline.processes,
-        gasVent: baseline.gasVent,
-        liquidDrain: baseline.liquidDrain,
-        coreIntegrity: 91,
-        matter: 17,
-        pendingMatter: 3,
-      },
-    };
-
-    const migrated = decodeGame(JSON.stringify(legacy));
-    expect(migrated).not.toBeNull();
-    if (!migrated) throw new Error("Expected the valid V7 fixture to migrate");
-    expect(gasConduitState(migrated, "gas:core__furnace").gas.oxygen).toBe(7);
-    expect(gasConduitState(migrated, "gas:core__furnace").gas.hydrogen).toBe(5);
-    expect(gasConduitState(migrated, "gas:core__furnace").gas.nitrogen).toBe(3);
-    expect(gasConduitState(migrated, "gas:core__furnace").enabled).toBe(false);
-    expect(migrated.gasConduits["liquid:reservoir__washlock"]).toBeUndefined();
-    expect(migrated.liquidConduits["gas:furnace__gallery"]).toBeUndefined();
-    expect(liquidConduitState(migrated, "liquid:core__lower_intake").liquid.water).toBe(4);
-    expect(liquidConduitState(migrated, "liquid:core__lower_intake").liquid.sodium_chloride).toBe(
-      6
-    );
-    expect(migrated.gasSources.starter_gas_header.gas.oxygen).toBe(11);
-    expect(migrated.gasSources.starter_gas_header.gas.nitrogen).toBe(2);
-    expect(migrated.gasSources.starter_gas_header.gas.hydrogen).toBe(13);
-    expect(migrated.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
-    expect(migrated.campaign.roundIndex).toBe(4);
-    expect(migrated.events[0]?.code).toBe("physical_conduit_migrated");
   });
 });

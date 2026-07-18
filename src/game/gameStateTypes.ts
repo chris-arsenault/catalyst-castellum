@@ -47,6 +47,10 @@ export interface RoundStats {
   combustionFlashes: number;
   peakHazard: number;
   matterHarvested: number;
+  fieldDamageAbsorbed: number;
+  reagentEmitted: number;
+  armorTransitions: number;
+  protectedAllySeconds: number;
   damageByChannel: HazardChannels;
   damageBySource: Record<DamageSourceId, number>;
   killsBySource: Record<DamageSourceId, number>;
@@ -90,6 +94,7 @@ export interface GameEventParameterMap {
     lifetimeSource: string;
     matterYield: number;
   };
+  enemy_molted: { enemyType: EnemyType; remainingHealth: number };
   equipment_installed: { equipmentId: EquipmentId; cost: number };
   equipment_upgraded: { equipmentId: EquipmentId; level: number };
   flash_cycle_started: { zone: GasZone };
@@ -102,10 +107,8 @@ export interface GameEventParameterMap {
   };
   gas_source_charged: { sourceId: GasSourceId; cost: number; amount: number };
   hcl_production_started: Record<never, never>;
-  legacy_message: { title: string; detail: string };
   level_planning_started: Record<never, never>;
   liquid_source_charged: { sourceId: LiquidSourceId; cost: number; amount: number };
-  physical_conduit_migrated: Record<never, never>;
   prime_started: { primeSeconds: number };
   process_started: { processId: ProcessId };
   round_advanced: Record<never, never>;
@@ -172,15 +175,14 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 13;
+  version: 14;
   pack: {
     id: string;
     contentVersion: number;
   };
   /**
    * The world the simulation runs on (ADR-0001). Frozen until a map edit replaces the
-   * object and bumps the revision; derived geometry is cached per map object. Rebuilt
-   * from the pack on decode until save v13 (plan M4) serializes it.
+   * object and bumps the revision; derived geometry is cached per map object.
    */
   map: WorldMap;
   mapRevision: number;

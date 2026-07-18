@@ -35,6 +35,7 @@ const corridorExamAvailability = availability({
 export const FLASH_POINT_LEVEL: LevelDefinition = {
   id: "flash_point",
   number: 1,
+  enemyLevel: 20,
   focusRoomId: "furnace",
   featuredReactionIds: ["hydrogen_oxygen_combustion"],
   startingMatter: 16,
@@ -49,23 +50,24 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
     {
       id: "first_spark",
       primeSeconds: 24,
-      wave: enemySequence(10, "crawler", 0.5, 2.2),
+      wave: enemySequence(10, "deckmouth", 0.5, 2.2),
       availability: flashAvailability,
     },
     {
       id: "stored_momentum",
       primeSeconds: 10,
-      wave: [...enemySequence(5, "skimmer", 0.5, 2.2), ...enemySequence(2, "crawler", 3, 2.5)].sort(
-        (left, right) => left.at - right.at
-      ),
+      wave: [
+        ...enemySequence(5, "flintjack", 0.5, 2.2),
+        ...enemySequence(2, "deckmouth", 3, 2.5),
+      ].sort((left, right) => left.at - right.at),
       availability: flashAvailability,
     },
     {
       id: "second_chamber",
       primeSeconds: 30,
       wave: [
-        ...enemySequence(10, "skimmer", 0.5, 1.5, 1.9),
-        ...enemySequence(8, "shell", 3, 2.2, 1.7),
+        ...enemySequence(10, "flintjack", 0.5, 1.5, 7),
+        ...enemySequence(8, "deckmouth", 3, 2.2, 6),
       ].sort((left, right) => left.at - right.at),
       availability: secondChamberAvailability,
     },
@@ -73,8 +75,8 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
       id: "higher_cadence",
       primeSeconds: 12,
       wave: [
-        ...enemySequence(14, "skimmer", 0.5, 1.2, 2.3),
-        ...enemySequence(7, "floater", 2.5, 2.2, 2.2),
+        ...enemySequence(14, "flintjack", 0.5, 1.2, 9),
+        ...enemySequence(7, "shear_jelly", 2.5, 2.2, 8),
       ].sort((left, right) => left.at - right.at),
       availability: secondChamberAvailability,
     },
@@ -82,10 +84,10 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
       id: "corridor_exam",
       primeSeconds: 20,
       wave: [
-        ...enemySequence(10, "skimmer", 0.5, 1.8, 2.3),
-        ...enemySequence(8, "shell", 2.5, 2.5, 2),
-        ...enemySequence(5, "floater", 5, 2.8, 2.2),
-        ...enemySequence(5, "bellows", 8, 3, 1.7),
+        ...enemySequence(10, "flintjack", 0.5, 1.8, 9),
+        ...enemySequence(8, "deckmouth", 2.5, 2.5, 7),
+        ...enemySequence(5, "shear_jelly", 5, 2.8, 8),
+        ...enemySequence(5, "redlung", 8, 3, 6),
       ].sort((left, right) => left.at - right.at),
       availability: corridorExamAvailability,
     },

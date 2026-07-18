@@ -1,0 +1,134 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="768" height="96"
+    viewBox="0 0 768 96"
+    role="img" aria-label="Glowbag sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#fff092"/>
+    <stop offset="0.48" stop-color="#d4bb3f"/>
+    <stop offset="1" stop-color="#76621e"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#fff092"/>
+    <stop offset="0.22" stop-color="#d4bb3f"/>
+    <stop offset="0.7" stop-color="#76621e"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#fff18b" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#ddc845" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="96" height="96"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 0.00)" filter="url(#shadow)">
+    <circle cx="64.00" cy="54.00" r="1.50" fill="#ffe87a" opacity="0.72" filter="url(#soft-glow)"/><circle cx="70.68" cy="41.25" r="2.25" fill="#ffe87a" opacity="0.54" filter="url(#soft-glow)"/><circle cx="75.82" cy="28.50" r="3.00" fill="#ffe87a" opacity="0.36" filter="url(#soft-glow)"/><path d="M40 64 Q40.00 73 37.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q52.66 73 40.34 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q59.38 73 49.62 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(1.00 1.00) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(96 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 2.12)" filter="url(#shadow)">
+    <circle cx="65.41" cy="49.75" r="1.75" fill="#ffe87a" opacity="0.66" filter="url(#soft-glow)"/><circle cx="70.95" cy="37.00" r="2.50" fill="#ffe87a" opacity="0.48" filter="url(#soft-glow)"/><circle cx="74.70" cy="24.25" r="3.25" fill="#ffe87a" opacity="0.30" filter="url(#soft-glow)"/><path d="M40 64 Q43.54 73 33.46 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q52.58 73 40.42 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q55.78 73 53.22 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(0.96 1.04) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(192 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 3.00)" filter="url(#shadow)">
+    <circle cx="66.00" cy="45.50" r="2.00" fill="#ffe87a" opacity="0.60" filter="url(#soft-glow)"/><circle cx="70.08" cy="32.75" r="2.75" fill="#ffe87a" opacity="0.42" filter="url(#soft-glow)"/><circle cx="73.17" cy="54.00" r="1.50" fill="#ffe87a" opacity="0.72" filter="url(#soft-glow)"/><path d="M40 64 Q45.00 73 32.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q49.81 73 43.19 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q52.31 73 56.69 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(0.94 1.06) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(288 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 2.12)" filter="url(#shadow)">
+    <circle cx="65.41" cy="41.25" r="2.25" fill="#ffe87a" opacity="0.54" filter="url(#soft-glow)"/><circle cx="68.57" cy="28.50" r="3.00" fill="#ffe87a" opacity="0.36" filter="url(#soft-glow)"/><circle cx="72.13" cy="49.75" r="1.75" fill="#ffe87a" opacity="0.66" filter="url(#soft-glow)"/><path d="M40 64 Q43.54 73 33.46 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q45.99 73 47.01 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q51.00 73 58.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(0.96 1.04) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(384 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 0.00)" filter="url(#shadow)">
+    <circle cx="64.00" cy="37.00" r="2.50" fill="#ffe87a" opacity="0.48" filter="url(#soft-glow)"/><circle cx="67.32" cy="24.25" r="3.25" fill="#ffe87a" opacity="0.30" filter="url(#soft-glow)"/><circle cx="72.18" cy="45.50" r="2.00" fill="#ffe87a" opacity="0.60" filter="url(#soft-glow)"/><path d="M40 64 Q40.00 73 37.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q43.34 73 49.66 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q52.62 73 56.38 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(1.00 1.00) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(480 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -2.12)" filter="url(#shadow)">
+    <circle cx="62.59" cy="32.75" r="2.75" fill="#ffe87a" opacity="0.42" filter="url(#soft-glow)"/><circle cx="67.05" cy="54.00" r="1.50" fill="#ffe87a" opacity="0.72" filter="url(#soft-glow)"/><circle cx="73.30" cy="41.25" r="2.25" fill="#ffe87a" opacity="0.54" filter="url(#soft-glow)"/><path d="M40 64 Q36.46 73 40.54 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q43.42 73 49.58 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q56.22 73 52.78 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(1.04 0.96) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(576 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -3.00)" filter="url(#shadow)">
+    <circle cx="62.00" cy="28.50" r="3.00" fill="#ffe87a" opacity="0.36" filter="url(#soft-glow)"/><circle cx="67.92" cy="49.75" r="1.75" fill="#ffe87a" opacity="0.66" filter="url(#soft-glow)"/><circle cx="74.83" cy="37.00" r="2.50" fill="#ffe87a" opacity="0.48" filter="url(#soft-glow)"/><path d="M40 64 Q35.00 73 42.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q46.19 73 46.81 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q59.69 73 49.31 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(1.06 0.94) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(672 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -2.12)" filter="url(#shadow)">
+    <circle cx="62.59" cy="24.25" r="3.25" fill="#ffe87a" opacity="0.30" filter="url(#soft-glow)"/><circle cx="69.43" cy="45.50" r="2.00" fill="#ffe87a" opacity="0.60" filter="url(#soft-glow)"/><circle cx="75.87" cy="32.75" r="2.75" fill="#ffe87a" opacity="0.42" filter="url(#soft-glow)"/><path d="M40 64 Q36.46 73 40.54 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/><path d="M48 64 Q50.01 73 42.99 84" fill="none" stroke="#c5a83d" stroke-width="2" stroke-linecap="round"/><path d="M56 64 Q61.00 73 48.00 84" fill="none" stroke="#c5a83d" stroke-width="1.4" stroke-linecap="round"/>
+    <g transform="translate(48 46) scale(1.04 0.96) translate(-48 -46)">
+      <path d="M30 58 Q21 43 29 26 Q38 14 52 18 Q70 21 73 41 Q71 59 59 67 Q42 72 30 58Z" fill="url(#body)" fill-opacity=".92" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M33 39 Q36 22 50 21 Q61 24 67 37 Q49 29 33 39Z" fill="#fff4a8" opacity=".43"/>
+      <path d="M35 54 Q47 62 62 53" fill="none" stroke="#7e6a25" stroke-width="1.5" opacity=".7"/>
+      <circle cx="43" cy="36" r="10" fill="url(#glow)" opacity=".75" filter="url(#soft-glow)"/>
+      <circle cx="39" cy="43" r="2.1" fill="#fff7b7"/><circle cx="58" cy="43" r="2.1" fill="#fff7b7"/>
+      <circle cx="39" cy="43" r=".9" fill="#463d16"/><circle cx="58" cy="43" r=".9" fill="#463d16"/>
+    </g>
+  </g>
+    </g>
+  </svg>

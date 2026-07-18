@@ -96,6 +96,16 @@ const resistedChannels = (
   };
 };
 
+export const requestedDamageForPackets = (
+  enemy: EnemyState,
+  packets: DamagePacket[],
+  definition: GameDefinition
+): number =>
+  packets.reduce(
+    (total, packet) => total + channelTotal(resistedChannels(enemy, packet.channels, definition)),
+    0
+  );
+
 export const dominantAppliedDamagePacket = (
   packets: AppliedDamagePacket[]
 ): AppliedDamagePacket | null =>
@@ -136,16 +146,17 @@ export const dominantLedgerSource = (ledger: DamageLedger): DamageSourceId | nul
  * This keeps attribution independent of packet iteration order when several hazards
  * jointly deliver lethal damage in the same simulation tick.
  */
-export const applyDamagePackets = (
+export const applyDamagePacketsWithScale = (
   state: GameState,
   enemy: EnemyState,
   packets: DamagePacket[],
+  incomingScale: number,
   definition: GameDefinition
 ): DamageApplication => {
   const healthBefore = enemy.health;
   const resisted = packets.map((packet) => ({
     ...packet,
-    channels: resistedChannels(enemy, packet.channels, definition),
+    channels: scaledChannels(resistedChannels(enemy, packet.channels, definition), incomingScale),
   }));
   const requested = resisted.reduce((total, packet) => total + channelTotal(packet.channels), 0);
   if (requested <= 0 || healthBefore <= 0) {
@@ -198,3 +209,10 @@ export const applyDamagePackets = (
     packets: applied,
   };
 };
+
+export const applyDamagePackets = (
+  state: GameState,
+  enemy: EnemyState,
+  packets: DamagePacket[],
+  definition: GameDefinition
+): DamageApplication => applyDamagePacketsWithScale(state, enemy, packets, 1, definition);

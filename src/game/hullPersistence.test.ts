@@ -6,7 +6,7 @@ import { roomState } from "./world/instances";
 import type { GameState } from "./types";
 
 /**
- * The walking-castellum's contract: only the player-owned hull travels between sites.
+ * The claim rig's travel contract: only the player-owned hull travels between sites.
  * The hull starts small — Core + R-06 washlock — so a defense built in a SITE room
  * (the furnace's OX-1) is temporary and does not carry, while a machine placed in an
  * OWNED room does. This is the deliberate progression: sites are disposable, the hull

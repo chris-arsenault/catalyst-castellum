@@ -10,6 +10,7 @@ import { createEventCopy } from "./eventCopy";
 import { createLevelCopy } from "./levelCopy";
 import { createLimitingFactorCopy } from "./limitingFactorCopy";
 import { createManualContent, createReactionMechanics } from "./manualContent";
+import { createNarrativeCopy } from "./narrativeCopy";
 import { createRoundReportCopy } from "./roundReportCopy";
 import { createPresentationSelectors } from "./selectors";
 
@@ -23,6 +24,7 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     commandCopy: createCommandCopy(translator),
     eventCopy: createEventCopy({ definition: runtime.definition, formatters, translator }),
     levelCopy: createLevelCopy(translator),
+    narrativeCopy: createNarrativeCopy(translator),
     manual: createManualContent(translator),
     reactionMechanics: createReactionMechanics(translator),
     damage: createDamageCopy(translator),

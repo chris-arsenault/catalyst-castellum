@@ -123,6 +123,10 @@ const finishResult = (
     killed: counters.reports.reduce((total, report) => total + report.killed, 0),
     breached: counters.reports.reduce((total, report) => total + report.breached, 0),
     coreDamage: counters.reports.reduce((total, report) => total + report.coreDamage, 0),
+    fieldDamageAbsorbed: counters.reports.reduce(
+      (total, report) => total + report.fieldDamageAbsorbed,
+      0
+    ),
     damageBySource: sourceTotals("damageBySource"),
     killsBySource: sourceTotals("killsBySource"),
     plannedActions: plan.commands.length,

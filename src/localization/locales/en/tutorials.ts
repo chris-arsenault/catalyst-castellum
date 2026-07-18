@@ -29,16 +29,16 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.reagent.coProducts.story.kicker": "Second field assignment",
   "tutorial.reagent.coProducts.story.title": "Commission the CL-02 membrane cell",
   "tutorial.reagent.coProducts.story.paragraph.0":
-    "The crawler route crosses the CL-02 cell bay and CL-03 reservoir. Chlorine production turns both rooms into active defenses.",
+    "The deckmouth route crosses the CL-02 cell bay and CL-03 reservoir. Chlorine production turns both rooms into active defenses.",
   "tutorial.reagent.coProducts.story.paragraph.1":
     "A single cell current consumes water and brine together. Every reaction extent creates chlorine, hydrogen, and sodium hydroxide, so feed availability and the smallest outlet headroom control the whole process.",
   "tutorial.reagent.coProducts.mission.title": "Establish CL-1 production",
   "tutorial.reagent.coProducts.mission.summary":
-    "Mount the Membrane Cell in CL-02, verify all three conserved outputs, then neutralize the crawler column.",
+    "Mount the Membrane Cell in CL-02, verify all three conserved outputs, then neutralize the deckmouth column.",
   "tutorial.reagent.coProducts.task.commissionCell": "Mount and run the Membrane Cell in CL-02.",
   "tutorial.reagent.coProducts.task.feedCell": "Open the Core → CL-02 water-and-brine feed.",
   "tutorial.reagent.coProducts.task.proveProducts": "Produce Cl₂, H₂, and NaOH through CL-1.",
-  "tutorial.reagent.coProducts.task.holdCrossing": "Neutralize the first crawler column.",
+  "tutorial.reagent.coProducts.task.holdCrossing": "Neutralize the first deckmouth column.",
   "tutorial.reagent.coProducts.step.installCell.title": "Install the membrane cell",
   "tutorial.reagent.coProducts.step.installCell.explanation":
     "CL-02 links the Core feed, the CL-03 transfer duct, and Core recovery for this assignment.",
@@ -70,13 +70,13 @@ export const TUTORIAL_MESSAGES = {
     "Watch the separated outlet panel until CL-1 records production.",
   "tutorial.reagent.coProducts.step.observeProducts.result":
     "CL-1 has produced all three conserved co-products.",
-  "tutorial.reagent.coProducts.step.startAssault.title": "Release the crawler wave",
+  "tutorial.reagent.coProducts.step.startAssault.title": "Release the deckmouth wave",
   "tutorial.reagent.coProducts.step.startAssault.explanation":
-    "The live process continues while crawlers cross CL-02 and CL-03, linking production state and defense timing on one clock.",
+    "The live process continues while deckmouths cross CL-02 and CL-03, linking production state and defense timing on one clock.",
   "tutorial.reagent.coProducts.step.startAssault.instruction":
     "Start the assault and track the chlorine exposure along the route.",
   "tutorial.reagent.coProducts.step.startAssault.result":
-    "The crawler column is moving through the live production network.",
+    "The deckmouth column is moving through the live production network.",
   "tutorial.reagent.coProducts.step.observeWave.title": "Hold the crossing",
   "tutorial.reagent.coProducts.step.observeWave.explanation":
     "CL-03 receives the shared chlorine-and-hydrogen stream while the membrane cell responds to feed and outlet headroom.",

@@ -31,9 +31,7 @@
 
 .intermission-visual {
   position: relative;
-  display: grid;
-  align-content: center;
-  min-height: 470px;
+  min-height: 650px;
   overflow: hidden;
   border-right: 1px solid #2d594a;
   background:
@@ -46,102 +44,203 @@
     auto;
 }
 
-.walking-castellum {
+.claim-rig-graphic {
+  position: absolute;
+  top: 5px;
+  left: 2%;
   display: block;
-  width: 100%;
-  max-height: 390px;
+  width: 96%;
+  height: 285px;
   overflow: visible;
 }
 
-.walking-ground path {
+.claim-rig-drift path {
   fill: none;
-  stroke: #426c5e;
+  stroke: #4d796a;
   stroke-width: 2;
-  stroke-dasharray: 18 14;
-  animation: walking-ground 1.1s linear infinite;
+  stroke-dasharray: 22 16;
+  animation: claim-rig-drift 2.8s linear infinite;
 }
 
-.walking-ground path + path {
-  stroke: #294d41;
-  stroke-width: 4;
-  stroke-dasharray: 36 24;
-  animation-duration: 1.65s;
+.claim-rig-field {
+  fill: url("#claim-rig-field");
+  animation: claim-rig-field 1.8s ease-in-out infinite alternate;
 }
 
-.walking-shadow {
-  fill: rgba(0, 0, 0, 0.38);
-  animation: walking-shadow 0.9s ease-in-out infinite alternate;
-}
-
-.walking-leg {
+.claim-rig-tow {
   fill: none;
-  stroke: #78a28e;
-  stroke-width: 10;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  transform-box: fill-box;
-  transform-origin: center top;
+  stroke: #8bc9b6;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 7px rgba(139, 201, 182, 0.55));
 }
 
-.walking-leg path {
-  filter: drop-shadow(0 5px 3px rgba(0, 0, 0, 0.4));
+.claim-rig-hull {
+  animation: claim-rig-hull 1.8s ease-in-out infinite alternate;
 }
 
-.walking-leg-a {
-  animation: walking-leg-a 0.9s ease-in-out infinite alternate;
-}
-
-.walking-leg-b {
-  animation: walking-leg-b 0.9s ease-in-out infinite alternate;
-}
-
-.walking-hull {
-  animation: walking-hull 0.9s ease-in-out infinite alternate;
-}
-
-.walking-hull-glow {
-  fill: rgba(113, 203, 176, 0.18);
-  filter: url("#hull-glow");
-}
-
-.walking-hull-body,
-.walking-room {
-  fill: url("#hull-fill");
+.claim-rig-hull > path:first-child,
+.claim-rig-hull > rect {
+  fill: url("#claim-rig-hull");
   stroke: #80b5a0;
   stroke-width: 3;
 }
 
-.walking-room {
+.claim-rig-hull > rect {
   fill: #153b2f;
 }
 
-.walking-core {
-  stroke: #83d2d8;
+.claim-rig-keel {
+  fill: #0a1a15;
+  stroke: #547d6d;
+  stroke-width: 3;
 }
 
-.walking-bracket {
+.claim-rig-bracket {
   fill: none;
   stroke: #68d7e3;
   stroke-width: 4;
   stroke-linecap: square;
 }
 
-.walking-reactor {
+.claim-rig-core {
   fill: #203d2b;
   stroke: #e7f76f;
   stroke-width: 4;
   filter: drop-shadow(0 0 8px rgba(231, 247, 111, 0.38));
 }
 
-.walking-pipe {
+.claim-rig-pipe,
+.claim-rig-array {
   fill: none;
   stroke: #59b6c2;
   stroke-width: 6;
 }
 
-.walking-light {
+.claim-rig-array {
+  stroke-width: 3;
+}
+
+.claim-rig-light {
   fill: #e7f76f;
   filter: drop-shadow(0 0 4px #e7f76f);
+}
+
+.campaign-route-map {
+  position: absolute;
+  top: 265px;
+  right: 24px;
+  bottom: 82px;
+  left: 24px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(91, 151, 130, 0.38);
+  border-radius: 8px;
+  background: rgba(5, 15, 12, 0.8);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(7px);
+}
+
+.campaign-route-map > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(91, 151, 130, 0.27);
+}
+
+.campaign-route-map > header strong,
+.campaign-route-map > header span {
+  color: #bfd4ca;
+  font: 750 9px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.campaign-route-map > header span {
+  color: #829f92;
+  font-size: 8px;
+  text-align: right;
+}
+
+.campaign-route-field {
+  position: relative;
+  min-height: 0;
+  background:
+    linear-gradient(rgba(91, 151, 130, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(91, 151, 130, 0.07) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.campaign-route-field > svg {
+  position: absolute;
+  inset: 8px;
+  width: calc(100% - 16px);
+  height: calc(100% - 16px);
+  margin: 0;
+  padding: 0;
+}
+
+.campaign-route-field line {
+  vector-effect: non-scaling-stroke;
+  stroke-width: 2;
+}
+
+.campaign-route-field line.secured {
+  stroke: #c7df62;
+}
+
+.campaign-route-field line.pending {
+  stroke: #345c4e;
+  stroke-dasharray: 4 5;
+}
+
+.route-site circle {
+  fill: #0b1b16;
+  stroke: #3e6b5b;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.route-site-order {
+  fill: #5e8274;
+  font: 750 2.2px/1 var(--mono);
+}
+
+.route-site.secured circle {
+  stroke: #79934b;
+}
+
+.route-site.secured .route-site-order {
+  fill: #b9ce66;
+}
+
+.route-site.current circle {
+  fill: #35401f;
+  stroke: var(--lime);
+  stroke-width: 2;
+}
+
+.route-site.current .route-site-order {
+  fill: #f1f8c3;
+}
+
+.route-site.next circle {
+  stroke: #72bda5;
+}
+
+.route-site.next .route-site-order {
+  fill: #a5d7c7;
+}
+
+.route-site-name {
+  fill: #e4efde;
+  font: 750 2.5px/1 var(--mono);
+  paint-order: stroke;
+  stroke: #07110e;
+  stroke-width: 1.4;
+  stroke-linejoin: round;
 }
 
 .intermission-motion-copy {
@@ -228,6 +327,48 @@
   line-height: 1.55;
 }
 
+.intermission-summary .narrative-dialogue {
+  margin: 0 0 18px;
+}
+
+.intermission-summary .dialogue-turn {
+  grid-template-columns: 74px minmax(0, 1fr);
+  gap: 13px;
+  min-height: 142px;
+  padding: 13px;
+}
+
+.intermission-summary .speaker-portrait {
+  min-height: 112px;
+}
+
+.intermission-summary .speaker-portrait-image {
+  min-height: 96px;
+  gap: 7px;
+}
+
+.intermission-summary .speaker-portrait-image svg {
+  width: 45px;
+  height: 45px;
+}
+
+.intermission-summary .speaker-portrait-image span {
+  font-size: 10px;
+}
+
+.intermission-summary .dialogue-turn > article {
+  gap: 9px;
+}
+
+.intermission-summary .dialogue-turn > article strong {
+  font-size: 13px;
+}
+
+.intermission-summary .dialogue-turn > article p {
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .intermission-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -292,6 +433,10 @@
   grid-template-columns: 1fr 1fr;
   gap: 10px;
   margin-top: 22px;
+}
+
+.intermission-choice.single {
+  grid-template-columns: 1fr;
 }
 
 .graft-choice,
@@ -368,8 +513,12 @@
   text-align: center;
 }
 
-.travel-recovery .walking-castellum {
-  max-height: 330px;
+.travel-recovery > .intermission-visual {
+  width: min(580px, 100%);
+  min-height: 460px;
+  margin-bottom: 22px;
+  border: 1px solid #2d594a;
+  border-radius: 9px;
 }
 
 .travel-recovery .travel-choice {
@@ -522,41 +671,23 @@
   min-width: 250px;
 }
 
-@keyframes walking-ground {
+@keyframes claim-rig-drift {
   to {
-    stroke-dashoffset: -32;
+    stroke-dashoffset: -76;
   }
 }
 
-@keyframes walking-shadow {
+@keyframes claim-rig-field {
   to {
-    opacity: 0.68;
-    transform: scaleX(0.93);
+    opacity: 0.58;
+    transform: scale(0.97);
     transform-origin: center;
   }
 }
 
-@keyframes walking-leg-a {
-  from {
-    transform: skewX(-3deg) translateX(-5px);
-  }
+@keyframes claim-rig-hull {
   to {
-    transform: skewX(4deg) translateX(7px);
-  }
-}
-
-@keyframes walking-leg-b {
-  from {
-    transform: skewX(4deg) translateX(7px);
-  }
-  to {
-    transform: skewX(-3deg) translateX(-5px);
-  }
-}
-
-@keyframes walking-hull {
-  to {
-    transform: translateY(-7px) rotate(0.3deg);
+    transform: translateY(-5px) rotate(0.2deg);
     transform-origin: center;
   }
 }
@@ -566,7 +697,7 @@
     grid-template-columns: 1fr;
   }
   .intermission-visual {
-    min-height: 360px;
+    min-height: 570px;
     border-right: 0;
     border-bottom: 1px solid #2d594a;
   }
@@ -630,11 +761,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .walking-ground path,
-  .walking-shadow,
-  .walking-leg-a,
-  .walking-leg-b,
-  .walking-hull {
+  .claim-rig-drift path,
+  .claim-rig-field,
+  .claim-rig-hull {
     animation: none;
   }
 }

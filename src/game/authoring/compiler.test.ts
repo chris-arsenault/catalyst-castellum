@@ -9,7 +9,7 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(4);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(7);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
@@ -28,7 +28,7 @@ describe("game pack compiler", () => {
                     at: 0,
                     type: "missing_enemy" as never,
                     routeId: "entry_to_core",
-                    healthScale: 1,
+                    levelOffset: 0,
                   },
                 ],
               },
@@ -77,3 +77,77 @@ describe("game pack compiler", () => {
     });
   });
 });
+
+describe("enemy level authoring", () => {
+  it("rejects a site baseline outside the enemy level domain", () => {
+    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        levels: {
+          ...DEFAULT_GAME_DEFINITION.levels,
+          flash_point: { ...level, enemyLevel: 100 },
+        },
+      })
+    ).toThrow(/Site enemy level must be an integer between 1 and 99/);
+  });
+
+  it("rejects a wave offset that resolves outside the enemy level domain", () => {
+    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        levels: {
+          ...DEFAULT_GAME_DEFINITION.levels,
+          flash_point: {
+            ...level,
+            rounds: level.rounds.map((round, index) =>
+              index === 0
+                ? {
+                    ...round,
+                    wave: round.wave.map((entry) => ({ ...entry, levelOffset: -20 })),
+                  }
+                : round
+            ),
+          },
+        },
+      })
+    ).toThrow(/Resolved enemy level must be between 1 and 99/);
+  });
+});
+
+describe("enemy behavior authoring", () => {
+  it("rejects an empty shared-field budget", () => {
+    const anchor = DEFAULT_GAME_DEFINITION.enemies.anchor;
+    if (anchor.behavior.kind !== "shared_field") throw new Error("Expected Anchor field behavior.");
+    const fieldBehavior = anchor.behavior;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        enemies: {
+          ...DEFAULT_GAME_DEFINITION.enemies,
+          anchor: { ...anchor, behavior: { ...fieldBehavior, capacity: 0 } },
+        },
+      })
+    ).toThrow(/Field capacity must be positive/);
+  });
+
+  it("caps a wave at one shared-field enemy", () => {
+    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        levels: {
+          ...DEFAULT_GAME_DEFINITION.levels,
+          flash_point: {
+            ...level,
+            rounds: level.rounds.map((round, index) =>
+              index === 0 ? { ...round, wave: enemySequenceForFieldTest() } : round
+            ),
+          },
+        },
+      })
+    ).toThrow(/at most one shared-field enemy/);
+  });
+});
+
+const enemySequenceForFieldTest = () => [
+  { at: 0, type: "anchor" as const, routeId: "entry_to_core", levelOffset: 0 },
+  { at: 1, type: "anchor" as const, routeId: "entry_to_core", levelOffset: 0 },
+];

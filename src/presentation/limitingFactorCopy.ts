@@ -28,7 +28,6 @@ const CONDITION_KEYS = Object.fromEntries(
 export const createLimitingFactorCopy =
   (translator: Translator) =>
   (factor: LimitingFactor): string => {
-    if (factor.kind === "legacy") return factor.label;
     const label =
       factor.kind === "species"
         ? SPECIES_DEFINITIONS[factor.speciesId].formula

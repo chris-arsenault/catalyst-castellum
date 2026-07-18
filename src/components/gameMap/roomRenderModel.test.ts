@@ -71,4 +71,15 @@ describe("canonical room rendering projection", () => {
     expect(new Set(model.gasInflowColors).size).toBe(2);
     expect(model.liquidInflowRate).toBe(0);
   });
+
+  it("projects the Core's authored supply reservoirs into its cutaway", () => {
+    const game = createScenarioGame("commissioning_exam");
+    game.liquidSources.water_tank.liquid.water = 90;
+    const model = roomRenderModel(game, "core", false, 0);
+
+    expect(model.coreReservoirs.map(({ id }) => id)).toEqual(["gas_header", "water", "brine"]);
+    expect(model.coreReservoirs.find(({ id }) => id === "water")?.fill).toBeCloseTo(0.5);
+    expect(model.coreReservoirs.every(({ fill }) => fill >= 0 && fill <= 1)).toBe(true);
+    expect(roomHitArea(model).contains(model.width / 2 + 18, 0)).toBe(true);
+  });
 });

@@ -8,10 +8,10 @@ import type {
   RoomId,
   RoomState,
 } from "../types";
-import { roundDefinitionFor } from "./campaign";
+import { levelDefinitionFor, roundDefinitionFor } from "./campaign";
 import {
   addChannels,
-  applyDamagePackets,
+  applyDamagePacketsWithScale,
   channelTotal,
   dominantAppliedDamagePacket,
   dominantLedgerSource,
@@ -34,8 +34,15 @@ import { findEnemyPath, findEnemyPathBetween } from "./navigation";
 import { roomMovementMultiplier } from "./roomState";
 import { enemyGasZone, enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 import type { WorldMap } from "../world/map";
-import { ENEMY_WORLD_SPEED_SCALE, LOCOMOTION_SPEED } from "./enemyMovementRules";
+import {
+  enemyBehaviorSpeedMultiplier,
+  ENEMY_WORLD_SPEED_SCALE,
+  LOCOMOTION_SPEED,
+} from "./enemyMovementRules";
+import { enemyStatsAtLevel, resolveEnemyLevel } from "./enemyLevel";
 import { roomState } from "../world/instances";
+import { initialEnemyBehaviorState, transitionArmoredMolt } from "./enemyBehaviors";
+import { sharedFieldDamageScales } from "./enemyField";
 
 export { enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 
@@ -54,6 +61,7 @@ const burstPacket = (
 });
 
 export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): void => {
+  const level = levelDefinitionFor(state, gameDefinition);
   const wave = roundDefinitionFor(state, gameDefinition).wave;
   while (state.spawnCursor < wave.length) {
     const entry = wave[state.spawnCursor];
@@ -64,10 +72,12 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
       state.map
     );
     if (path.length === 0) throw new Error(`No cell route reaches Core for ${entry.type}.`);
-    const health = definition.health * entry.healthScale;
+    const enemyLevel = resolveEnemyLevel(level.enemyLevel, entry.levelOffset);
+    const health = enemyStatsAtLevel(definition, enemyLevel).health;
     state.enemies.push({
       id: state.nextEnemyId,
       type: entry.type,
+      level: enemyLevel,
       health,
       maxHealth: health,
       routeId: entry.routeId,
@@ -80,6 +90,7 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
       damageTaken: 0,
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
+      behavior: initialEnemyBehaviorState(definition, enemyLevel),
     });
     state.nextEnemyId += 1;
     state.spawnCursor += 1;
@@ -100,15 +111,16 @@ const neutralizeEnemy = (
   gameDefinition: GameDefinition
 ): void => {
   const definition = gameDefinition.enemies[enemy.type];
+  const leveled = enemyStatsAtLevel(definition, enemy.level);
   const finalSource = application.dominantSource ?? dominantLedgerSource(enemy.damageBySource);
   const lifetimeSource = dominantLedgerSource(enemy.damageBySource);
   const finalChannel = application.dominantChannel;
   state.stats.killed += 1;
   if (finalSource) state.stats.killsBySource[finalSource] += 1;
-  state.stats.matterHarvested += definition.matterYield;
-  state.pendingMatter += definition.matterYield;
+  state.stats.matterHarvested += leveled.matterYield;
+  state.pendingMatter += leveled.matterYield;
   roomState(state, roomId).residue = clamp(
-    roomState(state, roomId).residue + definition.residueOnDeath,
+    roomState(state, roomId).residue + leveled.residueOnDeath,
     0,
     100
   );
@@ -123,7 +135,7 @@ const neutralizeEnemy = (
       finalSource: finalSource ?? "",
       finalChannel: finalChannel ?? "",
       lifetimeSource: lifetimeSource && lifetimeSource !== finalSource ? lifetimeSource : "",
-      matterYield: definition.matterYield,
+      matterYield: leveled.matterYield,
     },
     roomId
   );
@@ -175,31 +187,16 @@ const recordBurstIncidents = (state: GameState, builders: IncidentBuilder[]): vo
   }
 };
 
-const resolveCombatForEnemy = (
-  state: GameState,
+const recordEnemyIncidents = (
   enemy: EnemyState,
-  dt: number,
-  bursts: HazardBurst[],
+  roomId: RoomId | null,
+  position: ReturnType<typeof enemyWorldPosition>,
+  application: DamageApplication,
+  lethalPacket: AppliedDamagePacket | null,
+  matchingBurstIndices: number[],
   builders: IncidentBuilder[],
-  exposureBuilders: ExposureIncidentBuilders,
-  definition: GameDefinition
-): boolean => {
-  const position = enemyWorldPosition(enemy);
-  const roomId = enemyRoomId(enemy, state.map);
-  enemy.spawnAge += dt;
-  const matchingBurstIndices = bursts.flatMap((burst, index) =>
-    roomId !== null && burst.roomId === roomId ? [index] : []
-  );
-  const packets = [
-    ...(roomId
-      ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, state.map, definition)
-      : []),
-    ...matchingBurstIndices.map((index) =>
-      burstPacket(bursts[index] as HazardBurst, index, enemy, state.map)
-    ),
-  ];
-  const application = applyDamagePackets(state, enemy, packets, definition);
-  const lethalPacket = dominantAppliedDamagePacket(application.packets);
+  exposureBuilders: ExposureIncidentBuilders
+): void => {
   if (roomId) {
     collectExposureIncidents(exposureBuilders, roomId, enemy, position, application, lethalPacket);
   }
@@ -218,6 +215,45 @@ const resolveCombatForEnemy = (
       killed: application.killed && lethalPacket?.key === packet.key,
     });
   }
+};
+
+const resolveCombatForEnemy = (
+  state: GameState,
+  enemy: EnemyState,
+  dt: number,
+  bursts: HazardBurst[],
+  builders: IncidentBuilder[],
+  exposureBuilders: ExposureIncidentBuilders,
+  definition: GameDefinition,
+  incomingScale: number
+): boolean => {
+  const position = enemyWorldPosition(enemy);
+  const roomId = enemyRoomId(enemy, state.map);
+  enemy.spawnAge += dt;
+  const matchingBurstIndices = bursts.flatMap((burst, index) =>
+    roomId !== null && burst.roomId === roomId ? [index] : []
+  );
+  const packets = [
+    ...(roomId
+      ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, state.map, definition)
+      : []),
+    ...matchingBurstIndices.map((index) =>
+      burstPacket(bursts[index] as HazardBurst, index, enemy, state.map)
+    ),
+  ];
+  const application = applyDamagePacketsWithScale(state, enemy, packets, incomingScale, definition);
+  const lethalPacket = dominantAppliedDamagePacket(application.packets);
+  recordEnemyIncidents(
+    enemy,
+    roomId,
+    position,
+    application,
+    lethalPacket,
+    matchingBurstIndices,
+    builders,
+    exposureBuilders
+  );
+  transitionArmoredMolt(state, enemy, roomId, application.killed);
   if (!application.killed || !roomId) return true;
   neutralizeEnemy(state, enemy, roomId, application, definition);
   return false;
@@ -239,8 +275,18 @@ export const resolveEnemyCombat = (
     damageByChannel: emptyHazardChannels(),
   }));
   const exposureBuilders: ExposureIncidentBuilders = new Map();
+  const incomingScales = sharedFieldDamageScales(state, dt, bursts, definition);
   state.enemies = state.enemies.filter((enemy) =>
-    resolveCombatForEnemy(state, enemy, dt, bursts, builders, exposureBuilders, definition)
+    resolveCombatForEnemy(
+      state,
+      enemy,
+      dt,
+      bursts,
+      builders,
+      exposureBuilders,
+      definition,
+      incomingScales.get(enemy.id) ?? 1
+    )
   );
   recordExposureIncidents(state, exposureBuilders);
   recordBurstIncidents(state, builders);
@@ -323,6 +369,7 @@ const moveEnemy = (
   const definition = gameDefinition.enemies[enemy.type];
   let travel =
     definition.speed *
+    enemyBehaviorSpeedMultiplier(enemy, definition) *
     ENEMY_WORLD_SPEED_SCALE *
     (room ? roomMovementMultiplier(room, definition.flying, gameDefinition) : 1) *
     dt;
@@ -345,16 +392,11 @@ const moveEnemy = (
 
 const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDefinition): void => {
   const definition = gameDefinition.enemies[enemy.type];
-  state.coreIntegrity = Math.max(0, state.coreIntegrity - definition.coreDamage);
+  const coreDamage = enemyStatsAtLevel(definition, enemy.level).coreDamage;
+  state.coreIntegrity = Math.max(0, state.coreIntegrity - coreDamage);
   state.stats.breached += 1;
-  state.stats.coreDamage += definition.coreDamage;
-  addEvent(
-    state,
-    "danger",
-    "core_breached",
-    { enemyType: enemy.type, coreDamage: definition.coreDamage },
-    "core"
-  );
+  state.stats.coreDamage += coreDamage;
+  addEvent(state, "danger", "core_breached", { enemyType: enemy.type, coreDamage }, "core");
 };
 
 export const moveEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {

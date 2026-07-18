@@ -97,7 +97,7 @@ describe("player-built connections are map edits", () => {
     expect(rebuilt.state.mapRevision).toBe(dismantled.state.mapRevision);
   });
 
-  it("round-trips a player-built line through the v13 save", () => {
+  it("round-trips a player-built line through the current save", () => {
     const built = build(buildableState()).state;
     const decoded = decodeGame(encodeGame(built, DEFAULT_GAME_DEFINITION), DEFAULT_GAME_DEFINITION);
     expect(decoded).not.toBeNull();

@@ -1,67 +1,48 @@
-import { ArrowRight, Blocks, CheckCircle2, Footprints, Gauge, LogOut } from "lucide-react";
+import { ArrowRight, Blocks, CheckCircle2, Gauge, LogOut, Navigation } from "lucide-react";
 import { useCallback } from "react";
 import { useGamePresentation } from "../application/presentationContext";
 import { useGameStore } from "../application/store";
-import { LEVEL_DEFINITIONS, nextLevelId } from "../presentation/defaultGame";
+import {
+  LEVEL_DEFINITIONS,
+  narrativeSiteForLevel,
+  nextLevelId,
+  type NarrativeSiteDefinition,
+} from "../presentation/defaultGame";
 import { levelDefinitionFor } from "../game/queries";
 import { GraftBoard } from "./GraftBoard";
+import { CampaignRouteMap } from "./CampaignRouteMap";
+import { ClaimRigGraphic } from "./ClaimRigGraphic";
+import { NarrativeDialogue } from "./NarrativeDialogue";
 
-const WalkingCastellum = () => {
-  const { translator } = useGamePresentation();
+const NarrativeTransitVisual = ({
+  currentSite,
+  destination,
+}: {
+  currentSite: NarrativeSiteDefinition;
+  destination: NarrativeSiteDefinition | null;
+}) => {
+  const { narrativeCopy, translator } = useGamePresentation();
+  const siteName = narrativeCopy.site(destination ?? currentSite).name;
   return (
-    <svg
-      className="walking-castellum"
-      viewBox="0 0 640 320"
-      role="img"
-      aria-label={translator.text("ui.intermission.walkingLabel")}
-    >
-      <defs>
-        <linearGradient id="hull-fill" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor="#285c4e" />
-          <stop offset="1" stopColor="#102820" />
-        </linearGradient>
-        <filter id="hull-glow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur stdDeviation="8" />
-        </filter>
-      </defs>
-      <g className="walking-ground">
-        <path d="M30 270 H610" />
-        <path d="M60 292 H220 M260 292 H430 M470 292 H590" />
-      </g>
-      <ellipse className="walking-shadow" cx="320" cy="263" rx="180" ry="19" />
-      <g className="walking-leg walking-leg-a">
-        <path d="M220 190 L166 229 L126 274" />
-        <path d="M290 196 L248 239 L232 278" />
-        <path d="M390 194 L431 236 L456 276" />
-      </g>
-      <g className="walking-leg walking-leg-b">
-        <path d="M250 194 L209 239 L184 278" />
-        <path d="M350 196 L383 241 L396 279" />
-        <path d="M420 188 L481 226 L520 273" />
-      </g>
-      <g className="walking-hull">
-        <rect className="walking-hull-glow" x="174" y="112" width="292" height="90" rx="28" />
-        <path
-          className="walking-hull-body"
-          d="M176 148 Q176 115 210 112 H432 Q466 115 466 148 V174 Q466 202 436 204 H204 Q176 201 176 174 Z"
-        />
-        <rect className="walking-room" x="205" y="87" width="86" height="71" rx="13" />
-        <rect
-          className="walking-room walking-core"
-          x="304"
-          y="62"
-          width="106"
-          height="96"
-          rx="16"
-        />
-        <path className="walking-bracket" d="M318 78 V68 H396 V78 M318 141 V151 H396 V141" />
-        <circle className="walking-reactor" cx="357" cy="109" r="22" />
-        <path className="walking-pipe" d="M226 132 H319 M395 132 H442" />
-        <circle className="walking-light" cx="205" cy="172" r="4" />
-        <circle className="walking-light" cx="224" cy="172" r="4" />
-        <circle className="walking-light" cx="243" cy="172" r="4" />
-      </g>
-    </svg>
+    <div className="intermission-visual">
+      <ClaimRigGraphic />
+      <CampaignRouteMap currentSite={currentSite} />
+      <div className="intermission-motion-copy">
+        <Navigation size={18} />
+        <div>
+          <strong>
+            {translator.text(
+              destination ? "narrative.ui.transit.title" : "narrative.ui.transit.holdTitle"
+            )}
+          </strong>
+          <span>
+            {destination
+              ? translator.text("narrative.ui.transit.detail", { site: siteName })
+              : translator.text("narrative.ui.transit.holdDetail", { site: siteName })}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -91,15 +72,17 @@ const SummaryStats = () => {
 };
 
 const IntermissionChoices = ({
+  canTravel,
   onGraft,
   onTravel,
 }: {
+  canTravel: boolean;
   onGraft: () => void;
   onTravel: () => void;
 }) => {
   const { translator } = useGamePresentation();
   return (
-    <div className="intermission-choice">
+    <div className={`intermission-choice${canTravel ? "" : " single"}`}>
       <button
         type="button"
         className="graft-choice"
@@ -112,24 +95,51 @@ const IntermissionChoices = ({
           <small>{translator.text("ui.intermission.graft.detail")}</small>
         </span>
       </button>
-      <button
-        type="button"
-        className="travel-choice"
-        data-testid="travel-to-next-site"
-        onClick={onTravel}
-      >
-        <ArrowRight size={20} />
+      {canTravel && (
+        <button
+          type="button"
+          className="travel-choice"
+          data-testid="travel-to-next-site"
+          onClick={onTravel}
+        >
+          <ArrowRight size={20} />
+          <span>
+            <strong>{translator.text("ui.intermission.travel.action")}</strong>
+            <small>{translator.text("ui.intermission.travel.detail")}</small>
+          </span>
+        </button>
+      )}
+    </div>
+  );
+};
+
+const NextContract = ({ site }: { site: NarrativeSiteDefinition | null }) => {
+  const { narrativeCopy, translator } = useGamePresentation();
+  if (!site) {
+    return (
+      <div className="intermission-next">
         <span>
-          <strong>{translator.text("ui.intermission.travel.action")}</strong>
-          <small>{translator.text("ui.intermission.travel.detail")}</small>
+          <Gauge size={16} /> {translator.text("narrative.ui.progress.next")}
         </span>
-      </button>
+        <strong>{translator.text("narrative.ui.progress.campaign")}</strong>
+        <p>{translator.text("narrative.ui.progress.ledger")}</p>
+      </div>
+    );
+  }
+  const copy = narrativeCopy.site(site);
+  return (
+    <div className="intermission-next">
+      <span>
+        <Gauge size={16} /> {translator.text("narrative.ui.progress.next")}
+      </span>
+      <strong>{copy.name}</strong>
+      <p>{copy.briefing}</p>
     </div>
   );
 };
 
 const IntermissionSummary = () => {
-  const { levelCopy, roundReportCopy, translator } = useGamePresentation();
+  const { narrativeCopy, roundReportCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const setGraftMode = useGameStore((state) => state.setGraftMode);
@@ -138,7 +148,9 @@ const IntermissionSummary = () => {
   const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
   const nextId = nextLevelId(level.id);
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
-  const nextText = nextLevel ? levelCopy.level(nextLevel) : null;
+  const currentSite = narrativeSiteForLevel(level.id);
+  const nextSite = nextLevel ? narrativeSiteForLevel(nextLevel.id) : null;
+  const currentSiteCopy = narrativeCopy.site(currentSite);
   const travel = useCallback(() => {
     setGraftMode(false);
     dispatch({ type: "start_next_level" });
@@ -148,16 +160,7 @@ const IntermissionSummary = () => {
   return (
     <main className="intermission-stage" data-testid="level-intermission">
       <section className="intermission-screen">
-        <div className="intermission-visual">
-          <WalkingCastellum />
-          <div className="intermission-motion-copy">
-            <Footprints size={18} />
-            <div>
-              <strong>{translator.text("ui.intermission.motion.title")}</strong>
-              <span>{translator.text("ui.intermission.motion.detail")}</span>
-            </div>
-          </div>
-        </div>
+        <NarrativeTransitVisual currentSite={currentSite} destination={null} />
         <article className="intermission-summary">
           <header>
             <span className="intermission-seal">
@@ -166,22 +169,15 @@ const IntermissionSummary = () => {
             <div>
               <em>{translator.text("ui.progress.level.eyebrow")}</em>
               <h1>
-                {translator.text("ui.progress.level.complete", {
-                  name: levelCopy.level(level).name,
-                })}
+                {translator.text("narrative.ui.progress.complete", { site: currentSiteCopy.name })}
               </h1>
             </div>
           </header>
           <p>{report?.detail ?? translator.text("ui.progress.level.securedRecord")}</p>
+          <NarrativeDialogue key={`${currentSite.id}.debrief`} phase="debrief" site={currentSite} />
           <SummaryStats />
-          <div className="intermission-next">
-            <span>
-              <Gauge size={16} /> {translator.text("ui.progress.level.next")}
-            </span>
-            <strong>{nextText?.name ?? translator.text("ui.progress.level.campaign")}</strong>
-            <p>{nextText?.briefing ?? translator.text("ui.progress.level.curriculum")}</p>
-          </div>
-          <IntermissionChoices onGraft={graft} onTravel={travel} />
+          <NextContract site={nextSite} />
+          <IntermissionChoices canTravel={Boolean(nextLevel)} onGraft={graft} onTravel={travel} />
           <footer>
             <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
               <LogOut size={15} /> {translator.text("ui.topbar.saveSlots")}
@@ -194,21 +190,23 @@ const IntermissionSummary = () => {
 };
 
 const TravelRecovery = () => {
-  const { levelCopy, translator } = useGamePresentation();
+  const { narrativeCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const nextId = nextLevelId(game.campaign.levelId);
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
+  const currentSite = narrativeSiteForLevel(game.campaign.levelId);
+  const nextSite = nextLevel ? narrativeSiteForLevel(nextLevel.id) : null;
   const dock = useCallback(() => dispatch({ type: "dock_at_site" }), [dispatch]);
   return (
     <main className="intermission-stage" data-testid="travel-intermission">
       <section className="travel-recovery">
-        <WalkingCastellum />
+        <NarrativeTransitVisual currentSite={currentSite} destination={nextSite} />
         <em>{translator.text("ui.progress.travel.eyebrow")}</em>
         <h1>
           {translator.text("ui.progress.travel.title", {
             name: nextLevel
-              ? levelCopy.level(nextLevel).name
+              ? narrativeCopy.site(narrativeSiteForLevel(nextLevel.id)).name
               : translator.text("ui.progress.level.campaign"),
           })}
         </h1>

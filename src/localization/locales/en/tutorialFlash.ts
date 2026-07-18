@@ -15,25 +15,25 @@ export const TUTORIAL_FLASH_MESSAGES = {
   "tutorial.flash.explanation.startAssault": "Start first assault",
   "tutorial.flash.firstSpark.completion.title": "First cycle established",
   "tutorial.flash.firstSpark.completion.explanation":
-    "R-02 produced an attributed OX-1 combat hit and resolved the opening crawler wave.",
+    "R-02 produced an attributed OX-1 combat hit and resolved the opening deckmouth wave.",
   "tutorial.flash.firstSpark.completion.instruction":
     "Continue into Stored Momentum with the chamber’s established state.",
   "tutorial.flash.firstSpark.label": "Flash Point field drill",
   "tutorial.flash.firstSpark.story.kicker": "First field assignment",
   "tutorial.flash.firstSpark.story.title": "Turn R-02 into a combustion trap",
   "tutorial.flash.firstSpark.story.paragraph.0":
-    "The outer spiral has lost contact with its sentries. A crawler column is moving along the service route toward the Core, and R-02 sits directly in its path.",
+    "The outer spiral has lost contact with its sentries. A deckmouth column is moving along the service route toward the Core, and R-02 sits directly in its path.",
   "tutorial.flash.firstSpark.mission.title": "Commission the OX-1 cycle",
   "tutorial.flash.firstSpark.mission.summary":
-    "Build a repeating hydrogen-and-oxygen flash in R-02, then catch the first crawler inside it.",
+    "Build a repeating hydrogen-and-oxygen flash in R-02, then catch the first deckmouth inside it.",
   "tutorial.flash.firstSpark.task.mixChamber": "Install and run a Gas Agitator in R-02.",
   "tutorial.flash.firstSpark.task.feedReactants": "Open the Core → R-02 H₂/O₂ feed.",
   "tutorial.flash.firstSpark.task.proveIgnition": "Prime at 2× until R-02 produces an OX-1 flash.",
-  "tutorial.flash.firstSpark.task.catchCrawler":
-    "Start the assault and catch a crawler in the flash.",
+  "tutorial.flash.firstSpark.task.catchDeckmouth":
+    "Start the assault and catch a deckmouth in the flash.",
   "tutorial.flash.firstSpark.step.installAgitator.title": "Prepare the flash chamber",
   "tutorial.flash.firstSpark.step.installAgitator.explanation":
-    "R-02 lies on the crawler route. A Gas Agitator mixes its upper and lower gas layers for ignition.",
+    "R-02 lies on the deckmouth route. A Gas Agitator mixes its upper and lower gas layers for ignition.",
   "tutorial.flash.firstSpark.step.installAgitator.instruction":
     "Select R-02, then install a Gas Agitator in either socket.",
   "tutorial.flash.firstSpark.step.installAgitator.result":
@@ -79,18 +79,18 @@ export const TUTORIAL_FLASH_MESSAGES = {
     "The first OX-1 flash opens a one-time explanation of its gas feed, ignition threshold, pressure, and heat.",
   "tutorial.flash.firstSpark.step.coldAssault.title": "Cold chamber under assault",
   "tutorial.flash.firstSpark.step.coldAssault.explanation":
-    "R-02 entered assault ahead of its OX-1 ignition cycle. Each surviving crawler now advances toward the Core.",
+    "R-02 entered assault ahead of its OX-1 ignition cycle. Each surviving deckmouth now advances toward the Core.",
   "tutorial.flash.firstSpark.step.coldAssault.instruction":
     "Track the assault outcome, then use Retry checkpoint to rebuild the ignition cycle.",
   "tutorial.flash.firstSpark.step.coldAssault.result":
     "The priming flash armed R-02 before assault.",
   "tutorial.flash.firstSpark.step.startAssault.title": "Bring in the first wave",
   "tutorial.flash.firstSpark.step.startAssault.explanation":
-    "Crawlers follow the mapped route through R-02. An OX-1 flash applies pressure impact and thermal damage to targets inside.",
+    "Deckmouths follow the mapped route through R-02. An OX-1 flash applies pressure impact and thermal damage to targets inside.",
   "tutorial.flash.firstSpark.step.startAssault.instruction":
     "Start the assault and keep watching R-02.",
   "tutorial.flash.firstSpark.step.startAssault.result":
-    "Crawlers are advancing along the mapped route toward R-02.",
+    "Deckmouths are advancing along the mapped route toward R-02.",
   "tutorial.flash.firstSpark.step.observeCombatFlash.title": "Confirm the combat hit",
   "tutorial.flash.firstSpark.step.observeCombatFlash.explanation":
     "After the first hit, the incident log identifies each target, applied pressure and heat damage, and the resulting kills.",
@@ -136,7 +136,7 @@ export const TUTORIAL_FLASH_MESSAGES = {
     "The faster wave is entering the established reaction cycle.",
   "tutorial.flash.storedMomentum.step.observeFollowupAssault.title": "Let the cycle work",
   "tutorial.flash.storedMomentum.step.observeFollowupAssault.explanation":
-    "Skimmers compress the timing window. R-02’s map state and incident record show how the retained process meets them.",
+    "Flintjacks compress the timing window. R-02’s map state and incident record show how the retained process meets them.",
   "tutorial.flash.storedMomentum.step.observeFollowupAssault.instruction":
     "Watch R-02 and its incident record through the follow-up wave.",
   "tutorial.flash.storedMomentum.step.observeFollowupAssault.result":
@@ -206,14 +206,14 @@ export const TUTORIAL_FLASH_MESSAGES = {
     "The corridor held with layered chambers.",
   "tutorial.flash.higherCadence.completion.title": "Cadence tightened",
   "tutorial.flash.higherCadence.completion.explanation":
-    "The upgraded agitator ignites smaller batches sooner, closing the gaps skimmers slip through.",
+    "The upgraded agitator ignites smaller batches sooner, closing the gaps flintjacks slip through.",
   "tutorial.flash.higherCadence.completion.instruction":
     "Continue into the Corridor Exam with both chambers and your feed discipline.",
   "tutorial.flash.higherCadence.label": "Higher Cadence field guidance",
   "tutorial.flash.higherCadence.story.kicker": "Fourth field test",
   "tutorial.flash.higherCadence.story.title": "Close the gaps between flashes",
   "tutorial.flash.higherCadence.story.paragraph.0":
-    "Skimmers cross a chamber in seconds. If they arrive between detonations, they leave it alive.",
+    "Flintjacks cross a chamber in seconds. If they arrive between detonations, they leave it alive.",
   "tutorial.flash.higherCadence.story.paragraph.1":
     "A higher agitator grade lowers the batch each ignition needs, so the same feed produces more frequent flashes.",
   "tutorial.flash.higherCadence.mission.title": "Raise the flash cadence",
@@ -222,7 +222,7 @@ export const TUTORIAL_FLASH_MESSAGES = {
   "tutorial.flash.higherCadence.task.upgradeAgitator": "Upgrade the R-02 Gas Agitator to grade 2.",
   "tutorial.flash.higherCadence.task.confirmCorridor":
     "Keep both chambers and their Core feeds running.",
-  "tutorial.flash.higherCadence.task.holdWave": "Hold the skimmer wave.",
+  "tutorial.flash.higherCadence.task.holdWave": "Hold the flintjack wave.",
   "tutorial.flash.higherCadence.step.upgradeAgitator.title": "Upgrade the agitator",
   "tutorial.flash.higherCadence.step.upgradeAgitator.explanation":
     "Grade 2 agitation ignites a smaller combustible batch, shortening the wait between flashes.",
@@ -239,7 +239,7 @@ export const TUTORIAL_FLASH_MESSAGES = {
     "The upgraded cycle is flashing at its shorter interval.",
   "tutorial.flash.higherCadence.step.holdWave.title": "Meet the fast wave",
   "tutorial.flash.higherCadence.step.holdWave.explanation":
-    "Veteran skimmers and floaters cross quickly. The tighter cadence and the R-04 backstop decide the round.",
+    "Veteran flintjacks and Shear-jellies cross quickly. The tighter cadence and the R-04 backstop decide the round.",
   "tutorial.flash.higherCadence.step.holdWave.instruction":
     "Track both chambers through the round result.",
   "tutorial.flash.higherCadence.step.holdWave.result": "The fast wave broke on the tighter cycle.",
@@ -252,7 +252,7 @@ export const TUTORIAL_FLASH_MESSAGES = {
   "tutorial.flash.corridorExam.story.kicker": "Final field test",
   "tutorial.flash.corridorExam.story.title": "Run the corridor without guidance",
   "tutorial.flash.corridorExam.story.paragraph.0":
-    "A long mixed column is forming: crawlers, skimmers, and armored shells spread across the full assault.",
+    "A long mixed column is forming: deckmouths, flintjacks, and armored splitbacks spread across the full assault.",
   "tutorial.flash.corridorExam.story.paragraph.1":
     "No new tools this time. Ready both chambers, check every feed and grade, and time your prime yourself.",
   "tutorial.flash.corridorExam.mission.title": "Pass the corridor exam",

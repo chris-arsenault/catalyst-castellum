@@ -595,6 +595,7 @@
   height: 100%;
   background: linear-gradient(90deg, #db6b50, #f5c15f);
 }
+.enemy-behavior-detail,
 .enemy-exposure-detail,
 .enemy-last-damage {
   display: grid;
@@ -602,6 +603,7 @@
   padding: 9px 10px;
   border-top: 1px solid #244a3e;
 }
+.enemy-behavior-detail > strong,
 .enemy-exposure-detail > strong {
   color: #8fb0a1;
   font: 750 9px/1 var(--mono);
@@ -630,10 +632,14 @@
   font-size: 9px;
   line-height: 1.4;
 }
+.enemy-behavior-detail p,
 .enemy-exposure-detail p {
   margin: 0;
   color: #759789;
   font-size: 9px;
+}
+.enemy-behavior-detail {
+  background: rgba(98, 201, 194, 0.06);
 }
 .enemy-last-damage {
   background: rgba(213, 108, 67, 0.06);
@@ -778,6 +784,7 @@
 .room-composition,
 .room-pressure-explanation,
 .room-exposure-detail,
+.enemy-behavior-detail,
 .enemy-exposure-detail,
 .enemy-last-damage {
   border-color: rgba(117, 150, 137, 0.16);

@@ -1,0 +1,150 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="768" height="96"
+    viewBox="0 0 768 96"
+    role="img" aria-label="Shear Jelly sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#d0b9fb"/>
+    <stop offset="0.48" stop-color="#8d6bd0"/>
+    <stop offset="1" stop-color="#593c94"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#d0b9fb"/>
+    <stop offset="0.22" stop-color="#8d6bd0"/>
+    <stop offset="0.7" stop-color="#593c94"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#d8c5ff" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#b18ae8" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="96" height="96"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 0.00)" filter="url(#shadow)">
+    <path d="M36 57 Q33.00 68 36.00 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q44.92 68 40.08 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q54.87 68 48.13 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q60.14 68 58.86 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 27.00 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 27.00 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.11 0.90) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(96 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 1.84)" filter="url(#shadow)">
+    <path d="M36 57 Q36.54 68 32.46 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q45.97 68 39.03 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q52.64 68 50.36 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q56.31 68 62.69 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 23.46 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 30.54 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.05 0.96) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(192 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 2.60)" filter="url(#shadow)">
+    <path d="M36 57 Q38.00 68 31.00 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q44.11 68 40.89 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q48.86 68 54.14 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q53.48 68 65.52 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 22.00 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 32.00 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.02 0.98) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(288 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 1.84)" filter="url(#shadow)">
+    <path d="M36 57 Q36.54 68 32.46 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q40.43 68 44.57 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q45.75 68 57.25 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q53.29 68 65.71 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 23.46 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 30.54 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.05 0.96) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(384 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 0.00)" filter="url(#shadow)">
+    <path d="M36 57 Q33.00 68 36.00 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q37.08 68 47.92 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q45.13 68 57.87 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q55.86 68 63.14 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 27.00 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 27.00 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.11 0.90) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(480 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -1.84)" filter="url(#shadow)">
+    <path d="M36 57 Q29.46 68 39.54 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q36.03 68 48.97 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q47.36 68 55.64 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q59.69 68 59.31 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 30.54 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 23.46 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.19 0.84) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(576 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -2.60)" filter="url(#shadow)">
+    <path d="M36 57 Q28.00 68 41.00 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q37.89 68 47.11 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q51.14 68 51.86 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q62.52 68 56.48 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 32.00 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 22.00 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.22 0.82) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+<g transform="translate(672 0)" clip-path="url(#frame-clip)">
+      <g transform="translate(0 -1.84)" filter="url(#shadow)">
+    <path d="M36 57 Q29.46 68 39.54 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M44 57 Q41.57 68 43.43 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/><path d="M53 57 Q54.25 68 48.75 82" fill="none" stroke="#7653b4" stroke-width="2" stroke-linecap="round" opacity=".88"/><path d="M61 57 Q62.71 68 56.29 82" fill="none" stroke="#b99ae8" stroke-width="1.4" stroke-linecap="round" opacity=".88"/>
+    <path d="M45 49 Q26 30.54 12 43 Q25 52 43 55Z" fill="#8664ca" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M51 49 Q69 23.46 85 43 Q72 53 52 55Z" fill="#9f7ce0" fill-opacity=".72" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <g transform="translate(48 43) scale(1.19 0.84) translate(-48 -43)">
+      <path d="M27 50 Q27 22 48 18 Q69 22 70 50 Q60 61 48 61 Q35 60 27 50Z" fill="url(#body)" fill-opacity=".88" stroke="#17221f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M32 41 Q37 23 49 22 Q59 25 64 38 Q49 31 32 41Z" fill="#e2d3ff" fill-opacity=".42"/>
+      <ellipse cx="48" cy="43" rx="12" ry="9" fill="url(#glow)" opacity=".72" filter="url(#soft-glow)"/>
+      <path d="M36 50 Q48 56 61 49" fill="none" stroke="#d9c9ff" stroke-width="1.4" opacity=".8"/>
+      <circle cx="40" cy="38" r="2.4" fill="#f8ebff"/><circle cx="57" cy="38" r="2.4" fill="#f8ebff"/>
+      <circle cx="40" cy="38" r="1" fill="#31214d"/><circle cx="57" cy="38" r="1" fill="#31214d"/>
+    </g>
+  </g>
+    </g>
+  </svg>

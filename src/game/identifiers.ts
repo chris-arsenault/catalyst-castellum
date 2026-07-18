@@ -18,7 +18,16 @@ export const LIQUID_TYPES = [
   "hydrochloric_acid",
 ] as const;
 
-export const ENEMY_TYPES = ["crawler", "skimmer", "floater", "shell", "bellows"] as const;
+export const ENEMY_TYPES = [
+  "deckmouth",
+  "flintjack",
+  "shear_jelly",
+  "splitback",
+  "redlung",
+  "clatter",
+  "anchor",
+  "glowbag",
+] as const;
 
 export const GAS_SOURCE_IDS = ["starter_gas_header"] as const;
 export const LIQUID_SOURCE_IDS = ["water_tank", "sodium_chloride_tank"] as const;
@@ -44,7 +53,6 @@ export const DAMAGE_SOURCE_IDS = [
   "catastrophic_overpressure",
   "radiation_field",
   "hydrogen_oxygen_combustion",
-  "legacy_unattributed",
 ] as const;
 
 export const REACTION_IDS = [
@@ -109,16 +117,15 @@ export const GAME_EVENT_CODES = [
   "chlorine_evolution_started",
   "core_breached",
   "enemy_neutralized",
+  "enemy_molted",
   "equipment_installed",
   "equipment_upgraded",
   "flash_cycle_started",
   "flash_incident",
   "gas_source_charged",
   "hcl_production_started",
-  "legacy_message",
   "level_planning_started",
   "liquid_source_charged",
-  "physical_conduit_migrated",
   "prime_started",
   "process_started",
   "round_advanced",

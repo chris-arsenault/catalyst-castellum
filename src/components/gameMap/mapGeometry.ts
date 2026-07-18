@@ -8,6 +8,10 @@ export const VIEWPORT_WIDTH = 1120;
 export const VIEWPORT_HEIGHT = 560;
 export const WORLD_MARGIN_X = 34;
 export const WORLD_MARGIN_Y = 32;
+export const MAX_RENDER_RESOLUTION = 2;
+
+export const mapRenderResolution = (devicePixelRatio: number | undefined): number =>
+  Math.min(MAX_RENDER_RESOLUTION, Math.max(1, devicePixelRatio ?? 1));
 
 export interface CameraTransform {
   x: number;

@@ -48,8 +48,8 @@ export const firstSparkGuide: GuideDefinition = {
         completed: (game) => Boolean(primeFlashIncident(game)),
       },
       {
-        id: "catch-crawler",
-        label: "tutorial.flash.firstSpark.task.catchCrawler",
+        id: "catch-deckmouth",
+        label: "tutorial.flash.firstSpark.task.catchDeckmouth",
         completed: assaultFlashKilled,
       },
     ],

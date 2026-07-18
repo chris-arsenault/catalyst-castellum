@@ -13,6 +13,47 @@ import { colorNumber, mapViewFor } from "./mapGeometry";
 import type { RoomDrawModel } from "./roomGraphics";
 import { instance, roomState } from "../../game/world/instances";
 import { roomDefinition } from "../../presentation/defaultGame";
+import { DEFAULT_GAME_DEFINITION } from "../../game/definition";
+import type { CoreReservoirDrawModel } from "./coreGraphics";
+
+const sourceFill = (amount: number, capacity: number): number =>
+  capacity > 0 ? Math.max(0, Math.min(1, amount / capacity)) : 0;
+
+const coreReservoirs = (game: GameState): readonly CoreReservoirDrawModel[] => {
+  const gasDefinition = DEFAULT_GAME_DEFINITION.gasSources.starter_gas_header;
+  const waterDefinition = DEFAULT_GAME_DEFINITION.liquidSources.water_tank;
+  const brineDefinition = DEFAULT_GAME_DEFINITION.liquidSources.sodium_chloride_tank;
+  const gasAmount = Object.values(game.gasSources.starter_gas_header.gas).reduce(
+    (total, amount) => total + amount,
+    0
+  );
+  return [
+    {
+      available: game.availability.gasSources.includes("starter_gas_header"),
+      color: colorNumber(gasDefinition.accent),
+      fill: sourceFill(gasAmount, gasDefinition.capacity),
+      id: "gas_header",
+    },
+    {
+      available: game.availability.liquidSources.includes("water_tank"),
+      color: colorNumber(waterDefinition.accent),
+      fill: sourceFill(
+        game.liquidSources.water_tank.liquid[waterDefinition.substance],
+        waterDefinition.capacity
+      ),
+      id: "water",
+    },
+    {
+      available: game.availability.liquidSources.includes("sodium_chloride_tank"),
+      color: colorNumber(brineDefinition.accent),
+      fill: sourceFill(
+        game.liquidSources.sodium_chloride_tank.liquid[brineDefinition.substance],
+        brineDefinition.capacity
+      ),
+      id: "brine",
+    },
+  ];
+};
 
 const weightedGasColor = (gas: GasAmounts): number => {
   const total = GAS_TYPES.reduce((sum, species) => sum + gas[species], 0);
@@ -94,5 +135,6 @@ export const roomRenderModel = (
     liquidInflowRate: roomLiquidInflowRate(game, roomId),
     occupied,
     coreIntegrity: game.coreIntegrity,
+    coreReservoirs: definition.structure === "core" ? coreReservoirs(game) : [],
   };
 };

@@ -33,7 +33,7 @@ const incident = (
   targets: [
     {
       enemyId: id,
-      enemyType: "crawler",
+      enemyType: "deckmouth",
       worldPosition: { x: 98, elevation: 14 },
       healthBefore: 20,
       healthAfter: killed ? 0 : 10,

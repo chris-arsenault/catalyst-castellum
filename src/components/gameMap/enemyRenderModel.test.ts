@@ -15,7 +15,8 @@ describe("enemy render projection", () => {
     const climbIndex = path.findIndex((step) => step.mode === "climbing");
     const enemy: EnemyState = {
       id: 71,
-      type: "crawler",
+      type: "deckmouth",
+      level: 20,
       health: 74,
       maxHealth: 74,
       routeId: "entry_to_core",
@@ -28,6 +29,7 @@ describe("enemy render projection", () => {
       damageTaken: 0,
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
+      behavior: { kind: "standard" },
     };
     game.enemies = [enemy];
     const before = enemyRenderModel(enemy, WORLD_MAP);
@@ -47,10 +49,10 @@ describe("enemy render projection", () => {
       enemies: {
         ...DEFAULT_GAME_DEFINITION.enemies,
         [fixtureType]: {
-          ...DEFAULT_GAME_DEFINITION.enemies.shell,
+          ...DEFAULT_GAME_DEFINITION.enemies.splitback,
           type: fixtureType,
           color: "#123456",
-          presentation: { appearance: "shell", manualIcon: "shield" },
+          presentation: { appearance: "splitback" },
         },
       },
     });
@@ -59,6 +61,7 @@ describe("enemy render projection", () => {
     const enemy: EnemyState = {
       id: 72,
       type: fixtureType,
+      level: 20,
       health: 10,
       maxHealth: 20,
       routeId: "entry_to_core",
@@ -71,10 +74,11 @@ describe("enemy render projection", () => {
       damageTaken: 0,
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
+      behavior: { kind: "standard" },
     };
 
     const model = createEnemyRenderModel(definition)(enemy, WORLD_MAP);
-    expect(model.appearance).toBe("shell");
+    expect(model.appearance).toBe("splitback");
     expect(model.color).toBe(0x123456);
   });
 });

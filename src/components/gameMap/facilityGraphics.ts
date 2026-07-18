@@ -1,15 +1,8 @@
 import { architecturalConnections } from "../../game/world/map";
 import type { ArchitecturalConnection, WorldMap } from "../../game/world/map";
 import type { Graphics } from "pixi.js";
-import { facilityModelForMap } from "../../game/world/derivedModel";
 import type { FacilityPortalState, GridCell } from "../../game/types";
-import {
-  WORLD_MARGIN_X,
-  WORLD_MARGIN_Y,
-  mapViewFor,
-  type MapRect,
-  type MapView,
-} from "./mapGeometry";
+import { WORLD_MARGIN_X, WORLD_MARGIN_Y, mapViewFor, type MapView } from "./mapGeometry";
 
 type FacilityPortal = ArchitecturalConnection;
 
@@ -121,74 +114,6 @@ export const drawBackdrop = (graphics: Graphics, map: WorldMap): void => {
   }
 };
 
-const drawLadderCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
-  const rect = view.gridCellMapRect(gridCell);
-  const leftRail = rect.left + rect.width * 0.25;
-  const rightRail = rect.left + rect.width * 0.75;
-  graphics
-    .rect(rect.left + 2, rect.top - 1, rect.width - 4, rect.height + 2)
-    .fill({ color: 0x050907, alpha: 0.58 });
-  graphics
-    .moveTo(leftRail + 2, rect.top)
-    .lineTo(leftRail + 2, rect.top + rect.height)
-    .moveTo(rightRail + 2, rect.top)
-    .lineTo(rightRail + 2, rect.top + rect.height)
-    .stroke({ color: 0x090704, width: 3, alpha: 0.56 });
-  graphics
-    .moveTo(leftRail, rect.top - 1)
-    .lineTo(leftRail, rect.top + rect.height + 1)
-    .moveTo(rightRail, rect.top - 1)
-    .lineTo(rightRail, rect.top + rect.height + 1)
-    .stroke({ color: 0xd6af61, width: 1.6, alpha: 0.9 });
-  for (const y of [rect.top + 3, rect.top + rect.height / 2, rect.top + rect.height - 3]) {
-    graphics
-      .moveTo(leftRail, y)
-      .lineTo(rightRail, y)
-      .stroke({ color: 0xe9ca83, width: 1.2, alpha: 0.82 });
-  }
-};
-
-const drawPlatformCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
-  const rect = view.gridCellMapRect(gridCell);
-  graphics
-    .rect(rect.left + 2, rect.top + 3, rect.width, rect.height)
-    .fill({ color: 0x020504, alpha: 0.42 });
-  graphics
-    .roundRect(rect.left, rect.top, rect.width, rect.height, 2)
-    .fill({ color: 0x243d34 })
-    .stroke({ color: 0x739486, width: 1, alpha: 0.72 });
-  graphics
-    .poly([
-      rect.left,
-      rect.top,
-      rect.left + 4,
-      rect.top - 4,
-      rect.left + rect.width + 4,
-      rect.top - 4,
-      rect.left + rect.width,
-      rect.top,
-    ])
-    .fill({ color: 0x9ab7a8, alpha: 0.7 });
-  graphics
-    .moveTo(rect.left + 2, rect.top + rect.height - 2)
-    .lineTo(rect.left + rect.width - 2, rect.top + 2)
-    .moveTo(rect.left + 2, rect.top + 2)
-    .lineTo(rect.left + rect.width - 2, rect.top + rect.height - 2)
-    .stroke({ color: 0x16251f, width: 1, alpha: 0.56 });
-};
-
-const drawCoreShellCell = (graphics: Graphics, view: MapView, gridCell: GridCell): void => {
-  const rect = view.gridCellMapRect(gridCell);
-  graphics
-    .rect(rect.left, rect.top, rect.width, rect.height)
-    .fill({ color: 0x2b3025, alpha: 0.94 })
-    .stroke({ color: 0xa99a61, width: 1, alpha: 0.58 });
-  graphics
-    .moveTo(rect.left + 3, rect.top + rect.height - 3)
-    .lineTo(rect.left + rect.width - 3, rect.top + 3)
-    .stroke({ color: 0x746a3f, width: 1.2, alpha: 0.7 });
-};
-
 const drawPortalFlowArrow = (
   graphics: Graphics,
   view: MapView,
@@ -246,65 +171,7 @@ const drawPortalFlows = (
   drawPortalFlowArrow(graphics, view, portal, portalState.lastLiquidFlow, 0x50b7f6, 3);
 };
 
-const portalOpen = (portal: FacilityPortal, state: FacilityPortalState | undefined): boolean =>
-  state?.open ?? portal.defaultOpen;
-
-const openDoorX = (door: GridCell, rect: MapRect): number => {
-  if (door.column % 2 === 0) return rect.left + 2;
-  return rect.left + rect.width - 5;
-};
-
-const drawDoorPortal = (
-  graphics: Graphics,
-  view: MapView,
-  portal: FacilityPortal,
-  state: FacilityPortalState | undefined
-): void => {
-  const open = portalOpen(portal, state);
-  for (const door of portal.connectorCells) {
-    const rect = view.gridCellMapRect(door);
-    const width = open ? 3 : rect.width - 4;
-    const x = open ? openDoorX(door, rect) : rect.left + 2;
-    graphics
-      .roundRect(x, rect.top + 1, width, rect.height - 2, 2)
-      .fill({ color: 0x101814, alpha: 0.95 })
-      .stroke({ color: 0xd78562, width: 1.5, alpha: 0.92 });
-  }
-};
-
-const drawTrapdoorCell = (
-  graphics: Graphics,
-  view: MapView,
-  trapdoor: GridCell,
-  open: boolean
-): void => {
-  const rect = view.gridCellMapRect(trapdoor);
-  if (open) {
-    graphics
-      .moveTo(rect.left, rect.top)
-      .lineTo(rect.left + 4, rect.top + rect.height)
-      .moveTo(rect.left + rect.width, rect.top)
-      .lineTo(rect.left + rect.width - 4, rect.top + rect.height)
-      .stroke({ color: 0xd78562, width: 1.5, alpha: 0.88 });
-    return;
-  }
-  graphics
-    .rect(rect.left, rect.top + 5, rect.width, rect.height - 10)
-    .fill({ color: 0x2b3c34 })
-    .stroke({ color: 0xd78562, width: 1.25, alpha: 0.88 });
-};
-
-const drawTrapdoorPortal = (
-  graphics: Graphics,
-  view: MapView,
-  portal: FacilityPortal,
-  state: FacilityPortalState | undefined
-): void => {
-  const open = portalOpen(portal, state);
-  for (const trapdoor of portal.connectorCells) drawTrapdoorCell(graphics, view, trapdoor, open);
-};
-
-export const drawFacilityDoors = (
+export const drawFacilityPortalFlows = (
   graphics: Graphics,
   map: WorldMap,
   portalStates: Readonly<Record<string, FacilityPortalState>>
@@ -313,12 +180,6 @@ export const drawFacilityDoors = (
   graphics.clear();
   for (const portal of architecturalConnections(map)) {
     const state = portalStates[portal.id];
-    if (portal.kind === "door" || portal.kind === "core_door") {
-      drawDoorPortal(graphics, view, portal, state);
-    }
-    if (portal.kind === "trapdoor") {
-      drawTrapdoorPortal(graphics, view, portal, state);
-    }
     drawPortalFlows(graphics, view, portal, state);
   }
 };
@@ -336,34 +197,8 @@ const drawPortalCuts = (graphics: Graphics, map: WorldMap, view: MapView): void 
   }
 };
 
-const drawTerrainStructures = (graphics: Graphics, map: WorldMap, view: MapView): void => {
-  for (const definition of facilityModelForMap(map).cells()) {
-    if (definition.terrain === "core_shell") drawCoreShellCell(graphics, view, definition.cell);
-  }
-  for (const definition of facilityModelForMap(map).cells()) {
-    if (definition.terrain === "platform") drawPlatformCell(graphics, view, definition.cell);
-  }
-  for (const definition of facilityModelForMap(map).cells()) {
-    if (definition.terrain === "ladder") drawLadderCell(graphics, view, definition.cell);
-  }
-};
-
-const drawPassageFrames = (graphics: Graphics, map: WorldMap, view: MapView): void => {
-  for (const portal of architecturalConnections(map)) {
-    if (portal.kind !== "passage" && portal.kind !== "floor_hole") continue;
-    for (const connector of portal.connectorCells) {
-      const rect = view.gridCellMapRect(connector);
-      graphics
-        .rect(rect.left, rect.top, rect.width, rect.height)
-        .stroke({ color: 0x607b6f, width: 1, alpha: 0.28 });
-    }
-  }
-};
-
 export const drawFacilityCorridors = (graphics: Graphics, map: WorldMap): void => {
   const view = mapViewFor(map);
   graphics.clear();
   drawPortalCuts(graphics, map, view);
-  drawTerrainStructures(graphics, map, view);
-  drawPassageFrames(graphics, map, view);
 };

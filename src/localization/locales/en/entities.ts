@@ -39,21 +39,30 @@ export const ENTITY_MESSAGES = {
   "entities.equipment.membrane_cell.description":
     "Electrolyzes NaCl and water into separated Cl₂, H₂, and NaOH outlets at its installed grade.",
 
-  "entities.enemies.crawler.name": "Crawler",
-  "entities.enemies.crawler.description":
-    "Baseline oxygen-breathing organic with little environmental protection.",
-  "entities.enemies.skimmer.name": "Skimmer",
-  "entities.enemies.skimmer.description":
-    "Fast organic that can outrun a chlorine front still propagating through long lines.",
-  "entities.enemies.floater.name": "Floater",
-  "entities.enemies.floater.description":
-    "Airborne organism that avoids liquid contact but remains vulnerable to room gases.",
-  "entities.enemies.shell.name": "Shell",
-  "entities.enemies.shell.description":
-    "Mineral armor sheds ambient heat and atmosphere but cracks under pressure shock and corrosive liquids.",
-  "entities.enemies.bellows.name": "Bellows",
-  "entities.enemies.bellows.description":
-    "Large insulated respiratory volume resists atmosphere and heat but is vulnerable to corrosion and shock.",
+  "entities.enemies.deckmouth.name": "Deckmouth",
+  "entities.enemies.deckmouth.description":
+    "A steady oxygen-breathing wreck-feeder with little protection from room atmospheres.",
+  "entities.enemies.flintjack.name": "Flintjack",
+  "entities.enemies.flintjack.description":
+    "A fast deck runner that crosses long lines before a slow chemical front arrives.",
+  "entities.enemies.shear_jelly.name": "Shear-jelly",
+  "entities.enemies.shear_jelly.description":
+    "An airborne drifter that stays above liquid while its bell remains exposed to room gases and pressure.",
+  "entities.enemies.splitback.name": "Splitback",
+  "entities.enemies.splitback.description":
+    "A mineral coat absorbs the first exposure, then breaks away and releases a faster climbing body.",
+  "entities.enemies.redlung.name": "Redlung",
+  "entities.enemies.redlung.description":
+    "Folded breathing chambers resist atmosphere and heat, while corrosion and pressure reach its soft seams.",
+  "entities.enemies.clatter.name": "Clatter",
+  "entities.enemies.clatter.description":
+    "Hooked limbs turn ladders into fast lanes; its ground gait remains deliberate.",
+  "entities.enemies.anchor.name": "Anchor",
+  "entities.enemies.anchor.description":
+    "A resonant organ shares a rechargeable protective field with every other hostile in its room.",
+  "entities.enemies.glowbag.name": "Glowbag",
+  "entities.enemies.glowbag.description":
+    "A buoyant crop vents its carried hydrogen reserve into the occupied gas layer.",
 
   "entities.species.oxygen.name": "Oxygen",
   "entities.species.nitrogen.name": "Nitrogen",

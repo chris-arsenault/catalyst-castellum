@@ -74,6 +74,8 @@ export interface RoundDefinition {
 export interface LevelDefinition {
   id: LevelId;
   number: number;
+  /** The site's baseline enemy level; wave entries may apply small authored offsets. */
+  enemyLevel: number;
   focusRoomId: RoomId;
   featuredReactionIds: readonly ReactionId[];
   startingMatter: number;

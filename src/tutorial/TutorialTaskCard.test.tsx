@@ -28,7 +28,7 @@ describe("tutorial task card", () => {
     expect(screen.getByText("Install and run a Gas Agitator in R-02.")).toBeTruthy();
     expect(screen.getByText("Open the Core → R-02 H₂/O₂ feed.")).toBeTruthy();
     expect(screen.getByText("Prime at 2× until R-02 produces an OX-1 flash.")).toBeTruthy();
-    expect(screen.getByText("Start the assault and catch a crawler in the flash.")).toBeTruthy();
+    expect(screen.getByText("Start the assault and catch a deckmouth in the flash.")).toBeTruthy();
     expect(screen.getByText("Prepare the flash chamber")).toBeTruthy();
     expect(
       screen.getByText("Select R-02, then install a Gas Agitator in either socket.")

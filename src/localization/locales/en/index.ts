@@ -7,6 +7,7 @@ import { MANUAL_MESSAGES } from "./manual";
 import { PRESENTATION_MESSAGES } from "./presentation";
 import { DAMAGE_MESSAGES } from "./damage";
 import { TUTORIAL_MESSAGES } from "./tutorials";
+import { NARRATIVE_MESSAGES } from "./narrative";
 
 export const EN_LOCALE = {
   locale: "en",
@@ -20,5 +21,6 @@ export const EN_LOCALE = {
     ...PRESENTATION_MESSAGES,
     ...DAMAGE_MESSAGES,
     ...TUTORIAL_MESSAGES,
+    ...NARRATIVE_MESSAGES,
   },
 } as const;

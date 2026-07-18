@@ -31,7 +31,6 @@ const DAMAGE_SOURCE_KEYS: Record<DamageSourceId, LocaleKey> = {
   catastrophic_overpressure: "events.damage.catastrophic_overpressure",
   radiation_field: "events.damage.radiation_field",
   hydrogen_oxygen_combustion: "events.damage.hydrogen_oxygen_combustion",
-  legacy_unattributed: "events.damage.legacy_unattributed",
 };
 
 const sourceLabel = (sourceId: string, translator: Translator): string =>
@@ -170,9 +169,17 @@ const processEventCopy: EventCopyHandler = (event, context) => {
 };
 
 const enemyNeutralizedCopy: EventCopyHandler = (event, context) => {
-  if (event.code !== "enemy_neutralized") return null;
+  if (event.code !== "enemy_neutralized" && event.code !== "enemy_molted") return null;
   const { definition, formatters, translator } = context;
   const enemy = enemyCopy(definition.enemies[event.parameters.enemyType], translator).name;
+  if (event.code === "enemy_molted") {
+    return {
+      title: translator.text("events.enemy.molted.title", { enemy }),
+      detail: translator.text("events.enemy.molted.detail", {
+        health: formatters.number(event.parameters.remainingHealth),
+      }),
+    };
+  }
   const source = sourceLabel(event.parameters.finalSource, translator);
   const lifetime = event.parameters.lifetimeSource
     ? translator.text("events.enemy.lifetime", {
@@ -300,20 +307,6 @@ const campaignProgressCopy: EventCopyHandler = (event, context) => {
   }
 };
 
-const compatibilityCopy: EventCopyHandler = (event, { translator }) => {
-  switch (event.code) {
-    case "physical_conduit_migrated":
-      return {
-        title: translator.text("events.migration.title"),
-        detail: translator.text("events.migration.detail"),
-      };
-    case "legacy_message":
-      return { title: event.parameters.title, detail: event.parameters.detail };
-    default:
-      return null;
-  }
-};
-
 const EVENT_COPY_HANDLERS: readonly EventCopyHandler[] = [
   scenarioStartCopy,
   infrastructureCopy,
@@ -321,7 +314,6 @@ const EVENT_COPY_HANDLERS: readonly EventCopyHandler[] = [
   enemyNeutralizedCopy,
   roundOutcomeCopy,
   campaignProgressCopy,
-  compatibilityCopy,
 ];
 
 export const createEventCopy = (services: EventCopyServices) => {

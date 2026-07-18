@@ -45,7 +45,7 @@ const incident = (
       ? [
           {
             enemyId: 9,
-            enemyType: "crawler",
+            enemyType: "deckmouth",
             worldPosition: { x: 98, elevation: 14 },
             healthBefore: 64,
             healthAfter: killed ? 0 : 12,
@@ -93,7 +93,7 @@ describe("Flash Point guide definition", () => {
       "mix-chamber",
       "feed-reactants",
       "prove-ignition",
-      "catch-crawler",
+      "catch-deckmouth",
     ]);
     expect(guide.mission.tasks.map((task) => task.completed(game))).toEqual([
       false,

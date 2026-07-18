@@ -10,6 +10,7 @@ import { simulateStratification } from "./stratification";
 import { roundDefinitionFor } from "./campaign";
 import { phaseIsStatic } from "./phaseModel";
 import { definitionForMap } from "../world/activeDefinition";
+import { simulateEnemyBehaviors } from "./enemyBehaviors";
 
 const finishAssaultStep = (state: GameState, dt: number, definition: GameDefinition): void => {
   moveEnemies(state, dt, definition);
@@ -25,6 +26,7 @@ const stepMutable = (state: GameState, dt: number, definition: GameDefinition): 
   simulateInstalledEquipment(state, dt, definition);
   simulateStratification(state, dt, definition);
   if (state.phase === "assault") spawnEnemies(state, definition);
+  simulateEnemyBehaviors(state, dt, definition);
   const bursts = simulateReactions(state, dt, definition);
   resolveEnemyCombat(state, dt, bursts, definition);
   if (

@@ -8,7 +8,7 @@ export const TUTORIAL_ACID_MESSAGES = {
   "tutorial.acid.hotMix.story.kicker": "Third chlor-alkali assault",
   "tutorial.acid.hotMix.story.title": "Turn the CL-02 gas stream into an acid front",
   "tutorial.acid.hotMix.story.paragraph.0":
-    "Armored shells are entering the process train. Their mineral plating yields to sustained corrosion across the chambers ahead of the Core.",
+    "Splitbacks are entering the process train. Their mineral plating yields to sustained corrosion across the chambers ahead of the Core.",
   "tutorial.acid.hotMix.story.paragraph.1":
     "The CL-02 Membrane Cell holds chlorine and hydrogen in separated buffers. CL-04 supplies the temperature and mixing that convert their shared gas stream into hydrogen chloride, while the return fans extend that product across the hostile route.",
   "tutorial.acid.hotMix.mission.title": "Commission the CL-2 acid line",
@@ -73,14 +73,14 @@ export const TUTORIAL_ACID_MESSAGES = {
     "CL-04 is converting equal H₂ and Cl₂ inventories into hydrogen chloride.",
   "tutorial.acid.hotMix.step.startAssault.title": "Bring in the armored wave",
   "tutorial.acid.hotMix.step.startAssault.explanation":
-    "Shells receive corrosive and thermal exposure while they occupy the heated CL-04 acid front and its downstream return rooms.",
+    "Splitbacks receive corrosive and thermal exposure while they occupy the heated CL-04 acid front and its downstream return rooms.",
   "tutorial.acid.hotMix.step.startAssault.instruction":
     "Start the assault and track the HCl front along the route.",
   "tutorial.acid.hotMix.step.startAssault.result":
     "The armored formation is entering the commissioned acid line.",
   "tutorial.acid.hotMix.step.observeWave.title": "Hold the acid front",
   "tutorial.acid.hotMix.step.observeWave.explanation":
-    "Continuous feed, CL-2 conversion, and retained HCl inventory sustain exposure as each shell advances.",
+    "Continuous feed, CL-2 conversion, and retained HCl inventory sustain exposure as each splitback advances.",
   "tutorial.acid.hotMix.step.observeWave.instruction":
     "Track the acid line and wave through the round result.",
   "tutorial.acid.hotMix.step.observeWave.result": "The first Acid Line round is complete.",
@@ -95,7 +95,7 @@ export const TUTORIAL_ACID_MESSAGES = {
   "tutorial.acid.residence.story.paragraph.0":
     "CL-04 retains its operating temperature, equipment, reactant inventory, and HCl product from Hot Mix.",
   "tutorial.acid.residence.story.paragraph.1":
-    "Skimmers and floaters compress the timing window. The shorter prime tests how the filled feed and return segments carry the established acid front into the wave.",
+    "Flintjacks and Shear-jellies compress the timing window. The shorter prime tests how the filled feed and return segments carry the established acid front into the wave.",
   "tutorial.acid.residence.mission.title": "Hold Residence Time",
   "tutorial.acid.residence.mission.summary":
     "Confirm the full acid line, read its retained HCl inventory, and carry the active CL-2 process through the faster wave.",
@@ -120,7 +120,7 @@ export const TUTORIAL_ACID_MESSAGES = {
     "The retained acid front is meeting the faster wave timing.",
   "tutorial.acid.residence.step.observeAssault.title": "Let the acid line work",
   "tutorial.acid.residence.step.observeAssault.explanation":
-    "Ground skimmers and airborne floaters sample different gas layers while the agitator maintains their shared reactant and HCl distribution.",
+    "Ground flintjacks and airborne Shear-jellies sample different gas layers while the agitator maintains their shared reactant and HCl distribution.",
   "tutorial.acid.residence.step.observeAssault.instruction":
     "Track both enemy heights and the acid front through the round result.",
   "tutorial.acid.residence.step.observeAssault.result":
@@ -151,7 +151,7 @@ export const TUTORIAL_ACID_MESSAGES = {
   "tutorial.concept.flash.ignite.detail":
     "Each layer is evaluated independently. A ready layer consumes the 2:1 mixture, creates steam, adds {base} + {perExtent} × extent kPa of transient pressure, and raises gas temperature by {heat} °C × extent.",
   "tutorial.concept.flash.conclusion":
-    "The fan controls reaction mass. The room openings set state-dependent leakage. The agitator controls vertical distribution and reaction readiness. Pressure measures retained gas and becomes a damage output; the ignition gate uses composition, batch, agitation, and cooldown. Prime supplies transport time; assault tests whether a crawler occupies R-02 when the next threshold crossing produces a flash.",
+    "The fan controls reaction mass. The room openings set state-dependent leakage. The agitator controls vertical distribution and reaction readiness. Pressure measures retained gas and becomes a damage output; the ignition gate uses composition, batch, agitation, and cooldown. Prime supplies transport time; assault tests whether a deckmouth occupies R-02 when the next threshold crossing produces a flash.",
   "tutorial.concept.reagent.principle":
     "CL-1 is a continuous conserved process. Liquid feed supplies its reactants, cell current converts them together, three outlet buffers receive the products, and downstream flow restores production headroom.",
   "tutorial.concept.reagent.feed.title": "Supply equal reactants",
@@ -192,5 +192,5 @@ export const TUTORIAL_ACID_MESSAGES = {
   "tutorial.concept.acid.route.detail":
     "The two return fans extend the HCl-bearing gas path across three combat rooms. Filled conduit and room inventories preserve corrosive exposure as the wave advances.",
   "tutorial.concept.acid.conclusion":
-    "Feed inventory, per-layer temperature, reactant balance, mixing, and downstream residence time shape the acid front. Prime charges the complete line; assault tests its corrosive exposure against armored shells.",
+    "Feed inventory, per-layer temperature, reactant balance, mixing, and downstream residence time shape the acid front. Prime charges the complete line; assault tests its corrosive exposure against armored splitbacks.",
 } as const;

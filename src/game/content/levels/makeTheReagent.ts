@@ -31,6 +31,7 @@ const acidRounds = availability({
 export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   id: "make_the_reagent",
   number: 2,
+  enemyLevel: 21,
   focusRoomId: "lower_intake",
   featuredReactionIds: ["chlor_alkali_electrolysis", "hydrogen_chlorine_recombination"],
   startingMatter: 28,
@@ -53,36 +54,40 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
     {
       id: "co_products",
       primeSeconds: 25,
-      wave: enemySequence(5, "crawler", 10.5, 2, 0.2),
+      wave: enemySequence(5, "deckmouth", 10.5, 2, -18),
       availability: reagentRoundOne,
     },
     {
       id: "shared_relief",
       primeSeconds: 14,
-      wave: enemySequence(9, "skimmer", 0.5, 1.45),
+      wave: enemySequence(9, "flintjack", 0.5, 1.45),
       availability: reagentRoundTwo,
     },
     {
       id: "hot_mix",
       primeSeconds: 30,
-      wave: enemySequence(5, "shell", 0.5, 3.2),
+      wave: enemySequence(5, "splitback", 0.5, 3.2),
       availability: acidRounds,
     },
     {
       id: "residence_time",
       primeSeconds: 14,
-      wave: [...enemySequence(6, "skimmer", 0.5, 1.6), ...enemySequence(2, "floater", 2, 2.5)].sort(
-        (left, right) => left.at - right.at
-      ),
+      wave: [
+        ...enemySequence(3, "flintjack", 0.5, 1.6),
+        ...enemySequence(2, "shear_jelly", 2, 2.5),
+        ...enemySequence(3, "clatter", 3, 2.4),
+      ].sort((left, right) => left.at - right.at),
       availability: acidRounds,
     },
     {
       id: "full_chain",
       primeSeconds: 18,
       wave: [
-        ...enemySequence(8, "skimmer", 0.5, 1.4),
-        ...enemySequence(4, "shell", 2, 2.8),
-        ...enemySequence(3, "floater", 4, 2.6),
+        ...enemySequence(6, "flintjack", 0.5, 1.4),
+        ...enemySequence(4, "splitback", 2, 2.8),
+        ...enemySequence(2, "shear_jelly", 4, 2.6),
+        ...enemySequence(2, "glowbag", 5, 4),
+        ...enemySequence(1, "anchor", 6, 1),
       ].sort((left, right) => left.at - right.at),
       availability: acidRounds,
     },

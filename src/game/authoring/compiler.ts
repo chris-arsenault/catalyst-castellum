@@ -5,16 +5,16 @@ import type {
   RoundDefinition,
 } from "../definitionTypes";
 import type { ScenarioAvailability, SpeciesId } from "../types";
-import { isProcessLine, parseProcessLineId } from "../world/map";
+import { parseProcessLineId } from "../world/map";
 import type { WorldMap } from "../world/map";
 import { hullLayoutFromMap } from "../world/hullFragment";
 import { validateWorldMap } from "../world/mapValidation";
 import { generateSiteLayoutCandidate } from "../world/siteGenerator";
+import { MAX_ENEMY_LEVEL, MIN_ENEMY_LEVEL, resolveEnemyLevel } from "../engine/enemyLevel";
+import { validateEnemyDefinitions, type EnemyAuthoringIssue } from "./enemyValidation";
+import { validateCatalogStructure } from "./catalogValidation";
 
-export interface AuthoringIssue {
-  path: string;
-  message: string;
-}
+export type AuthoringIssue = EnemyAuthoringIssue;
 
 export class GamePackCompilationError extends Error {
   readonly issues: readonly AuthoringIssue[];
@@ -116,11 +116,31 @@ const validateAvailableIds = (
 const isSuperset = (next: readonly string[], previous: readonly string[]): boolean =>
   previous.every((id) => next.includes(id));
 
+const validateEnemyLevel = (
+  siteEnemyLevel: number,
+  entry: RoundDefinition["wave"][number],
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  if (!Number.isInteger(entry.levelOffset)) {
+    push(issues, path, "Enemy level offset must be an integer.");
+  }
+  const enemyLevel = resolveEnemyLevel(siteEnemyLevel, entry.levelOffset);
+  if (enemyLevel < MIN_ENEMY_LEVEL || enemyLevel > MAX_ENEMY_LEVEL) {
+    push(
+      issues,
+      path,
+      `Resolved enemy level must be between ${MIN_ENEMY_LEVEL} and ${MAX_ENEMY_LEVEL}.`
+    );
+  }
+};
+
 const validateRound = (
   source: GamePackSource,
   map: WorldMap,
   round: RoundDefinition,
   previous: RoundDefinition | undefined,
+  siteEnemyLevel: number,
   path: string,
   issues: AuthoringIssue[]
 ): void => {
@@ -132,7 +152,9 @@ const validateRound = (
     if (!(entry.type in source.enemies))
       push(issues, `${path}.wave.${index}.type`, `Unknown enemy ${entry.type}.`);
     if (entry.at < 0) push(issues, `${path}.wave.${index}.at`, "Spawn time must be nonnegative.");
+    validateEnemyLevel(siteEnemyLevel, entry, `${path}.wave.${index}.levelOffset`, issues);
   }
+  validateFieldSupportWave(source, round, path, issues);
   validateAvailability(source, map, round.availability, `${path}.availability`, issues);
   if (previous) {
     const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
@@ -141,6 +163,22 @@ const validateRound = (
         push(issues, `${path}.availability.${field}`, "Round availability must be cumulative.");
       }
     }
+  }
+};
+
+const validateFieldSupportWave = (
+  source: GamePackSource,
+  round: RoundDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const fieldCount = round.wave.filter(
+    (entry) => source.enemies[entry.type]?.behavior.kind === "shared_field"
+  ).length;
+  if (fieldCount > 1)
+    push(issues, `${path}.wave`, "A round may author at most one shared-field enemy.");
+  if (fieldCount === 1 && round.wave.length === 1) {
+    push(issues, `${path}.wave`, "A shared-field enemy must enter with at least one ally.");
   }
 };
 
@@ -188,6 +226,17 @@ const validateLevelDefinition = (
 ): void => {
   if (!(level.focusRoomId in map.rooms))
     push(issues, `${path}.focusRoomId`, `Unknown room ${level.focusRoomId}.`);
+  if (
+    !Number.isInteger(level.enemyLevel) ||
+    level.enemyLevel < MIN_ENEMY_LEVEL ||
+    level.enemyLevel > MAX_ENEMY_LEVEL
+  ) {
+    push(
+      issues,
+      `${path}.enemyLevel`,
+      `Site enemy level must be an integer between ${MIN_ENEMY_LEVEL} and ${MAX_ENEMY_LEVEL}.`
+    );
+  }
   for (const reactionId of level.featuredReactionIds) {
     if (!(reactionId in source.reactions))
       push(issues, `${path}.featuredReactionIds`, `Unknown reaction ${reactionId}.`);
@@ -200,7 +249,15 @@ const validateLevelDefinition = (
   if (new Set(roundIds).size !== roundIds.length)
     push(issues, `${path}.rounds`, "Round IDs must be unique within a level.");
   level.rounds.forEach((round, index) =>
-    validateRound(source, map, round, level.rounds[index - 1], `${path}.rounds.${index}`, issues)
+    validateRound(
+      source,
+      map,
+      round,
+      level.rounds[index - 1],
+      level.enemyLevel,
+      `${path}.rounds.${index}`,
+      issues
+    )
   );
 };
 
@@ -348,37 +405,17 @@ const validateProcesses = (source: GamePackSource, issues: AuthoringIssue[]): vo
   }
 };
 
-const validateWorldCoverage = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  for (const connection of Object.values(source.map.connections)) {
-    if (!isProcessLine(connection)) continue;
-    for (const roomId of connection.rooms) {
-      if (!(roomId in source.map.rooms))
-        push(issues, `map.connections.${connection.id}.rooms`, `Unknown room ${roomId}.`);
-    }
-  }
-};
-
-const validateModules = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  for (const [moduleId, template] of Object.entries(source.modules)) {
-    validateIdentity(issues, `modules.${moduleId}.id`, moduleId, template.id);
-    if (template.footprint.width < 1 || template.footprint.height < 1)
-      push(issues, `modules.${moduleId}.footprint`, "Module footprint must be positive.");
-    if (template.graftCost < 0)
-      push(issues, `modules.${moduleId}.graftCost`, "Graft cost must be nonnegative.");
-  }
-};
-
 export const validateGamePack = (source: GamePackSource): readonly AuthoringIssue[] => {
   const issues: AuthoringIssue[] = [];
   if (source.packId.trim().length === 0) push(issues, "packId", "Pack ID must be non-empty.");
-  validateWorldCoverage(source, issues);
+  issues.push(...validateCatalogStructure(source));
   if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);
   validateReactions(source, issues);
   validateMap(source, issues);
-  validateModules(source, issues);
   validateProcesses(source, issues);
+  issues.push(...validateEnemyDefinitions(source));
   return issues;
 };
 

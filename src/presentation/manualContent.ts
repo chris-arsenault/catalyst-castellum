@@ -1,4 +1,10 @@
-import type { EnemyType, EquipmentId, ReactionDefinition, ReactionId } from "../game/types";
+import {
+  ENEMY_TYPES,
+  type EnemyType,
+  type EquipmentId,
+  type ReactionDefinition,
+  type ReactionId,
+} from "../game/types";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
 
@@ -8,9 +14,15 @@ export interface EquipmentManualEntry {
   category: EquipmentCategory;
   designation: string;
   flavor: string;
-  image: string;
   operationalNotes: readonly string[];
   reactionIds: readonly ReactionId[];
+}
+
+export interface EnemyBestiaryEntry {
+  classification: string;
+  habitat: string;
+  blurb: string;
+  fieldNote: string;
 }
 
 const text = (
@@ -40,13 +52,18 @@ const createReactionManual = (
     ])
   ) as Record<ReactionId, { doctrine: string; flavor: string }>;
 
-const createEnemyFlavor = (translator: Translator): Record<EnemyType, string> =>
+const createEnemyBestiary = (translator: Translator): Record<EnemyType, EnemyBestiaryEntry> =>
   Object.fromEntries(
-    ["crawler", "skimmer", "floater", "shell", "bellows"].map((enemyType) => [
+    ENEMY_TYPES.map((enemyType) => [
       enemyType,
-      text(translator, `manual.enemies.${enemyType}.flavor`),
+      {
+        classification: text(translator, `manual.enemies.${enemyType}.classification`),
+        habitat: text(translator, `manual.enemies.${enemyType}.habitat`),
+        blurb: text(translator, `manual.enemies.${enemyType}.blurb`),
+        fieldNote: text(translator, `manual.enemies.${enemyType}.fieldNote`),
+      },
     ])
-  ) as Record<EnemyType, string>;
+  ) as Record<EnemyType, EnemyBestiaryEntry>;
 
 export const createManualContent = (translator: Translator) => {
   const equipmentCategoryLabels: Record<EquipmentCategory, string> = {
@@ -60,7 +77,6 @@ export const createManualContent = (translator: Translator) => {
       category: "atmosphere",
       designation: translator.text("manual.equipment.gas_agitator.designation"),
       flavor: translator.text("manual.equipment.gas_agitator.flavor"),
-      image: "/manual/equipment/gas-agitator.webp",
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.gas_agitator.note.${index}`)
       ),
@@ -70,7 +86,6 @@ export const createManualContent = (translator: Translator) => {
       category: "contact",
       designation: translator.text("manual.equipment.wet_contactor.designation"),
       flavor: translator.text("manual.equipment.wet_contactor.flavor"),
-      image: "/manual/equipment/wet-contactor.webp",
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.wet_contactor.note.${index}`)
       ),
@@ -85,7 +100,6 @@ export const createManualContent = (translator: Translator) => {
       category: "thermal",
       designation: translator.text("manual.equipment.thermal_coil.designation"),
       flavor: translator.text("manual.equipment.thermal_coil.flavor"),
-      image: "/manual/equipment/thermal-coil.webp",
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.thermal_coil.note.${index}`)
       ),
@@ -95,7 +109,6 @@ export const createManualContent = (translator: Translator) => {
       category: "process",
       designation: translator.text("manual.equipment.membrane_cell.designation"),
       flavor: translator.text("manual.equipment.membrane_cell.flavor"),
-      image: "/manual/equipment/membrane-cell.webp",
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.membrane_cell.note.${index}`)
       ),
@@ -103,15 +116,15 @@ export const createManualContent = (translator: Translator) => {
     },
   };
   const reactionManual = createReactionManual(translator);
-  const enemyFlavor = createEnemyFlavor(translator);
-  return { equipmentCategoryLabels, equipmentManual, reactionManual, enemyFlavor };
+  const enemyBestiary = createEnemyBestiary(translator);
+  return { equipmentCategoryLabels, equipmentManual, reactionManual, enemyBestiary };
 };
 
 const DEFAULT_MANUAL_CONTENT = createManualContent(DEFAULT_TRANSLATOR);
 export const EQUIPMENT_CATEGORY_LABELS = DEFAULT_MANUAL_CONTENT.equipmentCategoryLabels;
 export const EQUIPMENT_MANUAL = DEFAULT_MANUAL_CONTENT.equipmentManual;
 export const REACTION_MANUAL = DEFAULT_MANUAL_CONTENT.reactionManual;
-export const ENEMY_MANUAL_FLAVOR = DEFAULT_MANUAL_CONTENT.enemyFlavor;
+export const ENEMY_BESTIARY = DEFAULT_MANUAL_CONTENT.enemyBestiary;
 
 export const equipmentForReaction = (reactionId: ReactionId): EquipmentId[] =>
   (Object.entries(EQUIPMENT_MANUAL) as [EquipmentId, EquipmentManualEntry][]).flatMap(

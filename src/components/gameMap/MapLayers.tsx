@@ -2,13 +2,14 @@ import { useCallback } from "react";
 import { useGameStore } from "../../application/store";
 import type { Graphics } from "pixi.js";
 import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
-import { drawBackdrop, drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
+import { drawBackdrop, drawFacilityCorridors, drawFacilityPortalFlows } from "./facilityGraphics";
 import { drawProcessNodes } from "./processNodeGraphics";
 import { drawTransportRun, GAS_RUN_COLOR, LIQUID_RUN_COLOR } from "./transportGraphics";
 import { connectionRoomPair } from "../../presentation/defaultGame";
 import type { PipePreview } from "../../application/storeTypes";
 import { gridPathToWorldPath } from "../../game/spatial";
 import { mapViewFor } from "./mapGeometry";
+import { FacilityDoorLayer, FacilityStructureLayer } from "./ArchitectureLayer";
 
 export { IncidentLayer } from "./IncidentLayer";
 
@@ -52,15 +53,25 @@ export const FacilityCorridors = ({ game }: { game: GameState }) => {
     (graphics: Graphics) => drawFacilityCorridors(graphics, game.map),
     [game.map]
   );
-  return <pixiGraphics draw={draw} eventMode="none" />;
+  return (
+    <>
+      <pixiGraphics draw={draw} eventMode="none" />
+      <FacilityStructureLayer game={game} />
+    </>
+  );
 };
 
 export const FacilityDoors = ({ game }: { game: GameState }) => {
   const draw = useCallback(
-    (graphics: Graphics) => drawFacilityDoors(graphics, game.map, game.portalStates),
+    (graphics: Graphics) => drawFacilityPortalFlows(graphics, game.map, game.portalStates),
     [game.map, game.portalStates]
   );
-  return <pixiGraphics draw={draw} eventMode="none" />;
+  return (
+    <>
+      <FacilityDoorLayer game={game} />
+      <pixiGraphics draw={draw} eventMode="none" />
+    </>
+  );
 };
 
 interface TransportRunNodeProps {

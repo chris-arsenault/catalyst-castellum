@@ -18,7 +18,7 @@ export const startNewGame = async (page: Page, slot = 1): Promise<void> => {
   await page.getByTestId(`new-game-slot-${slot}`).click();
   await expect(page.getByTestId("enter-control-room")).toBeVisible();
   await expect(page.getByTestId("game-map")).toBeVisible();
-  await expect(page.getByTestId("phase-banner")).toContainText("Checkpoint briefing");
+  await expect(page.getByTestId("phase-banner")).toContainText("Site briefing");
 };
 
 export const startGuidedTutorial = async (page: Page): Promise<void> => {
@@ -36,7 +36,7 @@ export const startGuidedTutorial = async (page: Page): Promise<void> => {
   expect(startupError).toBeNull();
   const intro = page.getByTestId("tutorial-stage-intro");
   await expect(intro).toContainText("Turn R-02 into a combustion trap");
-  await expect(intro).toContainText(/crawler column is moving along the service route/i);
+  await expect(intro).toContainText(/deckmouth column is moving along the service route/i);
   await expect(intro).toContainText("Commission the OX-1 cycle");
   await expect(intro).toContainText("Process model");
   await expect(intro).toContainText("2 H₂ : 1 O₂ · up to 2.2 mol-eq/s");

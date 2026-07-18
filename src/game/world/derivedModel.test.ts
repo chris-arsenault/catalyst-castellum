@@ -21,7 +21,7 @@ describe("map-derived facility geometry", () => {
     expect(facilityModelFor(clone)).toBe(facilityModelFor(state));
   });
 
-  it("round-trips the state's own map through the save (v13)", () => {
+  it("round-trips the state's own map through the current save", () => {
     const state = freshGame();
     const decoded = decodeGame(encodeGame(state, DEFAULT_GAME_DEFINITION), DEFAULT_GAME_DEFINITION);
     expect(decoded).not.toBeNull();

@@ -16,6 +16,7 @@ export interface PlaytestResult {
   killed: number;
   breached: number;
   coreDamage: number;
+  fieldDamageAbsorbed: number;
   damageBySource: Record<DamageSourceId, number>;
   killsBySource: Record<DamageSourceId, number>;
   plannedActions: number;

@@ -139,6 +139,7 @@
 .manual-page-heading p,
 .manual-build-copy > p,
 .manual-entry-hero p,
+.manual-bestiary-heading p,
 .manual-threat-entry header p {
   margin: 0;
   color: #89a397;
@@ -339,6 +340,35 @@
   height: 100%;
   object-fit: cover;
 }
+
+.manual-machine-sprite {
+  display: block;
+  height: 100%;
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.manual-equipment-image .manual-machine-sprite img {
+  width: 800%;
+  max-width: none;
+  height: 100%;
+  object-fit: fill;
+  transform: translateX(0);
+  animation: machine-sprite-cycle 1.6s steps(8, end) infinite;
+}
+
+@keyframes machine-sprite-cycle {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .manual-equipment-image .manual-machine-sprite img {
+    animation-play-state: paused;
+  }
+}
 .manual-equipment-image.compact {
   width: 74px;
   border-radius: 3px;
@@ -442,9 +472,18 @@
 }
 .manual-index-tabs {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 4px;
   margin-bottom: 10px;
+}
+.manual-index-tabs button {
+  padding-inline: 6px;
+}
+.manual-index-note {
+  margin: 0 2px 11px;
+  color: #6f8d80;
+  font-size: 9px;
+  line-height: 1.5;
 }
 .manual-index-list,
 .manual-threat-index {
@@ -656,6 +695,90 @@
   font-size: 8px;
 }
 
+.manual-bestiary-heading {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+}
+.manual-bestiary-mark {
+  display: grid;
+  width: 92px;
+  height: 92px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--enemy) 70%, #496354);
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--enemy) 22%, #14241d), #0b1713 70%);
+  color: var(--enemy);
+  box-shadow: inset 0 0 24px color-mix(in srgb, var(--enemy) 12%, transparent);
+}
+
+.enemy-sprite-glyph {
+  display: inline-block;
+  overflow: hidden;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+
+.enemy-sprite-glyph[data-size="24"] {
+  width: 24px;
+  height: 24px;
+}
+
+.enemy-sprite-glyph[data-size="58"] {
+  width: 58px;
+  height: 58px;
+}
+
+.enemy-sprite-glyph img {
+  display: block;
+  width: 800%;
+  max-width: none;
+  height: 100%;
+  object-fit: fill;
+  transform: translateX(0);
+  animation: enemy-sprite-cycle 1s steps(8, end) infinite;
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 52%));
+}
+
+@keyframes enemy-sprite-cycle {
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .enemy-sprite-glyph img {
+    animation-play-state: paused;
+  }
+}
+
+.manual-bestiary-facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  margin: 22px 0 0;
+}
+.manual-bestiary-facts div {
+  display: grid;
+  gap: 7px;
+  padding: 11px 13px;
+  border: 1px solid #2b4e40;
+  background: #0d1b16;
+}
+.manual-bestiary-facts dt {
+  color: #708f80;
+  font: 700 8px/1.3 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.manual-bestiary-facts dd {
+  margin: 0;
+  color: #c2d2c3;
+  font-size: 10px;
+  line-height: 1.4;
+}
+
 /* Threats */
 .manual-threat-index > span {
   margin: 2px 4px 7px;
@@ -847,7 +970,8 @@
   .manual-cross-links,
   .manual-build-actions,
   .manual-phase-strip,
-  .manual-field-notes {
+  .manual-field-notes,
+  .manual-bestiary-facts {
     grid-template-columns: 1fr;
   }
   .manual-shell-footer > div,

@@ -16,9 +16,9 @@
 }
 .briefing-modal {
   display: grid;
-  grid-template-columns: minmax(300px, 0.92fr) minmax(390px, 1.08fr);
-  width: min(960px, 96vw);
-  min-height: 500px;
+  grid-template-columns: minmax(300px, 0.78fr) minmax(480px, 1.22fr);
+  width: min(1080px, 96vw);
+  min-height: 650px;
   overflow: hidden;
   border: 1px solid #48806d;
   border-radius: 9px;
@@ -27,7 +27,7 @@
 }
 .briefing-graphic {
   position: relative;
-  min-height: 500px;
+  min-height: 650px;
   overflow: hidden;
   border-right: 1px solid #3b6d5c;
   background: radial-gradient(circle at 55% 43%, #124436, #08120f 66%);
@@ -170,8 +170,10 @@
 .briefing-content {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: 42px 45px;
+  justify-content: flex-start;
+  max-height: min(820px, calc(100vh - 48px));
+  padding: 38px 42px;
+  overflow-y: auto;
   background: linear-gradient(150deg, #101f1a, #0a1512);
 }
 .eyebrow {
@@ -213,6 +215,236 @@
 .briefing-lede strong {
   color: #e3f4a5;
   font-weight: 650;
+}
+.act-introduction {
+  justify-content: center;
+}
+.act-summary {
+  max-width: 520px;
+  color: #dce8df;
+  font-size: 17px;
+  font-weight: 620;
+  line-height: 1.45;
+}
+.act-setting {
+  display: grid;
+  gap: 15px;
+  margin-top: 24px;
+}
+.act-setting p {
+  margin: 0;
+  color: #9bb1a6;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.contract-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -5px 0 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #294f42;
+}
+.contract-context span,
+.contract-context strong {
+  color: #b6cb70;
+  font: 700 8px/1.3 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.contract-context strong {
+  color: #728f82;
+  text-align: right;
+}
+.narrative-dialogue {
+  margin-top: 20px;
+  overflow: hidden;
+  border: 1px solid #2a5546;
+  border-radius: 8px;
+  background: rgba(5, 15, 12, 0.72);
+  box-shadow: 0 15px 34px rgba(0, 0, 0, 0.22);
+}
+.narrative-dialogue > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 13px;
+  border-bottom: 1px solid #24483c;
+  color: #83b09e;
+  font: 750 8px/1 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.narrative-dialogue > header > span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.narrative-dialogue > header small {
+  color: #587c6e;
+  font: inherit;
+}
+.dialogue-turn {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 20px;
+  min-height: 230px;
+  padding: 22px;
+  animation: dialogue-turn-enter 180ms ease-out;
+}
+.speaker-portrait {
+  --speaker-accent: #79b59f;
+  position: relative;
+  align-self: stretch;
+  min-height: 180px;
+  padding: 8px;
+  border: 1px solid color-mix(in srgb, var(--speaker-accent) 65%, #17372c);
+  border-radius: 8px;
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+    radial-gradient(
+      circle at 50% 35%,
+      color-mix(in srgb, var(--speaker-accent) 23%, transparent),
+      transparent 58%
+    ),
+    #0a1b16;
+  background-size:
+    100% 5px,
+    auto,
+    auto;
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.32);
+}
+.speaker-portrait-image {
+  display: grid;
+  height: 100%;
+  min-height: 162px;
+  place-items: center;
+  align-content: center;
+  gap: 13px;
+  color: var(--speaker-accent);
+}
+.speaker-portrait-image svg {
+  width: 74px;
+  height: 74px;
+  stroke-width: 1.15;
+  filter: drop-shadow(0 0 12px color-mix(in srgb, var(--speaker-accent) 34%, transparent));
+}
+.speaker-portrait-image span {
+  color: #dce9e2;
+  font: 800 14px/1 var(--mono);
+  letter-spacing: 0.12em;
+}
+.speaker-portrait > i {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--speaker-accent);
+  box-shadow: 0 0 8px var(--speaker-accent);
+}
+.speaker-portrait.concealed .speaker-portrait-image svg {
+  opacity: 0.3;
+  filter: blur(1px);
+}
+.speaker-malk_tern {
+  --speaker-accent: #d6a45f;
+}
+.speaker-tkesh,
+.speaker-vela_norr {
+  --speaker-accent: #62b9d1;
+}
+.speaker-mavo,
+.speaker-kethra {
+  --speaker-accent: #d47e61;
+}
+.speaker-surveyor {
+  --speaker-accent: #7faea1;
+}
+.speaker-buyer,
+.speaker-daro_venn {
+  --speaker-accent: #c8b061;
+}
+.speaker-soft_wake {
+  --speaker-accent: #92c98e;
+}
+.speaker-dern_talish {
+  --speaker-accent: #d2cb77;
+}
+.speaker-rig_telemetry {
+  --speaker-accent: #6fd0c7;
+}
+.dialogue-turn > article {
+  display: grid;
+  align-content: center;
+  gap: 18px;
+}
+.dialogue-turn > article > header {
+  display: grid;
+  gap: 5px;
+}
+.dialogue-turn > article strong {
+  color: #edf5ef;
+  font-size: 18px;
+  line-height: 1.1;
+}
+.dialogue-turn > article span {
+  color: var(--mint);
+  font: 700 8px/1.35 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.dialogue-turn > article p {
+  margin: 0;
+  color: #b2c5bb;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.narrative-dialogue > footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 13px 13px;
+}
+.dialogue-next-button,
+.dialogue-menu-return {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 39px;
+  padding: 0 14px;
+  border: 1px solid #7f9749;
+  border-radius: 5px;
+  background: #26321c;
+  color: #e6f0b7;
+  font: 750 9px/1 var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.dialogue-next-button:hover,
+.dialogue-menu-return:hover {
+  border-color: var(--lime);
+  background: #324023;
+}
+.dialogue-menu-return {
+  align-self: flex-start;
+  margin-top: 12px;
+  border-color: #355f50;
+  background: #0c1c17;
+  color: #789b8c;
+}
+@keyframes dialogue-turn-enter {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 .briefing-verbs {
   display: grid;
@@ -481,9 +713,49 @@
 }
 
 @media (max-width: 900px) {
+  .briefing-modal {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .briefing-graphic {
+    display: none;
+  }
+  .briefing-content {
+    max-height: calc(100vh - 48px);
+  }
   .progress-dock {
     right: 12px;
     bottom: 12px;
     width: min(470px, calc(100vw - 24px));
+  }
+}
+
+@media (max-width: 600px) {
+  .modal-backdrop {
+    padding: 8px;
+  }
+  .briefing-content {
+    max-height: calc(100vh - 16px);
+    padding: 28px 20px;
+  }
+  .dialogue-turn {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .speaker-portrait {
+    min-height: 112px;
+  }
+  .speaker-portrait-image {
+    min-height: 94px;
+    grid-template-columns: auto auto;
+  }
+  .speaker-portrait-image svg {
+    width: 52px;
+    height: 52px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialogue-turn {
+    animation: none;
   }
 }

@@ -4,7 +4,7 @@ import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { ManualSection } from "../../application/storeTypes";
 import { LEVEL_DEFINITIONS } from "../../presentation/defaultGame";
-import type { EquipmentId, ReactionId } from "../../game/types";
+import type { EnemyType, EquipmentId, ReactionId } from "../../game/types";
 import { guideDefinitionFor } from "../../tutorial/guideModel";
 import { BuildCatalog } from "./BuildCatalog";
 import { Encyclopedia, type EncyclopediaKind } from "./Encyclopedia";
@@ -17,18 +17,22 @@ const ManualPage = ({
   encyclopediaKind,
   onOpenEquipment,
   onOpenReaction,
+  onSelectEnemy,
   onSelectEncyclopediaKind,
   onSelectEquipment,
   section,
+  selectedEnemyType,
   selectedEquipmentId,
   selectedReactionId,
 }: {
   encyclopediaKind: EncyclopediaKind;
   onOpenEquipment: (equipmentId: EquipmentId) => void;
   onOpenReaction: (reactionId: ReactionId) => void;
+  onSelectEnemy: (enemyType: EnemyType) => void;
   onSelectEncyclopediaKind: (kind: EncyclopediaKind) => void;
   onSelectEquipment: (equipmentId: EquipmentId) => void;
   section: ManualSection;
+  selectedEnemyType: EnemyType;
   selectedEquipmentId: EquipmentId;
   selectedReactionId: ReactionId;
 }) => {
@@ -45,8 +49,10 @@ const ManualPage = ({
   return (
     <Encyclopedia
       kind={encyclopediaKind}
+      selectedEnemyType={selectedEnemyType}
       selectedEquipmentId={selectedEquipmentId}
       selectedReactionId={selectedReactionId}
+      onSelectEnemy={onSelectEnemy}
       onSelectEquipment={onOpenEquipment}
       onSelectKind={onSelectEncyclopediaKind}
       onSelectReaction={onOpenReaction}
@@ -116,6 +122,7 @@ const ManualShellFooter = () => {
 };
 
 export const FacilityManual = () => {
+  const [selectedEnemyType, setSelectedEnemyType] = useState<EnemyType>("deckmouth");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<EquipmentId>("gas_agitator");
   const [selectedReactionId, setSelectedReactionId] = useState<ReactionId>(
     "hydrogen_oxygen_combustion"
@@ -172,9 +179,11 @@ export const FacilityManual = () => {
             encyclopediaKind={encyclopediaKind}
             onOpenEquipment={openEquipment}
             onOpenReaction={openReaction}
+            onSelectEnemy={setSelectedEnemyType}
             onSelectEncyclopediaKind={setEncyclopediaKind}
             onSelectEquipment={selectEquipment}
             section={section}
+            selectedEnemyType={selectedEnemyType}
             selectedEquipmentId={selectedEquipmentId}
             selectedReactionId={selectedReactionId}
           />

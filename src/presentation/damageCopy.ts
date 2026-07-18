@@ -45,7 +45,6 @@ export const createDamageCopy = (translator: Translator) => ({
       "catastrophic_overpressure",
       "radiation_field",
       "hydrogen_oxygen_combustion",
-      "legacy_unattributed",
     ].map((source) => [source, localized(translator, `damage.source.${source}.label`)])
   ) as Record<DamageSourceId, string>,
   sourceDetail: Object.fromEntries(
@@ -56,7 +55,6 @@ export const createDamageCopy = (translator: Translator) => ({
       "catastrophic_overpressure",
       "radiation_field",
       "hydrogen_oxygen_combustion",
-      "legacy_unattributed",
     ].map((source) => [source, localized(translator, `damage.source.${source}.detail`)])
   ) as Record<DamageSourceId, string>,
 });
@@ -74,7 +72,6 @@ export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"
   catastrophic_overpressure: "continuous",
   radiation_field: "continuous",
   hydrogen_oxygen_combustion: "impact",
-  legacy_unattributed: "impact",
 };
 
 export const formatDamageAmount = (amount: number): string => {

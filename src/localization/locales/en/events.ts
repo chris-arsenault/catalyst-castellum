@@ -8,7 +8,6 @@ export const EVENT_MESSAGES = {
   "events.damage.catastrophic_overpressure": "catastrophic overpressure",
   "events.damage.radiation_field": "radiation field",
   "events.damage.hydrogen_oxygen_combustion": "OX-1 flash",
-  "events.damage.legacy_unattributed": "legacy unattributed damage",
   "events.damage.fallback": "environmental exposure",
   "events.round.contained.title": "Containment held",
   "events.round.breached.title": "{breaches} {breachLabel} recorded",
@@ -21,6 +20,8 @@ export const EVENT_MESSAGES = {
   "events.enemy.neutralized.title": "{enemy} neutralized — {source}",
   "events.enemy.neutralized.detail":
     "{damage} total damage; final {channel} contribution from {source}.{lifetime} {matterYield} matter recoverable.",
+  "events.enemy.molted.title": "{enemy} carapace shed",
+  "events.enemy.molted.detail": "Exposed form accelerates with {health} health remaining.",
   "events.enemy.lifetime": " Dominant lifetime source: {source}.",
   "events.flash.clear": "The chamber was clear at the instant of ignition.",
   "events.flash.hits": "{hits} hit; {killed} neutralized; {damage} applied pressure/heat damage.",
@@ -77,9 +78,6 @@ export const EVENT_MESSAGES = {
   "events.defeat.title": "Catalyst core lost",
   "events.defeat.detail":
     "The core fell during {level}, round {round}. The original facility state is ready for another attempt.",
-  "events.migration.title": "Physical conduit migration completed",
-  "events.migration.detail":
-    "The migration preserved every material, merged legacy sub-lines by room pair and phase, and set each migrated conduit to OFF for a fresh direction choice.",
   "events.fallback.title": "System event",
   "events.fallback.detail": "Event code {code} is ready for presentation copy.",
 } as const;

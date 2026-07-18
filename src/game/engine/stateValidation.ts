@@ -9,27 +9,14 @@ import {
   type ConnectionId,
 } from "../types";
 import { validateEnemyNavigation } from "./enemyNavigationValidation";
+import { MAX_ENEMY_LEVEL, MIN_ENEMY_LEVEL } from "./enemyLevel";
+import { validateEnemyBehaviorState } from "./enemyBehaviorValidation";
 import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionForMap } from "../world/activeDefinition";
+import type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 
-export type StateValidationCode =
-  | "availability_mismatch"
-  | "world_catalog_mismatch"
-  | "campaign_mismatch"
-  | "conduit_installation_mismatch"
-  | "conduit_route_invalid"
-  | "enemy_navigation_invalid"
-  | "identity_mismatch"
-  | "identifier_sequence_invalid"
-  | "phase_invariant_invalid"
-  | "portal_identity_mismatch";
-
-export interface StateValidationIssue {
-  code: StateValidationCode;
-  path: string;
-  message: string;
-}
+export type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 
 const issue = (
   issues: StateValidationIssue[],
@@ -307,14 +294,43 @@ const validatePhase = (
   validateNextIdentifiers(state, issues);
 };
 
-/**
- * The world catalogs are the exhaustiveness backstop for instance-keyed records
- * (ADR-0002): every catalog id must own a record entry and vice versa.
- */
-const validateWorldCatalogs = (
+const validateEnemyLevels = (state: GameState, issues: StateValidationIssue[]): void => {
+  state.enemies.forEach((enemy, index) => {
+    if (
+      !Number.isInteger(enemy.level) ||
+      enemy.level < MIN_ENEMY_LEVEL ||
+      enemy.level > MAX_ENEMY_LEVEL
+    ) {
+      issue(
+        issues,
+        "enemy_level_invalid",
+        `enemies.${index}.level`,
+        `Enemy level must be between ${MIN_ENEMY_LEVEL} and ${MAX_ENEMY_LEVEL}.`
+      );
+    }
+  });
+};
+
+const validateEnemyBehaviors = (
   state: GameState,
   issues: StateValidationIssue[],
   definition: GameDefinition
+): void => {
+  state.enemies.forEach((enemy, index) => {
+    for (const behaviorIssue of validateEnemyBehaviorState(
+      enemy,
+      definition,
+      `enemies.${index}.behavior`
+    )) {
+      issue(issues, "enemy_behavior_invalid", behaviorIssue.path, behaviorIssue.message);
+    }
+  });
+};
+
+const validateWorldCatalogs = (
+  state: GameState,
+  issues: StateValidationIssue[],
+  _definition: GameDefinition
 ): void => {
   const expectations: readonly [string, readonly string[], Record<string, unknown>][] = [
     ["rooms", state.world.rooms, state.rooms],
@@ -372,6 +388,8 @@ export const validateGameState = (
   validateCampaign(state, issues, activeDefinition);
   validateTopology(state, issues, activeDefinition);
   validateEnemyNavigation(state, issues, activeDefinition);
+  validateEnemyLevels(state, issues);
+  validateEnemyBehaviors(state, issues, activeDefinition);
   validatePhase(state, issues, activeDefinition);
   return issues;
 };

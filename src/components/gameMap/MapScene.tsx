@@ -1,5 +1,5 @@
 import { Application, extend } from "@pixi/react";
-import { Container, Graphics, Text } from "pixi.js";
+import { AnimatedSprite, Container, Graphics, Sprite, Text } from "pixi.js";
 import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
 import type { PipePreview } from "../../application/storeTypes";
 import { GhostRouteLayer } from "./MapLayers";
@@ -17,11 +17,17 @@ import {
   PipeHitLayer,
   TransportNetwork,
 } from "./MapLayers";
-import { VIEWPORT_HEIGHT, VIEWPORT_WIDTH, type CameraTransform } from "./mapGeometry";
+import {
+  mapRenderResolution,
+  VIEWPORT_HEIGHT,
+  VIEWPORT_WIDTH,
+  type CameraTransform,
+} from "./mapGeometry";
 import { MapLabelLayer } from "./MapLabelLayer";
 import { RoomNode } from "./RoomNode";
+import { enemyRoomId } from "../../game/queries";
 
-extend({ Container, Graphics, Text });
+extend({ AnimatedSprite, Container, Graphics, Sprite, Text });
 
 export interface MapSceneProps {
   camera: CameraTransform;
@@ -41,6 +47,36 @@ export interface MapSceneProps {
   selectedRoomId: RoomId;
   selectedSpecies: SpeciesId | null;
 }
+
+const enemyHasFieldProtection = (game: GameState, enemy: GameState["enemies"][number]): boolean => {
+  const roomId = enemyRoomId(enemy, game);
+  if (!roomId) return false;
+  return game.enemies.some(
+    (candidate) =>
+      candidate.id !== enemy.id &&
+      candidate.behavior.kind === "shared_field" &&
+      candidate.behavior.active &&
+      candidate.behavior.charge > 0 &&
+      enemyRoomId(candidate, game) === roomId
+  );
+};
+
+const EnemyLayer = ({
+  game,
+  onHoverEnemy,
+}: {
+  game: GameState;
+  onHoverEnemy: (enemyId: number | null) => void;
+}) =>
+  game.enemies.map((enemy) => (
+    <EnemyNode
+      key={enemy.id}
+      enemy={enemy}
+      map={game.map}
+      fieldProtected={enemyHasFieldProtection(game, enemy)}
+      onHover={onHoverEnemy}
+    />
+  ));
 
 export const MapScene = ({
   camera,
@@ -66,7 +102,7 @@ export const MapScene = ({
     backgroundAlpha={0}
     antialias
     autoDensity
-    resolution={1}
+    resolution={mapRenderResolution(globalThis.devicePixelRatio)}
     preference="webgl"
   >
     <pixiContainer x={camera.x} y={camera.y} scale={camera.zoom}>
@@ -107,9 +143,7 @@ export const MapScene = ({
         <EquipmentLayer game={game} onHover={onHoverEquipment} onSelectRoom={onSelectRoom} />
         <MapLabelLayer game={game} selectedRoomId={selectedRoomId} />
         <IncidentLayer game={game} />
-        {game.enemies.map((enemy) => (
-          <EnemyNode key={enemy.id} enemy={enemy} map={game.map} onHover={onHoverEnemy} />
-        ))}
+        <EnemyLayer game={game} onHoverEnemy={onHoverEnemy} />
         <DamageNumberLayer game={game} />
       </pixiContainer>
     </pixiContainer>

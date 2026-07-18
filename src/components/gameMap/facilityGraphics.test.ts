@@ -1,41 +1,34 @@
 import { Graphics } from "pixi.js";
 import { describe, expect, it, vi } from "vitest";
-import { facilityCells, initialPortalStates } from "../../game/config";
-import { drawFacilityCorridors, drawFacilityDoors } from "./facilityGraphics";
+import { initialPortalStates } from "../../game/config";
+import { drawFacilityCorridors, drawFacilityPortalFlows } from "./facilityGraphics";
 import { WORLD_MAP } from "../../game/content/worldMap";
+import { architecturalConnections } from "../../game/world/map";
 
 describe("facility architecture rendering", () => {
-  it("draws canonical shell, platform, ladder, and opening geometry", () => {
+  it("keeps portal cuts behind the illustrated structures while the Core owns its shell", () => {
     const graphics = new Graphics();
     const clear = vi.spyOn(graphics, "clear");
     const rect = vi.spyOn(graphics, "rect");
-    const moveTo = vi.spyOn(graphics, "moveTo");
-    const fill = vi.spyOn(graphics, "fill");
-    const cells = facilityCells();
-    const coreShells = cells.filter(({ terrain }) => terrain === "core_shell").length;
-    const platforms = cells.filter(({ terrain }) => terrain === "platform").length;
-    const ladders = cells.filter(({ terrain }) => terrain === "ladder").length;
+    const connectorCells = architecturalConnections(WORLD_MAP).reduce(
+      (total, portal) => total + portal.connectorCells.length,
+      0
+    );
 
     drawFacilityCorridors(graphics, WORLD_MAP);
 
     expect(clear).toHaveBeenCalledOnce();
-    expect(rect.mock.calls.length).toBeGreaterThanOrEqual(coreShells + platforms);
-    expect(moveTo.mock.calls.length).toBeGreaterThanOrEqual(coreShells + ladders * 3);
-    expect(fill.mock.calls.length).toBeGreaterThanOrEqual(coreShells + platforms);
+    expect(rect).toHaveBeenCalledTimes(connectorCells);
   });
 
-  it("draws the closed Core door and the authored open trapdoor", () => {
+  it("draws portal flow overlays separately from the illustrated structures", () => {
     const graphics = new Graphics();
     const clear = vi.spyOn(graphics, "clear");
-    const roundRect = vi.spyOn(graphics, "roundRect");
-    const moveTo = vi.spyOn(graphics, "moveTo");
-    const stroke = vi.spyOn(graphics, "stroke");
+    const lineTo = vi.spyOn(graphics, "lineTo");
 
-    drawFacilityDoors(graphics, WORLD_MAP, initialPortalStates());
+    drawFacilityPortalFlows(graphics, WORLD_MAP, initialPortalStates());
 
     expect(clear).toHaveBeenCalledOnce();
-    expect(roundRect).toHaveBeenCalledTimes(2);
-    expect(moveTo.mock.calls.length).toBeGreaterThanOrEqual(2);
-    expect(stroke.mock.calls.length).toBeGreaterThanOrEqual(3);
+    expect(lineTo).not.toHaveBeenCalled();
   });
 });

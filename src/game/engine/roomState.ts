@@ -140,6 +140,7 @@ const cloneCombatState = (
 ): Pick<GameState, "enemies" | "stats" | "lastReport" | "events" | "incidents"> => ({
   enemies: state.enemies.map((enemy) => ({
     ...enemy,
+    behavior: { ...enemy.behavior },
     path: enemy.path.map((step) => ({ ...step, cell: { ...step.cell } })),
     damageBySource: cloneDamageLedger(enemy.damageBySource),
     lastDamage: enemy.lastDamage

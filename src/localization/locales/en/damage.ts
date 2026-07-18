@@ -28,7 +28,4 @@ export const DAMAGE_MESSAGES = {
   "damage.source.hydrogen_oxygen_combustion.label": "OX-1 flash",
   "damage.source.hydrogen_oxygen_combustion.detail":
     "An OX-1 ignition applies one pressure-and-thermal impact to targets in the chamber.",
-  "damage.source.legacy_unattributed.label": "environment",
-  "damage.source.legacy_unattributed.detail":
-    "The saved record contains damage from an earlier simulation version.",
 } as const;

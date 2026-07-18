@@ -1,10 +1,12 @@
 import type { Graphics } from "pixi.js";
 import type { FacilityRing, GridCell, RoomDefinition } from "../../game/types";
 import type { RoomViewModel } from "../../presentation/selectors";
+import { drawCoreOverlay, type CoreReservoirDrawModel } from "./coreGraphics";
 
 export interface RoomDrawModel {
   analysis: RoomViewModel;
   coreIntegrity: number;
+  coreReservoirs: readonly CoreReservoirDrawModel[];
   elapsed: number;
   gasInflowRate: number;
   gasInflowColors: readonly number[];
@@ -237,33 +239,6 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
   }
 };
 
-const integrityColor = (integrity: number): number => {
-  if (integrity > 0.5) return 0xe8f87b;
-  if (integrity > 0.25) return 0xf5a53e;
-  return 0xf55147;
-};
-
-const drawCore = (graphics: Graphics, model: RoomDrawModel): void => {
-  if (model.structure !== "core") return;
-  const radius = Math.min(model.width, model.height) * 0.24;
-  const integrity = model.coreIntegrity / 100;
-  graphics.circle(0, 10, radius + 12).fill({ color: 0xc8b85f, alpha: 0.045 });
-  graphics.circle(0, 10, radius + 6).fill({ color: 0x090d0a, alpha: 0.9 });
-  for (let index = 0; index < 12; index += 1) {
-    const angle = (index / 12) * Math.PI * 2;
-    graphics
-      .moveTo(Math.cos(angle) * (radius + 8), 10 + Math.sin(angle) * (radius + 8))
-      .lineTo(Math.cos(angle) * (radius + 13), 10 + Math.sin(angle) * (radius + 13))
-      .stroke({ color: 0xd2b85f, width: 1, alpha: 0.5 });
-  }
-  graphics.circle(0, 10, radius).stroke({ color: 0x4c5130, width: 5, alpha: 0.92 });
-  graphics
-    .arc(0, 10, radius, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * integrity)
-    .stroke({ color: integrityColor(integrity), width: 5 });
-  graphics.circle(0, 10, radius * 0.35).fill({ color: 0x22251a, alpha: 0.98 });
-  graphics.circle(0, 10, radius * 0.14).fill({ color: 0xf6fbb9, alpha: 0.92 });
-};
-
 const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
   const left = -model.width / 2;
   const top = -model.height / 2;
@@ -293,11 +268,14 @@ const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
 
 export const drawRoom = (graphics: Graphics, model: RoomDrawModel): void => {
   graphics.clear();
+  if (model.structure === "core") {
+    drawCoreOverlay(graphics, model);
+    return;
+  }
   drawHazardGlow(graphics, model);
   drawHullFrame(graphics, model);
   drawRoomShell(graphics, model);
   drawRoomAtmosphere(graphics, model);
   drawRoomLiquid(graphics, model);
-  drawCore(graphics, model);
   drawIndicators(graphics, model);
 };

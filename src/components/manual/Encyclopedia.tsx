@@ -1,16 +1,25 @@
 import { ArrowRight, Atom, Cog, FlaskConical } from "lucide-react";
 import {
+  ENEMY_DEFINITIONS,
   EQUIPMENT_DEFINITIONS,
   REACTION_DEFINITIONS,
   SPECIES_DEFINITIONS,
 } from "../../presentation/defaultGame";
-import { EQUIPMENT_IDS, REACTION_IDS, type EquipmentId, type ReactionId } from "../../game/types";
+import {
+  ENEMY_TYPES,
+  EQUIPMENT_IDS,
+  REACTION_IDS,
+  type EnemyType,
+  type EquipmentId,
+  type ReactionId,
+} from "../../game/types";
 import { equipmentForReaction } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
-import { equipmentCopy, reactionCopy, speciesCopy } from "../../presentation/entityCopy";
+import { enemyCopy, equipmentCopy, reactionCopy, speciesCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
+import { EnemyGlyph } from "./EnemyGlyph";
 
-export type EncyclopediaKind = "equipment" | "reactions";
+export type EncyclopediaKind = "equipment" | "reactions" | "bestiary";
 
 const EquipmentEntry = ({
   equipmentId,
@@ -203,50 +212,112 @@ const ReactionEntry = ({
   );
 };
 
+const BestiaryEntry = ({ enemyType }: { enemyType: EnemyType }) => {
+  const { manual, translator } = useGamePresentation();
+  const definition = ENEMY_DEFINITIONS[enemyType];
+  const copy = enemyCopy(definition, translator);
+  const entry = manual.enemyBestiary[enemyType];
+  return (
+    <article
+      className="manual-encyclopedia-entry manual-bestiary-entry"
+      data-testid={`bestiary-entry-${enemyType}`}
+    >
+      <header className="manual-bestiary-heading" style={{ "--enemy": definition.color }}>
+        <div className="manual-bestiary-mark">
+          <EnemyGlyph appearance={definition.presentation.appearance} size={58} />
+        </div>
+        <div>
+          <span className="manual-entry-code">
+            {translator.text("ui.manual.encyclopedia.bestiary.record")} · {entry.classification}
+          </span>
+          <h2>{copy.name}</h2>
+          <p>{copy.description}</p>
+        </div>
+      </header>
+      <dl className="manual-bestiary-facts">
+        <div>
+          <dt>{translator.text("ui.manual.encyclopedia.bestiary.classification")}</dt>
+          <dd>{entry.classification}</dd>
+        </div>
+        <div>
+          <dt>{translator.text("ui.manual.encyclopedia.bestiary.habitat")}</dt>
+          <dd>{entry.habitat}</dd>
+        </div>
+      </dl>
+      <section className="manual-entry-section">
+        <h3>{translator.text("ui.manual.encyclopedia.bestiary.fieldRecord")}</h3>
+        <p>{entry.blurb}</p>
+      </section>
+      <blockquote>{entry.fieldNote}</blockquote>
+    </article>
+  );
+};
+
 interface EncyclopediaSelection {
   kind: EncyclopediaKind;
+  selectedEnemyType: EnemyType;
   selectedEquipmentId: EquipmentId;
   selectedReactionId: ReactionId;
+  onSelectEnemy: (enemyType: EnemyType) => void;
   onSelectEquipment: (equipmentId: EquipmentId) => void;
   onSelectKind: (kind: EncyclopediaKind) => void;
   onSelectReaction: (reactionId: ReactionId) => void;
 }
 
-const EncyclopediaIndex = ({
+const EncyclopediaEntries = ({
   kind,
+  selectedEnemyType,
   selectedEquipmentId,
   selectedReactionId,
+  onSelectEnemy,
   onSelectEquipment,
-  onSelectKind,
   onSelectReaction,
-}: EncyclopediaSelection) => {
+}: Omit<EncyclopediaSelection, "onSelectKind">) => {
   const { manual, translator } = useGamePresentation();
-  const entries =
-    kind === "equipment"
-      ? EQUIPMENT_IDS.map((equipmentId) => (
-          <button
-            key={equipmentId}
-            type="button"
-            className={selectedEquipmentId === equipmentId ? "selected" : ""}
-            onClick={() => onSelectEquipment(equipmentId)}
-          >
-            <small>
-              {manual.equipmentCategoryLabels[manual.equipmentManual[equipmentId].category]}
-            </small>
-            <strong>{equipmentCopy(EQUIPMENT_DEFINITIONS[equipmentId], translator).name}</strong>
-          </button>
-        ))
-      : REACTION_IDS.map((reactionId) => (
-          <button
-            key={reactionId}
-            type="button"
-            className={selectedReactionId === reactionId ? "selected" : ""}
-            onClick={() => onSelectReaction(reactionId)}
-          >
-            <small>{REACTION_DEFINITIONS[reactionId].code}</small>
-            <strong>{reactionCopy(REACTION_DEFINITIONS[reactionId], translator).name}</strong>
-          </button>
-        ));
+  if (kind === "equipment") {
+    return EQUIPMENT_IDS.map((equipmentId) => (
+      <button
+        key={equipmentId}
+        type="button"
+        className={selectedEquipmentId === equipmentId ? "selected" : ""}
+        onClick={() => onSelectEquipment(equipmentId)}
+      >
+        <small>
+          {manual.equipmentCategoryLabels[manual.equipmentManual[equipmentId].category]}
+        </small>
+        <strong>{equipmentCopy(EQUIPMENT_DEFINITIONS[equipmentId], translator).name}</strong>
+      </button>
+    ));
+  }
+  if (kind === "reactions") {
+    return REACTION_IDS.map((reactionId) => (
+      <button
+        key={reactionId}
+        type="button"
+        className={selectedReactionId === reactionId ? "selected" : ""}
+        onClick={() => onSelectReaction(reactionId)}
+      >
+        <small>{REACTION_DEFINITIONS[reactionId].code}</small>
+        <strong>{reactionCopy(REACTION_DEFINITIONS[reactionId], translator).name}</strong>
+      </button>
+    ));
+  }
+  return ENEMY_TYPES.map((enemyType) => (
+    <button
+      key={enemyType}
+      type="button"
+      className={selectedEnemyType === enemyType ? "selected" : ""}
+      onClick={() => onSelectEnemy(enemyType)}
+    >
+      <small>{manual.enemyBestiary[enemyType].classification}</small>
+      <strong>{enemyCopy(ENEMY_DEFINITIONS[enemyType], translator).name}</strong>
+    </button>
+  ));
+};
+
+const EncyclopediaIndex = ({ onSelectKind, ...selection }: EncyclopediaSelection) => {
+  const { translator } = useGamePresentation();
+  const { kind } = selection;
   return (
     <aside className="manual-index">
       <div className="manual-index-tabs">
@@ -264,23 +335,41 @@ const EncyclopediaIndex = ({
         >
           {translator.text("ui.manual.encyclopedia.reactionTab")}
         </button>
+        <button
+          type="button"
+          className={kind === "bestiary" ? "active" : ""}
+          onClick={() => onSelectKind("bestiary")}
+        >
+          {translator.text("ui.manual.encyclopedia.bestiaryTab")}
+        </button>
       </div>
-      <div className="manual-index-list">{entries}</div>
+      {kind === "bestiary" ? (
+        <p className="manual-index-note">
+          {translator.text("ui.manual.encyclopedia.bestiary.taxonomy")}
+        </p>
+      ) : null}
+      <div className="manual-index-list">
+        <EncyclopediaEntries {...selection} />
+      </div>
     </aside>
   );
 };
 
 export const Encyclopedia = ({
   kind,
+  selectedEnemyType,
   selectedEquipmentId,
   selectedReactionId,
+  onSelectEnemy,
   onSelectEquipment,
   onSelectKind,
   onSelectReaction,
 }: {
   kind: EncyclopediaKind;
+  selectedEnemyType: EnemyType;
   selectedEquipmentId: EquipmentId;
   selectedReactionId: ReactionId;
+  onSelectEnemy: (enemyType: EnemyType) => void;
   onSelectEquipment: (equipmentId: EquipmentId) => void;
   onSelectKind: (kind: EncyclopediaKind) => void;
   onSelectReaction: (reactionId: ReactionId) => void;
@@ -292,8 +381,10 @@ export const Encyclopedia = ({
     >
       <EncyclopediaIndex
         kind={kind}
+        selectedEnemyType={selectedEnemyType}
         selectedEquipmentId={selectedEquipmentId}
         selectedReactionId={selectedReactionId}
+        onSelectEnemy={onSelectEnemy}
         onSelectEquipment={onSelectEquipment}
         onSelectKind={onSelectKind}
         onSelectReaction={onSelectReaction}
@@ -301,9 +392,11 @@ export const Encyclopedia = ({
       <div className="manual-entry-scroll">
         {kind === "equipment" ? (
           <EquipmentEntry equipmentId={selectedEquipmentId} onOpenReaction={onSelectReaction} />
-        ) : (
+        ) : null}
+        {kind === "reactions" ? (
           <ReactionEntry reactionId={selectedReactionId} onOpenEquipment={onSelectEquipment} />
-        )}
+        ) : null}
+        {kind === "bestiary" ? <BestiaryEntry enemyType={selectedEnemyType} /> : null}
       </div>
     </section>
   );

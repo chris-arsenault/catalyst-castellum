@@ -122,6 +122,78 @@ const EnemyLastDamage = ({ enemy }: { enemy: EnemyState }) => {
   );
 };
 
+const EnemyBehavior = ({ enemy }: { enemy: EnemyState }) => {
+  const { formatters, translator } = useGamePresentation();
+  const definition = ENEMY_DEFINITIONS[enemy.type];
+  switch (enemy.behavior.kind) {
+    case "standard":
+      return null;
+    case "ladder_runner": {
+      if (definition.behavior.kind !== "ladder_runner") return null;
+      const multiplier = definition.behavior.locomotionMultipliers[enemy.mode];
+      return (
+        <section className="enemy-behavior-detail">
+          <strong>{translator.text("ui.map.enemy.behavior.ladder")}</strong>
+          <p>
+            {translator.text("ui.map.enemy.behavior.speedMultiplier", {
+              multiplier: formatters.number(multiplier, 2),
+            })}
+          </p>
+        </section>
+      );
+    }
+    case "armored_molt": {
+      const armor = Math.max(0, enemy.health - enemy.behavior.transitionHealth);
+      return (
+        <section className="enemy-behavior-detail">
+          <strong>
+            {translator.text(
+              enemy.behavior.phase === "armored"
+                ? "ui.map.enemy.behavior.carapace"
+                : "ui.map.enemy.behavior.exposed"
+            )}
+          </strong>
+          <p>
+            {translator.text("ui.map.enemy.behavior.armorRemaining", {
+              health: formatters.number(armor, 1),
+            })}
+          </p>
+        </section>
+      );
+    }
+    case "shared_field":
+      return (
+        <section className="enemy-behavior-detail">
+          <strong>
+            {translator.text(
+              enemy.behavior.active
+                ? "ui.map.enemy.behavior.fieldActive"
+                : "ui.map.enemy.behavior.fieldRecharging"
+            )}
+          </strong>
+          <p>
+            {translator.text("ui.map.enemy.behavior.fieldCharge", {
+              charge: formatters.number(enemy.behavior.charge, 1),
+              capacity: formatters.number(enemy.behavior.maximumCharge, 0),
+            })}
+          </p>
+        </section>
+      );
+    case "gas_emitter":
+      return (
+        <section className="enemy-behavior-detail">
+          <strong>{translator.text("ui.map.enemy.behavior.hydrogenFeed")}</strong>
+          <p>
+            {translator.text("ui.map.enemy.behavior.reservoir", {
+              amount: formatters.number(enemy.behavior.reservoir, 1),
+              capacity: formatters.number(enemy.behavior.initialReservoir, 0),
+            })}
+          </p>
+        </section>
+      );
+  }
+};
+
 export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: GameState }) => {
   const { formatters, translator } = useGamePresentation();
   if (enemyId === null) return null;
@@ -146,6 +218,10 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
       </div>
       <dl>
         <div>
+          <dt>{translator.text("ui.map.enemy.level")}</dt>
+          <dd>{formatters.number(enemy.level, 0)}</dd>
+        </div>
+        <div>
           <dt>{translator.text("ui.map.enemy.health")}</dt>
           <dd>
             {formatters.number(enemy.health, 1)} / {formatters.number(enemy.maxHealth, 0)}
@@ -160,6 +236,7 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
           <dd>{movementCopy(enemy, translator)}</dd>
         </div>
       </dl>
+      <EnemyBehavior enemy={enemy} />
       <EnemyExposure exposure={enemyExposure(game, enemy)} />
       <EnemyLastDamage enemy={enemy} />
       <small>{translator.text("ui.map.enemy.footer")}</small>

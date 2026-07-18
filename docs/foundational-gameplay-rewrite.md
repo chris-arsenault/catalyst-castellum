@@ -113,7 +113,7 @@ copy, line rendering, or tutorial sequencing.
 
 - Recorded the four substrate mismatches and the replacement invariants above.
 - Started independent read-only audits for transport, spatial map/input, and combat/tutorial.
-- Confirmed before implementation that the intended Flash Point setup kills all ten crawlers via
+- Confirmed before implementation that the intended Flash Point setup kills all ten deckmouths via
   the broad pressure channel, with eight receiving no combustion-pulse contribution at all. This
   is the baseline defect the new combat tests must prevent.
 - Captured a green baseline before changing domain state: TypeScript passed and all 58 unit tests

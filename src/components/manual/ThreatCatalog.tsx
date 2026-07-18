@@ -1,26 +1,65 @@
-import { Bird, Bug, Shield, Snail, Wind } from "lucide-react";
 import { useState } from "react";
 import { ENEMY_DEFINITIONS } from "../../presentation/defaultGame";
-import { ENEMY_TYPES, type EnemyManualIcon, type EnemyType } from "../../game/types";
+import { ENEMY_TYPES, type EnemyType } from "../../game/types";
 import { DAMAGE_CHANNELS } from "../../presentation/damageCopy";
 import { enemyCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { Translator } from "../../localization/translator";
-
-const ENEMY_ICONS: Record<EnemyManualIcon, typeof Bug> = {
-  bug: Bug,
-  wind: Wind,
-  bird: Bird,
-  shield: Shield,
-  snail: Snail,
-};
+import { EnemyGlyph } from "./EnemyGlyph";
 
 const movement = (enemyType: EnemyType, translator: Translator): string => {
   const definition = ENEMY_DEFINITIONS[enemyType];
+  if (definition.behavior.kind === "ladder_runner")
+    return translator.text("ui.manual.threats.movement.ladder");
+  if (definition.behavior.kind === "armored_molt")
+    return translator.text("ui.manual.threats.movement.molt");
+  if (definition.behavior.kind === "shared_field")
+    return translator.text("ui.manual.threats.movement.support");
   if (definition.flying) return translator.text("ui.manual.threats.movement.airborne");
   if (definition.speed >= 0.16) return translator.text("ui.manual.threats.movement.rapid");
   if (definition.speed <= 0.08) return translator.text("ui.manual.threats.movement.armored");
   return translator.text("ui.manual.threats.movement.ground");
+};
+
+const BehaviorProfile = ({ enemyType }: { enemyType: EnemyType }) => {
+  const { formatters, translator } = useGamePresentation();
+  const behavior = ENEMY_DEFINITIONS[enemyType].behavior;
+  let detail: string;
+  switch (behavior.kind) {
+    case "standard":
+      detail = translator.text("ui.manual.threats.behavior.standard");
+      break;
+    case "ladder_runner":
+      detail = translator.text("ui.manual.threats.behavior.ladder", {
+        climb: formatters.number(behavior.locomotionMultipliers.climbing, 2),
+        walk: formatters.number(behavior.locomotionMultipliers.walking, 2),
+      });
+      break;
+    case "armored_molt":
+      detail = translator.text("ui.manual.threats.behavior.molt", {
+        carapace: formatters.number(behavior.shellHealth, 0),
+        speed: formatters.number(behavior.exposedSpeedMultiplier, 2),
+      });
+      break;
+    case "shared_field":
+      detail = translator.text("ui.manual.threats.behavior.field", {
+        capacity: formatters.number(behavior.capacity, 0),
+        recharge: formatters.number(behavior.rechargePerSecond, 1),
+      });
+      break;
+    case "gas_emitter":
+      detail = translator.text("ui.manual.threats.behavior.emitter", {
+        reservoir: formatters.number(behavior.reservoir, 1),
+        rate: formatters.number(behavior.emissionRate, 1),
+      });
+      break;
+  }
+  return (
+    <section className="manual-entry-section">
+      <h3>{translator.text("ui.manual.threats.behavior")}</h3>
+      <p>{detail}</p>
+    </section>
+  );
 };
 
 const responseLabel = (multiplier: number, translator: Translator): string => {
@@ -41,7 +80,6 @@ const ThreatIndex = ({
     <aside className="manual-threat-index">
       <span>{translator.text("ui.manual.threats.observed")}</span>
       {ENEMY_TYPES.map((enemyType) => {
-        const EnemyIcon = ENEMY_ICONS[ENEMY_DEFINITIONS[enemyType].presentation.manualIcon];
         return (
           <button
             key={enemyType}
@@ -49,7 +87,10 @@ const ThreatIndex = ({
             className={selectedType === enemyType ? "selected" : ""}
             onClick={() => onSelect(enemyType)}
           >
-            <EnemyIcon size={18} />
+            <EnemyGlyph
+              appearance={ENEMY_DEFINITIONS[enemyType].presentation.appearance}
+              size={24}
+            />
             <span>
               <strong>{enemyCopy(ENEMY_DEFINITIONS[enemyType], translator).name}</strong>
               <small>{movement(enemyType, translator)}</small>
@@ -88,14 +129,13 @@ export const ThreatCatalog = () => {
   const [selectedType, setSelectedType] = useState<EnemyType>(ENEMY_TYPES[0]);
   const definition = ENEMY_DEFINITIONS[selectedType];
   const copy = enemyCopy(definition, translator);
-  const Icon = ENEMY_ICONS[definition.presentation.manualIcon];
   return (
     <section className="manual-page manual-threat-page" data-testid="manual-threat-page">
       <ThreatIndex onSelect={setSelectedType} selectedType={selectedType} />
       <article className="manual-threat-entry" data-testid={`enemy-entry-${selectedType}`}>
         <header style={{ "--enemy": definition.color }}>
           <div>
-            <Icon size={42} />
+            <EnemyGlyph appearance={definition.presentation.appearance} size={58} />
           </div>
           <span>
             <small>
@@ -107,7 +147,7 @@ export const ThreatCatalog = () => {
             <p>{copy.description}</p>
           </span>
         </header>
-        <blockquote>{manual.enemyFlavor[selectedType]}</blockquote>
+        <blockquote>{manual.enemyBestiary[selectedType].fieldNote}</blockquote>
         <dl className="manual-threat-stats">
           <div>
             <dt>{translator.text("ui.manual.threats.health")}</dt>
@@ -126,6 +166,7 @@ export const ThreatCatalog = () => {
             <dd>{formatters.number(definition.matterYield, 0)}</dd>
           </div>
         </dl>
+        <BehaviorProfile enemyType={selectedType} />
         <ExposureResponses enemyType={selectedType} />
       </article>
     </section>
