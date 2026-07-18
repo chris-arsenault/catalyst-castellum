@@ -32,7 +32,8 @@
     "sprites:core": "tsx tooling/generateCoreSprites.ts",
     "sprites:enemies": "tsx tooling/generateEnemySprites.ts",
     "sprites:machines": "tsx tooling/generateMachineSprites.ts",
-    "sprites:all": "pnpm run sprites:enemies && pnpm run sprites:machines && pnpm run sprites:architecture && pnpm run sprites:core",
+    "sprites:rooms": "tsx tooling/generateRoomSectionSprites.ts",
+    "sprites:all": "pnpm run sprites:enemies && pnpm run sprites:machines && pnpm run sprites:architecture && pnpm run sprites:core && pnpm run sprites:rooms",
     "site:candidates": "tsx tooling/siteCandidates.ts"
   },
   "dependencies": {

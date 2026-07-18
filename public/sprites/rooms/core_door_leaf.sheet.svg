@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="512" height="64"
+    viewBox="0 0 512 64"
+    role="img" aria-label="Sliding Core-door leaf sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#e6d2a4"/>
+    <stop offset="0.48" stop-color="#a07d4e"/>
+    <stop offset="1" stop-color="#4b3825"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#e6d2a4"/>
+    <stop offset="0.22" stop-color="#a07d4e"/>
+    <stop offset="0.7" stop-color="#4b3825"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#ffe5a0" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#f2b34b" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="64" height="64"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.00" y="13" width="26.00" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="33.00" y="13" width="26.00" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M27.00 17 V50 M37.00 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.00 17 H25.00 M39.00 17 H56.00" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(64 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.14" y="13" width="22.71" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="36.14" y="13" width="22.71" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M23.86 17 V50 M40.14 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.14 17 H21.86 M42.14 17 H55.86" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(128 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.29" y="13" width="19.43" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="39.29" y="13" width="19.43" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M20.71 17 V50 M43.29 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.29 17 H18.71 M45.29 17 H55.71" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(192 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.43" y="13" width="16.14" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="42.43" y="13" width="16.14" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M17.57 17 V50 M46.43 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.43 17 H15.57 M48.43 17 H55.57" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(256 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.57" y="13" width="12.86" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="45.57" y="13" width="12.86" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M14.43 17 V50 M49.57 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.57 17 H12.43 M51.57 17 H55.43" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(320 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.71" y="13" width="9.57" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="48.71" y="13" width="9.57" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M11.29 17 V50 M52.71 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.71 17 H9.29 M54.71 17 H55.29" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(384 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="5.86" y="13" width="6.29" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="51.86" y="13" width="6.29" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M8.14 17 V50 M55.86 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M8.86 17 H6.14 M57.86 17 H55.14" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+<g transform="translate(448 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <rect x="6.00" y="13" width="3.00" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="55.00" y="13" width="3.00" height="41" rx="2" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M5.00 17 V50 M59.00 17 V50" stroke="#f2b34b" stroke-width="2"/>
+    <path d="M9.00 17 H3.00 M61.00 17 H55.00" stroke="#fff0c9" stroke-width="1" opacity=".58"/>
+  </g>
+    </g>
+  </svg>

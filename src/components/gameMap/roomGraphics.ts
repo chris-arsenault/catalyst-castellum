@@ -13,7 +13,6 @@ export interface RoomDrawModel {
   height: number;
   cells: readonly RoomDrawCell[];
   structure: RoomDefinition["structure"];
-  provenance: "site" | "hull";
   liquidColor: number;
   liquidInflowRate: number;
   lowerGasColor: number;
@@ -36,118 +35,6 @@ export interface RoomDrawCell {
   top: number;
   zone: "lower" | "upper";
 }
-
-const roomBorderColor = (model: RoomDrawModel): number => {
-  if (model.selected) return 0xedfaa5;
-  if (model.structure === "core") return 0xe1cc60;
-  if (model.ring === "inner") return 0x66ceaf;
-  if (model.ring === "middle") return 0x5d95a3;
-  return 0x458774;
-};
-
-interface RoomPalette {
-  accent: number;
-  base: number;
-  inset: number;
-}
-
-const roomPalette = (model: RoomDrawModel): RoomPalette => {
-  if (model.structure === "core") return { accent: 0xd2b85f, base: 0x18170f, inset: 0x292719 };
-  if (model.ring === "inner") return { accent: 0xc49d64, base: 0x171a19, inset: 0x2b2a21 };
-  if (model.ring === "middle") return { accent: 0x629db3, base: 0x0d171c, inset: 0x182b33 };
-  return { accent: 0x54a891, base: 0x0b1815, inset: 0x163129 };
-};
-
-const chamberPath = (left: number, top: number, width: number, height: number, cut: number) => [
-  left + cut,
-  top,
-  left + width - cut,
-  top,
-  left + width,
-  top + cut,
-  left + width,
-  top + height - cut,
-  left + width - cut,
-  top + height,
-  left + cut,
-  top + height,
-  left,
-  top + height - cut,
-  left,
-  top + cut,
-];
-
-const HULL_ACCENT = 0x7be0ff;
-
-/** Owned hull rooms wear a bright bracketed frame so the player reads them as theirs. */
-const drawHullFrame = (graphics: Graphics, model: RoomDrawModel): void => {
-  if (model.provenance !== "hull") return;
-  const left = -model.width / 2 - 3;
-  const top = -model.height / 2 - 3;
-  const right = model.width / 2 + 3;
-  const bottom = model.height / 2 + 3;
-  const arm = 12;
-  for (const [x, y, dx, dy] of [
-    [left, top, 1, 1],
-    [right, top, -1, 1],
-    [left, bottom, 1, -1],
-    [right, bottom, -1, -1],
-  ] as const) {
-    graphics
-      .moveTo(x, y + dy * arm)
-      .lineTo(x, y)
-      .lineTo(x + dx * arm, y)
-      .stroke({ color: HULL_ACCENT, width: 2, alpha: 0.9 });
-  }
-};
-
-const drawHazardGlow = (graphics: Graphics, model: RoomDrawModel): void => {
-  if (model.analysis.hazard < 32) return;
-  const color = model.analysis.hazard >= 65 ? 0xdaf64c : 0xf0ba4d;
-  graphics
-    .roundRect(-model.width / 2 - 5, -model.height / 2 - 5, model.width + 10, model.height + 10, 11)
-    .stroke({ color, width: model.analysis.hazard >= 65 ? 2 : 1.25, alpha: 0.34 });
-};
-
-const drawRoomShell = (graphics: Graphics, model: RoomDrawModel): void => {
-  const left = -model.width / 2;
-  const top = -model.height / 2;
-  const palette = roomPalette(model);
-  graphics
-    .poly(chamberPath(left + 5, top + 7, model.width, model.height, 8))
-    .fill({ color: 0x010302, alpha: 0.58 });
-  graphics
-    .poly(chamberPath(left - 2, top - 2, model.width + 4, model.height + 4, 10))
-    .fill({ color: palette.inset, alpha: 0.98 })
-    .stroke({ color: palette.accent, width: 1, alpha: 0.42 });
-  graphics
-    .poly(chamberPath(left, top, model.width, model.height, 8))
-    .fill({ color: palette.base })
-    .stroke({
-      color: roomBorderColor(model),
-      width: model.selected ? 2.5 : 1,
-      alpha: model.selected ? 1 : 0.82,
-    });
-  if (model.selected) {
-    graphics
-      .poly(chamberPath(left + 2, top + 2, model.width - 4, model.height - 4, 7))
-      .fill({ color: 0xdbea83, alpha: 0.055 });
-  }
-  graphics
-    .moveTo(left + 10, top + 1)
-    .lineTo(left + model.width * 0.4, top + 1)
-    .stroke({ color: palette.accent, width: model.selected ? 3 : 2, alpha: 0.92 });
-  graphics
-    .moveTo(-left - 18, top + 1)
-    .lineTo(-left - 9, top + 1)
-    .lineTo(-left - 1, top + 9)
-    .stroke({ color: palette.accent, width: 1, alpha: 0.6 });
-  if (model.selected) {
-    graphics
-      .poly(chamberPath(left + 5, top + 5, model.width - 10, model.height - 10, 5))
-      .stroke({ color: 0xedfaa5, width: 1, alpha: 0.32 });
-  }
-};
 
 const drawGasInflow = (graphics: Graphics, model: RoomDrawModel): void => {
   if (model.gasInflowRate <= 0.002 || model.structure === "core") return;
@@ -195,16 +82,6 @@ const drawRoomAtmosphere = (graphics: Graphics, model: RoomDrawModel): void => {
         .stroke({ color: 0x9ab0a6, width: 1, alpha: 0.075 });
     }
   }
-  if (model.upperGasFill > 0.01) {
-    graphics
-      .roundRect(-model.width / 2 + 6, -half + 5, model.width - 12, 2, 1)
-      .fill({ color: model.upperGasColor, alpha: 0.5 + model.upperGasFill * 0.28 });
-  }
-  if (model.lowerGasFill > 0.01) {
-    graphics
-      .roundRect(-model.width / 2 + 6, half - 7, model.width - 12, 2, 1)
-      .fill({ color: model.lowerGasColor, alpha: 0.5 + model.lowerGasFill * 0.28 });
-  }
   graphics
     .moveTo(-model.width / 2 + 8, 0)
     .lineTo(model.width / 2 - 8, 0)
@@ -239,31 +116,97 @@ const drawRoomLiquid = (graphics: Graphics, model: RoomDrawModel): void => {
   }
 };
 
+const drawStatusPlate = (
+  graphics: Graphics,
+  x: number,
+  y: number,
+  color: number,
+  pulse = 0
+): void => {
+  const radius = 7 + pulse * (0.5 + Math.sin(pulse * 8) * 0.35);
+  graphics
+    .circle(x, y, radius)
+    .fill({ color: 0x07100d, alpha: 0.92 })
+    .stroke({ color, width: 1.3, alpha: 0.9 });
+};
+
+const drawSelectionIcon = (graphics: Graphics, x: number, y: number): void => {
+  const color = 0xedfaa5;
+  drawStatusPlate(graphics, x, y, color);
+  graphics
+    .poly([x, y - 4, x + 4, y, x, y + 4, x - 4, y], true)
+    .stroke({ color, width: 1.2, alpha: 0.95 });
+  graphics.circle(x, y, 1.2).fill({ color, alpha: 1 });
+};
+
+const drawHazardIcon = (graphics: Graphics, x: number, y: number, lethal: boolean): void => {
+  const color = lethal ? 0xdaf64c : 0xf0ba4d;
+  drawStatusPlate(graphics, x, y, color);
+  graphics
+    .poly([x, y - 4.5, x + 4.5, y + 3.8, x - 4.5, y + 3.8], true)
+    .stroke({ color, width: 1.15, alpha: 0.96 });
+  graphics
+    .moveTo(x, y - 1.7)
+    .lineTo(x, y + 1)
+    .stroke({ color, width: 1.2, alpha: 1 });
+  graphics.circle(x, y + 2.7, 0.7).fill({ color, alpha: 1 });
+};
+
+const drawReactionIcon = (graphics: Graphics, x: number, y: number): void => {
+  const color = 0xc1f64a;
+  drawStatusPlate(graphics, x, y, color);
+  for (const [dx, dy] of [
+    [0, -4],
+    [3.5, -2],
+    [3.5, 2],
+    [0, 4],
+    [-3.5, 2],
+    [-3.5, -2],
+  ] as const) {
+    graphics
+      .moveTo(x, y)
+      .lineTo(x + dx, y + dy)
+      .stroke({ color, width: 0.9, alpha: 0.82 });
+  }
+  graphics.circle(x, y, 1.7).fill({ color, alpha: 0.96 });
+};
+
+const drawPressureIcon = (graphics: Graphics, x: number, y: number, pressure: number): void => {
+  const color = 0xf6a35b;
+  const pulse = Math.min(1, pressure / 160);
+  drawStatusPlate(graphics, x, y, color, pulse);
+  graphics.circle(x, y, 4).stroke({ color, width: 1, alpha: 0.9 });
+  graphics
+    .moveTo(x, y)
+    .lineTo(x + 2.7, y - 2.5)
+    .stroke({ color, width: 1.3, alpha: 1 });
+  graphics.circle(x, y, 1).fill({ color, alpha: 1 });
+};
+
+const drawStatusIcons = (graphics: Graphics, model: RoomDrawModel): void => {
+  let x = -model.width / 2 + 10;
+  const y = -model.height / 2 + 12;
+  const advance = (): number => {
+    const current = x;
+    x += 15;
+    return current;
+  };
+  if (model.selected) drawSelectionIcon(graphics, advance(), y);
+  if (model.analysis.hazard >= 32)
+    drawHazardIcon(graphics, advance(), y, model.analysis.hazard >= 65);
+  if (model.pressurePulse > 1) drawPressureIcon(graphics, advance(), y, model.pressurePulse);
+  if (model.reactionIntensity > 0.08) drawReactionIcon(graphics, advance(), y);
+};
+
 const drawIndicators = (graphics: Graphics, model: RoomDrawModel): void => {
   const left = -model.width / 2;
-  const top = -model.height / 2;
   if (model.structure === "entry") {
     graphics.poly([left + 20, -16, left - 12, 0, left + 20, 16]).fill({ color: 0xe3785d });
   }
-  if (model.reactionIntensity > 0.08) {
-    graphics
-      .rect(left + 10, top + 10, model.width - 20, model.height - 20)
-      .stroke({ color: 0xc1f64a, width: 1.5, alpha: 0.72 });
-  }
-  if (model.pressurePulse > 1) {
-    const pulse = Math.min(1, model.pressurePulse / 160);
-    graphics
-      .rect(
-        left - 5 - pulse * 8,
-        top - 5 - pulse * 8,
-        model.width + 10 + pulse * 16,
-        model.height + 10 + pulse * 16
-      )
-      .stroke({ color: 0xf6a35b, width: 1 + pulse * 1.5, alpha: 0.35 + pulse * 0.35 });
-  }
   if (model.occupied > 0) {
-    graphics.circle(-left - 12, top + 12, 11).fill({ color: 0xe9584a, alpha: 0.9 });
+    graphics.circle(-left - 12, -model.height / 2 + 12, 11).fill({ color: 0xe9584a, alpha: 0.9 });
   }
+  drawStatusIcons(graphics, model);
 };
 
 export const drawRoom = (graphics: Graphics, model: RoomDrawModel): void => {
@@ -272,9 +215,6 @@ export const drawRoom = (graphics: Graphics, model: RoomDrawModel): void => {
     drawCoreOverlay(graphics, model);
     return;
   }
-  drawHazardGlow(graphics, model);
-  drawHullFrame(graphics, model);
-  drawRoomShell(graphics, model);
   drawRoomAtmosphere(graphics, model);
   drawRoomLiquid(graphics, model);
   drawIndicators(graphics, model);

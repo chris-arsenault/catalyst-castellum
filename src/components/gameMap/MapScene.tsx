@@ -26,6 +26,7 @@ import {
 import { MapLabelLayer } from "./MapLabelLayer";
 import { RoomNode } from "./RoomNode";
 import { enemyRoomId } from "../../game/queries";
+import { RoomBackgroundLayer } from "./RoomSectionLayer";
 
 extend({ AnimatedSprite, Container, Graphics, Sprite, Text });
 
@@ -108,6 +109,7 @@ export const MapScene = ({
     <pixiContainer x={camera.x} y={camera.y} scale={camera.zoom}>
       <pixiContainer alpha={pipeMode ? 0.32 : 1}>
         <MapBackdrop game={game} />
+        <RoomBackgroundLayer map={game.map} />
       </pixiContainer>
       <PipeHitLayer game={game} onHover={onHoverRun} />
       <pixiContainer alpha={pipeMode ? 0.55 : 1}>

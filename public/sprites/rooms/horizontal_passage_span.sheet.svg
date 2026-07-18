@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="64" height="64"
+    viewBox="0 0 64 64"
+    role="img" aria-label="Horizontal passage span sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#80949a"/>
+    <stop offset="0.48" stop-color="#3f5964"/>
+    <stop offset="1" stop-color="#192b32"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#80949a"/>
+    <stop offset="0.22" stop-color="#3f5964"/>
+    <stop offset="0.7" stop-color="#192b32"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#d5996a" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#b5664b" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="64" height="64"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g>
+    <rect x="24" y="15" width="16" height="35" fill="#071115"/>
+    <path d="M24 31 H40" stroke="#5d747c" stroke-width=".7" opacity=".3"/>
+    <path d="M24 8 H40 V15 H24Z M24 50 H40 V57 H24Z" fill="url(#shell)" stroke="#0b1215" stroke-width="1"/>
+    <path d="M24 15 H40 M24 50 H40" stroke="#c3d2d3" stroke-width=".8" opacity=".54"/>
+    <path d="M25 48 H39" stroke="#c3d2d3" stroke-width="1" opacity=".62"/>
+      <path d="M27 53 H37" stroke="#5e8e99" stroke-width="1.4" opacity=".72"/>
+  </g>
+    </g>
+  </svg>

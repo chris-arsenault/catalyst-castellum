@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg"
+    width="64" height="64"
+    viewBox="0 0 64 64"
+    role="img" aria-label="Left Core-door frame sprite sheet">
+    <defs>
+  <linearGradient id="body" x1="0" y1="0" x2="0.9" y2="1">
+    <stop offset="0" stop-color="#e6d2a4"/>
+    <stop offset="0.48" stop-color="#a07d4e"/>
+    <stop offset="1" stop-color="#4b3825"/>
+  </linearGradient>
+  <linearGradient id="shell" x1="0.12" y1="0" x2="0.84" y2="1">
+    <stop offset="0" stop-color="#e6d2a4"/>
+    <stop offset="0.22" stop-color="#a07d4e"/>
+    <stop offset="0.7" stop-color="#4b3825"/>
+    <stop offset="1" stop-color="#111c1a"/>
+  </linearGradient>
+  <radialGradient id="glow">
+    <stop offset="0" stop-color="#ffffff" stop-opacity="0.96"/>
+    <stop offset="0.28" stop-color="#ffe5a0" stop-opacity="0.9"/>
+    <stop offset="1" stop-color="#f2b34b" stop-opacity="0"/>
+  </radialGradient>
+  <filter id="shadow" x="-40%" y="-40%" width="180%" height="190%">
+    <feDropShadow dx="0" dy="2.5" stdDeviation="2.4" flood-color="#020908" flood-opacity="0.76"/>
+  </filter>
+  <filter id="soft-glow" x="-70%" y="-70%" width="240%" height="240%">
+    <feGaussianBlur stdDeviation="2.2" result="blur"/>
+    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+  </filter>
+  <clipPath id="frame-clip"><rect width="64" height="64"/></clipPath></defs>
+    <g transform="translate(0 0)" clip-path="url(#frame-clip)">
+      <g filter="url(#shadow)">
+    <path d="M15 5 H61 V17 H30 L15 21Z" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M15 47 L30 49 H61 V59 H15Z" fill="url(#body)" stroke="#291c10" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M22 13 H60 M22 53 H60" stroke="#fff0c9" stroke-width="1.2" opacity=".7"/>
+    <path d="M18 19 H60 M18 48 H60" stroke="#f2b34b" stroke-width="1.8" opacity=".84"/>
+    <rect x="17" y="7" width="16" height="10" rx="2" fill="#71512e" stroke="#f2b34b" stroke-width="1.2"/>
+    <circle cx="25" cy="12" r="2" fill="#f2b34b" stroke="#291c10" stroke-width="1"/>
+    <path d="M36 12 H59 M25 53 H59" stroke="#f2b34b" stroke-width="2.6" opacity=".8"/>
+    <rect x="18" y="50" width="10" height="6" rx="1.5" fill="#71512e" stroke="#f2b34b" stroke-width="1"/>
+  </g>
+    </g>
+  </svg>
