@@ -9,10 +9,10 @@ const MINIMUM_LENGTH_FACTOR = 0.68;
 const MAXIMUM_LENGTH_FACTOR = 1.3;
 
 export const conduitDefinition = (
+  state: GameState,
   runId: ConnectionId,
-  phase: TransportPhase,
-  definition: GameDefinition
-): ProcessLineView | null => maybeLineDefinition(definition, runId, phase);
+  phase: TransportPhase
+): ProcessLineView | null => maybeLineDefinition(state, runId, phase);
 
 export const conduitState = (state: GameState, runId: ConnectionId, phase: TransportPhase) =>
   phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
@@ -57,7 +57,7 @@ export const conduitCapacity = (
   phase: TransportPhase,
   definition: GameDefinition
 ): number => {
-  const conduit = conduitDefinition(runId, phase, definition);
+  const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduitLength(state, runId, phase) * conduit.volumePerCell : 0;
 };
 
@@ -67,7 +67,7 @@ export const conduitMaxFlow = (
   phase: TransportPhase,
   definition: GameDefinition
 ): number => {
-  const conduit = conduitDefinition(runId, phase, definition);
+  const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduit.maxFlow * lengthFactor(conduitLength(state, runId, phase)) : 0;
 };
 

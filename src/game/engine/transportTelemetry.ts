@@ -42,7 +42,6 @@ export interface MaterialRunFlow {
 }
 
 export interface TransportPhaseStatus {
-  installed: boolean;
   configured: boolean;
   active: boolean;
   blocked: boolean;
@@ -132,12 +131,9 @@ export const transportRunPhaseStatus = (
   phase: TransportPhase,
   definition: GameDefinition
 ): TransportPhaseStatus => {
-  const conduit =
-    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const exists = maybeLineDefinition(state, runId, phase) !== null;
   if (!exists) {
     return {
-      installed: false,
       configured: false,
       active: false,
       blocked: false,
@@ -145,9 +141,10 @@ export const transportRunPhaseStatus = (
       rate: 0,
     };
   }
+  const conduit =
+    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   return {
-    installed: conduit.installed,
-    configured: conduit.installed && conduit.enabled,
+    configured: conduit.enabled,
     active: Math.abs(conduit.lastFlow) > FLOW_EPSILON,
     blocked: conduit.blocked,
     priming: conduit.flowCause === "priming" && conduit.lastFlow > FLOW_EPSILON,

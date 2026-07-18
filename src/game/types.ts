@@ -285,7 +285,6 @@ export interface LiquidBufferState {
 }
 
 export interface GasConduitState {
-  installed: boolean;
   enabled: boolean;
   route: GridCell[];
   gas: GasAmounts;
@@ -297,7 +296,6 @@ export interface GasConduitState {
 }
 
 export interface LiquidConduitState {
-  installed: boolean;
   enabled: boolean;
   route: GridCell[];
   liquid: LiquidAmounts;

@@ -4,6 +4,7 @@ import {
   GAS_SOURCES,
   LIQUID_SOURCES,
   ROOM_VOLUME_PER_CELL,
+  WORLD_LINE_BLUEPRINTS,
   facilityCellDefinition,
   facilityCellHasSupport,
   facilityCells,
@@ -29,7 +30,7 @@ import {
 import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./simulation";
 import { mapViewFor } from "../components/gameMap/mapGeometry";
 import { instance } from "./world/instances";
-import { architecturalConnections, isProcessLine } from "./world/map";
+import { architecturalConnections } from "./world/map";
 
 const overlaps = (left: CellRect, right: CellRect): boolean =>
   left.column < right.column + right.width &&
@@ -300,7 +301,7 @@ describe("portal state navigation policy", () => {
 
 describe("dedicated routes and transforms", () => {
   it("gives every physical conduit a valid endpoint-owned route independent of portals", () => {
-    const lines = Object.values(FACILITY_MAP.connections).filter(isProcessLine);
+    const lines = Object.values(WORLD_LINE_BLUEPRINTS);
     expect(lines.length).toBeGreaterThan(0);
     for (const line of lines) {
       const path = line.route;

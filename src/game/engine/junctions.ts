@@ -77,7 +77,7 @@ const gasJunctionDemanded = (
     const definition = gasLineDefinition(state, runId);
     if (definition?.direction[0] !== roomId) return false;
     const conduit = gasConduitState(state, runId);
-    return conduit.installed && conduit.enabled;
+    return conduit.enabled;
   });
 
 const liquidJunctionDemanded = (
@@ -89,7 +89,7 @@ const liquidJunctionDemanded = (
     const definition = liquidLineDefinition(state, runId);
     if (definition?.direction[0] !== roomId) return false;
     const conduit = liquidConduitState(state, runId);
-    return conduit.installed && conduit.enabled;
+    return conduit.enabled;
   });
 
 const gasPools = (state: GameState, roomId: RoomId, gameDefinition: GameDefinition): GasPool[] => {

@@ -162,14 +162,6 @@ const validateRoute = (
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
   const path = `${phase}Conduits.${runId}`;
   if (!definition) return;
-  if (conduit.enabled && !conduit.installed) {
-    issue(
-      issues,
-      "conduit_installation_mismatch",
-      `${path}.enabled`,
-      "An enabled conduit must be installed."
-    );
-  }
   if (conduit.route.length < 2) {
     issue(
       issues,

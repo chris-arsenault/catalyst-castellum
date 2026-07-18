@@ -1,10 +1,9 @@
 import type { GasConduitLoadout, LiquidConduitLoadout } from "../../definitionTypes";
 import { EQUIPMENT_IDS, type ConnectionId } from "../../types";
-import { WORLD_MAP } from "../worldMap";
-import { isProcessLine } from "../../world/map";
+import { WORLD_LINE_BLUEPRINTS } from "../worldMap";
 import { availability, gasRun, liquidRun } from "./helpers";
 
-const LINES = Object.values(WORLD_MAP.connections).filter(isProcessLine);
+const LINES = Object.values(WORLD_LINE_BLUEPRINTS);
 export const ALL_GAS_RUNS = LINES.filter(({ kind }) => kind === "gas_line").map(({ id }) => id);
 export const ALL_LIQUID_RUNS = LINES.filter(({ kind }) => kind === "liquid_line").map(
   ({ id }) => id

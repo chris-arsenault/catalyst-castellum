@@ -6,7 +6,7 @@ describe("instance-keyed world access", () => {
   it("returns present instances", () => {
     const game = createScenarioGame("flash_point");
     expect(roomState(game, "furnace").id).toBe("furnace");
-    expect(gasConduitState(game, "gas:core__furnace").installed).toBe(true);
+    expect(gasConduitState(game, "gas:core__furnace").enabled).toBe(false);
     expect(instance({ a: 1 }, "a", "sample")).toBe(1);
   });
 

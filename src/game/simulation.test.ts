@@ -33,10 +33,6 @@ import {
 } from "./world/instances";
 import { isProcessLine } from "./world/map";
 
-const PACK_LINE_IDS = Object.values(WORLD_MAP.connections)
-  .filter(isProcessLine)
-  .map(({ id }) => id);
-
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
   expect(result.accepted, result.code ?? undefined).toBe(true);
@@ -68,7 +64,7 @@ const elementalLedger = (state: GameState): ElementalComposition => {
   for (const id of LIQUID_SOURCE_IDS) addLiquid(state.liquidSources[id].liquid);
   for (const id of GAS_BUFFER_IDS) addGas(state.gasBuffers[id].gas);
   for (const id of LIQUID_BUFFER_IDS) addLiquid(state.liquidBuffers[id].liquid);
-  for (const line of Object.values(WORLD_MAP.connections).filter(isProcessLine)) {
+  for (const line of Object.values(state.map.connections).filter(isProcessLine)) {
     if (line.kind === "gas_line") addGas(gasConduitState(state, line.id).gas);
     else addLiquid(liquidConduitState(state, line.id).liquid);
   }

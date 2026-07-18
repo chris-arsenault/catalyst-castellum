@@ -73,7 +73,7 @@ describe("current persistence", () => {
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the current save to decode.");
-    expect(decoded.version).toBe(14);
+    expect(decoded.version).toBe(15);
     expect(gasConduitState(decoded, "gas:core__furnace").route).toEqual(
       gasConduitState(game, "gas:core__furnace").route
     );

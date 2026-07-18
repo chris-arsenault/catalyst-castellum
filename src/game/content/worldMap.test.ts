@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { architecturalConnections, isProcessLine } from "../world/map";
 import { validateWorldMap } from "../world/mapValidation";
-import { WORLD_MAP } from "./worldMap";
+import { WORLD_LINE_BLUEPRINTS, WORLD_MAP } from "./worldMap";
 
-const lines = Object.values(WORLD_MAP.connections).filter(isProcessLine);
+const lines = Object.values(WORLD_LINE_BLUEPRINTS);
 
 /**
  * Iteration order is behavior: gas/liquid flow resolves lines in authored insertion
@@ -56,6 +56,7 @@ describe("the authored world map", () => {
       EXPECTED_LIQUID_ORDER
     );
     expect(architecturalConnections(WORLD_MAP).map(({ id }) => id)).toEqual(EXPECTED_PORTAL_ORDER);
+    expect(Object.values(WORLD_MAP.connections).filter(isProcessLine)).toEqual([]);
   });
 
   it("hosts every utility port in the core manifold", () => {

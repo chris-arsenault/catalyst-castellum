@@ -119,7 +119,7 @@ const initialPlan = (
 ): GasPlan | null => {
   const definition = gasLineDefinition(state, runId);
   const conduit = gasConduitState(state, runId);
-  if (!definition || !conduit.installed || !conduit.enabled) return null;
+  if (!definition || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
   const retained = gasAmountTotal(conduit.gas);
   const capacity = conduitCapacity(state, runId, "gas", gameDefinition);

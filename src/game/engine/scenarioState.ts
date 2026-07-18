@@ -25,9 +25,10 @@ import { worldCatalogsForMap } from "../world/catalogs";
 import type { HullFragment } from "../world/hullFragment";
 import { produceLevelSite, type ProducedSite } from "../world/producer";
 import type { RoundDefinition } from "../definitionTypes";
-import type { WorldMap } from "../world/map";
+import { isProcessLine, type WorldMap } from "../world/map";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionRoom } from "../world/instances";
+import { validateWorldMap } from "../world/mapValidation";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
   lastRate: 0,
@@ -175,7 +176,6 @@ const makeGasConduits = (loadout: FacilityLoadout, map: WorldMap): GameState["ga
       return [
         runId,
         {
-          installed: configured?.installed ?? false,
           enabled: configured?.enabled ?? false,
           route: definition ? definition.route.map((cell) => ({ ...cell })) : [],
           gas: { ...emptyGas(), ...(configured?.gas ?? {}) },
@@ -197,7 +197,6 @@ const makeLiquidConduits = (loadout: FacilityLoadout, map: WorldMap): GameState[
       return [
         runId,
         {
-          installed: configured?.installed ?? false,
           enabled: configured?.enabled ?? false,
           route: definition ? definition.route.map((cell) => ({ ...cell })) : [],
           liquid: { ...emptyLiquid(), ...(configured?.liquid ?? {}) },
@@ -248,6 +247,66 @@ const scenarioStartedEvent = (levelId: LevelId): GameState["events"][number] => 
   incidentId: null,
 });
 
+const initialLineIds = (loadout: FacilityLoadout, hull: HullFragment | null): Set<string> =>
+  new Set([
+    ...Object.keys(loadout.gasConduits),
+    ...Object.keys(loadout.liquidConduits),
+    ...(hull ? Object.keys(hull.gasConduits) : []),
+    ...(hull ? Object.keys(hull.liquidConduits) : []),
+  ]);
+
+const physicalConnections = (
+  source: WorldMap,
+  lineIds: ReadonlySet<string>
+): WorldMap["connections"] =>
+  Object.fromEntries(
+    Object.entries(source.connections).filter(
+      ([id, connection]) => !isProcessLine(connection) || lineIds.has(id)
+    )
+  );
+
+const seedMissingLines = (
+  connections: WorldMap["connections"],
+  lineIds: ReadonlySet<string>,
+  definition: GameDefinition
+): void => {
+  for (const id of lineIds) {
+    const existing = connections[id];
+    if (existing && isProcessLine(existing)) continue;
+    if (existing) throw new Error(`Process line ${id} collides with an architectural connection.`);
+    const blueprint = definition.lineBlueprints[id];
+    if (!blueprint) throw new Error(`Installed conduit ${id} has no process-line blueprint.`);
+    connections[id] = { ...blueprint, route: blueprint.route.map((target) => ({ ...target })) };
+  }
+};
+
+const assertPhysicalTopology = (map: WorldMap): void => {
+  const issues = validateWorldMap(map);
+  if (issues.length === 0) return;
+  const detail = issues.map(({ path, message }) => `${path}: ${message}`).join("; ");
+  throw new Error(`Physical scenario topology is invalid: ${detail}`);
+};
+
+const sharesConnectionRecords = (source: WorldMap, connections: WorldMap["connections"]): boolean =>
+  Object.keys(connections).length === Object.keys(source.connections).length &&
+  Object.keys(connections).every((id) => connections[id] === source.connections[id]);
+
+/** A live map contains physical topology only; absent loadout entries never exist. */
+const activeScenarioMap = (
+  source: WorldMap,
+  loadout: FacilityLoadout,
+  hull: HullFragment | null,
+  definition: GameDefinition
+): WorldMap => {
+  const installedIds = initialLineIds(loadout, hull);
+  const connections = physicalConnections(source, installedIds);
+  seedMissingLines(connections, installedIds, definition);
+  const map = { ...source, connections };
+  assertPhysicalTopology(map);
+  if (Object.isFrozen(source) && sharesConnectionRecords(source, connections)) return source;
+  return Object.freeze(map);
+};
+
 /**
  * Carry durable hull installations into a fresh site. Atmosphere, liquids, heat,
  * reaction residue, conduit contents, and damage telemetry reset during travel.
@@ -260,17 +319,11 @@ const seedHullContents = (state: GameState, hull: HullFragment | null): void => 
   }
   for (const [id, conduit] of Object.entries(hull.gasConduits)) {
     const destination = state.gasConduits[id];
-    if (destination) {
-      destination.installed = conduit.installed;
-      destination.enabled = conduit.enabled;
-    }
+    if (destination) destination.enabled = conduit.enabled;
   }
   for (const [id, conduit] of Object.entries(hull.liquidConduits)) {
     const destination = state.liquidConduits[id];
-    if (destination) {
-      destination.installed = conduit.installed;
-      destination.enabled = conduit.enabled;
-    }
+    if (destination) destination.enabled = conduit.enabled;
   }
 };
 
@@ -283,9 +336,9 @@ export const createScenarioGame = (
   const level = definition.levels[levelId];
   const round = site.rounds[0];
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
-  const map = site.map;
+  const map = activeScenarioMap(site.map, level.loadout, site.hull, definition);
   const state: GameState = {
-    version: 14,
+    version: 15,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {

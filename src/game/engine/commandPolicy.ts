@@ -19,9 +19,9 @@ import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } fr
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
-import { conduitState, gasConduitState, liquidConduitState, roomState } from "../world/instances";
+import { gasConduitState, liquidConduitState, roomState } from "../world/instances";
 import { isProcessLine, processLineId } from "../world/map";
-import { plannedLineConnection } from "../world/mapEdits";
+import { plannedLineConnection } from "../world/processLineEdits";
 import { graftParentJoint, plannedGraft } from "../world/graft";
 import {
   evaluateHullCellEdit,
@@ -156,7 +156,7 @@ const evaluateSetConduit = (
 ): CommandDecision => {
   if (!configurationUnlocked(state)) return reject("invalid_phase");
   if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
-  if (!conduitState(state, command.connectionId).installed) return reject("not_installed");
+  if (!(command.connectionId in state.map.connections)) return reject("not_installed");
   return allow();
 };
 
@@ -165,22 +165,18 @@ const lineFor = (state: GameState, connectionId: ConnectionId) => {
   return connection && isProcessLine(connection) ? connection : null;
 };
 
-/** The pair's line as a build would see it: stored map data, or the planned mint. */
+/** The pair's line as a build would create it. Existing map lines are already physical. */
 export const buildableLineFor = (
   state: GameState,
   command: Extract<GameCommand, { type: "build_connection" }>,
   gameDefinition: GameDefinition
 ) => {
-  const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
-  return (
-    lineFor(state, connectionId) ??
-    plannedLineConnection(
-      gameDefinition,
-      state.map,
-      command.kind,
-      command.fromRoomId,
-      command.toRoomId
-    )
+  return plannedLineConnection(
+    gameDefinition,
+    state.map,
+    command.kind,
+    command.fromRoomId,
+    command.toRoomId
   );
 };
 
@@ -195,10 +191,10 @@ const evaluateBuildConnection = (
     (roomId) => state.map.rooms[roomId]?.provenance === "hull"
   );
   if (!connectionAvailable(state, connectionId) && !hullInternal) return reject("unavailable");
+  const existing = lineFor(state, connectionId);
+  if (existing) return reject("already_installed", { cost: existing.buildCost });
   const line = buildableLineFor(state, command, gameDefinition);
   if (!line) return reject("route_unavailable");
-  if (connectionId in state.map.connections && conduitState(state, connectionId).installed)
-    return reject("already_installed", { cost: line.buildCost });
   if (state.matter < line.buildCost) return reject("insufficient_matter", { cost: line.buildCost });
   return allow({ cost: line.buildCost });
 };
@@ -289,7 +285,6 @@ const evaluateDismantleConnection = (
   if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
   const line = lineFor(state, command.connectionId);
   if (!line) return reject("route_unavailable");
-  if (!conduitState(state, command.connectionId).installed) return reject("not_installed");
   const amount =
     line.kind === "gas_line"
       ? gasAmountTotal(gasConduitState(state, command.connectionId).gas)

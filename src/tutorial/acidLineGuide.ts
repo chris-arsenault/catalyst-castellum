@@ -14,7 +14,7 @@ const agitatorRunning = (game: GameState): boolean => equipmentRunning(game, "ga
 const gasRunEnabled = (
   game: GameState,
   runId: "gas:furnace__lower_intake" | "gas:furnace__gallery" | "gas:gallery__washlock"
-): boolean => gasConduitState(game, runId).installed && gasConduitState(game, runId).enabled;
+): boolean => game.gasConduits[runId]?.enabled ?? false;
 
 const acidFeedEnabled = (game: GameState): boolean =>
   gasRunEnabled(game, "gas:furnace__lower_intake");

@@ -2,7 +2,7 @@ import { LEVEL_DEFINITIONS } from "./content/campaign";
 import { REACTION_DEFINITIONS } from "./content/chemistry";
 import { ENEMY_DEFINITIONS } from "./content/enemies";
 import { EQUIPMENT_DEFINITIONS } from "./content/equipment";
-import { WORLD_MAP } from "./content/worldMap";
+import { WORLD_LINE_BLUEPRINTS, WORLD_MAP } from "./content/worldMap";
 import { LINE_SPECS } from "./content/lineSpecs";
 import { MODULE_TEMPLATES } from "./content/modules";
 import { ENVIRONMENT_HAZARD_RULES } from "./content/hazards";
@@ -36,6 +36,7 @@ export const deriveGame = (
     packId: base.packId,
     contentVersion: base.contentVersion,
     map: base.map,
+    lineBlueprints: base.lineBlueprints,
     lineSpecs: base.lineSpecs,
     modules: base.modules,
     levelOrder: base.levelOrder,
@@ -61,6 +62,7 @@ export const DEFAULT_GAME_DEFINITION = defineGame({
   packId: "catalyst-castellum",
   contentVersion: 7,
   map: WORLD_MAP,
+  lineBlueprints: WORLD_LINE_BLUEPRINTS,
   lineSpecs: LINE_SPECS,
   modules: MODULE_TEMPLATES,
   levelOrder: LEVEL_IDS,

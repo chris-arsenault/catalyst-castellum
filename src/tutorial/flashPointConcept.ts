@@ -1,7 +1,6 @@
 import { architecturalConnections } from "../game/world/map";
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { TutorialCopy, TutorialCopyKey } from "./copyTypes";
-import { maybeLineDefinition } from "../game/world/instances";
 
 export type GuideConceptKind =
   "feed" | "accumulate" | "mix" | "ignite" | "convert" | "separate" | "relieve" | "heat" | "route";
@@ -39,7 +38,7 @@ interface FlashPointConceptValues {
 const flashPointConceptValues = (): FlashPointConceptValues => {
   const reaction = DEFAULT_GAME_DEFINITION.reactions.hydrogen_oxygen_combustion;
   const behavior = reaction.behavior;
-  const run = maybeLineDefinition(DEFAULT_GAME_DEFINITION, "gas:core__furnace", "gas");
+  const run = DEFAULT_GAME_DEFINITION.lineBlueprints["gas:core__furnace"];
   const grade = DEFAULT_GAME_DEFINITION.equipment.gas_agitator.grades.find(
     (candidate) => candidate.level === 1
   );

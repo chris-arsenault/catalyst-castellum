@@ -33,7 +33,12 @@ import type {
   WaveEntry,
   WorldPoint,
 } from "./types";
-import type { ArchitecturalConnection, LineSpecs, WorldMap } from "./world/map";
+import type {
+  ArchitecturalConnection,
+  LineSpecs,
+  ProcessLineConnection,
+  WorldMap,
+} from "./world/map";
 import type { ModuleId, ModuleTemplate } from "./world/modules";
 import type { GeneratedLevelSite } from "./world/siteGeneratorTypes";
 
@@ -42,13 +47,11 @@ export type ScenarioRoomEquipment = Partial<
 >;
 
 export interface GasConduitLoadout {
-  installed: boolean;
   enabled: boolean;
   gas: Partial<GasAmounts> | null;
 }
 
 export interface LiquidConduitLoadout {
-  installed: boolean;
   enabled: boolean;
   liquid: Partial<LiquidAmounts> | null;
 }
@@ -56,6 +59,7 @@ export interface LiquidConduitLoadout {
 export interface FacilityLoadout {
   equipment: ScenarioRoomEquipment;
   initialTemperatures: Partial<Record<RoomId, number>>;
+  /** Presence in either conduit record means the physical line begins installed. */
   gasConduits: Partial<Record<ConnectionId, GasConduitLoadout>>;
   liquidConduits: Partial<Record<ConnectionId, LiquidConduitLoadout>>;
   gasSourceGas: Partial<Record<GasSourceId, Partial<GasAmounts>>>;
@@ -128,6 +132,8 @@ export interface GamePackSource {
   readonly packId: string;
   readonly contentVersion: number;
   readonly map: WorldMap;
+  /** Optional construction templates; these are not physical map connections. */
+  readonly lineBlueprints: Readonly<Record<ConnectionId, ProcessLineConnection>>;
   readonly lineSpecs: LineSpecs;
   readonly modules: Readonly<Record<ModuleId, ModuleTemplate>>;
   readonly levelOrder: readonly LevelId[];

@@ -1,13 +1,12 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { GuideConceptModel, GuideConceptStage } from "./flashPointConcept";
-import { maybeLineDefinition } from "../game/world/instances";
 
 const makeReagentStages = (): GuideConceptStage[] => {
   const definition = DEFAULT_GAME_DEFINITION;
   const reaction = definition.reactions.chlor_alkali_electrolysis;
-  const feed = maybeLineDefinition(definition, "liquid:core__lower_intake", "liquid");
-  const recovery = maybeLineDefinition(definition, "gas:core__lower_intake", "gas");
-  const transfer = maybeLineDefinition(definition, "gas:lower_intake__reservoir", "gas");
+  const feed = definition.lineBlueprints["liquid:core__lower_intake"];
+  const recovery = definition.lineBlueprints["gas:core__lower_intake"];
+  const transfer = definition.lineBlueprints["gas:lower_intake__reservoir"];
   const grade = definition.equipment.membrane_cell.grades[0];
   if (!feed || !recovery || !transfer || grade?.behavior.kind !== "membrane_cell") {
     throw new Error("Make the Reagent concept requires its cell and transport runs");

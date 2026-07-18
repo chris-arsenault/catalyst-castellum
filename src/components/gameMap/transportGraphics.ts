@@ -104,11 +104,6 @@ interface LaneModel {
 }
 
 const laneAlpha = (model: LaneModel): number => {
-  if (!model.status.installed) {
-    if (model.emphasized) return model.hovered ? 0.85 : 0.5;
-    if (model.hovered) return 0.24;
-    return 0.08;
-  }
   if (!model.enabled) return model.hovered ? 0.78 : 0.5;
   if (model.emphasized) return 1;
   if (model.hovered) return 1;
@@ -116,13 +111,11 @@ const laneAlpha = (model: LaneModel): number => {
 };
 
 const laneShellWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return model.emphasized ? 5 : 3;
   if (model.emphasized) return model.hovered ? 7.5 : 6;
   return model.hovered ? 6 : 4.5;
 };
 
 const laneCoreWidth = (model: LaneModel): number => {
-  if (!model.status.installed) return model.emphasized ? 1.8 : 1;
   if (!model.enabled) return model.hovered ? 3.5 : 3;
   if (model.emphasized) return model.hovered ? 4 : 3.4;
   return model.hovered ? 3.7 : 3.1;
@@ -130,14 +123,11 @@ const laneCoreWidth = (model: LaneModel): number => {
 
 const laneColor = (model: LaneModel): number => {
   if (model.status.blocked) return 0xf0644c;
-  if (model.status.installed && !model.enabled) return 0xb65a45;
+  if (!model.enabled) return 0xb65a45;
   return model.color;
 };
 
-const laneShellAlpha = (model: LaneModel): number => {
-  if (model.status.installed) return model.enabled ? 0.9 : 0.78;
-  return model.emphasized ? 0.5 : 0.28;
-};
+const laneShellAlpha = (model: LaneModel): number => (model.enabled ? 0.9 : 0.78);
 
 const drawLane = (graphics: Graphics, model: LaneModel): void => {
   if (model.enabled) {
@@ -272,8 +262,6 @@ const phaseRouteCells = (
   if (!definition) return null;
   const conduit =
     phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
-  // Only pipes the player has actually built appear on the map.
-  if (!conduit.installed) return null;
   return conduit.route.length > 0 ? conduit.route : definition.route;
 };
 

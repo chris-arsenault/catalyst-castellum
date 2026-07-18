@@ -25,7 +25,6 @@ describe("Flash Point scenario truth", () => {
     expect(game.gasSources.starter_gas_header.gas.hydrogen).toBeGreaterThan(0);
     expect(game.gasSources.starter_gas_header.gas.oxygen).toBeGreaterThan(0);
     expect(gasConduitState(game, "gas:core__furnace")).toMatchObject({
-      installed: true,
       enabled: false,
     });
     expect(game.gasBuffers.cathode_header.gas.hydrogen).toBe(0);

@@ -1,6 +1,12 @@
 import type { GridCell, RoomId } from "../types";
 import { cell } from "../spatial";
-import type { GasTapDefinition, LiquidTapDefinition, MapRoom, WorldMap } from "../world/map";
+import type {
+  GasTapDefinition,
+  LiquidTapDefinition,
+  MapRoom,
+  ProcessLineConnection,
+  WorldMap,
+} from "../world/map";
 import { WORLD_MAP_CONNECTIONS } from "./worldMapConnections";
 import { isProcessLine } from "../world/map";
 import { routeConnection } from "../world/autoRouter";
@@ -151,7 +157,10 @@ const WORLD_MAP_BASE: WorldMap = {
     ),
   },
   connections: Object.fromEntries(
-    WORLD_MAP_CONNECTIONS.map((connection) => [connection.id, connection])
+    WORLD_MAP_CONNECTIONS.filter((connection) => !isProcessLine(connection)).map((connection) => [
+      connection.id,
+      connection,
+    ])
   ),
   utilityNodes: {
     starter_gas_header: { cell: cell(54, 16), hostRoomId: "core" },
@@ -168,21 +177,20 @@ const WORLD_MAP_BASE: WorldMap = {
  * router (a pure overlay, so it may cross rooms) draws the direct path both the map and
  * the physics use. Authoring never maintains a route by hand.
  */
-const routedConnections = (map: WorldMap): WorldMap["connections"] =>
+const routedLineBlueprints = (map: WorldMap): Record<string, ProcessLineConnection> =>
   Object.fromEntries(
-    Object.entries(map.connections).map(([id, connection]) => {
-      if (!isProcessLine(connection)) return [id, connection];
+    WORLD_MAP_CONNECTIONS.filter(isProcessLine).map((connection) => {
       const route = routeConnection(
         map,
         connection.kind,
         connection.direction[0],
         connection.direction[1]
       );
-      return [id, { ...connection, route: route ?? connection.route }];
+      return [connection.id, { ...connection, route: route ?? connection.route }];
     })
   );
 
-export const WORLD_MAP: WorldMap = {
-  ...WORLD_MAP_BASE,
-  connections: routedConnections(WORLD_MAP_BASE),
-};
+export const WORLD_MAP: WorldMap = WORLD_MAP_BASE;
+
+/** Construction presets are catalog data, never dormant entries in physical topology. */
+export const WORLD_LINE_BLUEPRINTS = routedLineBlueprints(WORLD_MAP_BASE);

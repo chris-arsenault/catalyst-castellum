@@ -211,7 +211,7 @@ describe("the persistent hull route", () => {
     const generated = dockAtNextSite(piped.state);
     const lineId = processLineId("gas_line", "core", roomId);
     expect(generated.map.connections[lineId]).toBeDefined();
-    expect(generated.gasConduits[lineId]?.installed).toBe(true);
+    expect(generated.gasConduits[lineId]).toBeDefined();
     expect(roomState(generated, roomId).equipment.socket_a?.level).toBe(2);
     expect(roomState(generated, roomId).residue).toBe(0);
     expect(roomState(generated, roomId).pressurePulse).toBe(0);

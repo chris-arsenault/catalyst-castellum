@@ -193,7 +193,10 @@ export const executeCommand = (
   definition: GameDefinition
 ): CommandResult => {
   const activeDefinition = definitionForMap(definition, source.map);
-  const decision = evaluateCommand(source, command, activeDefinition);
+  // Construction may reuse a compatible pack-authored route template that is absent
+  // from live topology. Other commands bind to the active map's derived definition.
+  const commandDefinition = command.type === "build_connection" ? definition : activeDefinition;
+  const decision = evaluateCommand(source, command, commandDefinition);
   if (!decision.allowed) {
     return rejectCommand(source, decision.code ?? "invalid_phase", decision.parameters);
   }
@@ -209,7 +212,7 @@ export const executeCommand = (
     case "dismantle_equipment":
       return dismantleEquipment(source, command, decision);
     case "build_connection":
-      return buildConnectionCommand(source, command, decision, activeDefinition);
+      return buildConnectionCommand(source, command, decision, definition);
     case "dismantle_connection":
       return dismantleConnectionCommand(source, command, decision);
     case "graft_module":

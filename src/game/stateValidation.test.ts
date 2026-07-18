@@ -44,10 +44,11 @@ describe("semantic game-state validation", () => {
     expect(decodeGame(encodeGame(room))).toBeNull();
   });
 
-  it("rejects enabled uninstalled conduits and invalid next identities", () => {
+  it("rejects conduit records outside topology and invalid next identities", () => {
     const conduit = createScenarioGame("flash_point");
-    gasConduitState(conduit, "gas:core__furnace").installed = false;
-    gasConduitState(conduit, "gas:core__furnace").enabled = true;
+    const connections = { ...conduit.map.connections };
+    delete connections["gas:core__furnace"];
+    conduit.map = { ...conduit.map, connections };
     expect(decodeGame(encodeGame(conduit))).toBeNull();
 
     const identity = createScenarioGame("flash_point");

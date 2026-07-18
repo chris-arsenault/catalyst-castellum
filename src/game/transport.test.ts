@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { WORLD_MAP } from "./config";
-import { isProcessLine } from "./world/map";
+import { WORLD_LINE_BLUEPRINTS } from "./config";
 import {
   conduitCapacity,
   conduitCrestElevation,
@@ -20,8 +19,7 @@ import {
   roomState,
 } from "./world/instances";
 
-const PACK_LINES = Object.values(WORLD_MAP.connections).filter(isProcessLine);
-const PACK_LINE_IDS = PACK_LINES.map(({ id }) => id);
+const PACK_LINES = Object.values(WORLD_LINE_BLUEPRINTS);
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -110,7 +108,6 @@ describe("shared conserved mixture transport", () => {
   it("allocates a shared junction to branches without starving the later run ID", () => {
     const state = enter("make_the_reagent");
     gasConduitState(state, "gas:furnace__lower_intake").enabled = true;
-    gasConduitState(state, "gas:lower_intake__reservoir").installed = true;
     gasConduitState(state, "gas:lower_intake__reservoir").enabled = true;
     gasJunctionState(state, "lower_intake").gas.hydrogen = 8;
     gasJunctionState(state, "lower_intake").gas.chlorine = 8;

@@ -75,18 +75,19 @@ const validateAvailability = (
     const ids = availability[field];
     if (new Set(ids).size !== ids.length)
       push(issues, `${path}.${field}`, "Identifiers must be unique.");
-    for (const id of ids) validateAvailableLine(map, id, kind, `${path}.${field}`, issues);
+    for (const id of ids) validateAvailableLine(source, map, id, kind, `${path}.${field}`, issues);
   }
 };
 
 const validateAvailableLine = (
+  source: GamePackSource,
   map: WorldMap,
   id: string,
   kind: "gas_line" | "liquid_line",
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  const authored = map.connections[id];
+  const authored = map.connections[id] ?? source.lineBlueprints[id];
   if (authored) {
     if (authored.kind !== kind) push(issues, path, `${id} is not a ${kind}.`);
     return;
@@ -191,7 +192,7 @@ const validateLevel = (
   const map = mapForLevel(source, level, path, issues);
   validateLevelDefinition(source, map, level, path, issues);
   validateEquipmentLoadout(source, map, level, path, issues);
-  validateConduitLoadout(map, level, path, issues);
+  validateConduitLoadout(source, map, level, path, issues);
 };
 
 const mapForLevel = (
@@ -279,6 +280,7 @@ const validateEquipmentLoadout = (
 };
 
 const validateConduitLoadout = (
+  source: GamePackSource,
   map: WorldMap,
   level: LevelDefinition,
   path: string,
@@ -290,7 +292,7 @@ const validateConduitLoadout = (
   ] as const;
   for (const [field, loadouts, kind] of conduitLoadouts) {
     for (const id of Object.keys(loadouts)) {
-      if (map.connections[id]?.kind !== kind)
+      if ((map.connections[id] ?? source.lineBlueprints[id])?.kind !== kind)
         push(issues, `${path}.loadout.${field}`, `${id} is not an authored ${kind}.`);
     }
   }

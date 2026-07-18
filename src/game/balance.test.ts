@@ -45,7 +45,7 @@ describe("flash point reinforcement contract", () => {
         const loadout =
           level.loadout.gasConduits[action.connectionId] ??
           level.loadout.liquidConduits[action.connectionId];
-        return loadout?.installed === true && loadout.enabled === false;
+        return loadout?.enabled === false;
       });
       expect(startsOff, level.id).toBe(true);
     }

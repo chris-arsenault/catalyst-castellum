@@ -27,9 +27,9 @@ export const emptyLoadout = (): FacilityLoadout => ({
 export const gasRun = (
   enabled = false,
   gas: Partial<GasAmounts> | null = null
-): GasConduitLoadout => ({ installed: true, enabled, gas });
+): GasConduitLoadout => ({ enabled, gas });
 
 export const liquidRun = (
   enabled = false,
   liquid: Partial<LiquidAmounts> | null = null
-): LiquidConduitLoadout => ({ installed: true, enabled, liquid });
+): LiquidConduitLoadout => ({ enabled, liquid });

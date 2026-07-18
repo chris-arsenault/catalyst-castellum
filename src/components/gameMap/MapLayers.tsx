@@ -101,7 +101,7 @@ const installedPipePaths = (game: GameState, runId: ConnectionId): number[][] =>
   const view = mapViewFor(game.map);
   const paths: number[][] = [];
   for (const conduit of [game.gasConduits[runId], game.liquidConduits[runId]]) {
-    if (!conduit?.installed || conduit.route.length < 2) continue;
+    if (!conduit || conduit.route.length < 2) continue;
     paths.push(view.worldPathToMap(gridPathToWorldPath(conduit.route)).flatMap((p) => [p.x, p.y]));
   }
   return paths;
@@ -130,9 +130,9 @@ const PipeHitNode = ({
   const toggle = useCallback(() => {
     const gas = game.gasConduits[runId];
     const liquid = game.liquidConduits[runId];
-    const anyOn = Boolean((gas?.installed && gas.enabled) || (liquid?.installed && liquid.enabled));
-    if (gas?.installed) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
-    if (liquid?.installed) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
+    const anyOn = Boolean(gas?.enabled || liquid?.enabled);
+    if (gas) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
+    if (liquid) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
   }, [dispatch, game.gasConduits, game.liquidConduits, runId]);
   return (
     <pixiGraphics
@@ -146,10 +146,9 @@ const PipeHitNode = ({
   );
 };
 
-const installedConnectionIds = (game: GameState): ConnectionId[] =>
+const physicalConnectionIds = (game: GameState): ConnectionId[] =>
   game.world.connections.filter(
-    (runId) =>
-      Boolean(game.gasConduits[runId]?.installed) || Boolean(game.liquidConduits[runId]?.installed)
+    (runId) => runId in game.gasConduits || runId in game.liquidConduits
   );
 
 export const PipeHitLayer = ({
@@ -160,7 +159,7 @@ export const PipeHitLayer = ({
   onHover: (runId: ConnectionId | null) => void;
 }) => (
   <>
-    {installedConnectionIds(game).map((runId) => (
+    {physicalConnectionIds(game).map((runId) => (
       <PipeHitNode key={runId} game={game} runId={runId} onHover={onHover} />
     ))}
   </>
@@ -182,7 +181,7 @@ export const TransportNetwork = ({
   selectedSpecies,
 }: TransportNetworkProps) => (
   <>
-    {installedConnectionIds(game).map((runId) => (
+    {physicalConnectionIds(game).map((runId) => (
       <TransportRunNode
         key={runId}
         emphasized={pipeMode}

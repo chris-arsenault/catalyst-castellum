@@ -3,7 +3,7 @@ import type { GameState, RoomId } from "../game/types";
 import { evaluateCommand } from "../game/simulation";
 import { isProcessLine, processLineId, type ProcessLineKind } from "../game/world/map";
 import { DEFAULT_GAME_DEFINITION as PACK } from "./defaultGame";
-import { plannedLineConnection } from "../game/world/mapEdits";
+import { plannedLineConnection } from "../game/world/processLineEdits";
 
 const KINDS: readonly ProcessLineKind[] = ["gas_line", "liquid_line"];
 

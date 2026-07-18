@@ -65,7 +65,22 @@ export const produceAuthoredSite = (spec: SiteSpec, hull: HullFragment | null): 
 
 /** The pack's levels as authored site specs (M6 re-authors these per site). */
 export const authoredSiteSpec = (definition: GameDefinition, levelId: LevelId): SiteSpec => ({
-  map: definition.map,
+  map: {
+    ...definition.map,
+    connections: {
+      ...definition.map.connections,
+      ...Object.fromEntries(
+        [
+          ...Object.keys(definition.levels[levelId].loadout.gasConduits),
+          ...Object.keys(definition.levels[levelId].loadout.liquidConduits),
+        ].map((id) => {
+          const blueprint = definition.lineBlueprints[id];
+          if (!blueprint) throw new Error(`Level ${levelId} has no line blueprint for ${id}.`);
+          return [id, blueprint];
+        })
+      ),
+    },
+  },
   rounds: definition.levels[levelId].rounds,
   hullAnchor: { columns: 0, elevations: 0 },
 });

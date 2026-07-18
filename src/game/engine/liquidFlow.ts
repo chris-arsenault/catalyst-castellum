@@ -83,7 +83,7 @@ const initialPlan = (
 ): LiquidPlan | null => {
   const definition = liquidLineDefinition(state, runId);
   const conduit = liquidConduitState(state, runId);
-  if (!definition || !conduit.installed || !conduit.enabled) return null;
+  if (!definition || !conduit.enabled) return null;
   const throughput = desiredThroughput(state, runId, dt, gameDefinition);
   const retained = liquidAmountTotal(conduit.liquid);
   const capacity = conduitCapacity(state, runId, "liquid", gameDefinition);

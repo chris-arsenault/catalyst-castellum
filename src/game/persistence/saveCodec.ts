@@ -112,7 +112,6 @@ const roomSchema = z.object({
 });
 
 const gasConduitSchema = z.object({
-  installed: z.boolean(),
   enabled: z.boolean(),
   route: z.array(gridCellSchema),
   gas: gasSchema,
@@ -123,7 +122,6 @@ const gasConduitSchema = z.object({
   temperature: z.number(),
 });
 const liquidConduitSchema = z.object({
-  installed: z.boolean(),
   enabled: z.boolean(),
   route: z.array(gridCellSchema),
   liquid: liquidSchema,
@@ -316,7 +314,7 @@ const packIdentitySchema = z.object({
 });
 
 const gameSchema = gameSimulationSchema.extend({
-  version: z.literal(14),
+  version: z.literal(15),
   pack: packIdentitySchema,
   map: worldMapSaveSchema,
   mapRevision: z.number().int().min(0),

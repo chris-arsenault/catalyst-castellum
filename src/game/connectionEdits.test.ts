@@ -2,8 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION } from "./config";
 import { createScenarioGame, executeCommand } from "./simulation";
 import { decodeGame, encodeGame } from "./persistence/saveCodec";
-import { processLineId } from "./world/map";
-import { plannedLineConnection } from "./world/mapEdits";
+import { isProcessLine, processLineId } from "./world/map";
+import { plannedLineConnection } from "./world/processLineEdits";
 import { gasConduitState } from "./world/instances";
 import type { GameState } from "./types";
 
@@ -35,6 +35,31 @@ const build = (state: GameState) =>
   });
 
 describe("player-built connections are map edits", () => {
+  it("keeps construction blueprints out of live topology", () => {
+    const state = createScenarioGame("flash_point");
+    const liveLines = Object.values(state.map.connections).filter(isProcessLine);
+    expect(liveLines.map(({ id }) => id)).toEqual(["gas:core__furnace"]);
+    expect(state.gasConduits).toHaveProperty("gas:core__furnace");
+    expect(state.gasConduits).not.toHaveProperty("gas:core__washlock");
+  });
+
+  it("authors a new Core-to-R-06 feed in the direction the player draws it", () => {
+    const state = buildableState();
+    const result = executeCommand(state, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "core",
+      toRoomId: "washlock",
+    });
+    expect(result.accepted, result.code ?? undefined).toBe(true);
+    expect(result.state.map.connections["gas:core__washlock"]).toMatchObject({
+      direction: ["core", "washlock"],
+      destinationKind: "room",
+    });
+  });
+});
+
+describe("process connection lifecycle", () => {
   it("mints, routes, and installs an unauthored available pair", () => {
     const state = buildableState();
     const planned = plannedLineConnection(
@@ -52,7 +77,7 @@ describe("player-built connections are map edits", () => {
     expect(next.mapRevision).toBe(state.mapRevision + 1);
     expect(next.map.connections[PAIR_ID]).toBeDefined();
     expect(next.world.connections).toContain(PAIR_ID);
-    expect(gasConduitState(next, PAIR_ID).installed).toBe(true);
+    expect(next.gasConduits[PAIR_ID]).toBeDefined();
     expect(gasConduitState(next, PAIR_ID).enabled).toBe(false);
     expect(gasConduitState(next, PAIR_ID).route).toEqual(planned?.route);
     expect(next.matter).toBe(state.matter - (planned?.buildCost ?? 0));
@@ -80,21 +105,20 @@ describe("player-built connections are map edits", () => {
     expect(duplicate.code).toBe("already_installed");
   });
 
-  it("keeps a dismantled line's routed map data for a cheaper identical rebuild", () => {
+  it("removes a dismantled line and deterministically routes a fresh rebuild", () => {
     const built = build(buildableState()).state;
+    const builtRoute = gasConduitState(built, PAIR_ID).route;
     const dismantled = executeCommand(built, {
       type: "dismantle_connection",
       connectionId: PAIR_ID,
     });
     expect(dismantled.accepted).toBe(true);
-    expect(dismantled.state.map.connections[PAIR_ID]).toBeDefined();
-    expect(gasConduitState(dismantled.state, PAIR_ID).installed).toBe(false);
+    expect(dismantled.state.map.connections[PAIR_ID]).toBeUndefined();
+    expect(dismantled.state.gasConduits[PAIR_ID]).toBeUndefined();
     const rebuilt = build(dismantled.state);
     expect(rebuilt.accepted).toBe(true);
-    expect(gasConduitState(rebuilt.state, PAIR_ID).route).toEqual(
-      gasConduitState(built, PAIR_ID).route
-    );
-    expect(rebuilt.state.mapRevision).toBe(dismantled.state.mapRevision);
+    expect(gasConduitState(rebuilt.state, PAIR_ID).route).toEqual(builtRoute);
+    expect(rebuilt.state.mapRevision).toBe(dismantled.state.mapRevision + 1);
   });
 
   it("round-trips a player-built line through the current save", () => {
@@ -104,6 +128,6 @@ describe("player-built connections are map edits", () => {
     if (!decoded) return;
     expect(decoded.map.connections[PAIR_ID]).toEqual(built.map.connections[PAIR_ID]);
     expect(decoded.mapRevision).toBe(built.mapRevision);
-    expect(gasConduitState(decoded, PAIR_ID).installed).toBe(true);
+    expect(decoded.gasConduits[PAIR_ID]).toBeDefined();
   });
 });

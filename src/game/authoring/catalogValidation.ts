@@ -1,20 +1,42 @@
 import type { GamePackSource } from "../definitionTypes";
-import { isProcessLine } from "../world/map";
 import type { EnemyAuthoringIssue } from "./enemyValidation";
+import { validateWorldMap } from "../world/mapValidation";
 
-export const validateCatalogStructure = (source: GamePackSource): EnemyAuthoringIssue[] => {
-  const issues: EnemyAuthoringIssue[] = [];
-  for (const connection of Object.values(source.map.connections)) {
-    if (!isProcessLine(connection)) continue;
+const validateLineBlueprints = (source: GamePackSource): EnemyAuthoringIssue[] => {
+  const issues: EnemyAuthoringIssue[] = Object.keys(source.lineBlueprints)
+    .filter((connectionId) => connectionId in source.map.connections)
+    .map((connectionId) => ({
+      path: `lineBlueprints.${connectionId}`,
+      message: "Line blueprint ID collides with physical map topology.",
+    }));
+  for (const [connectionId, connection] of Object.entries(source.lineBlueprints)) {
+    if (connectionId !== connection.id) {
+      issues.push({
+        path: `lineBlueprints.${connectionId}.id`,
+        message: "Line blueprint ID must match its record key.",
+      });
+    }
     for (const roomId of connection.rooms) {
       if (!(roomId in source.map.rooms)) {
         issues.push({
-          path: `map.connections.${connection.id}.rooms`,
+          path: `lineBlueprints.${connection.id}.rooms`,
           message: `Unknown room ${roomId}.`,
         });
       }
     }
   }
+  const blueprintMap = {
+    ...source.map,
+    connections: { ...source.map.connections, ...source.lineBlueprints },
+  };
+  for (const { path, message } of validateWorldMap(blueprintMap)) {
+    issues.push({ path: `lineBlueprints.${path}`, message });
+  }
+  return issues;
+};
+
+const validateModules = (source: GamePackSource): EnemyAuthoringIssue[] => {
+  const issues: EnemyAuthoringIssue[] = [];
   for (const [moduleId, template] of Object.entries(source.modules)) {
     if (moduleId !== template.id) {
       issues.push({
@@ -37,3 +59,8 @@ export const validateCatalogStructure = (source: GamePackSource): EnemyAuthoring
   }
   return issues;
 };
+
+export const validateCatalogStructure = (source: GamePackSource): EnemyAuthoringIssue[] => [
+  ...validateLineBlueprints(source),
+  ...validateModules(source),
+];

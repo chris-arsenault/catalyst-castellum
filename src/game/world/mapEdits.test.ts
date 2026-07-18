@@ -3,8 +3,10 @@ import { DEFAULT_GAME_DEFINITION } from "../config";
 import { WORLD_MAP } from "../content/worldMap";
 import { facilityModelForMap } from "./derivedModel";
 import { isProcessLine, processLineId } from "./map";
-import { lineBuildCost, mintLineConnection, withConnection } from "./mapEdits";
+import { withConnection } from "./mapEdits";
+import { lineBuildCost, mintLineConnection } from "./processLineEdits";
 import { validateWorldMap } from "./mapValidation";
+import { createScenarioGame } from "../simulation";
 
 const mint = (from: string, to: string) =>
   mintLineConnection(DEFAULT_GAME_DEFINITION, WORLD_MAP, "gas_line", from, to);
@@ -22,7 +24,15 @@ describe("in-play map edits", () => {
   });
 
   it("refuses to mint a pair the map already carries", () => {
-    expect(mint("core", "furnace")).toBeNull();
+    expect(
+      mintLineConnection(
+        DEFAULT_GAME_DEFINITION,
+        createScenarioGame("flash_point").map,
+        "gas_line",
+        "core",
+        "furnace"
+      )
+    ).toBeNull();
   });
 
   it("appends edits behind the authored order and validates the result", () => {

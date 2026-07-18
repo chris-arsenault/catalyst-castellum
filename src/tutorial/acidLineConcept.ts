@@ -1,6 +1,5 @@
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
 import type { GuideConceptModel, GuideConceptStage } from "./flashPointConcept";
-import { maybeLineDefinition } from "../game/world/instances";
 
 const ACID_REACTION = DEFAULT_GAME_DEFINITION.reactions.hydrogen_chlorine_recombination;
 const acidCoefficient = (species: string): number =>
@@ -10,9 +9,9 @@ const acidCoefficient = (species: string): number =>
 const acidLineStages = (): GuideConceptStage[] => {
   const definition = DEFAULT_GAME_DEFINITION;
   const behavior = ACID_REACTION.behavior;
-  const feed = maybeLineDefinition(definition, "gas:furnace__lower_intake", "gas");
-  const firstReturn = maybeLineDefinition(definition, "gas:furnace__gallery", "gas");
-  const finalReturn = maybeLineDefinition(definition, "gas:gallery__washlock", "gas");
+  const feed = definition.lineBlueprints["gas:furnace__lower_intake"];
+  const firstReturn = definition.lineBlueprints["gas:furnace__gallery"];
+  const finalReturn = definition.lineBlueprints["gas:gallery__washlock"];
   const coil = definition.equipment.thermal_coil.grades[0];
   const agitator = definition.equipment.gas_agitator.grades[0];
   if (

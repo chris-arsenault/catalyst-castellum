@@ -181,7 +181,7 @@ export const HullBuilderCanvas = ({
             connection.kind === "gas_line"
               ? game.gasConduits[connection.id]
               : game.liquidConduits[connection.id];
-          if (!state?.installed) return [];
+          if (!state) return [];
           return [
             <polyline
               key={connection.id}

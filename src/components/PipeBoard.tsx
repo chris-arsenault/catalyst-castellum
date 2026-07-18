@@ -1,11 +1,8 @@
 import { Spline, X } from "lucide-react";
 import { useCallback } from "react";
-import { transportPhaseAvailable } from "../game/queries";
-
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import { TransportRunPanel } from "./processControls/TransportControls";
-import { gasConduitState, liquidConduitState } from "../game/world/instances";
 
 export const PipeBoard = () => {
   const { translator } = useGamePresentation();
@@ -13,9 +10,7 @@ export const PipeBoard = () => {
   const setPipeMode = useGameStore((state) => state.setPipeMode);
   const close = useCallback(() => setPipeMode(false), [setPipeMode]);
   const runs = game.world.connections.filter(
-    (runId) =>
-      (transportPhaseAvailable(game, runId, "gas") && gasConduitState(game, runId).installed) ||
-      (transportPhaseAvailable(game, runId, "liquid") && liquidConduitState(game, runId).installed)
+    (runId) => runId in game.gasConduits || runId in game.liquidConduits
   );
   return (
     <aside className="room-inspector pipe-board" data-testid="pipe-board">

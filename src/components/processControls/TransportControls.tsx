@@ -1,6 +1,5 @@
 import { ArrowRightLeft, Droplets, Trash2, Wind } from "lucide-react";
 import { useCallback } from "react";
-import { transportPhaseAvailable } from "../../game/queries";
 import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { GameState, TransportPhase, ConnectionId } from "../../game/types";
@@ -11,7 +10,6 @@ import { connectionRoomPair, lineDefinition, roomDefinition } from "../../presen
 
 interface PhaseModel {
   enabled: boolean;
-  installed: boolean;
 }
 
 const phaseModel = (
@@ -20,12 +18,9 @@ const phaseModel = (
   phase: TransportPhase
 ): PhaseModel | null => {
   const definition = lineDefinition(game, runId, phase);
-  if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
+  if (!definition) return null;
   const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
-  return {
-    enabled: conduit.enabled,
-    installed: conduit.installed,
-  };
+  return { enabled: conduit.enabled };
 };
 
 const PhaseIcon = ({ phase }: { phase: TransportPhase }) =>
@@ -64,7 +59,7 @@ const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: C
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const model = phaseModel(game, runId, phase);
-  if (!model?.installed) return null;
+  if (!model) return null;
   return (
     <div
       className={`transport-phase-control ${phase} installed ${model.enabled ? "active" : "inactive"}`}

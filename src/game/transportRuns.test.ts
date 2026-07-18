@@ -1,17 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { WORLD_MAP } from "./config";
-import { isProcessLine } from "./world/map";
+import { WORLD_LINE_BLUEPRINTS } from "./content/worldMap";
 import { createScenarioGame, executeCommand } from "./simulation";
 import { gasConduitState, liquidConduitState } from "./world/instances";
 
-const PACK_LINES = Object.values(WORLD_MAP.connections).filter(isProcessLine);
-const PACK_LINE_IDS = PACK_LINES.map(({ id }) => id);
+const PACK_LINES = Object.values(WORLD_LINE_BLUEPRINTS);
 
 describe("conduit command boundary", () => {
   it("has one binary control state per phase and no purpose-specific settings", () => {
     const state = createScenarioGame("flash_point");
     const conduit = gasConduitState(state, "gas:core__furnace");
-    expect(conduit).toMatchObject({ installed: true, enabled: false });
+    expect(conduit).toMatchObject({ enabled: false });
     expect(Object.keys(conduit)).not.toContain("setting");
     expect(Object.keys(state)).not.toContain("gasLines");
     expect(Object.keys(state)).not.toContain("liquidLines");

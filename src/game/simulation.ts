@@ -94,7 +94,6 @@ export const installedEquipment = equipment.installedEquipment;
 export const gridRouteLength = networkGeometry.gridRouteLength;
 export const transportPhaseEnabled = routing.transportPhaseEnabled;
 export const transportPhaseExists = routing.transportPhaseExists;
-export const transportPhaseInstalled = routing.transportPhaseInstalled;
 export const equipmentAvailable = campaign.equipmentAvailable;
 export const gasSourceAvailable = campaign.gasSourceAvailable;
 export const liquidSourceAvailable = campaign.liquidSourceAvailable;

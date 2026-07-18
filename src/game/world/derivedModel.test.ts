@@ -8,9 +8,10 @@ import { facilityModelFor } from "./derivedModel";
 const freshGame = () => createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
 
 describe("map-derived facility geometry", () => {
-  it("carries the pack map on state at revision zero", () => {
+  it("carries only physical process topology on state at revision zero", () => {
     const state = freshGame();
-    expect(state.map).toBe(DEFAULT_GAME_DEFINITION.map);
+    expect(state.map).not.toBe(DEFAULT_GAME_DEFINITION.map);
+    expect(Object.keys(state.gasConduits)).toEqual(["gas:core__furnace"]);
     expect(state.mapRevision).toBe(0);
   });
 
@@ -25,7 +26,7 @@ describe("map-derived facility geometry", () => {
     const state = freshGame();
     const decoded = decodeGame(encodeGame(state, DEFAULT_GAME_DEFINITION), DEFAULT_GAME_DEFINITION);
     expect(decoded).not.toBeNull();
-    expect(decoded?.map).toEqual(DEFAULT_GAME_DEFINITION.map);
+    expect(decoded?.map).toEqual(state.map);
     expect(decoded?.mapRevision).toBe(0);
   });
 });

@@ -3,7 +3,7 @@ import type { GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
 import { MAKE_REAGENT_CONCEPT_MODEL } from "./makeReagentConcept";
-import { gasConduitState, liquidConduitState, roomState } from "../game/world/instances";
+import { roomState } from "../game/world/instances";
 
 const membraneCellInstalled = (game: GameState): boolean =>
   Object.values(roomState(game, "lower_intake").equipment).some(
@@ -14,15 +14,13 @@ const membraneCellRunning = (game: GameState): boolean =>
   roomEquipmentIsActive(roomState(game, "lower_intake"), "membrane_cell");
 
 const liquidFeedEnabled = (game: GameState): boolean =>
-  liquidConduitState(game, "liquid:core__lower_intake").installed &&
-  liquidConduitState(game, "liquid:core__lower_intake").enabled;
+  game.liquidConduits["liquid:core__lower_intake"]?.enabled ?? false;
 
 const coProductsEstablished = (game: GameState): boolean =>
   game.processes.chlor_alkali_cell.totalProcessed >= 0.05;
 
 const recoveryEnabled = (game: GameState): boolean =>
-  gasConduitState(game, "gas:core__lower_intake").installed &&
-  gasConduitState(game, "gas:core__lower_intake").enabled;
+  game.gasConduits["gas:core__lower_intake"]?.enabled ?? false;
 
 const recoveryFlowEstablished = (game: GameState): boolean => gasAmountTotal(game.gasVent) >= 0.05;
 

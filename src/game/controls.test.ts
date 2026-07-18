@@ -26,24 +26,24 @@ describe("simple conduit controls", () => {
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
-    const state = executeCommand(createScenarioGame("make_the_reagent"), {
+    const state = executeCommand(createScenarioGame("flash_point"), {
       type: "begin_level",
     }).state;
-    state.availability.gasLines.push("gas:furnace__gallery");
-    gasConduitState(state, "gas:furnace__gallery").installed = false;
+    state.availability.gasLines.push("gas:core__gallery");
     const built = executeCommand(state, {
       type: "build_connection",
       kind: "gas_line",
-      fromRoomId: "furnace",
+      fromRoomId: "core",
       toRoomId: "gallery",
     });
     expect(built.accepted).toBe(true);
-    expect(gasConduitState(built.state, "gas:furnace__gallery").installed).toBe(true);
+    expect(built.state.gasConduits["gas:core__gallery"]).toBeDefined();
     const dismantled = executeCommand(built.state, {
       type: "dismantle_connection",
-      connectionId: "gas:furnace__gallery",
+      connectionId: "gas:core__gallery",
     });
     expect(dismantled.accepted).toBe(true);
+    expect(dismantled.state.gasConduits["gas:core__gallery"]).toBeUndefined();
   });
 
   it("rejects dismantling conserved retained material", () => {
