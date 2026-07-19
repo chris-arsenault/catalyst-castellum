@@ -125,7 +125,7 @@ export interface WorldMap {
   rooms: Record<RoomId, MapRoom>;
   connections: Record<ConnectionId, MapConnection>;
   /** Feedstock, vent, and drain ports present on this map, hosted by their rooms. */
-  utilityNodes: Partial<Record<FacilityUtilityNodeId, MapUtilityNode>>;
+  utilityNodes: Record<FacilityUtilityNodeId, MapUtilityNode>;
 }
 
 /** Parameters for player-built lines of a kind; cost scales with routed length. */

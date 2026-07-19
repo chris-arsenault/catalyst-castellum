@@ -15,6 +15,8 @@ import { gasConduitState, liquidConduitState, roomState } from "../world/instanc
 import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionForMap } from "../world/activeDefinition";
 import type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
+import { validateEquipmentStates } from "./equipmentStateValidation";
+import { validateSupplyStates } from "./supplyStateValidation";
 
 export type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 
@@ -43,7 +45,7 @@ const validateAvailability = (
   expected: ScenarioAvailability,
   issues: StateValidationIssue[]
 ): void => {
-  const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
+  const fields = ["equipment", "gasLines", "liquidLines"] as const;
   for (const field of fields) {
     if (!sameIdentifiers(state.availability[field], expected[field])) {
       issue(
@@ -378,10 +380,12 @@ export const validateGameState = (
     );
   }
   validateCampaign(state, issues, activeDefinition);
+  issues.push(...validateSupplyStates(state, activeDefinition));
   validateTopology(state, issues, activeDefinition);
   validateEnemyNavigation(state, issues, activeDefinition);
   validateEnemyLevels(state, issues);
   validateEnemyBehaviors(state, issues, activeDefinition);
+  issues.push(...validateEquipmentStates(state, activeDefinition));
   validatePhase(state, issues, activeDefinition);
   return issues;
 };

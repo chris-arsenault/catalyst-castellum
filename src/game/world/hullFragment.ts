@@ -7,7 +7,7 @@ import type {
   RoomState,
   ConnectionId,
 } from "../types";
-import type { MapConnection, MapRoom, WorldMap } from "./map";
+import type { MapConnection, MapRoom, MapUtilityNode, WorldMap } from "./map";
 import { architecturalConnections, isProcessLine } from "./map";
 import { validateWorldMap } from "./mapValidation";
 
@@ -20,6 +20,7 @@ import { validateWorldMap } from "./mapValidation";
 export interface HullFragment {
   rooms: Record<RoomId, MapRoom>;
   connections: Record<ConnectionId, MapConnection>;
+  utilityNodes: Record<string, MapUtilityNode>;
   roomStates: Record<RoomId, RoomState>;
   gasConduits: Record<ConnectionId, GasConduitState>;
   liquidConduits: Record<ConnectionId, LiquidConduitState>;
@@ -42,6 +43,16 @@ const hullConnectionRecords = (
     Object.entries(map.connections)
       .filter(([, connection]) => connection.rooms.every((roomId) => roomId in rooms))
       .map(([connectionId, connection]) => [connectionId, deepCopy(connection)])
+  );
+
+const hullUtilityNodeRecords = (
+  map: WorldMap,
+  rooms: Readonly<Record<RoomId, MapRoom>>
+): Record<string, MapUtilityNode> =>
+  Object.fromEntries(
+    Object.entries(map.utilityNodes)
+      .filter(([, node]) => node.hostRoomId in rooms)
+      .map(([nodeId, node]) => [nodeId, deepCopy(node)])
   );
 
 /**
@@ -96,10 +107,13 @@ export const hullPlanningMap = (map: WorldMap): WorldMap => {
   });
 };
 
-const extractHullMapData = (state: GameState): Pick<HullFragment, "rooms" | "connections"> => {
+const extractHullMapData = (
+  state: GameState
+): Pick<HullFragment, "rooms" | "connections" | "utilityNodes"> => {
   const rooms = hullRoomRecords(state.map);
   const connections = hullConnectionRecords(state.map, rooms);
-  return { rooms, connections };
+  const utilityNodes = hullUtilityNodeRecords(state.map, rooms);
+  return { rooms, connections, utilityNodes };
 };
 
 /**
@@ -109,7 +123,8 @@ const extractHullMapData = (state: GameState): Pick<HullFragment, "rooms" | "con
 export const hullLayoutFromMap = (map: WorldMap): HullFragment => {
   const rooms = hullRoomRecords(map);
   const connections = hullConnectionRecords(map, rooms);
-  return { rooms, connections, roomStates: {}, gasConduits: {}, liquidConduits: {} };
+  const utilityNodes = hullUtilityNodeRecords(map, rooms);
+  return { rooms, connections, utilityNodes, roomStates: {}, gasConduits: {}, liquidConduits: {} };
 };
 
 const extractConduitStates = (
@@ -129,13 +144,19 @@ const extractConduitStates = (
 };
 
 export const extractHullFragment = (state: GameState): HullFragment => {
-  const { rooms, connections } = extractHullMapData(state);
+  const { rooms, connections, utilityNodes } = extractHullMapData(state);
   const roomStates: HullFragment["roomStates"] = {};
   for (const roomId of Object.keys(rooms)) {
     const roomState = state.rooms[roomId];
     if (roomState) roomStates[roomId] = deepCopy(roomState);
   }
-  return { rooms, connections, roomStates, ...extractConduitStates(state, connections) };
+  return {
+    rooms,
+    connections,
+    utilityNodes,
+    roomStates,
+    ...extractConduitStates(state, connections),
+  };
 };
 
 export interface HullOffset {
@@ -201,7 +222,13 @@ export const embedHullFragment = (
       throw new Error(`Hull connection ${connection.id} collides with a site connection.`);
     connections[connection.id] = shiftConnection(deepCopy(connection), offset);
   }
-  const embedded: WorldMap = { ...map, rooms, connections };
+  const utilityNodes = { ...map.utilityNodes };
+  for (const [nodeId, node] of Object.entries(fragment.utilityNodes)) {
+    if (nodeId in utilityNodes)
+      throw new Error(`Hull utility node ${nodeId} collides with a site.`);
+    utilityNodes[nodeId] = { ...deepCopy(node), cell: shiftCell(node.cell, offset) };
+  }
+  const embedded: WorldMap = { ...map, rooms, connections, utilityNodes };
   const issues = validateWorldMap(embedded);
   if (issues.length > 0) {
     const detail = issues.map(({ path, message }) => path + ": " + message).join("; ");
@@ -243,6 +270,12 @@ export const translateHullFragment = (
     Object.entries(fragment.connections).map(([id, connection]) => [
       id,
       shiftConnection(deepCopy(connection), offset),
+    ])
+  ),
+  utilityNodes: Object.fromEntries(
+    Object.entries(fragment.utilityNodes).map(([id, node]) => [
+      id,
+      { ...deepCopy(node), cell: shiftCell(node.cell, offset) },
     ])
   ),
 });

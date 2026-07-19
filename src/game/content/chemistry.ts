@@ -5,6 +5,10 @@ import {
   type ReactionId,
 } from "../types";
 import { SPECIES_DEFINITIONS } from "./substances";
+import { CARBON_STEAM_REACTIONS } from "./reactions/carbonSteam";
+import { NITROGEN_OXIDE_REACTIONS } from "./reactions/nitrogenOxide";
+import { TRANSITION_METAL_REACTIONS } from "./reactions/transitionMetals";
+import { URANIUM_FLUORINE_REACTIONS } from "./reactions/uraniumFluorine";
 
 export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   chlor_alkali_electrolysis: {
@@ -21,7 +25,7 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       { species: "hydrogen", coefficient: 1 },
       { species: "sodium_hydroxide", coefficient: 2 },
     ],
-    behavior: { kind: "electrolysis", maximumRate: 1, roomHeatPerExtent: 0.62 },
+    behavior: { kind: "electrolysis", maximumRate: 1.12, roomHeatPerExtent: 0.62 },
   },
   hydrogen_oxygen_combustion: {
     id: "hydrogen_oxygen_combustion",
@@ -44,9 +48,9 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       pressurePulsePerExtent: 20,
       gasHeatPerExtent: 11,
       roomHeatPerExtent: 1.8,
-      pressureDamageBase: 59.5,
-      pressureDamagePerExtent: 7.95,
-      heatDamagePerExtent: 1.98,
+      pressureDamageBase: 59.46,
+      pressureDamagePerExtent: 7.945,
+      heatDamagePerExtent: 1.979,
     },
   },
   hydrogen_chlorine_recombination: {
@@ -148,6 +152,10 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       event: { code: "chlorine_evolution_started", roomId: "washlock" },
     },
   },
+  ...CARBON_STEAM_REACTIONS,
+  ...NITROGEN_OXIDE_REACTIONS,
+  ...TRANSITION_METAL_REACTIONS,
+  ...URANIUM_FLUORINE_REACTIONS,
 };
 
 const flashBehavior = REACTION_DEFINITIONS.hydrogen_oxygen_combustion.behavior;

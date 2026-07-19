@@ -1,11 +1,9 @@
 import type {
   EnemyDefinition,
   EquipmentDefinition,
-  GasBufferDefinition,
-  GasSourceDefinition,
-  LiquidBufferDefinition,
-  LiquidSourceDefinition,
-  ProcessDefinition,
+  EquipmentOutputDefinition,
+  GasSupplyDefinition,
+  LiquidSupplyDefinition,
   ReactionDefinition,
   RoomDefinition,
   SpeciesDefinition,
@@ -92,26 +90,27 @@ export const reactionCopy = (
   name: localized(translator, `entities.reactions.${definition.id}.name`),
 });
 
-export const processCopy = (
-  definition: ProcessDefinition,
-  translator: Translator = DEFAULT_TRANSLATOR
-): DescribedEntityCopy => ({
-  name: localized(translator, `entities.processes.${definition.id}.name`),
-  description: localized(translator, `entities.processes.${definition.id}.description`),
-});
-
 export const sourceCopy = (
-  definition: GasSourceDefinition | LiquidSourceDefinition,
+  definition: GasSupplyDefinition | LiquidSupplyDefinition,
   translator: Translator = DEFAULT_TRANSLATOR
-): NamedEntityCopy => ({
-  name: localized(translator, `entities.sources.${definition.id}.name`),
-});
+): NamedEntityCopy => {
+  const key = `entities.sources.${definition.id}.name`;
+  if (hasLocalized(translator, key)) return { name: localized(translator, key) };
+  return {
+    name: translator.text(
+      `entities.sources.generic.${definition.phase}.name` as LocaleKey,
+      {
+        code: definition.code,
+      } as never
+    ),
+  };
+};
 
-export const bufferCopy = (
-  definition: GasBufferDefinition | LiquidBufferDefinition,
+export const equipmentOutputCopy = (
+  definition: EquipmentOutputDefinition,
   translator: Translator = DEFAULT_TRANSLATOR
 ): NamedEntityCopy => ({
-  name: localized(translator, `entities.buffers.${definition.id}.name`),
+  name: localized(translator, `entities.equipmentOutputs.${definition.id}.name`),
 });
 
 export const transportCopy = (

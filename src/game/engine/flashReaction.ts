@@ -93,6 +93,7 @@ const setFlashTelemetry = (
   if (amount > 0) {
     const rate = amount / Math.max(dt, 0.0001);
     telemetry.lastRate += rate;
+    telemetry.direction = "forward";
     telemetry.limitingFactor = limitingFactor;
     room.reactionIntensity = Math.max(room.reactionIntensity, rate);
   } else if (telemetry.lastRate <= 0) {

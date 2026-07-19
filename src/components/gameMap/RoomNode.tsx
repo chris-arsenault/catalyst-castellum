@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Graphics } from "pixi.js";
 import { enemyRoomId } from "../../game/queries";
 import type { GameState, RoomId } from "../../game/types";
@@ -8,6 +8,7 @@ import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
 import { coreIntegrityColor } from "./coreDamageModel";
 import { CoreSprite } from "./CoreSprite";
+import { useGamePresentation } from "../../application/presentationContext";
 
 interface RoomNodeProps {
   game: GameState;
@@ -30,9 +31,11 @@ export const RoomNode = ({
   onPipeDragEnd,
   pipeMode,
 }: RoomNodeProps) => {
+  const { supplies } = useGamePresentation();
   const geometry = mapViewFor(game.map).roomMapRect(roomId);
   const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy, game) === roomId).length;
-  const model = roomRenderModel(game, roomId, selected, occupied);
+  const supplyCards = useMemo(() => supplies(game), [game, supplies]);
+  const model = roomRenderModel(game, roomId, selected, occupied, supplyCards);
   const hitArea = roomHitArea(model);
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);
   return (

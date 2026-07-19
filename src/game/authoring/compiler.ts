@@ -13,6 +13,9 @@ import { generateSiteLayoutCandidate } from "../world/siteGenerator";
 import { MAX_ENEMY_LEVEL, MIN_ENEMY_LEVEL, resolveEnemyLevel } from "../engine/enemyLevel";
 import { validateEnemyDefinitions, type EnemyAuthoringIssue } from "./enemyValidation";
 import { validateCatalogStructure } from "./catalogValidation";
+import { validateReactions } from "./reactionValidation";
+import { validateEquipmentOperations } from "./equipmentOperationValidation";
+import { validateLevelSupplies } from "./supplyValidation";
 
 export type AuthoringIssue = EnemyAuthoringIssue;
 
@@ -58,11 +61,7 @@ const validateAvailability = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  const checks = [
-    ["equipment", availability.equipment, source.equipment],
-    ["gasSources", availability.gasSources, source.gasSources],
-    ["liquidSources", availability.liquidSources, source.liquidSources],
-  ] as const;
+  const checks = [["equipment", availability.equipment, source.equipment]] as const;
   for (const [field, ids, catalog] of checks) {
     validateAvailableIds(ids, catalog, `${path}.${field}`, issues);
   }
@@ -158,7 +157,7 @@ const validateRound = (
   validateFieldSupportWave(source, round, path, issues);
   validateAvailability(source, map, round.availability, `${path}.availability`, issues);
   if (previous) {
-    const fields = ["equipment", "gasLines", "liquidLines", "gasSources", "liquidSources"] as const;
+    const fields = ["equipment", "gasLines", "liquidLines"] as const;
     for (const field of fields) {
       if (!isSuperset(round.availability[field], previous.availability[field])) {
         push(issues, `${path}.availability.${field}`, "Round availability must be cumulative.");
@@ -192,6 +191,8 @@ const validateLevel = (
   const map = mapForLevel(source, level, path, issues);
   validateLevelDefinition(source, map, level, path, issues);
   validateEquipmentLoadout(source, map, level, path, issues);
+  issues.push(...validateLevelSupplies(source, map, level, path));
+  validateStationaryLoadout(source, map, level, path, issues);
   validateConduitLoadout(source, map, level, path, issues);
 };
 
@@ -279,6 +280,33 @@ const validateEquipmentLoadout = (
   }
 };
 
+const validateStationaryLoadout = (
+  source: GamePackSource,
+  map: WorldMap,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  for (const [roomId, inventory] of Object.entries(level.loadout.stationary)) {
+    if (!(roomId in map.rooms))
+      push(issues, `${path}.loadout.stationary`, `Unknown room ${roomId}.`);
+    for (const [speciesId, amount] of Object.entries(inventory ?? {})) {
+      if (source.species[speciesId as SpeciesId]?.phase !== "stationary")
+        push(
+          issues,
+          `${path}.loadout.stationary.${roomId}`,
+          `${speciesId} is not a stationary species.`
+        );
+      if (amount !== undefined && (!Number.isFinite(amount) || amount < 0))
+        push(
+          issues,
+          `${path}.loadout.stationary.${roomId}.${speciesId}`,
+          "Stationary inventory must be finite and nonnegative."
+        );
+    }
+  }
+};
+
 const validateConduitLoadout = (
   source: GamePackSource,
   map: WorldMap,
@@ -298,77 +326,9 @@ const validateConduitLoadout = (
   }
 };
 
-const compositionFor = (source: GamePackSource, speciesId: SpeciesId) =>
-  source.species[speciesId]?.elements;
-
-const reactionElementTotals = (
-  source: GamePackSource,
-  participants: GamePackSource["reactions"][keyof GamePackSource["reactions"]]["reactants"]
-): Record<string, number> => {
-  const totals: Record<string, number> = {};
-  for (const participant of participants) {
-    const composition = compositionFor(source, participant.species);
-    if (!composition) continue;
-    for (const [element, amount] of Object.entries(composition)) {
-      totals[element] = (totals[element] ?? 0) + amount * participant.coefficient;
-    }
-  }
-  return totals;
-};
-
-type ReactionParticipants =
-  GamePackSource["reactions"][keyof GamePackSource["reactions"]]["reactants"];
-
-const validateReactionSide = (
-  source: GamePackSource,
-  participants: ReactionParticipants,
-  path: string,
-  issues: AuthoringIssue[]
-): void => {
-  if (participants.length === 0) push(issues, path, "Reaction side must contain participants.");
-  for (const participant of participants) {
-    if (!(participant.species in source.species))
-      push(issues, path, `Unknown species ${participant.species}.`);
-    if (participant.coefficient <= 0) push(issues, path, "Coefficients must be positive.");
-  }
-};
-
-const validateReactionBalance = (
-  source: GamePackSource,
-  reaction: GamePackSource["reactions"][keyof GamePackSource["reactions"]],
-  path: string,
-  issues: AuthoringIssue[]
-): void => {
-  const reactants = reactionElementTotals(source, reaction.reactants);
-  const products = reactionElementTotals(source, reaction.products);
-  for (const element of new Set([...Object.keys(reactants), ...Object.keys(products)])) {
-    if (Math.abs((reactants[element] ?? 0) - (products[element] ?? 0)) > 1e-8)
-      push(issues, path, `Element ${element} is unbalanced.`);
-  }
-};
-
-const validateReactions = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  for (const [reactionId, reaction] of Object.entries(source.reactions)) {
-    validateIdentity(issues, `reactions.${reactionId}.id`, reactionId, reaction.id);
-    validateReactionSide(source, reaction.reactants, `reactions.${reactionId}.reactants`, issues);
-    validateReactionSide(source, reaction.products, `reactions.${reactionId}.products`, issues);
-    validateReactionBalance(source, reaction, `reactions.${reactionId}`, issues);
-  }
-};
-
 const validateMap = (source: GamePackSource, issues: AuthoringIssue[]): void => {
   for (const { path, message } of validateWorldMap(source.map)) {
     push(issues, `map.${path}`, message);
-  }
-  for (const [roomId, room] of Object.entries(source.map.rooms)) {
-    for (const sourceId of room.taps.gas.sourceIds) {
-      if (!(sourceId in source.gasSources))
-        push(issues, `map.rooms.${roomId}.taps.gas`, `Unknown gas source ${sourceId}.`);
-    }
-    for (const sourceId of room.taps.liquid.sourceIds) {
-      if (!(sourceId in source.liquidSources))
-        push(issues, `map.rooms.${roomId}.taps.liquid`, `Unknown liquid source ${sourceId}.`);
-    }
   }
 };
 
@@ -393,17 +353,15 @@ const validateLevelOrder = (source: GamePackSource, issues: AuthoringIssue[]): v
   }
 };
 
-const validateProcesses = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  for (const [processId, process] of Object.entries(source.processes)) {
-    validateIdentity(issues, `processes.${processId}.id`, processId, process.id);
-    if (!(process.reactionId in source.reactions))
-      push(issues, `processes.${processId}.reactionId`, `Unknown reaction ${process.reactionId}.`);
-    if (!(process.equipmentId in source.equipment))
+const validateSpeciesHazardSources = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  for (const [speciesId, species] of Object.entries(source.species)) {
+    if (species.hazards.length > 0 && species.damageSourceId === null) {
       push(
         issues,
-        `processes.${processId}.equipmentId`,
-        `Unknown equipment ${process.equipmentId}.`
+        `species.${speciesId}.damageSourceId`,
+        "A hazardous species requires a combat damage source."
       );
+    }
   }
 };
 
@@ -414,9 +372,10 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
   if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);
+  validateSpeciesHazardSources(source, issues);
   validateReactions(source, issues);
+  validateEquipmentOperations(source, issues);
   validateMap(source, issues);
-  validateProcesses(source, issues);
   issues.push(...validateEnemyDefinitions(source));
   return issues;
 };

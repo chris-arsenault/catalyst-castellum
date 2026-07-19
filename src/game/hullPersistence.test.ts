@@ -28,6 +28,7 @@ describe("only the owned hull travels between sites", () => {
         equipmentId: "gas_agitator",
         level: 1,
         enabled: true,
+        operation: null,
       };
     });
     expect(site2.campaign.levelId).toBe("make_the_reagent");
@@ -42,6 +43,7 @@ describe("only the owned hull travels between sites", () => {
         equipmentId: "gas_agitator",
         level: 2,
         enabled: true,
+        operation: null,
       };
     });
     expect(site2.map.rooms.washlock?.provenance).toBe("hull");
@@ -50,6 +52,17 @@ describe("only the owned hull travels between sites", () => {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
+      operation: null,
     });
+  });
+
+  it("carries stationary media with the hull and leaves site deposits behind", () => {
+    const site2 = dockedAtSite2((state) => {
+      state.rooms.washlock!.stationary.surface_nickel = 3.5;
+      state.rooms.furnace!.stationary.solid_carbon = 8;
+    });
+
+    expect(roomState(site2, "washlock").stationary.surface_nickel).toBe(3.5);
+    expect(roomState(site2, "furnace").stationary.solid_carbon).toBe(0);
   });
 });

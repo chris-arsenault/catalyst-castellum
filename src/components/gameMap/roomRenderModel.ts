@@ -13,45 +13,34 @@ import { colorNumber, mapViewFor } from "./mapGeometry";
 import type { RoomDrawModel } from "./roomGraphics";
 import { instance, roomState } from "../../game/world/instances";
 import { roomDefinition } from "../../presentation/defaultGame";
-import { DEFAULT_GAME_DEFINITION } from "../../game/definition";
 import type { CoreReservoirDrawModel } from "./coreGraphics";
+import type { SupplyCardCopy } from "../../presentation/supplyCopy";
 
 const sourceFill = (amount: number, capacity: number): number =>
   capacity > 0 ? Math.max(0, Math.min(1, amount / capacity)) : 0;
 
-const coreReservoirs = (game: GameState): readonly CoreReservoirDrawModel[] => {
-  const gasDefinition = DEFAULT_GAME_DEFINITION.gasSources.starter_gas_header;
-  const waterDefinition = DEFAULT_GAME_DEFINITION.liquidSources.water_tank;
-  const brineDefinition = DEFAULT_GAME_DEFINITION.liquidSources.sodium_chloride_tank;
-  const gasAmount = Object.values(game.gasSources.starter_gas_header.gas).reduce(
-    (total, amount) => total + amount,
-    0
-  );
+const reservoir = (
+  id: CoreReservoirDrawModel["id"],
+  supply: SupplyCardCopy | undefined,
+  fallbackColor: number
+): CoreReservoirDrawModel => ({
+  available: supply?.available ?? false,
+  color: supply ? colorNumber(supply.accent) : fallbackColor,
+  fill: supply ? sourceFill(supply.amount, supply.capacity) : 0,
+  id,
+});
+
+const coreReservoirs = (
+  supplies: readonly SupplyCardCopy[],
+  coreRoomId: RoomId
+): readonly CoreReservoirDrawModel[] => {
+  const coreSupplies = supplies.filter((supply) => supply.hostRoomId === coreRoomId);
+  const gas = coreSupplies.find((supply) => supply.phase === "gas");
+  const liquids = coreSupplies.filter((supply) => supply.phase === "liquid");
   return [
-    {
-      available: game.availability.gasSources.includes("starter_gas_header"),
-      color: colorNumber(gasDefinition.accent),
-      fill: sourceFill(gasAmount, gasDefinition.capacity),
-      id: "gas_header",
-    },
-    {
-      available: game.availability.liquidSources.includes("water_tank"),
-      color: colorNumber(waterDefinition.accent),
-      fill: sourceFill(
-        game.liquidSources.water_tank.liquid[waterDefinition.substance],
-        waterDefinition.capacity
-      ),
-      id: "water",
-    },
-    {
-      available: game.availability.liquidSources.includes("sodium_chloride_tank"),
-      color: colorNumber(brineDefinition.accent),
-      fill: sourceFill(
-        game.liquidSources.sodium_chloride_tank.liquid[brineDefinition.substance],
-        brineDefinition.capacity
-      ),
-      id: "brine",
-    },
+    reservoir("gas_header", gas, 0xed9a48),
+    reservoir("water", liquids[0], 0x41baf5),
+    reservoir("brine", liquids[1], 0x60cce4),
   ];
 };
 
@@ -78,7 +67,8 @@ export const roomRenderModel = (
   game: GameState,
   roomId: RoomId,
   selected: boolean,
-  occupied: number
+  occupied: number,
+  supplies: readonly SupplyCardCopy[] = []
 ): RoomDrawModel => {
   const definition = roomDefinition(game, roomId);
   const facility = facilityModelForMap(game.map);
@@ -134,6 +124,6 @@ export const roomRenderModel = (
     liquidInflowRate: roomLiquidInflowRate(game, roomId),
     occupied,
     coreIntegrity: game.coreIntegrity,
-    coreReservoirs: definition.structure === "core" ? coreReservoirs(game) : [],
+    coreReservoirs: definition.structure === "core" ? coreReservoirs(supplies, roomId) : [],
   };
 };

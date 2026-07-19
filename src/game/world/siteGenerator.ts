@@ -31,10 +31,26 @@ import type {
 const shiftCell = (source: GridCell, offset: HullOffset): GridCell =>
   cell(source.column + offset.columns, source.elevation + offset.elevations);
 
-const shiftUtilityNode = (node: MapUtilityNode, offset: HullOffset): MapUtilityNode => ({
-  ...node,
-  cell: shiftCell(node.cell, offset),
-});
+const placeSiteUtilityNodes = (
+  nodes: GeneratedSiteSpec["utilityNodes"],
+  rooms: Readonly<Record<RoomId, MapRoom>>
+): Record<string, MapUtilityNode> =>
+  Object.fromEntries(
+    Object.entries(nodes).map(([id, node]) => {
+      const room = rooms[node.hostRoomId];
+      if (!room) throw new Error(`Utility node ${id} has unknown host room ${node.hostRoomId}.`);
+      return [
+        id,
+        {
+          ...node,
+          cell: cell(
+            room.bounds.column + node.cell.column,
+            room.bounds.elevation + node.cell.elevation
+          ),
+        },
+      ];
+    })
+  );
 
 const translateRoom = (room: MapRoom, column: number, elevation: number): MapRoom => {
   const offset = { columns: column, elevations: elevation };
@@ -355,11 +371,6 @@ export const generateSiteLayoutCandidate = (
   const random = seededRandom(seed);
   const order = spec.chunkOrders[drawIndex(random, spec.chunkOrders.length)] as readonly string[];
   const pattern = spec.patterns[drawIndex(random, spec.patterns.length)] as SiteRoutePattern;
-  const translatedUtilityNodes = Object.fromEntries(
-    Object.entries(spec.utilityNodes).flatMap(([id, node]) =>
-      node ? [[id, shiftUtilityNode(node, spec.hullAnchor)]] : []
-    )
-  );
   const emptyMap: WorldMap = {
     width: spec.width,
     height: spec.height,
@@ -370,7 +381,7 @@ export const generateSiteLayoutCandidate = (
     entryCell: cell(0, 0),
     rooms: {},
     connections: {},
-    utilityNodes: translatedUtilityNodes,
+    utilityNodes: {},
   };
   const hullMap = embedHullFragment(emptyMap, hull, spec.hullAnchor);
   const dockRoomId = hullDockRoomId(hullMap);
@@ -384,6 +395,10 @@ export const generateSiteLayoutCandidate = (
     entryCell: cell(entryRoom.bounds.column, entryRoom.bounds.elevation),
     rooms: route.rooms,
     connections: { ...route.connections, ...hullMap.connections },
+    utilityNodes: {
+      ...hullMap.utilityNodes,
+      ...placeSiteUtilityNodes(spec.utilityNodes, route.rooms),
+    },
   };
   // Reject overlaps, bounds failures, and disconnected room graphs before running the
   // comparatively expensive process-line router for a candidate that cannot ship.

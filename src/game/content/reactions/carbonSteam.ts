@@ -1,0 +1,233 @@
+import type { ReactionDefinition, ReactionId } from "../../types";
+
+export const CARBON_STEAM_REACTIONS = {
+  water_gas_reaction: {
+    id: "water_gas_reaction",
+    code: "CS-1",
+    kind: "chemical",
+    equation: "C(s) + H₂O(g) ⇌ CO(g) + H₂(g)",
+    reactants: [
+      { species: "solid_carbon", coefficient: 1 },
+      { species: "steam", coefficient: 1 },
+    ],
+    products: [
+      { species: "carbon_monoxide", coefficient: 1 },
+      { species: "hydrogen", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.72,
+      halfSaturation: 2.5,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "solid_carbon", order: 1 },
+          { species: "steam", order: 1 },
+        ],
+        activationTemperature: 82,
+        fullActivationTemperature: 145,
+      },
+      reverse: {
+        rateConstant: 0.26,
+        rateOrders: [
+          { species: "carbon_monoxide", order: 1 },
+          { species: "hydrogen", order: 1 },
+        ],
+        activationTemperature: 24,
+        fullActivationTemperature: 70,
+        deactivationTemperature: 145,
+        inactiveTemperature: 205,
+      },
+      gasHeatPerExtent: -2.4,
+      roomHeatPerExtent: -0.55,
+    },
+  },
+  water_gas_shift: {
+    id: "water_gas_shift",
+    code: "CS-2",
+    kind: "chemical",
+    equation: "CO(g) + H₂O(g) ⇌ CO₂(g) + H₂(g)",
+    reactants: [
+      { species: "carbon_monoxide", coefficient: 1 },
+      { species: "steam", coefficient: 1 },
+    ],
+    products: [
+      { species: "carbon_dioxide", coefficient: 1 },
+      { species: "hydrogen", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.9,
+      halfSaturation: 2.2,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "carbon_monoxide", order: 1 },
+          { species: "steam", order: 1 },
+        ],
+        activationTemperature: 42,
+        fullActivationTemperature: 88,
+        deactivationTemperature: 165,
+        inactiveTemperature: 230,
+      },
+      reverse: {
+        rateConstant: 0.36,
+        rateOrders: [
+          { species: "carbon_dioxide", order: 1 },
+          { species: "hydrogen", order: 1 },
+        ],
+        activationTemperature: 105,
+        fullActivationTemperature: 165,
+      },
+      catalyst: { species: "iron_catalyst", halfSaturation: 0.8 },
+      gasHeatPerExtent: 1.2,
+      roomHeatPerExtent: 0.26,
+    },
+  },
+  boudouard_reaction: {
+    id: "boudouard_reaction",
+    code: "CS-3",
+    kind: "chemical",
+    equation: "C(s) + CO₂(g) ⇌ 2 CO(g)",
+    reactants: [
+      { species: "solid_carbon", coefficient: 1 },
+      { species: "carbon_dioxide", coefficient: 1 },
+    ],
+    products: [{ species: "carbon_monoxide", coefficient: 2 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.54,
+      halfSaturation: 2.8,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "solid_carbon", order: 1 },
+          { species: "carbon_dioxide", order: 1 },
+        ],
+        activationTemperature: 110,
+        fullActivationTemperature: 180,
+      },
+      reverse: {
+        rateConstant: 0.5,
+        rateOrders: [{ species: "carbon_monoxide", order: 2 }],
+        activationTemperature: 25,
+        fullActivationTemperature: 65,
+        deactivationTemperature: 125,
+        inactiveTemperature: 185,
+      },
+      gasHeatPerExtent: -2,
+      roomHeatPerExtent: -0.48,
+    },
+  },
+  carbon_monoxide_oxidation: {
+    id: "carbon_monoxide_oxidation",
+    code: "CS-4",
+    kind: "chemical",
+    equation: "2 CO(g) + O₂(g) → 2 CO₂(g) + heat",
+    reactants: [
+      { species: "carbon_monoxide", coefficient: 2 },
+      { species: "oxygen", coefficient: 1 },
+    ],
+    products: [{ species: "carbon_dioxide", coefficient: 2 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.68,
+      halfSaturation: 2,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "carbon_monoxide", order: 1 },
+          { species: "oxygen", order: 1 },
+        ],
+        activationTemperature: 72,
+        fullActivationTemperature: 125,
+      },
+      gasHeatPerExtent: 4.2,
+      roomHeatPerExtent: 0.92,
+    },
+  },
+  carbon_methanation: {
+    id: "carbon_methanation",
+    code: "CS-6A",
+    kind: "chemical",
+    equation: "C(s) + 2 H₂(g) ⇌ CH₄(g)",
+    reactants: [
+      { species: "solid_carbon", coefficient: 1 },
+      { species: "hydrogen", coefficient: 2 },
+    ],
+    products: [{ species: "methane", coefficient: 1 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.44,
+      halfSaturation: 2.4,
+      contact: "gas",
+      forward: {
+        rateConstant: 0.72,
+        rateOrders: [
+          { species: "solid_carbon", order: 1 },
+          { species: "hydrogen", order: 2 },
+        ],
+        activationTemperature: 32,
+        fullActivationTemperature: 78,
+        deactivationTemperature: 145,
+        inactiveTemperature: 205,
+      },
+      reverse: {
+        rateConstant: 0.28,
+        rateOrders: [{ species: "methane", order: 1 }],
+        activationTemperature: 150,
+        fullActivationTemperature: 205,
+      },
+      catalyst: { species: "surface_nickel", halfSaturation: 0.8 },
+      gasHeatPerExtent: 2.1,
+      roomHeatPerExtent: 0.46,
+    },
+  },
+  methane_steam_reforming: {
+    id: "methane_steam_reforming",
+    code: "CS-6B",
+    kind: "chemical",
+    equation: "CH₄(g) + H₂O(g) ⇌ CO(g) + 3 H₂(g)",
+    reactants: [
+      { species: "methane", coefficient: 1 },
+      { species: "steam", coefficient: 1 },
+    ],
+    products: [
+      { species: "carbon_monoxide", coefficient: 1 },
+      { species: "hydrogen", coefficient: 3 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.48,
+      halfSaturation: 2.4,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "methane", order: 1 },
+          { species: "steam", order: 1 },
+        ],
+        activationTemperature: 125,
+        fullActivationTemperature: 195,
+      },
+      reverse: {
+        rateConstant: 0.35,
+        rateOrders: [
+          { species: "carbon_monoxide", order: 1 },
+          { species: "hydrogen", order: 2 },
+        ],
+        activationTemperature: 35,
+        fullActivationTemperature: 82,
+        deactivationTemperature: 145,
+        inactiveTemperature: 205,
+      },
+      catalyst: { species: "surface_nickel", halfSaturation: 0.8 },
+      gasHeatPerExtent: -3.1,
+      roomHeatPerExtent: -0.7,
+    },
+  },
+} satisfies Partial<Record<ReactionId, ReactionDefinition>>;

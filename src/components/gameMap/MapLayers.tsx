@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useGameStore } from "../../application/store";
 import type { Graphics } from "pixi.js";
 import { type GameState, type RoomId, type SpeciesId, type ConnectionId } from "../../game/types";
@@ -11,6 +11,7 @@ import { gridPathToWorldPath } from "../../game/spatial";
 import { mapViewFor } from "./mapGeometry";
 import { FacilityStructureLayer } from "./ArchitectureLayer";
 import { RoomBoundaryLayer, RoomClosureLayer } from "./RoomSectionLayer";
+import { useGamePresentation } from "../../application/presentationContext";
 
 export { IncidentLayer } from "./IncidentLayer";
 
@@ -199,6 +200,11 @@ export const TransportNetwork = ({
 );
 
 export const ProcessNodes = ({ game }: { game: GameState }) => {
-  const draw = useCallback((graphics: Graphics) => drawProcessNodes(graphics, game), [game]);
+  const { supplies } = useGamePresentation();
+  const supplyCards = useMemo(() => supplies(game), [game, supplies]);
+  const draw = useCallback(
+    (graphics: Graphics) => drawProcessNodes(graphics, game, supplyCards),
+    [game, supplyCards]
+  );
   return <pixiGraphics draw={draw} eventMode="none" />;
 };

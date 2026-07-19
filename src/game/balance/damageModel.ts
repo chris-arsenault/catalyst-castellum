@@ -9,6 +9,12 @@ export const PRIMARY_DAMAGE_FAMILIES = [
   "chlorine_gas",
   "hydrogen_chloride_gas",
   "liquid_corrosion",
+  "carbon_monoxide",
+  "nitrogen_chemistry",
+  "nickel_carbonyl",
+  "hydrogen_fluoride",
+  "fluorine",
+  "uranium_chemistry",
 ] as const;
 export type PrimaryDamageFamily = (typeof PRIMARY_DAMAGE_FAMILIES)[number];
 export const SECONDARY_DAMAGE_FAMILIES = ["asphyxiation", "thermal", "overpressure"] as const;
@@ -20,11 +26,86 @@ const FAMILY_SPECIES: Record<Exclude<DamageFamily, "ox1_flash" | "overpressure">
   chlorine_gas: ["chlorine"],
   hydrogen_chloride_gas: ["hydrogen_chloride"],
   liquid_corrosion: ["sodium_hydroxide", "sodium_hypochlorite", "hydrochloric_acid"],
+  carbon_monoxide: ["carbon_monoxide"],
+  nitrogen_chemistry: ["ammonia", "nitric_oxide", "nitrogen_dioxide", "nitric_acid"],
+  nickel_carbonyl: ["nickel_carbonyl"],
+  hydrogen_fluoride: ["hydrogen_fluoride"],
+  fluorine: ["fluorine"],
+  uranium_chemistry: ["uranium_hexafluoride", "uranyl_fluoride"],
   asphyxiation: ["oxygen", "carbon_dioxide"],
   thermal: ["steam"],
 };
-const REFERENCE_GAS_EXCESS = 0.04;
-const REFERENCE_LIQUID_STRENGTH_EXCESS = 8;
+
+interface FamilyReferenceExposure {
+  gasPartialRatioExcess: number;
+  liquidStrengthExcess: number;
+  stationaryInventoryExcess: number;
+}
+
+/** Physically representative, family-specific chamber samples used by the static solve. */
+export const FAMILY_REFERENCE_EXPOSURES: Record<DamageFamily, FamilyReferenceExposure> = {
+  ox1_flash: { gasPartialRatioExcess: 0, liquidStrengthExcess: 0, stationaryInventoryExcess: 0 },
+  chlorine_gas: {
+    gasPartialRatioExcess: 0.008,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  hydrogen_chloride_gas: {
+    gasPartialRatioExcess: 0.04,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  liquid_corrosion: {
+    gasPartialRatioExcess: 0,
+    liquidStrengthExcess: 2,
+    stationaryInventoryExcess: 0,
+  },
+  carbon_monoxide: {
+    gasPartialRatioExcess: 0.25,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  nitrogen_chemistry: {
+    gasPartialRatioExcess: 0.08,
+    liquidStrengthExcess: 2,
+    stationaryInventoryExcess: 0,
+  },
+  nickel_carbonyl: {
+    gasPartialRatioExcess: 0.006,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  hydrogen_fluoride: {
+    gasPartialRatioExcess: 0.04,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  fluorine: {
+    gasPartialRatioExcess: 0.035,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  uranium_chemistry: {
+    gasPartialRatioExcess: 0.04,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 10,
+  },
+  asphyxiation: {
+    gasPartialRatioExcess: 0.04,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  thermal: {
+    gasPartialRatioExcess: 0.04,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+  overpressure: {
+    gasPartialRatioExcess: 0,
+    liquidStrengthExcess: 0,
+    stationaryInventoryExcess: 0,
+  },
+};
 const REFERENCE_TEMPERATURE_EXCESS = 40;
 const REFERENCE_PRESSURE_RATIO_EXCESS = 0.3;
 
@@ -63,12 +144,14 @@ const familyChannels = (family: DamageFamily, definition: GameDefinition): Hazar
     return channels;
   }
   const speciesIds = family === "overpressure" ? [] : FAMILY_SPECIES[family];
+  const exposure = FAMILY_REFERENCE_EXPOSURES[family];
   for (const speciesId of speciesIds) {
     for (const hazard of definition.species[speciesId].hazards) {
-      const excess =
-        hazard.basis === "gas_partial_ratio"
-          ? REFERENCE_GAS_EXCESS
-          : REFERENCE_LIQUID_STRENGTH_EXCESS;
+      const excess = {
+        gas_partial_ratio: exposure.gasPartialRatioExcess,
+        liquid_strength: exposure.liquidStrengthExcess,
+        stationary_inventory: exposure.stationaryInventoryExcess,
+      }[hazard.basis];
       channels[hazard.channel] += hazard.rate * excess;
     }
   }
@@ -113,7 +196,7 @@ export const referenceDamageProfiles = (definition: GameDefinition): ReferenceDa
   const routes = Object.fromEntries(
     ENEMY_TYPES.map((enemyType) => [
       enemyType,
-      routeProfile("commissioning_exam", enemyType, definition),
+      routeProfile("morrow_pocket", enemyType, definition),
     ])
   ) as Record<EnemyType, EnemyRouteProfile>;
   return DAMAGE_FAMILIES.flatMap((family) =>
@@ -137,12 +220,18 @@ export const referenceDamageProfiles = (definition: GameDefinition): ReferenceDa
 };
 
 const FIRST_ORDER_DECKMOUTH_TARGETS: Record<PrimaryDamageFamily, number> = {
-  ox1_flash: 1.15,
-  chlorine_gas: 1.25,
-  hydrogen_chloride_gas: 1.1,
-  liquid_corrosion: 1.2,
+  ox1_flash: 1.4,
+  chlorine_gas: 1.18,
+  hydrogen_chloride_gas: 1.04,
+  liquid_corrosion: 1.4,
+  carbon_monoxide: 1.3,
+  nitrogen_chemistry: 3.15,
+  nickel_carbonyl: 1.3,
+  hydrogen_fluoride: 1.25,
+  fluorine: 1.4,
+  uranium_chemistry: 1.4,
 };
-const REFERENCE_DECKMOUTH_HEALTH = 80;
+const REFERENCE_DECKMOUTH_HEALTH = 85;
 
 export interface FirstOrderDamageSolve {
   families: PrimaryDamageFamily[];
@@ -170,8 +259,8 @@ export const solveFirstOrderDamage = (definition: GameDefinition): FirstOrderDam
   const result = solveLeastSquares(coefficients, targets, {
     ridge: 0.02,
     prior: PRIMARY_DAMAGE_FAMILIES.map(() => 1),
-    minimum: 0.2,
-    maximum: 5,
+    minimum: 0.05,
+    maximum: 20,
   });
   return {
     families: [...PRIMARY_DAMAGE_FAMILIES],
@@ -186,54 +275,54 @@ export const solveFirstOrderDamage = (definition: GameDefinition): FirstOrderDam
 
 const ENCOUNTERS_TO_NEUTRALIZE: Record<EnemyType, Partial<Record<PrimaryDamageFamily, number>>> = {
   deckmouth: {
-    ox1_flash: 0.95,
-    chlorine_gas: 1,
-    hydrogen_chloride_gas: 1.05,
-    liquid_corrosion: 1.05,
+    ox1_flash: 0.75,
+    chlorine_gas: 0.8,
+    hydrogen_chloride_gas: 0.83,
+    liquid_corrosion: 0.83,
   },
   flintjack: {
-    ox1_flash: 0.8,
-    chlorine_gas: 0.9,
-    hydrogen_chloride_gas: 0.9,
-    liquid_corrosion: 0.9,
+    ox1_flash: 0.75,
+    chlorine_gas: 0.84,
+    hydrogen_chloride_gas: 0.84,
+    liquid_corrosion: 0.84,
   },
-  shear_jelly: { ox1_flash: 1, chlorine_gas: 1.1, hydrogen_chloride_gas: 1.1 },
+  shear_jelly: { ox1_flash: 0.79, chlorine_gas: 0.87, hydrogen_chloride_gas: 0.87 },
   splitback: {
-    ox1_flash: 1.7,
-    chlorine_gas: 1.6,
-    hydrogen_chloride_gas: 1.8,
-    liquid_corrosion: 1.15,
+    ox1_flash: 1.29,
+    chlorine_gas: 1.21,
+    hydrogen_chloride_gas: 1.36,
+    liquid_corrosion: 0.87,
   },
   redlung: {
-    ox1_flash: 1.4,
-    chlorine_gas: 1.35,
-    hydrogen_chloride_gas: 1.5,
-    liquid_corrosion: 1.25,
+    ox1_flash: 1.09,
+    chlorine_gas: 1.05,
+    hydrogen_chloride_gas: 1.16,
+    liquid_corrosion: 0.97,
   },
   clatter: {
-    ox1_flash: 0.9,
-    chlorine_gas: 0.95,
-    hydrogen_chloride_gas: 1,
-    liquid_corrosion: 1,
+    ox1_flash: 0.71,
+    chlorine_gas: 0.75,
+    hydrogen_chloride_gas: 0.79,
+    liquid_corrosion: 0.79,
   },
   anchor: {
-    ox1_flash: 0.85,
-    chlorine_gas: 0.9,
-    hydrogen_chloride_gas: 0.9,
-    liquid_corrosion: 0.85,
+    ox1_flash: 0.64,
+    chlorine_gas: 0.68,
+    hydrogen_chloride_gas: 0.68,
+    liquid_corrosion: 0.64,
   },
-  glowbag: { ox1_flash: 0.95, chlorine_gas: 1, hydrogen_chloride_gas: 1 },
+  glowbag: { ox1_flash: 0.76, chlorine_gas: 0.8, hydrogen_chloride_gas: 0.8 },
 };
 
 /** Absolute identity anchors remove scale drift when the workbook is rerun after applying a solve. */
 const ENEMY_HEALTH_PRIOR: Record<EnemyType, number> = {
-  deckmouth: 80,
+  deckmouth: 85,
   flintjack: 55,
-  shear_jelly: 80,
-  splitback: 155,
-  redlung: 120,
-  clatter: 70,
-  anchor: 65,
+  shear_jelly: 85,
+  splitback: 175,
+  redlung: 130,
+  clatter: 75,
+  anchor: 75,
   glowbag: 75,
 };
 
@@ -304,7 +393,7 @@ export interface EnemySpeedSolve {
 
 export const solveEnemySpeeds = (definition: GameDefinition): EnemySpeedSolve[] =>
   ENEMY_TYPES.map((enemyType) => {
-    const route = routeProfile("commissioning_exam", enemyType, definition);
+    const route = routeProfile("morrow_pocket", enemyType, definition);
     const currentSpeed = definition.enemies[enemyType].speed;
     const targetRouteSeconds = TARGET_ROUTE_SECONDS[enemyType];
     const exact = (currentSpeed * route.drySeconds) / targetRouteSeconds;

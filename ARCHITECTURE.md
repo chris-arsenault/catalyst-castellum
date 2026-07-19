@@ -93,21 +93,19 @@ reproduce affordability, placement, phase, refund, or rejection prose.
 ### Events and persisted copy
 
 Current events use stable codes and structured parameters. Presentation derives current copy; copy
-changes cannot affect deduplication or simulation identity. Historic prose events migrate to the
-`legacy_message` code and retain their old text as compatibility parameters.
+changes cannot affect deduplication or simulation identity.
 
-Reaction/process limiting factors likewise use structured species or condition identities.
-Historic labels are retained only in the explicit `legacy` compatibility variant.
+Reaction and equipment-operation limiting factors likewise use structured species or condition
+identities.
 
 ### Persistence and invalid saves
 
-Save V12 is current. Every state carries `{ pack.id, pack.contentVersion }`; a runtime rejects state
-owned by another pack. V7–V11 remain readable through frozen compatibility schemas and migrations;
-the conserving compatibility transforms are isolated in `persistence/legacySaveMigrations.ts`.
-The pipeline is:
+Save V17 is current. Every state carries `{ pack.id, pack.contentVersion }`; a runtime rejects state
+owned by another pack. Pre-release saves use an exact current-version schema with no compatibility
+decoder or migration path. The pipeline is:
 
 ```text
-untrusted JSON -> structural decode -> version migration -> semantic validation -> GameState
+untrusted JSON -> current-version structural decode -> semantic validation -> GameState
 ```
 
 Semantic validation covers topology/endpoints, identity records, campaign/availability agreement,
@@ -115,9 +113,9 @@ phase invariants, portals, navigation identities, and monotonic event/enemy/inci
 local saves are rejected. Application initialization only enumerates three named slots; it never
 automatically activates a simulation. Each slot envelope owns one validated `GameState`, its
 tutorial-dismissal record, and save metadata. Refresh therefore returns to slot selection, while an
-explicit load restores both game and tutorial state. Legacy unslotted saves migrate once into slot
-one. Browser storage and slot-aware debounced/flushable scheduling are application concerns,
-separate from the pure codec; reset cancels stale pending writes before replacing the active slot.
+explicit load restores both game and tutorial state. Browser storage and slot-aware
+debounced/flushable scheduling are application concerns, separate from the pure codec; reset
+cancels stale pending writes before replacing the active slot.
 
 ### Campaign health
 
@@ -128,7 +126,7 @@ All five current levels satisfy that contract.
 ## Performance contract
 
 The repeatable baseline is `pnpm performance:baseline`; CI runs the deliberately generous
-regression budget with `pnpm performance:check`. The representative state is the Commissioning Exam
+regression budget with `pnpm performance:check`. The representative state is the Morrow Pocket
 after prime plus eight simulated seconds.
 
 Baseline measured on the repository development container on 2026-07-13:
@@ -155,7 +153,7 @@ decisions are cached per immutable snapshot/reference.
 1. Add one rules module under `src/game/content/levels/`.
 2. Add it to the explicit ordered registry in `content/campaign.ts`.
 3. Add its English level/round keys under `src/localization/locales/en/levels.ts`.
-4. Add its reference health plan to `content/playtestPlans.ts`.
+4. Add its round-aware reference builds and diversity target to `content/playtestPortfolios.ts`.
 5. Let pack compilation validate every enemy, route, loadout, availability, and reaction reference.
 
 ### Ordinary reaction
@@ -213,7 +211,7 @@ decisions are cached per immutable snapshot/reference.
 
 1. Define construction/default semantics.
 2. Update the explicit clone and prove deep independence.
-3. Update the current save schema and version/migration policy.
+3. Update the current save schema and increment the exact accepted version.
 4. Add semantic invariants where cross-field validity exists.
 
 ## Verification contract

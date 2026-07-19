@@ -12,8 +12,20 @@ export const ALL_AVAILABILITY = availability({
   equipment: [...EQUIPMENT_IDS],
   gasLines: ALL_GAS_RUNS,
   liquidLines: ALL_LIQUID_RUNS,
-  gasSources: ["starter_gas_header"],
-  liquidSources: ["water_tank", "sodium_chloride_tank"],
+});
+
+/** Every mechanism established by the end of Act I; later specialist cells stay campaign-gated. */
+export const ACT_I_AVAILABILITY = availability({
+  equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell"],
+  gasLines: ALL_GAS_RUNS,
+  liquidLines: ALL_LIQUID_RUNS,
+});
+
+/** Pell Cut adds the specialist fluorine cell after every ordinary process control is established. */
+export const ACT_II_AVAILABILITY = availability({
+  equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell", "fluorine_cell"],
+  gasLines: ALL_GAS_RUNS,
+  liquidLines: ALL_LIQUID_RUNS,
 });
 
 export const FULL_GAS_LOADOUT = Object.fromEntries(

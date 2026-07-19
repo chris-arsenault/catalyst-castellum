@@ -207,32 +207,32 @@ export const enemySequence = (
     levelOffset,
   }));
 
-export const COMMISSIONING_WAVES: WaveEntry[][] = [
-  enemySequence(5, "deckmouth", 0.5, 2.6),
+export const MORROW_POCKET_WAVES: WaveEntry[][] = [
+  enemySequence(7, "deckmouth", 0.5, 2.35),
   [
-    ...enemySequence(3, "flintjack", 0.5, 2),
+    ...enemySequence(4, "flintjack", 0.5, 1.8),
     ...enemySequence(2, "shear_jelly", 3, 3),
-    ...enemySequence(2, "clatter", 2, 2.8),
+    ...enemySequence(3, "clatter", 2, 2.45, 1),
   ].sort((left, right) => left.at - right.at),
   [
-    ...enemySequence(1, "redlung", 0.5, 4),
-    ...enemySequence(3, "splitback", 2, 3.2),
+    ...enemySequence(2, "redlung", 0.5, 3.6),
+    ...enemySequence(4, "splitback", 2, 2.9, 1),
     ...enemySequence(1, "anchor", 3.5, 1),
   ].sort((left, right) => left.at - right.at),
   [
-    ...enemySequence(5, "flintjack", 0.5, 1.8),
-    ...enemySequence(3, "splitback", 2, 3),
-    ...enemySequence(1, "shear_jelly", 4, 3.4),
-    ...enemySequence(2, "glowbag", 3, 4),
+    ...enemySequence(6, "flintjack", 0.5, 1.55),
+    ...enemySequence(4, "splitback", 2, 2.7),
+    ...enemySequence(2, "shear_jelly", 4, 3.1),
+    ...enemySequence(2, "glowbag", 3, 3.6, 1),
     ...enemySequence(1, "anchor", 4.5, 1),
   ].sort((left, right) => left.at - right.at),
   [
-    ...enemySequence(3, "deckmouth", 0.5, 2),
-    ...enemySequence(3, "splitback", 1.5, 2.8),
-    ...enemySequence(2, "redlung", 3, 3.2),
-    ...enemySequence(2, "shear_jelly", 4.5, 3),
-    ...enemySequence(2, "clatter", 2.5, 2.6),
-    ...enemySequence(2, "glowbag", 4, 4),
+    ...enemySequence(4, "deckmouth", 0.5, 1.8),
+    ...enemySequence(4, "splitback", 1.5, 2.45, 1),
+    ...enemySequence(3, "redlung", 3, 2.8, 1),
+    ...enemySequence(3, "shear_jelly", 4.5, 2.7),
+    ...enemySequence(3, "clatter", 2.5, 2.25),
+    ...enemySequence(2, "glowbag", 4, 3.6),
     ...enemySequence(1, "anchor", 5, 1),
   ].sort((left, right) => left.at - right.at),
 ];

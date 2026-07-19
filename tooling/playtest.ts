@@ -5,11 +5,7 @@ import { LEVEL_IDS, type LevelId } from "../src/game/types";
 import type { LevelEvaluation, PlaytestResult } from "../src/game/playtest/types";
 import { levelCopy } from "../src/presentation/levelCopy";
 
-/**
- * Stage 1 (Flash Point) is the tuned tutorial and must play perfectly. The remaining
- * levels are placeholders awaiting the stage 2-N map redesign, so their intended plans
- * only need to finish the level without the core reaching a dangerous state.
- */
+/** Stage 1 is the tuned tutorial and must play perfectly. */
 const STRICT_HEALTH_LEVELS: LevelId[] = ["flash_point"];
 
 interface CliOptions {
@@ -17,7 +13,7 @@ interface CliOptions {
   runs: number;
   seed: number;
   json: boolean;
-  assertIntended: boolean;
+  assertPortfolio: boolean;
 }
 
 const valueAfter = (args: string[], flag: string): string | null => {
@@ -41,26 +37,58 @@ const parseOptions = (args: string[]): CliOptions => {
     runs: parsePositiveInteger(valueAfter(args, "--runs"), 200),
     seed: parsePositiveInteger(valueAfter(args, "--seed"), 13_371),
     json: args.includes("--json"),
-    assertIntended: args.includes("--assert-intended"),
+    assertPortfolio: args.includes("--assert-portfolio"),
   };
 };
 
 const resultLine = (label: string, result: PlaytestResult): string =>
-  `${label.padEnd(12)} ${result.success ? "PASS" : "FAIL"} · core ${result.coreIntegrity.toFixed(0).padStart(3)}% · ${result.plannedActions} planned / ${result.acceptedActions} accepted · ${result.roundsCleared} rounds · OX-1 ${result.killsBySource.hydrogen_oxygen_combustion} kills / ${result.damageBySource.hydrogen_oxygen_combustion.toFixed(0)} damage`;
+  `${label.padEnd(24)} ${result.success ? "PASS" : "FAIL"} · core ${result.coreIntegrity.toFixed(0).padStart(3)}% · Matter ${result.matterSpent.toFixed(0).padStart(3)} · ${result.buildProfile.equipment.length} machines / ${result.buildProfile.enabledGasLines.length + result.buildProfile.enabledLiquidLines.length} lines · pulse ${result.pulseDamage.toFixed(0)} / continuous ${result.continuousDamage.toFixed(0)} · ${result.roundsCleared} rounds`;
 
 const printEvaluation = (evaluation: LevelEvaluation): void => {
   const level = LEVEL_DEFINITIONS[evaluation.levelId];
   console.log(`\nL${level.number} ${levelCopy(level).name}`);
   console.log(resultLine("do nothing", evaluation.doNothing));
-  console.log(resultLine("intended", evaluation.intended));
+  for (const reference of evaluation.references) {
+    console.log(
+      resultLine(`${reference.archetype ?? "untyped"}: ${reference.planName}`, reference)
+    );
+  }
+  const diversity = evaluation.diversity;
+  console.log(
+    `diversity                ${diversity.satisfied ? "PASS" : "FAIL"} · ${diversity.passingBuilds}/${diversity.minimumPassingBuilds} builds · ${diversity.passingArchetypes.length}/${diversity.minimumPassingArchetypes} archetypes · ${diversity.distinctPassingSignatures}/${diversity.minimumDistinctSignatures} signatures`
+  );
+  for (const issue of diversity.issues) console.log(`  ${issue}`);
   console.log("actions       trials   pass rate   avg core");
   for (const band of evaluation.actionBands) {
     console.log(
       `${String(band.actions).padStart(7)} ${String(band.trials).padStart(12)} ${(band.passRate * 100).toFixed(1).padStart(10)}% ${band.averageCore.toFixed(1).padStart(10)}%`
     );
   }
-  const unstable = evaluation.randomTrials.filter((trial) => !trial.stable).length;
+  const unstable = evaluation.mutationTrials.filter((trial) => !trial.stable).length;
   if (unstable > 0) console.log(`UNSTABLE TERMINATIONS: ${unstable}`);
+};
+
+const referenceFailureReasons = (levelId: LevelId, reference: PlaytestResult): string[] => {
+  const reasons: string[] = [];
+  if (!reference.success) reasons.push(`${reference.planName} failed`);
+  if (!reference.stable) reasons.push(`${reference.planName} was unstable`);
+  if (STRICT_HEALTH_LEVELS.includes(levelId)) {
+    if (reference.breached > 0) reasons.push(`${reference.planName} allowed a breach`);
+    if (reference.coreIntegrity < 100)
+      reasons.push(`${reference.planName} finished below full Core integrity`);
+  } else if (reference.coreIntegrity < 40) {
+    reasons.push(`${reference.planName} finished dangerously low on Core integrity`);
+  }
+  return reasons;
+};
+
+const evaluationFailure = (evaluation: LevelEvaluation): string | null => {
+  const reasons = evaluation.references.flatMap((reference) =>
+    referenceFailureReasons(evaluation.levelId, reference)
+  );
+  if (!evaluation.diversity.satisfied) reasons.push(...evaluation.diversity.issues);
+  if (evaluation.doNothing.success) reasons.push("do-nothing policy unexpectedly passed");
+  return reasons.length > 0 ? `${evaluation.levelId}: ${reasons.join(", ")}` : null;
 };
 
 const main = (): void => {
@@ -70,24 +98,15 @@ const main = (): void => {
   );
   if (options.json) console.log(JSON.stringify(evaluations, null, 2));
   else {
-    console.log(`Catalyst Castellum headless playtest · ${options.runs} random policies per level`);
+    console.log(
+      `Catalyst Castellum headless playtest · reference portfolios + ${options.runs} mutations per level`
+    );
     for (const evaluation of evaluations) printEvaluation(evaluation);
   }
-  if (options.assertIntended) {
-    const failures = evaluations.flatMap((evaluation) => {
-      const reasons: string[] = [];
-      if (!evaluation.intended.success) reasons.push("intended policy failed");
-      if (!evaluation.intended.stable) reasons.push("intended policy was unstable");
-      if (STRICT_HEALTH_LEVELS.includes(evaluation.levelId)) {
-        if (evaluation.intended.breached > 0) reasons.push("intended policy allowed a breach");
-        if (evaluation.intended.coreIntegrity < 100)
-          reasons.push("intended policy finished below full core integrity");
-      } else if (evaluation.intended.coreIntegrity < 40) {
-        reasons.push("intended policy finished dangerously low on core integrity");
-      }
-      if (evaluation.doNothing.success) reasons.push("do-nothing policy unexpectedly passed");
-      return reasons.length > 0 ? [`${evaluation.levelId}: ${reasons.join(", ")}`] : [];
-    });
+  if (options.assertPortfolio) {
+    const failures = evaluations
+      .map(evaluationFailure)
+      .filter((failure): failure is string => failure !== null);
     if (failures.length > 0) throw new Error(`Campaign health failed: ${failures.join("; ")}`);
   }
 };

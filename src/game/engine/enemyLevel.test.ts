@@ -55,6 +55,6 @@ describe("enemy level curve", () => {
       (levelId) => DEFAULT_GAME_DEFINITION.levels[levelId].enemyLevel
     );
 
-    expect(levels).toEqual([20, 21, 22, 23]);
+    expect(levels).toEqual([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31]);
   });
 });

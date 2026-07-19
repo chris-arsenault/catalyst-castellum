@@ -39,8 +39,8 @@ const assertRoomMaterialsAreDistinct = (designs: Record<string, SpriteSheetDesig
 };
 
 describe("machine and architecture sprite generation", () => {
-  it("authors four softly animated room-scale machines", async () => {
-    expect(Object.keys(MACHINE_SPRITE_DESIGNS)).toHaveLength(4);
+  it("authors five softly animated room-scale machines", async () => {
+    expect(Object.keys(MACHINE_SPRITE_DESIGNS)).toHaveLength(5);
     await assertSynchronized(
       join(process.cwd(), "public", "sprites", "machines"),
       MACHINE_SPRITE_DESIGNS

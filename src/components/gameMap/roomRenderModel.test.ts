@@ -4,6 +4,7 @@ import { createScenarioGame } from "../../game/simulation";
 import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
 import { gasConduitState, roomState } from "../../game/world/instances";
+import { DEFAULT_GAME_PRESENTATION } from "../../presentation/services";
 
 describe("canonical room rendering projection", () => {
   it("projects the same owned cells used by room physics, including portal connectors", () => {
@@ -73,9 +74,9 @@ describe("canonical room rendering projection", () => {
   });
 
   it("projects the Core's authored supply reservoirs into its cutaway", () => {
-    const game = createScenarioGame("commissioning_exam");
-    game.liquidSources.water_tank.liquid.water = 90;
-    const model = roomRenderModel(game, "core", false, 0);
+    const game = createScenarioGame("morrow_pocket");
+    game.liquidSources.liquid_reservoir_a!.liquid.water = 90;
+    const model = roomRenderModel(game, "core", false, 0, DEFAULT_GAME_PRESENTATION.supplies(game));
 
     expect(model.coreReservoirs.map(({ id }) => id)).toEqual(["gas_header", "water", "brine"]);
     expect(model.coreReservoirs.find(({ id }) => id === "water")?.fill).toBeCloseTo(0.5);

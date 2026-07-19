@@ -106,6 +106,22 @@ export const requestedDamageForPackets = (
     0
   );
 
+export const requestedDamageBySourceForPackets = (
+  enemy: EnemyState,
+  packets: DamagePacket[],
+  definition: GameDefinition
+): Record<DamageSourceId, number> =>
+  Object.fromEntries(
+    DAMAGE_SOURCE_IDS.map((sourceId) => [
+      sourceId,
+      requestedDamageForPackets(
+        enemy,
+        packets.filter((packet) => packet.sourceId === sourceId),
+        definition
+      ),
+    ])
+  ) as Record<DamageSourceId, number>;
+
 export const dominantAppliedDamagePacket = (
   packets: AppliedDamagePacket[]
 ): AppliedDamagePacket | null =>

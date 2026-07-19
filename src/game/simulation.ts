@@ -95,8 +95,7 @@ export const gridRouteLength = networkGeometry.gridRouteLength;
 export const transportPhaseEnabled = routing.transportPhaseEnabled;
 export const transportPhaseExists = routing.transportPhaseExists;
 export const equipmentAvailable = campaign.equipmentAvailable;
-export const gasSourceAvailable = campaign.gasSourceAvailable;
-export const liquidSourceAvailable = campaign.liquidSourceAvailable;
+export const supplyAvailable = bindDefinition(campaign.supplyAvailable);
 export const transportPhaseAvailable = campaign.transportPhaseAvailable;
 
 export {

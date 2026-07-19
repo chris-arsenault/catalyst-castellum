@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_LINE_BLUEPRINTS } from "./config";
+import { DEFAULT_GAME_DEFINITION } from "./definition";
+import { createEquipmentInstance } from "./engine/equipment";
 import {
   conduitCapacity,
   conduitCrestElevation,
@@ -21,6 +23,12 @@ import {
 
 const PACK_LINES = Object.values(WORLD_LINE_BLUEPRINTS);
 
+const lineBlueprint = (id: string): (typeof PACK_LINES)[number] => {
+  const blueprint = WORLD_LINE_BLUEPRINTS[id];
+  if (!blueprint) throw new Error(`Unknown process-line blueprint: ${id}`);
+  return blueprint;
+};
+
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
   expect(result.accepted, result.code ?? undefined).toBe(true);
@@ -29,6 +37,20 @@ const command = (source: GameState, value: GameCommand): GameState => {
 
 const enter = (level: "flash_point" | "make_the_reagent") =>
   command(createScenarioGame(level), { type: "begin_level" });
+
+const enterOpenPlant = (): GameState => {
+  const state = command(createScenarioGame("morrow_pocket"), { type: "begin_level" });
+  state.matter = 10_000;
+  return state;
+};
+
+const buildLine = (source: GameState, line: (typeof PACK_LINES)[number]): GameState =>
+  command(source, {
+    type: "build_connection",
+    kind: line.kind,
+    fromRoomId: line.direction[0],
+    toRoomId: line.direction[1],
+  });
 
 const advance = (source: GameState, seconds: number): GameState => {
   let state = source;
@@ -47,7 +69,8 @@ describe("one physical conduit per room pair and phase", () => {
   });
 
   it("exposes exactly one telemetry channel for each authored phase", () => {
-    const state = createScenarioGame("commissioning_exam");
+    let state = enterOpenPlant();
+    for (const line of PACK_LINES) state = buildLine(state, line);
     for (const line of PACK_LINES) {
       const channels = transportRunChannels(state, line.id);
       expect(channels.filter((channel) => channel.phase === "gas")).toHaveLength(
@@ -63,7 +86,6 @@ describe("one physical conduit per room pair and phase", () => {
 describe("shared conserved mixture transport", () => {
   it("moves H2 and O2 through one actuator and one retained inventory", () => {
     let state = enter("flash_point");
-    expect(state.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
     expect(gasJunctionState(state, "lower_intake").gas.hydrogen).toBe(0);
     state = command(state, {
       type: "set_conduit",
@@ -121,24 +143,23 @@ describe("shared conserved mixture transport", () => {
   });
 });
 
-describe("equipment-owned process buffers", () => {
-  it("connects membrane-cell buffers to the installed room junction", () => {
-    const state = command(createScenarioGame("commissioning_exam"), { type: "begin_level" });
-    for (const room of Object.values(state.rooms)) {
-      room.equipment.socket_a = null;
-      room.equipment.socket_b = null;
-    }
-    roomState(state, "furnace").equipment.socket_a = {
-      equipmentId: "membrane_cell",
-      level: 1,
-      enabled: true,
-    };
-    state.gasBuffers.anode_header.gas.chlorine = 8;
+describe("equipment-owned outputs", () => {
+  it("connects membrane-cell gas outputs to the installed room junction", () => {
+    let state = enterOpenPlant();
+    state = buildLine(state, lineBlueprint("gas:furnace__gallery"));
+    const cell = createEquipmentInstance(
+      { equipmentId: "membrane_cell", level: 1, enabled: true },
+      DEFAULT_GAME_DEFINITION
+    );
+    const anode = cell.operation?.outputs.anode_header;
+    if (!anode || anode.phase !== "gas") throw new Error("Membrane cell anode is missing.");
+    roomState(state, "furnace").equipment.socket_a = cell;
+    anode.gas.chlorine = 8;
     gasConduitState(state, "gas:furnace__gallery").enabled = true;
 
     simulateNetworks(state, 0.5);
 
-    expect(state.gasBuffers.anode_header.gas.chlorine).toBeLessThan(8);
+    expect(anode.gas.chlorine).toBeLessThan(8);
     expect(
       gasJunctionState(state, "furnace").gas.chlorine +
         gasConduitState(state, "gas:furnace__gallery").gas.chlorine
@@ -146,23 +167,23 @@ describe("equipment-owned process buffers", () => {
     expect(gasJunctionState(state, "lower_intake").gas.chlorine).toBe(0);
   });
 
-  it("connects the cell-liquor buffer to the installed room liquid junction", () => {
-    const state = command(createScenarioGame("commissioning_exam"), { type: "begin_level" });
-    for (const room of Object.values(state.rooms)) {
-      room.equipment.socket_a = null;
-      room.equipment.socket_b = null;
-    }
-    roomState(state, "reservoir").equipment.socket_a = {
-      equipmentId: "membrane_cell",
-      level: 1,
-      enabled: true,
-    };
-    state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide = 8;
+  it("connects the cell-liquor output to the installed room liquid junction", () => {
+    let state = enterOpenPlant();
+    state = buildLine(state, lineBlueprint("liquid:reservoir__washlock"));
+    const cell = createEquipmentInstance(
+      { equipmentId: "membrane_cell", level: 1, enabled: true },
+      DEFAULT_GAME_DEFINITION
+    );
+    const liquor = cell.operation?.outputs.cell_liquor;
+    if (!liquor || liquor.phase !== "liquid")
+      throw new Error("Membrane cell liquor outlet is missing.");
+    roomState(state, "reservoir").equipment.socket_a = cell;
+    liquor.liquid.sodium_hydroxide = 8;
     liquidConduitState(state, "liquid:reservoir__washlock").enabled = true;
 
     simulateNetworks(state, 0.5);
 
-    expect(state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide).toBeLessThan(8);
+    expect(liquor.liquid.sodium_hydroxide).toBeLessThan(8);
     expect(
       liquidJunctionState(state, "reservoir").liquid.sodium_hydroxide +
         liquidConduitState(state, "liquid:reservoir__washlock").liquid.sodium_hydroxide
@@ -223,7 +244,7 @@ describe("liquid lift and physical route geometry", () => {
   });
 
   it("derives capacity from each live serializable route", () => {
-    const state = createScenarioGame("commissioning_exam");
+    const state = buildLine(enterOpenPlant(), lineBlueprint("gas:core__furnace"));
     const original = conduitCapacity(state, "gas:core__furnace", "gas");
     gasConduitState(state, "gas:core__furnace").route = gasConduitState(
       state,

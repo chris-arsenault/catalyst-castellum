@@ -2,7 +2,7 @@ import type { GameDefinition } from "../definitionTypes";
 import type {
   CommandDecision,
   CommandResult,
-  EquipmentInstance,
+  EquipmentLoadout,
   GameCommand,
   GameState,
   GasSourceId,
@@ -10,7 +10,7 @@ import type {
 } from "../types";
 import { addEvent, makeStats } from "./events";
 import { dismantleModuleCommand, graftModuleCommand } from "./graftCommands";
-import { roundDefinitionFor } from "./campaign";
+import { roundDefinitionFor, supplyDefinitionFor } from "./campaign";
 import { cloneGame } from "./roomState";
 import { beginAssault } from "./phases";
 import { evaluateCommand } from "./commandPolicy";
@@ -31,6 +31,7 @@ import {
 } from "./transportCommands";
 import { roomState } from "../world/instances";
 import { definitionForMap } from "../world/activeDefinition";
+import { createEquipmentInstance } from "./equipment";
 import {
   configureHullPortalCommand,
   connectHullRoomsCommand,
@@ -64,12 +65,20 @@ const startAssault = (source: GameState): CommandResult => {
 const installEquipment = (
   source: GameState,
   command: GameCommand & { type: "install_equipment" },
-  decision: CommandDecision
+  decision: CommandDecision,
+  definition: GameDefinition
 ): CommandResult => {
-  const instance: EquipmentInstance = { equipmentId: command.equipmentId, level: 1, enabled: true };
+  const loadout: EquipmentLoadout = {
+    equipmentId: command.equipmentId,
+    level: 1,
+    enabled: true,
+  };
   const state = cloneGame(source);
   state.matter -= decision.cost;
-  roomState(state, command.roomId).equipment[command.socketId] = instance;
+  roomState(state, command.roomId).equipment[command.socketId] = createEquipmentInstance(
+    loadout,
+    definitionForMap(definition, state.map)
+  );
   addEvent(
     state,
     "info",
@@ -118,7 +127,8 @@ const dismantleEquipment = (
   decision: CommandDecision
 ): CommandResult => {
   const state = cloneGame(source);
-  roomState(state, command.roomId).equipment[command.socketId] = null;
+  const room = roomState(state, command.roomId);
+  room.equipment[command.socketId] = null;
   state.matter += decision.refund;
   return acceptCommand(state);
 };
@@ -129,17 +139,20 @@ const gasCharge = (
   decision: CommandDecision,
   gameDefinition: GameDefinition
 ): CommandResult => {
-  const definition = gameDefinition.gasSources[sourceId];
-  const ratedAmount = Object.values(definition.chargeGas).reduce(
+  const definition = supplyDefinitionFor(source, sourceId, gameDefinition);
+  if (definition?.phase !== "gas" || definition.replenishment.kind !== "matter")
+    throw new Error(`Gas supply ${sourceId} has no Matter replenishment.`);
+  const ratedAmount = Object.values(definition.replenishment.contents).reduce(
     (total, amount) => total + (amount ?? 0),
     0
   );
   const state = cloneGame(source);
+  const target = state.gasSources[sourceId];
+  if (!target) throw new Error(`Gas supply ${sourceId} has no state.`);
   state.matter -= decision.cost;
-  for (const [species, rated] of Object.entries(definition.chargeGas)) {
-    state.gasSources[sourceId].gas[
-      species as keyof (typeof state.gasSources)[typeof sourceId]["gas"]
-    ] += (rated ?? 0) * (decision.amount / ratedAmount);
+  for (const [species, rated] of Object.entries(definition.replenishment.contents)) {
+    target.gas[species as keyof typeof target.gas] +=
+      (rated ?? 0) * (decision.amount / ratedAmount);
   }
   addEvent(state, "info", "gas_source_charged", {
     sourceId,
@@ -155,10 +168,21 @@ const liquidCharge = (
   decision: CommandDecision,
   gameDefinition: GameDefinition
 ): CommandResult => {
-  const definition = gameDefinition.liquidSources[sourceId];
+  const definition = supplyDefinitionFor(source, sourceId, gameDefinition);
+  if (definition?.phase !== "liquid" || definition.replenishment.kind !== "matter")
+    throw new Error(`Liquid supply ${sourceId} has no Matter replenishment.`);
+  const ratedAmount = Object.values(definition.replenishment.contents).reduce(
+    (total, amount) => total + (amount ?? 0),
+    0
+  );
   const state = cloneGame(source);
+  const target = state.liquidSources[sourceId];
+  if (!target) throw new Error(`Liquid supply ${sourceId} has no state.`);
   state.matter -= decision.cost;
-  state.liquidSources[sourceId].liquid[definition.substance] += decision.amount;
+  for (const [species, rated] of Object.entries(definition.replenishment.contents)) {
+    target.liquid[species as keyof typeof target.liquid] +=
+      (rated ?? 0) * (decision.amount / ratedAmount);
+  }
   addEvent(state, "info", "liquid_source_charged", {
     sourceId,
     cost: decision.cost,
@@ -204,7 +228,7 @@ export const executeCommand = (
     case "set_conduit":
       return setConduitCommand(source, command);
     case "install_equipment":
-      return installEquipment(source, command, decision);
+      return installEquipment(source, command, decision, commandDefinition);
     case "toggle_equipment":
       return toggleEquipment(source, command);
     case "upgrade_equipment":

@@ -34,7 +34,7 @@ export interface MapSceneProps {
   camera: CameraTransform;
   game: GameState;
   hoveredRunId: ConnectionId | null;
-  onHoverCellOutlet: (bufferId: CellOutletId | null) => void;
+  onHoverCellOutlet: (outputId: CellOutletId | null) => void;
   onHoverEquipment: (equipment: EquipmentHover | null) => void;
   onHoverEnemy: (enemyId: number | null) => void;
   onHoverRoom: (roomId: RoomId | null) => void;

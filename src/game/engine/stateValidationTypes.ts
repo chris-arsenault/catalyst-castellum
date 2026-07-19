@@ -6,10 +6,12 @@ export type StateValidationCode =
   | "enemy_navigation_invalid"
   | "enemy_level_invalid"
   | "enemy_behavior_invalid"
+  | "equipment_state_invalid"
   | "identity_mismatch"
   | "identifier_sequence_invalid"
   | "phase_invariant_invalid"
-  | "portal_identity_mismatch";
+  | "portal_identity_mismatch"
+  | "supply_state_invalid";
 
 export interface StateValidationIssue {
   code: StateValidationCode;

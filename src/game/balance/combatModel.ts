@@ -1,4 +1,5 @@
 export * from "./damageModel";
+export * from "./balancedDefinition";
 export * from "./routeModel";
 export * from "./throughputModel";
 export * from "./transientModel";

@@ -136,7 +136,7 @@ const MapTooltips = ({
       <EnemyTooltip game={game} enemyId={hoveredEnemyId} />
       <CellOutletTooltip
         game={game}
-        bufferId={hoveredEnemyId === null ? hoveredCellOutletId : null}
+        outputId={hoveredEnemyId === null ? hoveredCellOutletId : null}
       />
       <EquipmentTooltip
         game={game}

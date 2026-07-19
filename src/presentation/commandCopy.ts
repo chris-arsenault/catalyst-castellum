@@ -12,6 +12,7 @@ const REJECTION_KEYS: Record<CommandRejectionCode, LocaleKey> = {
   not_installed: "commands.rejection.not_installed",
   occupied_socket: "commands.rejection.occupied_socket",
   placement: "commands.rejection.placement",
+  retained_inventory: "commands.rejection.retained_inventory",
   route_unavailable: "commands.rejection.route_unavailable",
   unavailable: "commands.rejection.unavailable",
   unique_equipment: "commands.rejection.unique_equipment",

@@ -28,7 +28,7 @@ const expectNoSharedObjects = (source: unknown, clone: unknown, path = "game"): 
 
 describe("game-state snapshot lifecycle", () => {
   it("deep-clones every reference-valued branch", () => {
-    const source = createScenarioGame("commissioning_exam");
+    const source = createScenarioGame("morrow_pocket");
     const clone = cloneGame(source);
     expect(clone).toEqual(source);
     expectNoSharedObjects(source, clone);

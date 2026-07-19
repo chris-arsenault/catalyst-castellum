@@ -5,6 +5,7 @@ import { DEFAULT_TRANSLATOR } from "../localization/translator";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "./guideModel";
 import { tutorialText } from "./tutorialCopy";
+import { roomState } from "../game/world/instances";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -58,7 +59,11 @@ describe("Make the Reagent guidance", () => {
     game = command(game, { type: "start_prime" });
     game = advance(game, 12);
 
-    expect(game.processes.chlor_alkali_cell.totalProcessed).toBeGreaterThan(0);
+    expect(
+      Object.values(roomState(game, "lower_intake").equipment).find(
+        (instance) => instance?.equipmentId === "membrane_cell"
+      )?.operation?.totalProcessed
+    ).toBeGreaterThan(0);
     expect(guide.mission.tasks[2]?.completed(game)).toBe(true);
     expect(guidedPhaseActionReason(game, "start_assault", [])).toBeNull();
   });

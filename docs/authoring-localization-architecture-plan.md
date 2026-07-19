@@ -51,7 +51,7 @@ and locale. Components render view models and dispatch typed commands.
   require an engine or component edit.
 - Architecture tooling detects forbidden imports and cycles between engine, definition, content,
   presentation, application, and UI layers.
-- The existing save migrations, deterministic campaign health, and browser behavior remain intact.
+- Exact-version save rejection, deterministic campaign health, and browser behavior remain intact.
 
 ## Phase 1: engine contracts and runtime binding
 
@@ -74,14 +74,14 @@ Acceptance:
    loadouts, waves, cumulative availability, guide targets, and non-empty rounds.
 2. Give compiled packs an immutable `packId` and integer `contentVersion`.
 3. Store pack identity in `GameState` and save envelopes; reject saves owned by another pack.
-4. Make current save decoding definition-aware while preserving V7-V11 migration behavior.
+4. Make current save decoding definition-aware and reject obsolete pre-release schemas.
 5. Split the campaign monolith into one module per level plus an explicit ordered registry.
 6. Keep reference playtest plans beside authoring modules but exclude them from runtime level rules.
 
 Acceptance:
 
 - Invalid authored references fail compilation before a scenario can start.
-- An existing save round-trips with pack identity and legacy saves migrate to the default pack.
+- A current save round-trips with pack identity and obsolete saves fail closed.
 - A new level is one rules module, one registry entry, one locale entry, and one health plan.
 
 ## Phase 3: reusable extension seams
@@ -185,6 +185,6 @@ Final evidence:
   decide campaign order.
 - Data-only extension applies to new instances of existing mechanics. New mechanical or visual
   behavior intentionally requires a new strategy implementation.
-- Keep changes save-compatible wherever possible. Any required current-schema change receives a new
-  save version and a conserving migration.
+- Treat each pre-release schema as exact. Any durable state change receives a new save version, and
+  obsolete versions remain unsupported.
 - Review every moved or modified player-facing English string against `AGENTS.md` before completion.

@@ -49,17 +49,20 @@ const mapB: WorldMap = Object.freeze({
   ),
 });
 
-const makeReagentWithoutGeneratedSite: LevelDefinition = {
-  ...DEFAULT_GAME_DEFINITION.levels.make_the_reagent,
-  site: null,
-};
+const levelsWithoutGeneratedSites = Object.fromEntries(
+  Object.entries(DEFAULT_GAME_DEFINITION.levels).map(([levelId, level]) => [
+    levelId,
+    {
+      ...level,
+      site: null,
+      supplies: level.supplies.filter(({ id }) => id in mapA.utilityNodes),
+    },
+  ])
+) as unknown as Record<keyof typeof DEFAULT_GAME_DEFINITION.levels, LevelDefinition>;
 
 const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
   map: mapA,
-  levels: {
-    ...DEFAULT_GAME_DEFINITION.levels,
-    make_the_reagent: makeReagentWithoutGeneratedSite,
-  },
+  levels: levelsWithoutGeneratedSites,
 });
 
 describe("the hull fragment carries across consecutive authored maps", () => {
@@ -69,6 +72,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
+      operation: null,
     };
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     roomState(ending, "switchyard").liquid.water = 4;
@@ -87,6 +91,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
+      operation: null,
     };
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     roomState(ending, "switchyard").liquid.water = 4;

@@ -1,9 +1,9 @@
 # Enemy level progression
 
 Enemy level is the campaign's durability axis. Every spawned enemy has an integer level, every site
-authors a baseline level, and a wave may apply a small integer offset for a tutorial target or
-veteran. Enemy count remains a cadence, economy, and breach-stakes axis; it is not used as a proxy
-for durability because room hazards affect every occupant.
+authors a baseline level, and a wave may apply an integer offset for a veteran, weakened cohort, or
+tutorial target. Enemy count remains a cadence, economy, and breach-stakes axis; it is not used as a
+proxy for durability because room hazards affect every occupant.
 
 ## Research basis
 
@@ -92,12 +92,20 @@ encounter-design controls.
 
 The initial campaign baselines are:
 
-| Site               | Enemy level | Health versus level 20 |
-| ------------------ | ----------: | ---------------------: |
-| Flash Point        |          20 |                 1.000x |
-| Make the Reagent   |          21 |                 1.100x |
-| Stored Chlorine    |          22 |                 1.210x |
-| Commissioning Exam |          23 |                 1.331x |
+| Site             | Enemy level | Health versus level 20 |
+| ---------------- | ----------: | ---------------------: |
+| Flash Point      |          20 |                 1.000x |
+| Make the Reagent |          21 |                 1.100x |
+| Stored Chlorine  |          22 |                 1.210x |
+| Morrow Pocket    |          23 |                 1.331x |
+| Kettleblack      |          24 |                 1.464x |
+| Cordon 41        |          25 |                 1.611x |
+| Junction L-6     |          26 |                 1.772x |
+| Pell Cut         |          27 |                 1.949x |
+| Station 14       |          28 |                 2.144x |
+| Vasker Store     |          29 |                 2.358x |
+| Lane Six         |          30 |                 2.594x |
+| Pell Cordon      |          31 |                 2.853x |
 
 Flash Point's former anonymous health multipliers are represented as level offsets. The conversion
 uses `round(log(oldScale) / log(1.10))`, making the authored veteran intent visible. Make the
@@ -112,6 +120,10 @@ resolved level so health, breach damage, matter, residue, tooltips, and save/loa
 `pnpm balance:combat` prints the site curve, wave-level range, full reaction/feed solve, route and
 room residence, first-order coefficient solve, second-order transient sensitivity matrix, and exact
 campaign replay. `pnpm campaign:health` is the final playability gate.
+
+The campaign advances its baseline by one level per site while the current construction vocabulary
+remains stable. This keeps health progression at 10% per checkpoint and preserves room-wide wave
+density. A larger level jump requires a measured, matching geometric increase in player output.
 
 For future sites, choose the baseline from the expected player-power curve first. Shape individual
 rounds with composition, timing, route, and sparse offsets. Use count to set the consequence of a

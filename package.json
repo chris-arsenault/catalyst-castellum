@@ -25,7 +25,7 @@
     "performance:check": "tsx tooling/performanceBaseline.ts --assert",
     "balance:combat": "tsx tooling/combatBalance.ts",
     "playtest": "tsx tooling/playtest.ts",
-    "campaign:health": "tsx tooling/playtest.ts --runs 1 --seed 13371 --assert-intended",
+    "campaign:health": "tsx tooling/playtest.ts --runs 1 --seed 13371 --assert-portfolio",
     "check": "pnpm run architecture:check && pnpm run copy:check && pnpm run locales:check && pnpm run typecheck && pnpm test",
     "determinism:snapshot": "tsx tooling/determinismSnapshot.ts",
     "sprites:architecture": "tsx tooling/generateArchitectureSprites.ts",

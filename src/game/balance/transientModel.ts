@@ -1,166 +1,18 @@
-import { deriveGame } from "../definition";
-import type { GameDefinition, GameDefinitionSource } from "../definitionTypes";
-import { intendedPlan } from "../playtest/policies";
+import type { GameDefinition } from "../definitionTypes";
+import { referencePlans } from "../playtest/policies";
 import { runPlan } from "../playtest/runner";
 import { createGameRuntime } from "../runtime";
 import {
-  ENEMY_TYPES,
   LEVEL_IDS,
-  type EnemyType,
+  type DamageSourceId,
   type HazardChannels,
   type LevelId,
   type SpeciesId,
 } from "../types";
-import { DAMAGE_FAMILIES, damageFamilyIncludesSpecies, type DamageFamily } from "./damageModel";
+import { DAMAGE_FAMILIES, type DamageFamily } from "./damageModel";
 import { solveMinimumCoverage, type LeastSquaresResult, type Matrix } from "./linearAlgebra";
 import { enemyStatsAtLevel, resolveEnemyLevel } from "../engine/enemyLevel";
-
-const speciesScale = (
-  speciesId: SpeciesId,
-  scales: Partial<Record<DamageFamily, number>>,
-  exclusiveFamily: DamageFamily | null
-): number => {
-  if (exclusiveFamily) return damageFamilyIncludesSpecies(exclusiveFamily, speciesId) ? 1 : 0;
-  const family = DAMAGE_FAMILIES.find((candidate) =>
-    damageFamilyIncludesSpecies(candidate, speciesId)
-  );
-  return family ? (scales[family] ?? 1) : 1;
-};
-
-const scaledSpecies = (
-  definition: GameDefinition,
-  scales: Partial<Record<DamageFamily, number>>,
-  exclusiveFamily: DamageFamily | null
-): GameDefinitionSource["species"] =>
-  Object.fromEntries(
-    Object.entries(definition.species).map(([id, species]) => {
-      const scale = speciesScale(id as SpeciesId, scales, exclusiveFamily);
-      return [
-        id,
-        {
-          ...species,
-          hazards: species.hazards.map((hazard) => ({ ...hazard, rate: hazard.rate * scale })),
-        },
-      ];
-    })
-  ) as unknown as GameDefinitionSource["species"];
-
-const exclusiveScale = (
-  family: DamageFamily,
-  scales: Partial<Record<DamageFamily, number>>,
-  exclusiveFamily: DamageFamily | null
-): number => {
-  if (exclusiveFamily) return exclusiveFamily === family ? 1 : 0;
-  return scales[family] ?? 1;
-};
-
-const scaledReactions = (
-  definition: GameDefinition,
-  scales: Partial<Record<DamageFamily, number>>,
-  exclusiveFamily: DamageFamily | null
-): GameDefinitionSource["reactions"] =>
-  Object.fromEntries(
-    Object.entries(definition.reactions).map(([id, reaction]) => {
-      if (id !== "hydrogen_oxygen_combustion" || reaction.behavior.kind !== "flash") {
-        return [id, reaction];
-      }
-      const scale = exclusiveScale("ox1_flash", scales, exclusiveFamily);
-      return [
-        id,
-        {
-          ...reaction,
-          behavior: {
-            ...reaction.behavior,
-            pressureDamageBase: reaction.behavior.pressureDamageBase * scale,
-            pressureDamagePerExtent: reaction.behavior.pressureDamagePerExtent * scale,
-            heatDamagePerExtent: reaction.behavior.heatDamagePerExtent * scale,
-          },
-        },
-      ];
-    })
-  ) as GameDefinitionSource["reactions"];
-
-const scaledEnvironment = (
-  definition: GameDefinition,
-  scales: Partial<Record<DamageFamily, number>>,
-  exclusiveFamily: DamageFamily | null
-): GameDefinitionSource["environmentHazards"] => ({
-  gasTemperature: {
-    ...definition.environmentHazards.gasTemperature,
-    rate:
-      definition.environmentHazards.gasTemperature.rate *
-      exclusiveScale("thermal", scales, exclusiveFamily),
-  },
-  staticPressure: {
-    ...definition.environmentHazards.staticPressure,
-    rate:
-      definition.environmentHazards.staticPressure.rate *
-      exclusiveScale("overpressure", scales, exclusiveFamily),
-  },
-});
-
-export type EnemyBalanceOverride = Partial<{
-  health: number;
-  speed: number;
-  hazardMultipliers: HazardChannels;
-  coreDamage: number;
-}>;
-
-export type BalancedDefinitionOptions = Partial<{
-  familyScales: Partial<Record<DamageFamily, number>>;
-  exclusiveFamily: DamageFamily | null;
-  enemyOverrides: Partial<Record<EnemyType, EnemyBalanceOverride>>;
-  probe: boolean;
-}>;
-
-const scaledEnemies = (
-  definition: GameDefinition,
-  options: BalancedDefinitionOptions
-): GameDefinitionSource["enemies"] =>
-  Object.fromEntries(
-    ENEMY_TYPES.map((enemyType) => {
-      const enemy = definition.enemies[enemyType];
-      const override = options.enemyOverrides?.[enemyType];
-      return [
-        enemyType,
-        {
-          ...enemy,
-          ...override,
-          hazardMultipliers: override?.hazardMultipliers ?? enemy.hazardMultipliers,
-          health: options.probe ? 1_000_000_000 : (override?.health ?? enemy.health),
-          coreDamage: options.probe ? 0 : (override?.coreDamage ?? enemy.coreDamage),
-        },
-      ];
-    })
-  ) as GameDefinitionSource["enemies"];
-
-const scaledLevels = (
-  definition: GameDefinition,
-  probe: boolean
-): GameDefinitionSource["levels"] => {
-  if (!probe) return definition.levels;
-  return Object.fromEntries(
-    LEVEL_IDS.map((levelId) => [
-      levelId,
-      { ...definition.levels[levelId], startingMatter: 1_000_000 },
-    ])
-  ) as GameDefinitionSource["levels"];
-};
-
-export const deriveBalancedDefinition = (
-  definition: GameDefinition,
-  options: BalancedDefinitionOptions
-): GameDefinition => {
-  const scales = options.familyScales ?? {};
-  const exclusiveFamily = options.exclusiveFamily ?? null;
-  return deriveGame(definition, {
-    species: scaledSpecies(definition, scales, exclusiveFamily),
-    reactions: scaledReactions(definition, scales, exclusiveFamily),
-    environmentHazards: scaledEnvironment(definition, scales, exclusiveFamily),
-    enemies: scaledEnemies(definition, options),
-    levels: scaledLevels(definition, options.probe ?? false),
-  });
-};
+import { deriveBalancedDefinition } from "./balancedDefinition";
 
 const damageTotal = (report: {
   damageBySource: Record<string, number>;
@@ -169,20 +21,37 @@ const damageTotal = (report: {
   Object.values(report.damageBySource).reduce((total, amount) => total + amount, 0) +
   report.fieldDamageAbsorbed;
 
+export const DAMAGE_SOURCE_FOR_FAMILY: Record<DamageFamily, DamageSourceId> = {
+  ox1_flash: "hydrogen_oxygen_combustion",
+  chlorine_gas: "chlorine_gas",
+  hydrogen_chloride_gas: "hydrogen_chloride_gas",
+  liquid_corrosion: "liquid_corrosion",
+  carbon_monoxide: "carbon_monoxide",
+  nitrogen_chemistry: "nitrogen_chemistry",
+  nickel_carbonyl: "nickel_carbonyl",
+  hydrogen_fluoride: "hydrogen_fluoride",
+  fluorine: "fluorine",
+  uranium_chemistry: "uranium_chemistry",
+  asphyxiation: "asphyxiation",
+  thermal: "thermal_exposure",
+  overpressure: "catastrophic_overpressure",
+};
+
 export interface TransientProbeRow {
   levelId: LevelId;
+  planName: string;
+  archetype: string | null;
   round: number;
   familyDamage: Record<DamageFamily, number>;
   effectiveHealth: number;
   targetDamage: number;
 }
 
-const LEVEL_COVERAGE_TARGET: Record<LevelId, number> = {
-  flash_point: 1.2,
-  make_the_reagent: 1.15,
-  stored_chlorine: 1.18,
-  commissioning_exam: 1.12,
-};
+const MINIMUM_CORE_INTEGRITY: Record<LevelId, number> = Object.fromEntries(
+  LEVEL_IDS.map((levelId) => [levelId, levelId === "flash_point" ? 100 : 45])
+) as Record<LevelId, number>;
+
+const TRANSIENT_COVERAGE_MARGIN = 1.05;
 
 const waveEffectiveHealth = (
   levelId: LevelId,
@@ -201,48 +70,96 @@ const waveEffectiveHealth = (
     return total + health + initialField;
   }, 0);
 
-type FamilyProbeDamage = Record<DamageFamily, Record<LevelId, Record<number, number>>>;
-
-const probeFamily = (
-  family: DamageFamily,
+const wavePotentialCoreDamage = (
+  levelId: LevelId,
+  roundIndex: number,
   definition: GameDefinition
-): Record<LevelId, Record<number, number>> => {
+): number =>
+  (definition.levels[levelId].rounds[roundIndex]?.wave ?? []).reduce((total, entry) => {
+    const siteLevel = definition.levels[levelId].enemyLevel;
+    const level = resolveEnemyLevel(siteLevel, entry.levelOffset);
+    return total + enemyStatsAtLevel(definition.enemies[entry.type], level).coreDamage;
+  }, 0);
+
+const roundCoverageTarget = (
+  levelId: LevelId,
+  roundIndex: number,
+  definition: GameDefinition
+): { effectiveHealth: number; targetDamage: number } => {
+  const level = definition.levels[levelId];
+  const effectiveHealth = waveEffectiveHealth(levelId, roundIndex, definition);
+  const coreLossBudget = Math.max(0, level.startingCoreIntegrity - MINIMUM_CORE_INTEGRITY[levelId]);
+  const roundCoreLossBudget = coreLossBudget / level.rounds.length;
+  const potentialCoreDamage = wavePotentialCoreDamage(levelId, roundIndex, definition);
+  const requiredNeutralizationFraction =
+    potentialCoreDamage <= 0 ? 0 : Math.max(0, 1 - roundCoreLossBudget / potentialCoreDamage);
+  return {
+    effectiveHealth,
+    targetDamage: effectiveHealth * requiredNeutralizationFraction * TRANSIENT_COVERAGE_MARGIN,
+  };
+};
+
+const reportDamageByFamily = (report: {
+  damageBySource: Record<DamageSourceId, number>;
+  fieldDamageAbsorbedBySource: Record<DamageSourceId, number>;
+}): Record<DamageFamily, number> =>
+  Object.fromEntries(
+    DAMAGE_FAMILIES.map((family) => {
+      const sourceId = DAMAGE_SOURCE_FOR_FAMILY[family];
+      return [
+        family,
+        report.damageBySource[sourceId] + report.fieldDamageAbsorbedBySource[sourceId],
+      ];
+    })
+  ) as Record<DamageFamily, number>;
+
+const probeDamageByFamily = (
+  definition: GameDefinition
+): Array<{
+  levelId: LevelId;
+  planName: string;
+  archetype: string | null;
+  rounds: Record<number, Record<DamageFamily, number>>;
+}> => {
   const probeDefinition = deriveBalancedDefinition(definition, {
-    exclusiveFamily: family,
     probe: true,
   });
   const runtime = createGameRuntime(probeDefinition);
-  return Object.fromEntries(
-    LEVEL_IDS.map((levelId) => {
-      const result = runPlan(levelId, intendedPlan(levelId), runtime);
-      const rounds = Object.fromEntries(
-        result.reports.map((report) => [report.round, damageTotal(report)])
-      ) as Record<number, number>;
-      return [levelId, rounds];
-    })
-  ) as Record<LevelId, Record<number, number>>;
-};
-
-const probeDamageByFamily = (definition: GameDefinition): FamilyProbeDamage =>
-  Object.fromEntries(
-    DAMAGE_FAMILIES.map((family) => [family, probeFamily(family, definition)])
-  ) as FamilyProbeDamage;
-
-export const runTransientProbes = (definition: GameDefinition): TransientProbeRow[] => {
-  const damageByFamily = probeDamageByFamily(definition);
   return LEVEL_IDS.flatMap((levelId) =>
-    definition.levels[levelId].rounds.map((_, roundIndex) => {
-      const round = roundIndex + 1;
-      const effectiveHealth = waveEffectiveHealth(levelId, roundIndex, definition);
+    referencePlans(levelId).map((plan) => {
+      const result = runPlan(levelId, plan, runtime);
       return {
         levelId,
-        round,
-        familyDamage: Object.fromEntries(
-          DAMAGE_FAMILIES.map((family) => [family, damageByFamily[family][levelId][round] ?? 0])
-        ) as Record<DamageFamily, number>,
-        effectiveHealth,
-        targetDamage: effectiveHealth * LEVEL_COVERAGE_TARGET[levelId],
+        planName: plan.name,
+        archetype: plan.archetype,
+        rounds: Object.fromEntries(
+          result.reports.map((report) => [report.round, reportDamageByFamily(report)])
+        ) as Record<number, Record<DamageFamily, number>>,
       };
+    })
+  );
+};
+
+export const runTransientProbes = (definition: GameDefinition): TransientProbeRow[] => {
+  const portfolioDamage = probeDamageByFamily(definition);
+  return portfolioDamage.flatMap(({ levelId, planName, archetype, rounds }) =>
+    definition.levels[levelId].rounds.flatMap((_, roundIndex) => {
+      const round = roundIndex + 1;
+      const coverage = roundCoverageTarget(levelId, roundIndex, definition);
+      return coverage.targetDamage <= 1e-8
+        ? []
+        : [
+            {
+              levelId,
+              planName,
+              archetype,
+              round,
+              familyDamage: Object.fromEntries(
+                DAMAGE_FAMILIES.map((family) => [family, rounds[round]?.[family] ?? 0])
+              ) as Record<DamageFamily, number>,
+              ...coverage,
+            },
+          ];
     })
   );
 };
@@ -254,6 +171,12 @@ export interface SecondOrderDamageSolve {
   normalizedTargets: number[];
   result: LeastSquaresResult;
   scales: Record<DamageFamily, number>;
+  coverage: {
+    minimum: number;
+    tenthPercentile: number;
+    mean: number;
+    shortfallRows: number;
+  };
 }
 
 const speciesHazardRate = (
@@ -271,7 +194,17 @@ const anchorRatio = (target: number, current: number, label: string): number => 
 const mean = (values: number[]): number =>
   values.reduce((total, value) => total + value, 0) / values.length;
 
-/** Secondary damage is measured in the matrix but held to absolute environmental guardrails. */
+const SECOND_ORDER_ROLE_ANCHORS = new Set<DamageFamily>([
+  "ox1_flash",
+  "hydrogen_fluoride",
+  "fluorine",
+  "uranium_chemistry",
+  "asphyxiation",
+  "thermal",
+  "overpressure",
+]);
+
+/** Secondary and already-clearing specialist damage retain their first-order role guardrails. */
 const secondaryAnchorScale = (family: DamageFamily, definition: GameDefinition): number => {
   if (family === "overpressure") {
     return anchorRatio(36, definition.environmentHazards.staticPressure.rate, "Static pressure");
@@ -295,35 +228,18 @@ const secondaryAnchorScale = (family: DamageFamily, definition: GameDefinition):
   return 1;
 };
 
-const familyMinimum = (
-  family: DamageFamily,
-  ox1Minimum: number,
-  definition: GameDefinition
-): number => {
-  if (family === "overpressure" || family === "thermal" || family === "asphyxiation") {
+const familyMinimum = (family: DamageFamily, definition: GameDefinition): number => {
+  if (SECOND_ORDER_ROLE_ANCHORS.has(family)) {
     return secondaryAnchorScale(family, definition);
   }
-  if (family === "ox1_flash") return ox1Minimum;
   return 0.05;
 };
 
 const familyMaximum = (family: DamageFamily, definition: GameDefinition): number => {
-  if (family === "overpressure" || family === "thermal" || family === "asphyxiation") {
+  if (SECOND_ORDER_ROLE_ANCHORS.has(family)) {
     return secondaryAnchorScale(family, definition);
   }
   return 5;
-};
-
-const ignitionPulseMinimum = (definition: GameDefinition): number => {
-  const flash = definition.reactions.hydrogen_oxygen_combustion.behavior;
-  if (flash.kind !== "flash") throw new Error("OX-1 behavior is not a flash.");
-  const deckmouthPulse =
-    (flash.pressureDamageBase + flash.ignitionExtent * flash.pressureDamagePerExtent) *
-      definition.enemies.deckmouth.hazardMultipliers.pressure +
-    flash.ignitionExtent *
-      flash.heatDamagePerExtent *
-      definition.enemies.deckmouth.hazardMultipliers.heat;
-  return (definition.enemies.deckmouth.health * 1.05) / deckmouthPulse;
 };
 
 /** Uses exact state-space simulations as the sensitivity matrix for a coupled correction pass. */
@@ -333,14 +249,14 @@ export const solveSecondOrderDamage = (definition: GameDefinition): SecondOrderD
     DAMAGE_FAMILIES.map((family) => row.familyDamage[family] / row.targetDamage)
   );
   const normalizedTargets = rows.map(() => 1);
-  const ox1Minimum = ignitionPulseMinimum(definition);
   const result = solveMinimumCoverage(normalizedCoefficients, normalizedTargets, {
     weights: rows.map(() => 1),
-    ridge: 0.0005,
+    ridge: 0.005,
     prior: DAMAGE_FAMILIES.map((family) => secondaryAnchorScale(family, definition)),
-    minimum: DAMAGE_FAMILIES.map((family) => familyMinimum(family, ox1Minimum, definition)),
+    minimum: DAMAGE_FAMILIES.map((family) => familyMinimum(family, definition)),
     maximum: DAMAGE_FAMILIES.map((family) => familyMaximum(family, definition)),
   });
+  const coverage = [...result.predicted].sort((left, right) => left - right);
   return {
     rows,
     families: [...DAMAGE_FAMILIES],
@@ -350,29 +266,63 @@ export const solveSecondOrderDamage = (definition: GameDefinition): SecondOrderD
     scales: Object.fromEntries(
       DAMAGE_FAMILIES.map((family, index) => [family, result.solution[index] ?? 1])
     ) as Record<DamageFamily, number>,
+    coverage: {
+      minimum: coverage[0] ?? 0,
+      tenthPercentile: coverage[Math.floor(Math.max(0, coverage.length - 1) * 0.1)] ?? 0,
+      mean: mean(coverage),
+      shortfallRows: coverage.filter((value) => value < 1 - 1e-6).length,
+    },
   };
 };
 
 export interface LiveBalanceResult {
   levelId: LevelId;
+  planName: string;
+  archetype: string | null;
   success: boolean;
   coreIntegrity: number;
   killed: number;
   breached: number;
   damage: number;
+  matterSpent: number;
+  damagePerMatter: number;
+  dominantFamily: DamageFamily | null;
+  dominantShare: number;
 }
 
 export const verifyLiveBalance = (definition: GameDefinition): LiveBalanceResult[] => {
   const runtime = createGameRuntime(definition);
-  return LEVEL_IDS.map((levelId) => {
-    const result = runPlan(levelId, intendedPlan(levelId), runtime);
-    return {
-      levelId,
-      success: result.success,
-      coreIntegrity: result.coreIntegrity,
-      killed: result.killed,
-      breached: result.breached,
-      damage: damageTotal(result),
-    };
-  });
+  return LEVEL_IDS.flatMap((levelId) =>
+    referencePlans(levelId).map((plan) => {
+      const result = runPlan(levelId, plan, runtime);
+      const familyDamage = Object.fromEntries(
+        DAMAGE_FAMILIES.map((family) => {
+          const sourceId = DAMAGE_SOURCE_FOR_FAMILY[family];
+          return [
+            family,
+            result.damageBySource[sourceId] + result.fieldDamageAbsorbedBySource[sourceId],
+          ];
+        })
+      ) as Record<DamageFamily, number>;
+      const dominantFamily = DAMAGE_FAMILIES.reduce<DamageFamily | null>((best, family) => {
+        if (familyDamage[family] <= 0) return best;
+        return !best || familyDamage[family] > familyDamage[best] ? family : best;
+      }, null);
+      const damage = damageTotal(result);
+      return {
+        levelId,
+        planName: plan.name,
+        archetype: plan.archetype,
+        success: result.success,
+        coreIntegrity: result.coreIntegrity,
+        killed: result.killed,
+        breached: result.breached,
+        damage,
+        matterSpent: result.matterSpent,
+        damagePerMatter: damage / Math.max(1, result.matterSpent),
+        dominantFamily,
+        dominantShare: dominantFamily ? familyDamage[dominantFamily] / Math.max(1, damage) : 0,
+      };
+    })
+  );
 };

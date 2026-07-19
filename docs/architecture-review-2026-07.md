@@ -66,7 +66,7 @@ genuinely new mechanical strategy, never a new instance of an existing strategy.
   version, level order, nonempty rounds/waves, enemy and route references, cumulative availability,
   loadouts, reaction participants/balance, facility paths, and featured-reaction references.
 - Each level is an independent module under `content/levels/`; `campaign.ts` is an explicit ordered
-  registry. Reference policies live in `content/playtestPlans.ts` and are absent from runtime level
+  registry. Reference portfolios live in `content/playtestPortfolios.ts` and are absent from runtime level
   rules.
 - Room reactions dispatch through a behavior-strategy registry. Reusable strategies own ordinary
   gas recombination, absorption, and mixed-contact chemistry; the instantaneous OX-1 flash remains
@@ -75,8 +75,8 @@ genuinely new mechanical strategy, never a new instance of an existing strategy.
   definition-bound and switches on appearance archetypes.
 - Guides use registrations and typed state conditions. Levels author featured reactions, while a
   reusable panel selects an existing behavior view.
-- Save V12 carries pack ID and content version. Foreign-pack saves are rejected; V7-V11 data
-  migrates into the default pack.
+- Save V17 carries pack ID and content version. Foreign-pack and obsolete-version saves are
+  rejected.
 - Fixture tests add a reaction, enemy, and guided level through these seams without engine or
   renderer dispatch edits.
 
@@ -158,7 +158,7 @@ component test proves the binding at the rendered UI boundary.
 | New appearance archetype           | —                             | enemy trait                           | entity/manual keys | one renderer archetype | —                            |
 | English copy edit                  | —                             | —                                     | locale module      | —                      | —                            |
 | New locale                         | —                             | —                                     | complete bundle    | bind at composition    | —                            |
-| New durable state field            | construction/clone/validation | optional                              | optional           | projection             | schema + migration           |
+| New durable state field            | construction/clone/validation | optional                              | optional           | projection             | schema + version increment   |
 
 `—` means the layer normally remains untouched. New mechanical or visual behavior intentionally
 crosses its corresponding strategy boundary.

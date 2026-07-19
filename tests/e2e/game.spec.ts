@@ -168,7 +168,7 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(page.getByTestId("tutorial-task-card")).toContainText("2 / 4");
   await expect(page.getByTestId("begin-prime")).toBeEnabled();
 
-  await expect(page.getByTestId("source-starter_gas_header")).toHaveText("∞");
+  await expect(page.getByTestId("source-gas_reservoir")).toHaveText("∞");
   await page.getByTestId("begin-prime").click();
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
   await expect(page.getByTestId("start-assault")).toBeDisabled();
@@ -369,9 +369,9 @@ test("supplies expose actionable reserves without duplicating hidden plant inven
   await expect(page.getByTestId("supply-dock")).toContainText("Supplies");
   await expect(page.getByText("Core material manifold")).toHaveCount(0);
   await expect(page.getByText("System trace")).toHaveCount(0);
-  await expect(page.getByTestId("source-starter_gas_header")).toHaveText("∞");
-  await expect(page.getByTestId("source-water_tank")).toHaveCount(0);
-  await expect(page.getByTestId("source-sodium_chloride_tank")).toHaveCount(0);
+  await expect(page.getByTestId("source-gas_reservoir")).toHaveText("∞");
+  await expect(page.getByTestId("source-liquid_reservoir_a")).toHaveCount(0);
+  await expect(page.getByTestId("source-liquid_reservoir_b")).toHaveCount(0);
   await expect(page.getByTestId("core-gas-junction")).toHaveCount(0);
   await expect(page.getByTestId("gas-vent-total")).toHaveCount(0);
   await expect(page.getByTestId("liquid-drain-total")).toHaveCount(0);
@@ -380,6 +380,6 @@ test("supplies expose actionable reserves without duplicating hidden plant inven
   await page.getByTestId("conduit-control-gas:core__furnace").click();
   await page.getByTestId("pipe-board-close").click();
   await page.getByTestId("begin-prime").click();
-  await expect(page.getByTestId("source-starter_gas_header")).toHaveText("∞");
+  await expect(page.getByTestId("source-gas_reservoir")).toHaveText("∞");
   await expect(page.getByTestId("phase-banner")).toContainText("Live prime");
 });

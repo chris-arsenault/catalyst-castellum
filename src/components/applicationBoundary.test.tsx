@@ -1,5 +1,5 @@
 /** @vitest-environment jsdom */
-import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { useGameStore } from "../application/store";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
@@ -116,5 +116,23 @@ describe("application decision and phase rendering", () => {
     fireEvent.click(notice);
     expect(useGameStore.getState().notice).toBeNull();
     expect(screen.queryByRole("button", { name: "Test rejection. Dismiss" })).toBeNull();
+  });
+});
+
+describe("build-phase wave forecast", () => {
+  it("shows an actionable wave forecast during planning", () => {
+    publish();
+    render(<PhaseBanner />);
+
+    const strip = screen.getByTestId("wave-forecast-strip");
+    expect(within(strip).getByText("10 × Deckmouth")).toBeTruthy();
+    expect(within(strip).getByText("Level 20")).toBeTruthy();
+    expect(within(strip).getByText("Tight formation")).toBeTruthy();
+    expect(within(strip).getByText("West Breach → Catalyst Core")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: /wave forecast/i }));
+    const details = screen.getByTestId("wave-forecast-details");
+    expect(within(details).getByText("Composition")).toBeTruthy();
+    expect(within(details).getByText(/steady oxygen-breathing wreck-feeder/)).toBeTruthy();
   });
 });

@@ -36,9 +36,11 @@ describe("narrative campaign authoring", () => {
     ]);
   });
 
-  it("binds every playable level to the opening Ratter sites", () => {
+  it("binds every playable level through the complete campaign route", () => {
     expect(LEVEL_IDS.map((levelId) => narrativeSiteForLevel(levelId).levelId)).toEqual(LEVEL_IDS);
-    expect(LEVEL_IDS.map((levelId) => narrativeSiteForLevel(levelId).order)).toEqual([1, 2, 3, 4]);
+    expect(LEVEL_IDS.map((levelId) => narrativeSiteForLevel(levelId).order)).toEqual(
+      Array.from({ length: 12 }, (_, index) => index + 1)
+    );
   });
 
   it("advances through authored sites independently of mechanical bindings", () => {

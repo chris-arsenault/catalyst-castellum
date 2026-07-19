@@ -291,7 +291,7 @@ The review's deterministic intended-policy run produced:
 | 2 — Make the Reagent   | Fail, 0% core after one round |
 | 3 — Acid Line          | Fail, 0% core after one round |
 | 4 — Stored Chlorine    | Fail, 0% core after one round |
-| 5 — Commissioning Exam | Pass, 100% core               |
+| 5 — Morrow Pocket | Pass, 100% core               |
 
 The repository's own spatial rewrite ledger records the same Level 2–4 failures. The current unit
 balance tests verify that levels require actions and use typed conduits; they do not verify that the

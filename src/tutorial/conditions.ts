@@ -1,10 +1,10 @@
 import type {
-  GameState,
+  ConnectionId,
+  EquipmentId,
   GamePhase,
-  ProcessId,
+  GameState,
   RoomId,
   TransportPhase,
-  ConnectionId,
 } from "../game/types";
 import { roomState } from "../game/world/instances";
 
@@ -15,7 +15,12 @@ export type GuideCondition =
   | { kind: "phase_is_after_build" }
   | { kind: "equipment_active"; roomId: RoomId; equipmentId: string }
   | { kind: "transport_enabled"; runId: ConnectionId; phase: TransportPhase }
-  | { kind: "process_total"; processId: ProcessId; minimum: number }
+  | {
+      kind: "equipment_total";
+      roomId: RoomId;
+      equipmentId: EquipmentId;
+      minimum: number;
+    }
   | { kind: "level_resolved" };
 
 type GuideLeafCondition = Exclude<GuideCondition, { kind: "all" | "any" }>;
@@ -39,6 +44,19 @@ const transportIsEnabled = (
     ? game.gasConduits[condition.runId]?.enabled
     : game.liquidConduits[condition.runId]?.enabled) ?? false;
 
+const equipmentTotalReached = (
+  game: GameState,
+  condition: Extract<GuideCondition, { kind: "equipment_total" }>
+): boolean => {
+  const instance = Object.values(roomState(game, condition.roomId).equipment).find(
+    (candidate) => candidate?.equipmentId === condition.equipmentId
+  );
+  return (instance?.operation?.totalProcessed ?? 0) >= condition.minimum;
+};
+
+const levelIsResolved = (game: GameState): boolean =>
+  game.phase === "level_complete" || game.phase === "victory";
+
 const evaluateGuideLeaf = (condition: GuideLeafCondition, game: GameState): boolean => {
   switch (condition.kind) {
     case "phase_is":
@@ -49,10 +67,10 @@ const evaluateGuideLeaf = (condition: GuideLeafCondition, game: GameState): bool
       return equipmentIsActive(game, condition);
     case "transport_enabled":
       return transportIsEnabled(game, condition);
-    case "process_total":
-      return game.processes[condition.processId].totalProcessed >= condition.minimum;
+    case "equipment_total":
+      return equipmentTotalReached(game, condition);
     case "level_resolved":
-      return game.phase === "level_complete" || game.phase === "victory";
+      return levelIsResolved(game);
   }
 };
 

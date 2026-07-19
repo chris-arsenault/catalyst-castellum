@@ -2,8 +2,11 @@ import { describe, expect, it } from "vitest";
 import { LEVEL_DEFINITIONS } from "./config";
 import { createInitialGame, createScenarioGame, executeCommand, stepGame } from "./simulation";
 import type { GameCommand, GameState, ScenarioAvailability } from "./types";
-import { LEVEL_PLAYTEST_PLANS } from "./content/playtestPlans";
+import { primaryReferenceBuildFor } from "./content/playtestPortfolios";
 import { gasConduitState, gasJunctionState, roomState } from "./world/instances";
+
+const primaryCommands = (levelId: keyof typeof LEVEL_DEFINITIONS) =>
+  primaryReferenceBuildFor(levelId).rounds.flatMap((round) => round.commands);
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -14,27 +17,24 @@ const command = (source: GameState, value: GameCommand): GameState => {
 const availabilitySubset = (before: ScenarioAvailability, after: ScenarioAvailability): boolean =>
   before.equipment.every((id) => after.equipment.includes(id)) &&
   before.gasLines.every((id) => after.gasLines.includes(id)) &&
-  before.liquidLines.every((id) => after.liquidLines.includes(id)) &&
-  before.gasSources.every((id) => after.gasSources.includes(id)) &&
-  before.liquidSources.every((id) => after.liquidSources.includes(id));
+  before.liquidLines.every((id) => after.liquidLines.includes(id));
 
 describe("Flash Point scenario truth", () => {
   it("starts inert with one Core mixture, one gas conduit, and no Inner Bay starter state", () => {
     const game = createInitialGame();
     expect(game.phase).toBe("level_briefing");
-    expect(game.gasSources.starter_gas_header.gas.hydrogen).toBeGreaterThan(0);
-    expect(game.gasSources.starter_gas_header.gas.oxygen).toBeGreaterThan(0);
+    expect(game.gasSources.gas_reservoir!.gas.hydrogen).toBeGreaterThan(0);
+    expect(game.gasSources.gas_reservoir!.gas.oxygen).toBeGreaterThan(0);
     expect(gasConduitState(game, "gas:core__furnace")).toMatchObject({
       enabled: false,
     });
-    expect(game.gasBuffers.cathode_header.gas.hydrogen).toBe(0);
     expect(gasJunctionState(game, "lower_intake").gas.hydrogen).toBe(0);
     expect(game.availability.gasLines).toEqual(["gas:core__furnace"]);
   });
 
   it("requires the authored equipment and shared fan action", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)) {
+    for (const action of primaryCommands("flash_point").slice(0, 2)) {
       state = command(state, action);
     }
     expect(roomState(state, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
@@ -43,7 +43,7 @@ describe("Flash Point scenario truth", () => {
 
   it("emits the real prime flash before the automatic assault removes its action button", () => {
     let state = command(createScenarioGame("flash_point"), { type: "begin_level" });
-    for (const action of LEVEL_PLAYTEST_PLANS.flash_point.commands.slice(0, 2)) {
+    for (const action of primaryCommands("flash_point").slice(0, 2)) {
       state = command(state, action);
     }
     state = command(state, { type: "start_prime" });
@@ -104,7 +104,7 @@ describe("campaign checkpoints", () => {
 
   it("authors every level around typed whole-conduit controls", () => {
     for (const level of Object.values(LEVEL_DEFINITIONS)) {
-      const conduitActions = LEVEL_PLAYTEST_PLANS[level.id].commands.filter(
+      const conduitActions = primaryCommands(level.id).filter(
         (action): action is Extract<GameCommand, { type: "set_conduit" }> =>
           action.type === "set_conduit"
       );

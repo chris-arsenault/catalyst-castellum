@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { equipmentGradeEffect } from "../presentation/equipmentCopy";
 import { DEFAULT_GAME_DEFINITION, deriveGame } from "./definition";
-import { roomGasMixingRate } from "./engine/equipment";
+import { createEquipmentInstance, roomGasMixingRate } from "./engine/equipment";
 import { roomHazards } from "./engine/physics";
-import { simulateProcesses } from "./engine/processExecutor";
+import { simulateEquipmentOperations } from "./engine/equipmentOperations";
 import { createScenarioGame as createScenarioGameForDefinition } from "./engine/scenarioState";
 import { createScenarioGame } from "./simulation";
 import { roomState } from "./world/instances";
@@ -30,6 +30,7 @@ describe("definition extension contracts", () => {
       equipmentId: "gas_agitator",
       level: 1,
       enabled: true,
+      operation: null,
     };
 
     expect(roomGasMixingRate(roomState(state, "furnace"), definition)).toBe(9);
@@ -58,29 +59,46 @@ describe("definition extension contracts", () => {
     expect(hazardous.atmosphere + hazardous.corrosion).toBeGreaterThan(0);
     expect(inert.atmosphere + inert.corrosion).toBe(0);
   });
+});
 
-  it("routes process products through declared dependencies instead of fixed buffer IDs", () => {
-    const baseProcess = DEFAULT_GAME_DEFINITION.processes.chlor_alkali_cell;
+describe("powered equipment extension contracts", () => {
+  it("routes powered-reaction products through the installed equipment's authored ports", () => {
+    const baseEquipment = DEFAULT_GAME_DEFINITION.equipment.membrane_cell;
+    const operation = baseEquipment.operation;
+    if (!operation) throw new Error("Membrane cell operation missing.");
     const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
-      id: "process-output-extension",
-      processes: {
-        chlor_alkali_cell: {
-          ...baseProcess,
-          outputs: baseProcess.outputs.map((output) =>
-            output.speciesId === "chlorine"
-              ? { ...output, bufferId: "cathode_header", limitCode: "cathode_headroom" }
-              : output
-          ),
-          separatorBackflow: null,
+      id: "equipment-output-extension",
+      equipment: {
+        ...DEFAULT_GAME_DEFINITION.equipment,
+        membrane_cell: {
+          ...baseEquipment,
+          operation: {
+            ...operation,
+            outputs: operation.outputs.map((output) => {
+              if (output.speciesId === "chlorine")
+                return { ...output, id: "cathode_header", limitCode: "cathode_headroom" };
+              if (output.speciesId === "hydrogen")
+                return { ...output, id: "anode_header", limitCode: "anode_headroom" };
+              return output;
+            }),
+            separatorBackflow: null,
+          },
         },
       },
     });
-    const state = createScenarioGameForDefinition("commissioning_exam", [], definition);
+    const state = createScenarioGameForDefinition("morrow_pocket", [], definition);
+    roomState(state, "lower_intake").equipment.socket_a = createEquipmentInstance(
+      { equipmentId: "membrane_cell", level: 1, enabled: true },
+      definition
+    );
     roomState(state, "lower_intake").liquid.water = 10;
     roomState(state, "lower_intake").liquid.sodium_chloride = 10;
-    simulateProcesses(state, 0.5, definition);
+    simulateEquipmentOperations(state, 0.5, definition);
 
-    expect(state.gasBuffers.cathode_header.gas.chlorine).toBeGreaterThan(0);
-    expect(state.gasBuffers.anode_header.gas.chlorine).toBe(0);
+    const instance = roomState(state, "lower_intake").equipment.socket_a;
+    const cathode = instance?.operation?.outputs.cathode_header;
+    const anode = instance?.operation?.outputs.anode_header;
+    expect(cathode?.phase === "gas" ? cathode.gas.chlorine : 0).toBeGreaterThan(0);
+    expect(anode?.phase === "gas" ? anode.gas.chlorine : 0).toBe(0);
   });
 });

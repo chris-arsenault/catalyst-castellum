@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION } from "../definition";
 import {
   DAMAGE_FAMILIES,
+  DAMAGE_SOURCE_FOR_FAMILY,
+  PRIMARY_DAMAGE_FAMILIES,
   deriveBalancedDefinition,
   idealThroughputProfile,
   routeProfile,
@@ -9,6 +11,7 @@ import {
   solveFirstOrderDamage,
   stoichiometryModel,
 } from "./combatModel";
+import { DAMAGE_SOURCE_IDS } from "../types";
 import { solveLinearSystem, solveMinimumCoverage } from "./linearAlgebra";
 
 describe("combat balance linear algebra", () => {
@@ -42,8 +45,8 @@ describe("combat balance linear algebra", () => {
 
 describe("combat balance source-of-truth model", () => {
   it("derives residence time from route geometry, locomotion, speed, and drag", () => {
-    const deckmouth = routeProfile("commissioning_exam", "deckmouth", DEFAULT_GAME_DEFINITION);
-    const shearJelly = routeProfile("commissioning_exam", "shear_jelly", DEFAULT_GAME_DEFINITION);
+    const deckmouth = routeProfile("morrow_pocket", "deckmouth", DEFAULT_GAME_DEFINITION);
+    const shearJelly = routeProfile("morrow_pocket", "shear_jelly", DEFAULT_GAME_DEFINITION);
 
     expect(deckmouth.pathCells).toBe(89);
     expect(deckmouth.roomsVisited).toBe(7);
@@ -65,8 +68,13 @@ describe("combat balance source-of-truth model", () => {
     expect(model.matrix[steam]?.[ox1]).toBe(2);
   });
 
+  it("keeps every solved damage family independently measurable", () => {
+    expect(new Set(Object.values(DAMAGE_SOURCE_FOR_FAMILY)).size).toBe(DAMAGE_FAMILIES.length);
+    expect(new Set(Object.values(DAMAGE_SOURCE_FOR_FAMILY))).toEqual(new Set(DAMAGE_SOURCE_IDS));
+  });
+
   it("propagates feed limits through every chlorine-sodium branch and OX-1 cadence", () => {
-    const throughput = idealThroughputProfile("commissioning_exam", DEFAULT_GAME_DEFINITION);
+    const throughput = idealThroughputProfile("morrow_pocket", DEFAULT_GAME_DEFINITION);
 
     expect(throughput.chlorAlkaliExtentPerSecond).toBeGreaterThan(0);
     expect(throughput.hydrogenChloridePerSecond).toBeCloseTo(
@@ -78,15 +86,38 @@ describe("combat balance source-of-truth model", () => {
       8
     );
     expect(throughput.ox1ExpectedIntervalSeconds).toBeGreaterThan(throughput.ox1CooldownSeconds);
+    expect(throughput.reactions).toHaveLength(30);
+    expect(
+      throughput.reactions.find(({ reactionId }) => reactionId === "hydrogen_fluoride_electrolysis")
+        ?.equipmentExtentPerSecondByLevel
+    ).toEqual([0.3, 0.46, 0.66]);
+    expect(throughput.supplies.every(({ portRate }) => portRate > 0)).toBe(true);
   });
+});
 
-  it("normalizes reference weapons before solving durable enemy roles", () => {
+describe("combat balance role solves", () => {
+  it("solves controlled reference roles before solving durable enemy roles", () => {
     const damage = solveFirstOrderDamage(DEFAULT_GAME_DEFINITION);
     const health = solveEnemyHealth(DEFAULT_GAME_DEFINITION, damage.scales);
 
-    expect(damage.scales.ox1_flash).toBeLessThan(1);
-    expect(damage.scales.chlorine_gas).toBeLessThan(1);
-    expect(damage.scales.hydrogen_chloride_gas).toBeCloseTo(1, 1);
+    damage.result.predicted.forEach((predicted, index) => {
+      expect(predicted).toBeCloseTo(damage.targets[index] ?? 0, 3);
+    });
+    for (const family of [
+      "ox1_flash",
+      "chlorine_gas",
+      "carbon_monoxide",
+      "hydrogen_fluoride",
+      "fluorine",
+      "uranium_chemistry",
+    ] as const) {
+      expect(damage.scales[family], family).toBeGreaterThan(0.95);
+      expect(damage.scales[family], family).toBeLessThan(1.05);
+    }
+    for (const family of PRIMARY_DAMAGE_FAMILIES) {
+      expect(damage.scales[family], family).toBeGreaterThanOrEqual(0.05);
+      expect(damage.scales[family], family).toBeLessThanOrEqual(20);
+    }
     expect(health.find(({ enemyType }) => enemyType === "splitback")?.solvedHealth).toBeGreaterThan(
       health.find(({ enemyType }) => enemyType === "deckmouth")?.solvedHealth ?? 0
     );

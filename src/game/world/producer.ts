@@ -42,9 +42,11 @@ const emptyHull = (hull: HullFragment | null): boolean =>
 const siteWithoutHull = (spec: SiteSpec, hull: HullFragment): SiteSpec => {
   const rooms = { ...spec.map.rooms };
   const connections = { ...spec.map.connections };
+  const utilityNodes = { ...spec.map.utilityNodes };
   for (const roomId of Object.keys(hull.rooms)) delete rooms[roomId];
   for (const connectionId of Object.keys(hull.connections)) delete connections[connectionId];
-  return { ...spec, map: { ...spec.map, rooms, connections } };
+  for (const utilityNodeId of Object.keys(hull.utilityNodes)) delete utilityNodes[utilityNodeId];
+  return { ...spec, map: { ...spec.map, rooms, connections, utilityNodes } };
 };
 
 export const produceAuthoredSite = (spec: SiteSpec, hull: HullFragment | null): ProducedSite => {

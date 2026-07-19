@@ -4,8 +4,8 @@ import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 
 import type { Translator } from "../localization/translator";
-import { OutletBuffers } from "./processControls/ActuatorControls";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
+import { EquipmentOperationStatus } from "./processControls/EquipmentOperationStatus";
 import { roomState } from "../game/world/instances";
 import { connectionRoomPair } from "../presentation/defaultGame";
 
@@ -29,9 +29,7 @@ export const ProcessControls = () => {
         transportPhaseAvailable(game, runId, "liquid"))
   );
   const locked = !["build", "prime"].includes(game.phase);
-  const hasCell = Object.values(room.equipment).some(
-    (instance) => instance?.equipmentId === "membrane_cell"
-  );
+  const operationSockets = socketIds.filter((socketId) => room.equipment[socketId]?.operation);
   const phaseLabel = localizedPhaseLabel(game.phase, translator);
   return (
     <section className="inspector-section process-controls">
@@ -53,7 +51,9 @@ export const ProcessControls = () => {
           </div>
         </>
       ) : null}
-      {hasCell && <OutletBuffers />}
+      {operationSockets.map((socketId) => (
+        <EquipmentOperationStatus key={socketId} roomId={roomId} socketId={socketId} />
+      ))}
       {connectedRuns.length > 0 && (
         <button
           type="button"

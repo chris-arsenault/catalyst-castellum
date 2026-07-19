@@ -1,0 +1,242 @@
+import type { ReactionDefinition, ReactionId } from "../../types";
+
+export const TRANSITION_METAL_REACTIONS = {
+  hematite_carbon_monoxide_reduction: {
+    id: "hematite_carbon_monoxide_reduction",
+    code: "FE-1",
+    kind: "chemical",
+    equation: "3 Fe₂O₃(s) + CO(g) → 2 Fe₃O₄(s) + CO₂(g)",
+    reactants: [
+      { species: "hematite", coefficient: 3 },
+      { species: "carbon_monoxide", coefficient: 1 },
+    ],
+    products: [
+      { species: "magnetite", coefficient: 2 },
+      { species: "carbon_dioxide", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.5,
+      halfSaturation: 2.5,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "hematite", order: 1 },
+          { species: "carbon_monoxide", order: 1 },
+        ],
+        activationTemperature: 58,
+        fullActivationTemperature: 105,
+      },
+      gasHeatPerExtent: 1.5,
+      roomHeatPerExtent: 0.34,
+    },
+  },
+  hematite_hydrogen_reduction: {
+    id: "hematite_hydrogen_reduction",
+    code: "FE-2",
+    kind: "chemical",
+    equation: "3 Fe₂O₃(s) + H₂(g) → 2 Fe₃O₄(s) + H₂O(g)",
+    reactants: [
+      { species: "hematite", coefficient: 3 },
+      { species: "hydrogen", coefficient: 1 },
+    ],
+    products: [
+      { species: "magnetite", coefficient: 2 },
+      { species: "steam", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.52,
+      halfSaturation: 2.5,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "hematite", order: 1 },
+          { species: "hydrogen", order: 1 },
+        ],
+        activationTemperature: 52,
+        fullActivationTemperature: 96,
+      },
+      gasHeatPerExtent: 1.1,
+      roomHeatPerExtent: 0.26,
+    },
+  },
+  magnetite_reoxidation: {
+    id: "magnetite_reoxidation",
+    code: "FE-3",
+    kind: "chemical",
+    equation: "4 Fe₃O₄(s) + O₂(g) → 6 Fe₂O₃(s) + heat",
+    reactants: [
+      { species: "magnetite", coefficient: 4 },
+      { species: "oxygen", coefficient: 1 },
+    ],
+    products: [{ species: "hematite", coefficient: 6 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.46,
+      halfSaturation: 2.5,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "magnetite", order: 1 },
+          { species: "oxygen", order: 1 },
+        ],
+        activationTemperature: 44,
+        fullActivationTemperature: 86,
+      },
+      gasHeatPerExtent: 3.4,
+      roomHeatPerExtent: 0.82,
+    },
+  },
+  nickel_oxide_reduction: {
+    id: "nickel_oxide_reduction",
+    code: "NI-1",
+    kind: "chemical",
+    equation: "NiO(s) + H₂(g) → Ni(s) + H₂O(g)",
+    reactants: [
+      { species: "nickel_oxide", coefficient: 1 },
+      { species: "hydrogen", coefficient: 1 },
+    ],
+    products: [
+      { species: "surface_nickel", coefficient: 1 },
+      { species: "steam", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.34,
+      halfSaturation: 1.8,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "nickel_oxide", order: 1 },
+          { species: "hydrogen", order: 1 },
+        ],
+        activationTemperature: 48,
+        fullActivationTemperature: 92,
+      },
+      gasHeatPerExtent: 0.8,
+      roomHeatPerExtent: 0.18,
+    },
+  },
+  nickel_carbonyl_formation: {
+    id: "nickel_carbonyl_formation",
+    code: "NI-2",
+    kind: "chemical",
+    equation: "Ni(s) + 4 CO(g) → Ni(CO)₄(g)",
+    reactants: [
+      { species: "surface_nickel", coefficient: 1 },
+      { species: "carbon_monoxide", coefficient: 4 },
+    ],
+    products: [{ species: "nickel_carbonyl", coefficient: 1 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.24,
+      halfSaturation: 2.2,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "surface_nickel", order: 1 },
+          { species: "carbon_monoxide", order: 2 },
+        ],
+        activationTemperature: -10,
+        fullActivationTemperature: 18,
+        deactivationTemperature: 42,
+        inactiveTemperature: 72,
+      },
+      gasHeatPerExtent: 0.2,
+      roomHeatPerExtent: 0.04,
+    },
+  },
+  nickel_carbonyl_deposition: {
+    id: "nickel_carbonyl_deposition",
+    code: "NI-3",
+    kind: "chemical",
+    equation: "Ni(CO)₄(g) → Ni(s) + 4 CO(g)",
+    reactants: [{ species: "nickel_carbonyl", coefficient: 1 }],
+    products: [
+      { species: "surface_nickel", coefficient: 1 },
+      { species: "carbon_monoxide", coefficient: 4 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.4,
+      halfSaturation: 1.2,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [{ species: "nickel_carbonyl", order: 1 }],
+        activationTemperature: 44,
+        fullActivationTemperature: 82,
+      },
+      gasHeatPerExtent: -0.7,
+      roomHeatPerExtent: -0.16,
+    },
+  },
+  nickel_deposit_oxidation: {
+    id: "nickel_deposit_oxidation",
+    code: "NI-4",
+    kind: "chemical",
+    equation: "2 Ni(s) + O₂(g) → 2 NiO(s) + heat",
+    reactants: [
+      { species: "surface_nickel", coefficient: 2 },
+      { species: "oxygen", coefficient: 1 },
+    ],
+    products: [{ species: "nickel_oxide", coefficient: 2 }],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.32,
+      halfSaturation: 1.8,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "surface_nickel", order: 1 },
+          { species: "oxygen", order: 1 },
+        ],
+        activationTemperature: 28,
+        fullActivationTemperature: 68,
+      },
+      gasHeatPerExtent: 2,
+      roomHeatPerExtent: 0.46,
+    },
+  },
+  nickel_catalyzed_methanation: {
+    id: "nickel_catalyzed_methanation",
+    code: "NI-5",
+    kind: "chemical",
+    equation: "CO(g) + 3 H₂(g) → CH₄(g) + H₂O(g) + heat",
+    reactants: [
+      { species: "carbon_monoxide", coefficient: 1 },
+      { species: "hydrogen", coefficient: 3 },
+    ],
+    products: [
+      { species: "methane", coefficient: 1 },
+      { species: "steam", coefficient: 1 },
+    ],
+    behavior: {
+      kind: "mass_action",
+      maximumRate: 0.58,
+      halfSaturation: 2.4,
+      contact: "gas",
+      forward: {
+        rateConstant: 1,
+        rateOrders: [
+          { species: "carbon_monoxide", order: 1 },
+          { species: "hydrogen", order: 2 },
+        ],
+        activationTemperature: 34,
+        fullActivationTemperature: 72,
+        deactivationTemperature: 145,
+        inactiveTemperature: 205,
+      },
+      catalyst: { species: "surface_nickel", halfSaturation: 0.8 },
+      gasHeatPerExtent: 3,
+      roomHeatPerExtent: 0.68,
+    },
+  },
+} satisfies Partial<Record<ReactionId, ReactionDefinition>>;

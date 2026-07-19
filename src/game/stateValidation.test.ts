@@ -10,7 +10,7 @@ describe("semantic game-state validation", () => {
       "flash_point",
       "make_the_reagent",
       "stored_chlorine",
-      "commissioning_exam",
+      "morrow_pocket",
     ] as const;
     for (const levelId of levelIds) {
       expect(validateGameState(createScenarioGame(levelId))).toEqual([]);
@@ -56,6 +56,22 @@ describe("semantic game-state validation", () => {
     expect(decodeGame(encodeGame(identity))).toBeNull();
   });
 
+  it("rejects reservoir records outside site authoring and inventory above capacity", () => {
+    const extra = createScenarioGame("flash_point");
+    extra.gasSources.detached = { gas: { ...extra.gasSources.gas_reservoir!.gas } };
+    expect(validateGameState(extra)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "supply_state_invalid" })])
+    );
+
+    const overloaded = createScenarioGame("morrow_pocket");
+    overloaded.liquidSources.liquid_reservoir_a!.liquid.water = 181;
+    expect(validateGameState(overloaded)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code: "supply_state_invalid" })])
+    );
+  });
+});
+
+describe("phase state validation", () => {
   it("rejects wave state in phases that cannot own spawned enemies", () => {
     const invalidPrime = createScenarioGame("flash_point");
     invalidPrime.phase = "prime";

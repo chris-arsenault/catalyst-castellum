@@ -13,6 +13,8 @@ import { createManualContent, createReactionMechanics } from "./manualContent";
 import { createNarrativeCopy } from "./narrativeCopy";
 import { createRoundReportCopy } from "./roundReportCopy";
 import { createPresentationSelectors } from "./selectors";
+import { createWaveForecastPresentation } from "./waveForecast";
+import { createSupplyPresentation } from "./supplyCopy";
 
 export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundle) => {
   const translator = createTranslator(locale);
@@ -31,6 +33,8 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     equipmentGradeEffect: createEquipmentGradeEffect(translator, formatters),
     limitingFactorCopy: createLimitingFactorCopy(translator),
     roundReportCopy: createRoundReportCopy(translator),
+    waveForecast: createWaveForecastPresentation(runtime.definition, runtime.queries, translator),
+    supplies: createSupplyPresentation(runtime.definition, runtime.queries, translator, formatters),
   });
 };
 

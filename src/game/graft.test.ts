@@ -138,6 +138,7 @@ describe("dismantling and carrying grafted modules", () => {
       equipmentId: "gas_agitator",
       level: 1,
       enabled: false,
+      operation: null,
     };
     const result = executeCommand(grafted, { type: "dismantle_module", roomId }, definition);
     expect(result.accepted).toBe(false);
@@ -199,6 +200,7 @@ describe("the persistent hull route", () => {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
+      operation: null,
     };
     roomState(grafted.state, roomId).residue = 8;
     roomState(grafted.state, roomId).pressurePulse = 12;

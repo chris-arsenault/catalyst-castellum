@@ -28,6 +28,8 @@ describe("bound game presentation", () => {
     expect(
       presentation.selectors.roomAnalysis(roomState(game, "furnace")).hazardLabel
     ).toBeDefined();
+    expect(presentation.waveForecast(game).composition[0]?.name).toBe("⟦Deckmouth⟧");
+    expect(presentation.supplies(game)[0]?.name).toBe("⟦Gas reservoir⟧");
     expect(presentation.commandCopy(runtime.execute(game, { type: "start_prime" }))).toBe(
       "⟦The current phase keeps this action locked.⟧"
     );

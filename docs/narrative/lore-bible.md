@@ -46,6 +46,9 @@ The finale closes the Pell emergence before it becomes a lasting Bloom. The wide
 
 ## Story delivery and prose rules
 
+Register, vocabulary, and review rules for writing the strings themselves live in the
+[narrative and copy style guide](style-guide.md).
+
 - Each act begins with two paragraphs of setting before its first call. The introduction establishes where the crew is, how people live and work there, and what changed since the previous act.
 - Contract calls use a talking-head sequence with one speaker and one complete turn at a time. The player advances the conversation, then opens a separate mechanical mission briefing.
 - A dialogue turn states what the speaker wants, what concrete fact they know, or what action follows. It avoids strings of atmospheric fragments.

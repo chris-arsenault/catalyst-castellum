@@ -8,13 +8,7 @@ import type {
   RoomId,
   ConnectionId,
 } from "../types";
-import {
-  equipmentAvailable,
-  gasSourceAvailable,
-  liquidSourceAvailable,
-  nextLevelIdFor,
-  connectionAvailable,
-} from "./campaign";
+import { equipmentAvailable, nextLevelIdFor, connectionAvailable } from "./campaign";
 import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } from "./equipment";
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
@@ -33,6 +27,7 @@ import {
   portalStatesForMap,
   topologyHasRoutes,
 } from "./hullCommandPolicy";
+import { evaluateSupplyCharge } from "./supplyCommandPolicy";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -102,6 +97,7 @@ const evaluateInstall = (
     equipmentId: command.equipmentId,
     level: 1,
     enabled: true,
+    operation: null,
   };
   if (!equipmentFits(state, command.roomId, command.socketId, instance, gameDefinition))
     return reject("capacity", { cost });
@@ -147,6 +143,12 @@ const evaluateDismantleEquipment = (
   if (state.phase !== "build") return reject("invalid_phase");
   const instance = roomState(state, command.roomId).equipment[command.socketId];
   if (!instance) return reject("empty_socket");
+  const retainedOutput = Object.values(instance.operation?.outputs ?? {}).some((output) =>
+    output?.phase === "gas"
+      ? gasAmountTotal(output.gas) > 1e-8
+      : output?.phase === "liquid" && liquidAmountTotal(output.liquid) > 1e-8
+  );
+  if (retainedOutput) return reject("retained_inventory");
   return allow({ refund: equipmentDismantleRefund(instance, definition) });
 };
 
@@ -294,26 +296,6 @@ const evaluateDismantleConnection = (
   return allow({ refund });
 };
 
-const evaluateGasCharge = (
-  state: GameState,
-  command: Extract<GameCommand, { type: "charge_gas_source" }>,
-  gameDefinition: GameDefinition
-): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
-  if (!gasSourceAvailable(state, command.sourceId)) return reject("unavailable");
-  const definition = gameDefinition.gasSources[command.sourceId];
-  const current = gasAmountTotal(state.gasSources[command.sourceId].gas);
-  const ratedAmount = Object.values(definition.chargeGas).reduce(
-    (total, amount) => total + (amount ?? 0),
-    0
-  );
-  const amount = Math.min(ratedAmount, definition.capacity - current);
-  const cost = Math.ceil(definition.chargeCost * (amount / ratedAmount));
-  if (amount <= 0.01) return reject("capacity", { amount, cost });
-  if (state.matter < cost) return reject("insufficient_matter", { amount, cost });
-  return allow({ amount, cost });
-};
-
 const requirePhase = (state: GameState, phase: GameState["phase"]): CommandDecision =>
   state.phase === phase ? allow() : reject("invalid_phase");
 
@@ -334,22 +316,6 @@ const evaluateDockAtSite = (state: GameState, definition: GameDefinition): Comma
 
 const evaluateLiveControl = (state: GameState): CommandDecision =>
   simulationActive(state) ? allow() : reject("invalid_phase");
-
-const evaluateLiquidCharge = (
-  state: GameState,
-  command: Extract<GameCommand, { type: "charge_liquid_source" }>,
-  gameDefinition: GameDefinition
-): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
-  if (!liquidSourceAvailable(state, command.sourceId)) return reject("unavailable");
-  const definition = gameDefinition.liquidSources[command.sourceId];
-  const current = liquidAmountTotal(state.liquidSources[command.sourceId].liquid);
-  const amount = Math.min(definition.chargeAmount, definition.capacity - current);
-  const cost = Math.ceil(definition.chargeCost * (amount / definition.chargeAmount));
-  if (amount <= 0.01) return reject("capacity", { amount, cost });
-  if (state.matter < cost) return reject("insufficient_matter", { amount, cost });
-  return allow({ amount, cost });
-};
 
 /* eslint-disable complexity -- Exhaustive policy over the public command union is intentional. */
 export const evaluateCommand = (
@@ -390,9 +356,8 @@ export const evaluateCommand = (
     case "set_portal":
       return evaluateSetPortal(state, command, definition);
     case "charge_gas_source":
-      return evaluateGasCharge(state, command, definition);
     case "charge_liquid_source":
-      return evaluateLiquidCharge(state, command, definition);
+      return evaluateSupplyCharge(state, command, definition);
     case "start_prime":
       return requirePhase(state, "build");
     case "start_assault":

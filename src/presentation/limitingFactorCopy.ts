@@ -22,6 +22,11 @@ const CONDITION_KEYS = Object.fromEntries(
     "gas_agitation",
     "combustible_batch",
     "cooldown",
+    "reaction_kinetics",
+    "reaction_temperature",
+    "reaction_pressure",
+    "catalyst_inventory",
+    "reaction_inhibition",
   ].map((code) => [code, `presentation.limit.${code}`])
 ) as Record<LimitConditionCode, LocaleKey>;
 

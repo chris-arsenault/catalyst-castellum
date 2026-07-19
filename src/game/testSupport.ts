@@ -1,9 +1,9 @@
 import { createScenarioGame, executeCommand } from "./simulation";
 import type { GameState } from "./types";
 
-export const createCommissioningGame = (): GameState => {
-  const briefing = createScenarioGame("commissioning_exam");
+export const createMorrowPocketGame = (): GameState => {
+  const briefing = createScenarioGame("morrow_pocket");
   const result = executeCommand(briefing, { type: "begin_level" });
-  if (!result.accepted) throw new Error(result.code ?? "Could not enter commissioning scenario");
+  if (!result.accepted) throw new Error(result.code ?? "Could not enter Morrow Pocket");
   return result.state;
 };

@@ -11,6 +11,7 @@ import type {
 import type { WorldMap } from "../world/map";
 import {
   addChannels,
+  channelTotal,
   emptyHazardChannels,
   type AppliedDamagePacket,
   type DamageApplication,
@@ -18,13 +19,7 @@ import {
 } from "./damage";
 import { enemyGasZone, enemyWorldPosition } from "./enemyPosition";
 import { upsertContinuousCombatIncident } from "./events";
-import { liquidSurfaceElevation } from "./physics";
-import { roomHazards } from "./roomState";
-
-const channelsWith = (channel: keyof HazardChannels, amount: number): HazardChannels => ({
-  ...emptyHazardChannels(),
-  [channel]: amount,
-});
+import { liquidSurfaceElevation, roomHazardsBySource } from "./physics";
 
 export const environmentalDamagePackets = (
   room: RoomState,
@@ -40,40 +35,25 @@ export const environmentalDamagePackets = (
     enemy.mode !== "climbing" &&
     enemy.mode !== "falling" &&
     liquidSurfaceElevation(room, gameDefinition) > footElevation;
-  const hazards = roomHazards(
+  const hazards = roomHazardsBySource(
     room,
     floorContact,
     definition.needsOxygen,
     enemyGasZone(enemy, map),
     gameDefinition
   );
-  return [
-    {
-      key: "environment:atmospheric_exposure",
-      sourceId: "atmospheric_exposure",
-      channels: channelsWith("atmosphere", hazards.atmosphere * dt),
-    },
-    {
-      key: "environment:surface_corrosion",
-      sourceId: "surface_corrosion",
-      channels: channelsWith("corrosion", hazards.corrosion * dt),
-    },
-    {
-      key: "environment:thermal_exposure",
-      sourceId: "thermal_exposure",
-      channels: channelsWith("heat", hazards.heat * dt),
-    },
-    {
-      key: "environment:catastrophic_overpressure",
-      sourceId: "catastrophic_overpressure",
-      channels: channelsWith("pressure", hazards.pressure * dt),
-    },
-    {
-      key: "environment:radiation_field",
-      sourceId: "radiation_field",
-      channels: channelsWith("radiation", hazards.radiation * dt),
-    },
-  ];
+  return Object.entries(hazards).flatMap(([sourceId, sourceHazards]) => {
+    const channels = {
+      atmosphere: sourceHazards.atmosphere * dt,
+      corrosion: sourceHazards.corrosion * dt,
+      heat: sourceHazards.heat * dt,
+      pressure: sourceHazards.pressure * dt,
+      radiation: sourceHazards.radiation * dt,
+    };
+    return channelTotal(channels) > 0
+      ? [{ key: `environment:${sourceId}`, sourceId: sourceId as DamageSourceId, channels }]
+      : [];
+  });
 };
 
 interface ExposureIncidentBuilder {

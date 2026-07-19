@@ -8,6 +8,7 @@ import { guidedPhaseActionReason, guideDefinitionFor, guideStepIndexFor } from "
 import { tutorialText } from "./tutorialCopy";
 import { roomState } from "../game/world/instances";
 import { DEFAULT_GAME_DEFINITION } from "../game/definition";
+import { createEquipmentInstance } from "../game/engine/equipment";
 
 const command = (source: GameState, value: GameCommand): GameState => {
   const result = executeCommand(source, value);
@@ -30,16 +31,18 @@ const enterAcidRound = (roundIndex: 2 | 3): GameState => {
     equipment: [...availability.equipment],
     gasLines: [...availability.gasLines],
     liquidLines: [...availability.liquidLines],
-    gasSources: [...availability.gasSources],
-    liquidSources: [...availability.liquidSources],
   };
-  game.gasBuffers.anode_header.gas.chlorine = 16;
-  game.gasBuffers.cathode_header.gas.hydrogen = 16;
-  roomState(game, "lower_intake").equipment.socket_a = {
-    equipmentId: "membrane_cell",
-    level: 1,
-    enabled: true,
-  };
+  const cell = createEquipmentInstance(
+    { equipmentId: "membrane_cell", level: 1, enabled: true },
+    DEFAULT_GAME_DEFINITION
+  );
+  const anode = cell.operation?.outputs.anode_header;
+  const cathode = cell.operation?.outputs.cathode_header;
+  if (!anode || anode.phase !== "gas" || !cathode || cathode.phase !== "gas")
+    throw new Error("Membrane cell gas outlets are missing.");
+  anode.gas.chlorine = 16;
+  cathode.gas.hydrogen = 16;
+  roomState(game, "lower_intake").equipment.socket_a = cell;
   return game;
 };
 

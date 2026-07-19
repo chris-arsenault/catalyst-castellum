@@ -3,9 +3,10 @@ import type { DamageSourceId, GameEvent } from "../game/types";
 import { DEFAULT_FORMATTERS, type LocaleFormatters } from "../localization/formatters";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
-import { enemyCopy, equipmentCopy, processCopy } from "./entityCopy";
+import { enemyCopy, equipmentCopy } from "./entityCopy";
 import { createLevelCopy } from "./levelCopy";
 import { definitionRoom } from "../game/world/instances";
+import { supplyFormula } from "./supplyCopy";
 
 export interface EventCopy {
   detail: string;
@@ -25,11 +26,18 @@ interface EventCopyContext extends EventCopyServices {
 type EventCopyHandler = (event: GameEvent, context: EventCopyContext) => EventCopy | null;
 
 const DAMAGE_SOURCE_KEYS: Record<DamageSourceId, LocaleKey> = {
-  atmospheric_exposure: "events.damage.atmospheric_exposure",
-  surface_corrosion: "events.damage.surface_corrosion",
+  asphyxiation: "events.damage.asphyxiation",
+  carbon_monoxide: "events.damage.carbon_monoxide",
+  chlorine_gas: "events.damage.chlorine_gas",
+  hydrogen_chloride_gas: "events.damage.hydrogen_chloride_gas",
+  liquid_corrosion: "events.damage.liquid_corrosion",
+  nitrogen_chemistry: "events.damage.nitrogen_chemistry",
+  nickel_carbonyl: "events.damage.nickel_carbonyl",
+  hydrogen_fluoride: "events.damage.hydrogen_fluoride",
+  fluorine: "events.damage.fluorine",
+  uranium_chemistry: "events.damage.uranium_chemistry",
   thermal_exposure: "events.damage.thermal_exposure",
   catastrophic_overpressure: "events.damage.catastrophic_overpressure",
-  radiation_field: "events.damage.radiation_field",
   hydrogen_oxygen_combustion: "events.damage.hydrogen_oxygen_combustion",
 };
 
@@ -99,24 +107,32 @@ const infrastructureCopy: EventCopyHandler = (event, context) => {
     };
   }
   if (event.code === "gas_source_charged") {
-    const source = definition.gasSources[event.parameters.sourceId];
+    const source = definition.levels[event.levelId].supplies.find(
+      (supply) => supply.phase === "gas" && supply.id === event.parameters.sourceId
+    );
+    if (!source) return null;
+    const formula = supplyFormula(definition, source);
     return {
-      title: translator.text("events.source.gas.title", { formula: source.formula }),
+      title: translator.text("events.source.gas.title", { formula }),
       detail: translator.text("events.source.gas.detail", {
         cost: formatters.number(event.parameters.cost),
         amount: formatters.number(event.parameters.amount, 0),
-        formula: source.formula,
+        formula,
       }),
     };
   }
   if (event.code === "liquid_source_charged") {
-    const source = definition.liquidSources[event.parameters.sourceId];
+    const source = definition.levels[event.levelId].supplies.find(
+      (supply) => supply.phase === "liquid" && supply.id === event.parameters.sourceId
+    );
+    if (!source) return null;
+    const formula = supplyFormula(definition, source);
     return {
-      title: translator.text("events.source.liquid.title", { formula: source.formula }),
+      title: translator.text("events.source.liquid.title", { formula }),
       detail: translator.text("events.source.liquid.detail", {
         cost: formatters.number(event.parameters.cost),
         amount: formatters.number(event.parameters.amount, 0),
-        formula: source.formula,
+        formula,
       }),
     };
   }
@@ -134,14 +150,14 @@ const processEventCopy: EventCopyHandler = (event, context) => {
         title: translator.text("events.separator.title"),
         detail: translator.text("events.separator.detail"),
       };
-    case "process_started": {
-      const process = processCopy(
-        definition.processes[event.parameters.processId],
+    case "equipment_operation_started": {
+      const equipment = equipmentCopy(
+        definition.equipment[event.parameters.equipmentId],
         translator
       ).name;
       return {
-        title: translator.text("events.process.title", { process }),
-        detail: translator.text("events.process.detail", { room }),
+        title: translator.text("events.equipmentOperation.title", { equipment }),
+        detail: translator.text("events.equipmentOperation.detail", { room }),
       };
     }
     case "hcl_production_started":

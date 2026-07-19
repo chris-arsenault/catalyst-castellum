@@ -1,62 +1,6 @@
-import { cell } from "../../spatial";
-import type { GasTapDefinition, LiquidTapDefinition, MapRoom } from "../../world/map";
-import type { GeneratedSiteSpec, SiteRoomChunk } from "../../world/siteGeneratorTypes";
+import type { GeneratedSiteSpec } from "../../world/siteGeneratorTypes";
 import { WORLD_MAP } from "../worldMap";
-
-const gasTap = (overrides: Partial<GasTapDefinition> = {}): GasTapDefinition => ({
-  capacity: 18,
-  includeRoomInventory: true,
-  roomPortHeight: 0.72,
-  sourceIds: [],
-  ...overrides,
-});
-
-const liquidTap = (overrides: Partial<LiquidTapDefinition> = {}): LiquidTapDefinition => ({
-  capacity: 18,
-  includeRoomInventory: true,
-  roomPortHeight: 0.12,
-  sourceIds: [],
-  ...overrides,
-});
-
-const chunk = (
-  id: string,
-  code: string,
-  structure: MapRoom["structure"],
-  width: number,
-  height: number,
-  overrides: Partial<Omit<MapRoom, "id" | "code" | "structure" | "bounds">> = {}
-): SiteRoomChunk => ({
-  id,
-  room: {
-    id,
-    code,
-    structure,
-    ambientTemperature: 22,
-    socketCount: structure === "entry" ? 0 : 2,
-    bounds: { column: 0, elevation: 0, width, height },
-    socketCells:
-      structure === "entry"
-        ? {}
-        : {
-            socket_a: cell(Math.floor(width * 0.34), 0),
-            socket_b: cell(Math.floor(width * 0.72), 0),
-          },
-    platformCells: [],
-    ladderCells: [],
-    taps: { gas: gasTap(), liquid: liquidTap() },
-    hardpoints: [],
-    provenance: "site",
-    ...overrides,
-  },
-});
-
-const utilityNodes = Object.fromEntries(
-  Object.entries(WORLD_MAP.utilityNodes).map(([id, node]) => [
-    id,
-    { ...node, cell: { ...node.cell } },
-  ])
-);
+import { siteGasTap, siteLiquidTap, siteRoomChunk } from "./siteAuthoring";
 
 /**
  * The chlor-alkali site's chunk vocabulary carries one continuous process train from
@@ -72,14 +16,14 @@ export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
   coreAnchor: { ...WORLD_MAP.coreAnchor },
   coreBreachCell: { ...WORLD_MAP.coreBreachCell },
   chunks: [
-    chunk("west_intake", "ENTRY", "entry", 4, 8),
-    chunk("switchyard", "CL-01", "room", 14, 8),
-    chunk("lower_intake", "CL-02", "room", 15, 10, {
-      taps: { gas: gasTap({ capacity: 22 }), liquid: liquidTap({ capacity: 24 }) },
+    siteRoomChunk("west_intake", "ENTRY", "entry", 4, 8),
+    siteRoomChunk("switchyard", "CL-01", "room", 14, 8),
+    siteRoomChunk("lower_intake", "CL-02", "room", 15, 10, {
+      taps: { gas: siteGasTap({ capacity: 22 }), liquid: siteLiquidTap({ capacity: 24 }) },
     }),
-    chunk("reservoir", "CL-03", "room", 18, 12),
-    chunk("furnace", "CL-04", "room", 15, 12),
-    chunk("gallery", "CL-05", "room", 12, 9),
+    siteRoomChunk("reservoir", "CL-03", "room", 18, 12),
+    siteRoomChunk("furnace", "CL-04", "room", 15, 12),
+    siteRoomChunk("gallery", "CL-05", "room", 12, 9),
   ],
   chunkOrders: [
     ["west_intake", "switchyard", "reservoir", "lower_intake", "furnace", "gallery"],
@@ -171,7 +115,7 @@ export const CHLOR_ALKALI_SITE: GeneratedSiteSpec = {
       buildCost: 8,
     },
   ],
-  utilityNodes,
+  utilityNodes: {},
 };
 
 /** Selected from the generated candidate sheet; stable so tutorial guidance is reproducible. */

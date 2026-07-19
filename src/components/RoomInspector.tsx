@@ -19,27 +19,11 @@ import { HydrogenChlorineGate } from "./HydrogenChlorineGate";
 import { OxidizerIgnitionGate } from "./OxidizerIgnitionGate";
 import { ProcessControls } from "./ProcessControls";
 import { reactionCopy, roomCopy, speciesCopy } from "../presentation/entityCopy";
-import type { LocaleFormatters } from "../localization/formatters";
-import type { Translator } from "../localization/translator";
-import type { HazardLabel } from "../presentation/roomCopy";
 import { RecentIncidents } from "./roomInspector/RecentIncidents";
+import { StationaryComposition } from "./roomInspector/StationaryComposition";
+import { formatPercent, localizedHazard } from "./roomInspector/formatters";
 import { roomState } from "../game/world/instances";
 import { roomDefinition } from "../presentation/defaultGame";
-
-const formatPercent = (value: number, formatters: LocaleFormatters): string => {
-  if (value > 0 && value < 0.001) return `<${formatters.percent(0.001, 1)}`;
-  return formatters.percent(value, value < 0.1 ? 1 : 0);
-};
-
-const localizedHazard = (hazard: HazardLabel, translator: Translator): string => {
-  const keys = {
-    CLEAR: "ui.room.hazard.clear",
-    LOW: "ui.room.hazard.low",
-    HOSTILE: "ui.room.hazard.hostile",
-    LETHAL: "ui.room.hazard.lethal",
-  } as const;
-  return translator.text(keys[hazard]);
-};
 
 const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
   const { formatters, selectors, translator } = useGamePresentation();
@@ -189,6 +173,7 @@ const Composition = () => {
       </div>
       <GasComposition />
       <LiquidComposition />
+      <StationaryComposition />
     </section>
   );
 };
@@ -311,7 +296,10 @@ const ReactionPanel = () => {
               <div key={reactionId}>
                 <span>{reaction.code}</span>
                 <strong>{reactionCopy(reaction, translator).name}</strong>
-                <em>{formatters.measurement(reading.lastRate, "mol-eq/s", 2)}</em>
+                <em>
+                  {translator.text(`ui.room.reactionDirection.${reading.direction}`)} ·{" "}
+                  {formatters.measurement(reading.lastRate, "mol-eq/s", 2)}
+                </em>
                 <small>
                   {translator.text("ui.room.limiting", {
                     factor: factorCopy(reading.limitingFactor),

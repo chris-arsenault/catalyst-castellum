@@ -1,7 +1,7 @@
-import type { EquipmentInstance, EquipmentSocketId, RoomId } from "../types";
+import type { EquipmentLoadout, EquipmentSocketId, RoomId } from "../types";
 
 type ScenarioRoomEquipment = Partial<
-  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
+  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentLoadout>>>
 >;
 
 export const TUTORIAL_EQUIPMENT: ScenarioRoomEquipment = {

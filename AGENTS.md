@@ -1,6 +1,21 @@
 # Repository Instructions
 
+## Campaign and encounter design
+
+Tutorials demonstrate tools. Sites test defenses. Chemistry creates strategies.
+
+- Introduce controls and simulation rules through tutorials, then let encounters support multiple
+  materially different defenses.
+- Author sites around geometry, resources, enemy composition, timing, and economic pressure rather
+  than a required reaction chain or prescribed room configuration.
+- Treat newly available chemistry as an additional strategic option. Keep established builds viable
+  through soft counters, overlapping combat roles, and compounding process interactions.
+
 ## Player-facing copy
+
+Voice, register, vocabulary, and canon for all player-facing prose are governed by the
+[narrative and copy style guide](docs/narrative/style-guide.md). The rules below cover
+sentence-level mechanics for interface strings.
 
 - Write player-facing copy as affirmative, present-tense declarations.
 - Center each message on useful game information: the current state, its immediate consequence, or the player's next action.

@@ -1,11 +1,11 @@
 import type { LevelDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
+import { GAS_RESERVOIR_ID, REACTANT_GAS_CHARGE, gasSupply } from "../supplies";
 import { availability, emptyLoadout, gasRun } from "./helpers";
 
 const flashAvailability = availability({
   equipment: ["gas_agitator"],
   gasLines: ["gas:core__furnace"],
-  gasSources: ["starter_gas_header"],
 });
 
 const secondChamberAvailability = availability({
@@ -16,7 +16,6 @@ const secondChamberAvailability = availability({
     "gas:core__reservoir",
     "gas:core__gallery",
   ],
-  gasSources: ["starter_gas_header"],
 });
 
 /** The exam opens one unauthored pair: the player may route a brand-new duct. */
@@ -29,7 +28,6 @@ const corridorExamAvailability = availability({
     "gas:core__gallery",
     "gas:reservoir__washlock",
   ],
-  gasSources: ["starter_gas_header"],
 });
 
 export const FLASH_POINT_LEVEL: LevelDefinition = {
@@ -41,6 +39,17 @@ export const FLASH_POINT_LEVEL: LevelDefinition = {
   startingMatter: 16,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  supplies: [
+    gasSupply({
+      id: GAS_RESERVOIR_ID,
+      code: "G-1",
+      capacity: 150,
+      initial: { hydrogen: 100, oxygen: 50 },
+      availableFromRound: "first_spark",
+      replenishment: { kind: "unlimited", contents: REACTANT_GAS_CHARGE },
+      accent: "#ed9a48",
+    }),
+  ],
   site: null,
   loadout: {
     ...emptyLoadout(),

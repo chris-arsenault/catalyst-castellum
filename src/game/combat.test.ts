@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   ROOM_REACTION_IDS,
   type EnemyState,
+  type EquipmentInstance,
   type GameState,
   type GasAmounts,
   type HazardChannels,
@@ -25,8 +26,10 @@ import { emptyDamageLedger, emptyHazardChannels, type HazardBurst } from "./engi
 import { makeStats } from "./engine/events";
 import { CATASTROPHIC_PRESSURE_START, STANDARD_PRESSURE } from "./engine/physics";
 import { roomState } from "./world/instances";
+import { emptyGas, emptyLiquid, emptyStationary } from "./materials";
 
 const gas = (scale = 1): GasAmounts => ({
+  ...emptyGas(),
   oxygen: 10.5 * scale,
   nitrogen: 39.5 * scale,
   carbon_dioxide: 0,
@@ -43,13 +46,8 @@ const room = (pressureScale = 1, id: RoomState["id"] = "furnace"): RoomState => 
     upper: gas((pressureScale * roomVolume(id)) / 100),
   },
   gasTemperature: { lower: 22, upper: 22 },
-  liquid: {
-    water: 0,
-    sodium_chloride: 0,
-    sodium_hydroxide: 0,
-    sodium_hypochlorite: 0,
-    hydrochloric_acid: 0,
-  },
+  liquid: emptyLiquid(),
+  stationary: emptyStationary(),
   temperature: 22,
   residue: 0,
   reactionIntensity: 0,
@@ -61,11 +59,19 @@ const room = (pressureScale = 1, id: RoomState["id"] = "furnace"): RoomState => 
       reactionId,
       {
         lastRate: 0,
+        direction: "idle",
         limitingFactor: { kind: "condition", code: "conditions", zone: null },
       },
     ])
   ) as RoomState["reactions"],
   equipment: { socket_a: null, socket_b: null },
+});
+
+const gasAgitator = (enabled: boolean): EquipmentInstance => ({
+  equipmentId: "gas_agitator",
+  level: 1,
+  enabled,
+  operation: null,
 });
 
 const enemy = (health = 200): EnemyState => {
@@ -205,7 +211,7 @@ describe("position-derived surface contact", () => {
 
     resolveEnemyCombat(dryState, 0.1, []);
 
-    expect(elevated.damageBySource.surface_corrosion.corrosion).toBe(0);
+    expect(elevated.damageBySource.liquid_corrosion.corrosion).toBe(0);
 
     const immersed = enemy(200);
     immersed.pathIndex = path.findIndex(
@@ -217,7 +223,7 @@ describe("position-derived surface contact", () => {
 
     resolveEnemyCombat(wetState, 0.1, []);
 
-    expect(immersed.damageBySource.surface_corrosion.corrosion).toBeGreaterThan(0);
+    expect(immersed.damageBySource.liquid_corrosion.corrosion).toBeGreaterThan(0);
   });
 });
 
@@ -240,7 +246,7 @@ describe("damage attribution", () => {
     const state = stateFor(hostileRoom, [target]);
 
     resolveEnemyCombat(state, 0.1, []);
-    const first = state.incidents.find((incident) => incident.sourceId === "atmospheric_exposure");
+    const first = state.incidents.find((incident) => incident.sourceId === "chlorine_gas");
     expect(first?.damageByChannel.atmosphere).toBeGreaterThan(0);
     expect(first?.targets).toHaveLength(1);
     const firstDamage = first?.damageByChannel.atmosphere ?? 0;
@@ -249,7 +255,7 @@ describe("damage attribution", () => {
     resolveEnemyCombat(state, 0.1, []);
 
     const atmosphericIncidents = state.incidents.filter(
-      (incident) => incident.sourceId === "atmospheric_exposure"
+      (incident) => incident.sourceId === "chlorine_gas"
     );
     expect(atmosphericIncidents).toHaveLength(1);
     expect(atmosphericIncidents[0]?.damageByChannel.atmosphere).toBeGreaterThan(firstDamage);
@@ -297,7 +303,7 @@ describe("central damage resolution", () => {
     const forwardEnemy = enemy(100);
     const corrosion = {
       key: "corrosion",
-      sourceId: "surface_corrosion" as const,
+      sourceId: "liquid_corrosion" as const,
       channels: { ...emptyHazardChannels(), corrosion: 80 },
     };
     const pressure = {
@@ -312,7 +318,7 @@ describe("central damage resolution", () => {
     applyDamagePackets(reverseState, reverseEnemy, [pressure, corrosion]);
 
     expect(forwardEnemy.damageTaken).toBeCloseTo(100, 8);
-    expect(forwardEnemy.damageBySource.surface_corrosion.corrosion).toBeCloseTo(50, 8);
+    expect(forwardEnemy.damageBySource.liquid_corrosion.corrosion).toBeCloseTo(50, 8);
     expect(forwardEnemy.damageBySource.catastrophic_overpressure.pressure).toBeCloseTo(50, 8);
     expect(reverseEnemy.damageBySource).toEqual(forwardEnemy.damageBySource);
     expect(forwardState.stats.damageByChannel).toEqual(reverseState.stats.damageByChannel);
@@ -325,7 +331,7 @@ describe("OX-1 burst incidents", () => {
     const target = enemy(200);
     const state = stateFor(room(), [target]);
     const furnace = roomState(state, "furnace");
-    furnace.equipment.socket_a = { equipmentId: "gas_agitator", level: 1, enabled: true };
+    furnace.equipment.socket_a = gasAgitator(true);
     furnace.gas.lower.hydrogen = 16;
 
     const flash = simulateHydrogenOxygenFlash(state, roomState(state, "furnace"), "lower", 0.1);
@@ -352,7 +358,7 @@ describe("OX-1 burst incidents", () => {
       zone: "lower",
     });
 
-    furnace.equipment.socket_a = { equipmentId: "gas_agitator", level: 1, enabled: false };
+    furnace.equipment.socket_a = gasAgitator(false);
     expect(ignite()).toBeNull();
 
     Object.assign(furnace.equipment.socket_a ?? {}, { enabled: true });

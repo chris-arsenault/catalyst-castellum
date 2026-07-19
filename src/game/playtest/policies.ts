@@ -2,7 +2,7 @@ import { WORLD_MAP } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
 import type { RandomSource } from "../world/seededRandom";
 import type { PlaytestPlan } from "./types";
-import { LEVEL_PLAYTEST_PLANS } from "../content/playtestPlans";
+import { primaryReferenceBuildFor, referenceBuildsFor } from "../content/playtestPortfolios";
 
 export { seededRandom } from "../world/seededRandom";
 
@@ -39,28 +39,32 @@ const shuffle = (commands: GameCommand[], random: RandomSource): GameCommand[] =
 
 export const doNothingPlan = (): PlaytestPlan => ({
   name: "do_nothing",
-  commands: [],
-  primeFraction: 1,
+  archetype: null,
+  rounds: [],
 });
 
-export const intendedPlan = (levelId: LevelId): PlaytestPlan => ({
-  name: "intended",
-  commands: [...LEVEL_PLAYTEST_PLANS[levelId].commands],
-  primeFraction: 1,
-});
+export const referencePlans = (levelId: LevelId): PlaytestPlan[] => referenceBuildsFor(levelId);
 
-export const randomPlan = (
+export const primaryReferencePlan = (levelId: LevelId): PlaytestPlan =>
+  primaryReferenceBuildFor(levelId);
+
+export const mutatedReferencePlan = (
   levelId: LevelId,
   quality: number,
   random: RandomSource
 ): PlaytestPlan => {
-  const candidates = LEVEL_PLAYTEST_PLANS[levelId].commands;
-  const selected = candidates
-    .filter(() => random.next() < quality)
-    .map((command) => maybeMisplace(command, quality, random));
+  const reference = primaryReferencePlan(levelId);
   return {
-    name: `random_${quality.toFixed(2)}`,
-    commands: shuffle(selected, random),
-    primeFraction: Math.min(1, 0.32 + quality * 0.68),
+    name: `mutation_${reference.name}_${quality.toFixed(2)}`,
+    archetype: reference.archetype,
+    rounds: reference.rounds.map((round) => {
+      const selected = round.commands
+        .filter(() => random.next() < quality)
+        .map((command) => maybeMisplace(command, quality, random));
+      return {
+        commands: shuffle(selected, random),
+        primeFraction: Math.min(round.primeFraction, 0.32 + quality * 0.68),
+      };
+    }),
   };
 };

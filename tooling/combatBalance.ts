@@ -2,6 +2,7 @@
 import { DEFAULT_GAME_DEFINITION } from "../src/game/definition";
 import {
   DAMAGE_FAMILIES,
+  FAMILY_REFERENCE_EXPOSURES,
   PRIMARY_DAMAGE_FAMILIES,
   conduitProfiles,
   deriveBalancedDefinition,
@@ -28,6 +29,8 @@ import {
   resolveEnemyLevel,
 } from "../src/game/engine/enemyLevel";
 import { ENEMY_TYPES, LEVEL_IDS, type EnemyType } from "../src/game/types";
+import { printEnemies, printVerification } from "./combatBalanceEnemyPrint";
+import { number, table } from "./tableFormat";
 
 const siteLevelProgression = () =>
   LEVEL_IDS.map((levelId) => {
@@ -51,17 +54,16 @@ const siteLevelProgression = () =>
     };
   });
 
-interface CombatBalanceReport {
+export interface CombatBalanceReport {
   assumptions: {
-    gasPartialRatioExcess: number;
-    liquidStrengthExcess: number;
+    familyReferenceExposures: typeof FAMILY_REFERENCE_EXPOSURES;
     temperatureExcessCelsius: number;
     staticPressureRatioExcess: number;
     statement: string;
   };
   routes: ReturnType<typeof routeProfile>[];
   conduits: ReturnType<typeof conduitProfiles>;
-  throughput: ReturnType<typeof idealThroughputProfile>;
+  throughput: ReturnType<typeof idealThroughputProfile>[];
   stoichiometry: ReturnType<typeof stoichiometryModel>;
   levelProgression: ReturnType<typeof siteLevelProgression>;
   referenceDamage: ReturnType<typeof referenceDamageProfiles>;
@@ -73,20 +75,6 @@ interface CombatBalanceReport {
   behaviors: ReturnType<typeof enemyBehaviorProfiles>;
   verification: ReturnType<typeof verifyLiveBalance>;
 }
-
-const number = (value: number, digits = 2): string =>
-  Number.isFinite(value) ? value.toFixed(digits) : "∞";
-
-const table = (headers: string[], rows: Array<Array<string | number>>): string => {
-  const widths = headers.map((header, column) =>
-    Math.max(header.length, ...rows.map((row) => String(row[column] ?? "").length))
-  );
-  const line = (row: Array<string | number>): string =>
-    row.map((value, column) => String(value).padEnd(widths[column] ?? 0)).join("  ");
-  return [line(headers), line(widths.map((width) => "-".repeat(width))), ...rows.map(line)].join(
-    "\n"
-  );
-};
 
 const combinedScales = (
   first: Record<PrimaryDamageFamily, number>,
@@ -117,8 +105,8 @@ const overridesFrom = (
 
 const buildReport = (firstOrderOnly: boolean): CombatBalanceReport => {
   const base = DEFAULT_GAME_DEFINITION;
-  const routes = ENEMY_TYPES.map((enemyType) =>
-    routeProfile("commissioning_exam", enemyType, base)
+  const routes = LEVEL_IDS.flatMap((levelId) =>
+    ENEMY_TYPES.map((enemyType) => routeProfile(levelId, enemyType, base))
   );
   const firstOrder = solveFirstOrderDamage(base);
   const firstHealth = solveEnemyHealth(base, firstOrder.scales);
@@ -137,16 +125,15 @@ const buildReport = (firstOrderOnly: boolean): CombatBalanceReport => {
   });
   return {
     assumptions: {
-      gasPartialRatioExcess: 0.04,
-      liquidStrengthExcess: 8,
+      familyReferenceExposures: FAMILY_REFERENCE_EXPOSURES,
       temperatureExcessCelsius: 40,
       staticPressureRatioExcess: 0.3,
       statement:
         "First order holds one reference exposure fixed; second order integrates the exact transient engine and solves its family sensitivity matrix.",
     },
     routes,
-    conduits: conduitProfiles("commissioning_exam", base),
-    throughput: idealThroughputProfile("commissioning_exam", base),
+    conduits: LEVEL_IDS.flatMap((levelId) => conduitProfiles(levelId, base)),
+    throughput: LEVEL_IDS.map((levelId) => idealThroughputProfile(levelId, base)),
     stoichiometry: stoichiometryModel(base),
     levelProgression: siteLevelProgression(),
     referenceDamage: referenceDamageProfiles(base),
@@ -156,7 +143,7 @@ const buildReport = (firstOrderOnly: boolean): CombatBalanceReport => {
     health,
     speed,
     behaviors: enemyBehaviorProfiles(base),
-    verification: verifyLiveBalance(candidate),
+    verification: firstOrderOnly ? [] : verifyLiveBalance(candidate),
   };
 };
 
@@ -185,8 +172,9 @@ const printRoutes = (report: CombatBalanceReport): void => {
   console.log("\nENEMY ROUTE / DWELL SOLVE");
   console.log(
     table(
-      ["enemy", "cells", "rooms", "dry s", "1.7 atm s", "60% fill s", "both s"],
+      ["site", "enemy", "cells", "rooms", "dry s", "1.7 atm s", "60% fill s", "both s"],
       report.routes.map((route) => [
+        route.levelId,
         route.enemyType,
         route.pathCells,
         route.roomsVisited,
@@ -200,16 +188,24 @@ const printRoutes = (report: CombatBalanceReport): void => {
   console.log("\nROOM RESIDENCE (deckmouth, dry)");
   console.log(
     table(
-      ["room", "cells", "volume", "seconds"],
-      (report.routes.find(({ enemyType }) => enemyType === "deckmouth")?.rooms ?? []).map(
-        (room) => [room.roomId, room.cells, number(room.volume), number(room.drySeconds)]
-      )
+      ["site", "room", "cells", "volume", "seconds"],
+      report.routes
+        .filter(({ enemyType }) => enemyType === "deckmouth")
+        .flatMap((route) =>
+          route.rooms.map((room) => [
+            route.levelId,
+            room.roomId,
+            room.cells,
+            number(room.volume),
+            number(room.drySeconds),
+          ])
+        )
     )
   );
 };
 
 const printFeed = (report: CombatBalanceReport): void => {
-  const t = report.throughput;
+  const t = report.throughput.find(({ levelId }) => levelId === "morrow_pocket")!;
   console.log("\nMATERIAL / PROC SOLVE");
   console.log(
     table(
@@ -226,6 +222,38 @@ const printFeed = (report: CombatBalanceReport): void => {
         ["OX-1 extent/s", number(t.ox1ExtentPerSecond, 3)],
         ["OX-1 ideal interval", number(t.ox1ExpectedIntervalSeconds, 2)],
       ]
+    )
+  );
+  console.log("\nALL REACTION RATE CAPS");
+  console.log(
+    table(
+      ["code", "reaction", "kind", "extent/s", "min proc s", "equipment L1/L2/L3"],
+      t.reactions.map((reaction) => [
+        reaction.code,
+        reaction.reactionId,
+        reaction.behaviorKind,
+        number(reaction.maximumExtentPerSecond, 3),
+        number(reaction.minimumProcIntervalSeconds, 3),
+        reaction.equipmentExtentPerSecondByLevel?.map((rate) => number(rate, 2)).join("/") ??
+          "room",
+      ])
+    )
+  );
+  console.log("\nSITE FEED RATE / DEPLETION");
+  console.log(
+    table(
+      ["site", "supply", "phase", "inventory", "port/s", "ideal empty s", "charge"],
+      report.throughput.flatMap((site) =>
+        site.supplies.map((supply) => [
+          site.levelId,
+          supply.supplyId,
+          supply.phase,
+          number(supply.totalInventory, 1),
+          number(supply.portRate, 2),
+          number(supply.idealDischargeSeconds, 1),
+          supply.replenishmentCost ?? "unlimited",
+        ])
+      )
     )
   );
   console.log("\nCONDUIT HOLD-UP");
@@ -277,12 +305,16 @@ const printDamage = (report: CombatBalanceReport): void => {
     )
   );
   if (report.secondOrder) {
+    console.log(
+      `\nCoverage: min ${number(report.secondOrder.coverage.minimum, 3)}; p10 ${number(report.secondOrder.coverage.tenthPercentile, 3)}; mean ${number(report.secondOrder.coverage.mean, 3)}; shortfalls ${report.secondOrder.coverage.shortfallRows}/${report.secondOrder.rows.length}.`
+    );
     console.log("\nTRANSIENT CAMPAIGN SENSITIVITY MATRIX");
     console.log(
       table(
-        ["level", "round", ...DAMAGE_FAMILIES, "effective hp", "target"],
+        ["level", "build", "round", ...DAMAGE_FAMILIES, "effective hp", "target"],
         report.secondOrder.rows.map((row) => [
           row.levelId,
+          row.planName,
           row.round,
           ...DAMAGE_FAMILIES.map((family) => number(row.familyDamage[family], 0)),
           number(row.effectiveHealth, 0),
@@ -291,80 +323,6 @@ const printDamage = (report: CombatBalanceReport): void => {
       )
     );
   }
-};
-
-const printEnemies = (report: CombatBalanceReport): void => {
-  console.log("\nENEMY DURABILITY / SPEED SOLVE");
-  console.log(
-    table(
-      ["enemy", "current hp", "solved hp", "current speed", "solved speed", "target route s"],
-      ENEMY_TYPES.map((enemyType) => {
-        const health = report.health.find((entry) => entry.enemyType === enemyType)!;
-        const speed = report.speed.find((entry) => entry.enemyType === enemyType)!;
-        return [
-          enemyType,
-          DEFAULT_GAME_DEFINITION.enemies[enemyType].health,
-          health.solvedHealth,
-          number(speed.currentSpeed, 3),
-          number(speed.solvedSpeed, 3),
-          number(speed.targetRouteSeconds, 1),
-        ];
-      })
-    )
-  );
-  console.log("\nENEMY BEHAVIOR BUDGETS");
-  console.log(
-    table(
-      ["enemy", "behavior", "mathematical budget"],
-      report.behaviors.map((behavior) => {
-        switch (behavior.kind) {
-          case "standard":
-            return [behavior.enemyType, behavior.kind, "direct stats"];
-          case "ladder_runner":
-            return [
-              behavior.enemyType,
-              behavior.kind,
-              `walk ${number(behavior.walkingRate, 2)}x; climb ${number(behavior.climbingRate, 2)}x`,
-            ];
-          case "armored_molt":
-            return [
-              behavior.enemyType,
-              behavior.kind,
-              `${number(behavior.shellHealth, 0)} shell + ${number(behavior.exposedHealth, 0)} exposed; speed ${number(behavior.exposedSpeed, 3)}`,
-            ];
-          case "shared_field":
-            return [
-              behavior.enemyType,
-              behavior.kind,
-              `${number(behavior.capacity, 0)} charge; ${number(behavior.rechargePerSecond, 1)}/s; full ${number(behavior.fullRechargeSeconds, 1)}s`,
-            ];
-          case "gas_emitter":
-            return [
-              behavior.enemyType,
-              behavior.kind,
-              `${number(behavior.reservoir, 1)} ${behavior.species}; ${number(behavior.dischargeSeconds, 1)}s; ${number(behavior.ignitionChargeCount, 2)} ignition charge`,
-            ];
-        }
-      })
-    )
-  );
-};
-
-const printVerification = (report: CombatBalanceReport): void => {
-  console.log("\nEXACT LIVE VERIFICATION");
-  console.log(
-    table(
-      ["level", "result", "core", "killed", "breached", "damage"],
-      report.verification.map((entry) => [
-        entry.levelId,
-        entry.success ? "pass" : "fail",
-        entry.coreIntegrity,
-        entry.killed,
-        entry.breached,
-        number(entry.damage, 0),
-      ])
-    )
-  );
 };
 
 const printStoichiometry = (report: CombatBalanceReport): void => {

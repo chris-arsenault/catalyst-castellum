@@ -2,44 +2,47 @@ import type { HazardChannels } from "./gameStateTypes";
 import type { RoomEquipment } from "./facilityTypes";
 import {
   DAMAGE_SOURCE_IDS,
-  ENEMY_LOCOMOTION_MODES,
   ENEMY_TYPES,
   EQUIPMENT_IDS,
   EQUIPMENT_LEVELS,
   EQUIPMENT_SOCKET_IDS,
   FLOW_CAUSES,
   GAME_EVENT_CODES,
-  GAS_BUFFER_IDS,
-  GAS_SOURCE_IDS,
   GAS_TYPES,
   GAS_ZONES,
   LEVEL_IDS,
-  LIQUID_BUFFER_IDS,
-  LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
   LIMIT_CONDITION_CODES,
-  PROCESS_IDS,
+  EQUIPMENT_OUTPUT_IDS,
   REACTION_IDS,
   ROOM_REACTION_IDS,
+  STATIONARY_TYPES,
   TRANSPORT_PHASES,
 } from "./identifiers";
 
 export * from "./gameStateTypes";
 export * from "./facilityTypes";
+export * from "./geometryTypes";
 export * from "./identifiers";
+export * from "./enemyTypes";
+import type { GridCell } from "./geometryTypes";
 
 export type GasType = (typeof GAS_TYPES)[number];
 export type GasZone = (typeof GAS_ZONES)[number];
 export type LiquidType = (typeof LIQUID_TYPES)[number];
-export type SpeciesId = GasType | LiquidType;
+export type StationaryType = (typeof STATIONARY_TYPES)[number];
+export type SpeciesId = GasType | LiquidType | StationaryType;
 export type EnemyType = (typeof ENEMY_TYPES)[number];
 /** Opaque enemy-route instance id (ADR-0002); alias kept for signature readability. */
 // eslint-disable-next-line sonarjs/redundant-type-aliases
 export type EnemyRouteId = string;
-export type GasSourceId = (typeof GAS_SOURCE_IDS)[number];
-export type LiquidSourceId = (typeof LIQUID_SOURCE_IDS)[number];
-export type GasBufferId = (typeof GAS_BUFFER_IDS)[number];
-export type LiquidBufferId = (typeof LIQUID_BUFFER_IDS)[number];
+/** Opaque site-authored gas-reservoir instance ID. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type GasSourceId = string;
+/** Opaque site-authored liquid-reservoir instance ID. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type LiquidSourceId = string;
+export type EquipmentOutputId = (typeof EQUIPMENT_OUTPUT_IDS)[number];
 /** Opaque transport-connection instance id (ADR-0002); alias kept for signature readability. */
 // eslint-disable-next-line sonarjs/redundant-type-aliases
 export type ConnectionId = string;
@@ -47,7 +50,6 @@ export type EquipmentId = (typeof EQUIPMENT_IDS)[number];
 export type EquipmentSocketId = (typeof EQUIPMENT_SOCKET_IDS)[number];
 export type EquipmentLevel = (typeof EQUIPMENT_LEVELS)[number];
 export type TransportPhase = (typeof TRANSPORT_PHASES)[number];
-export type ProcessId = (typeof PROCESS_IDS)[number];
 export type ReactionId = (typeof REACTION_IDS)[number];
 export type RoomReactionId = (typeof ROOM_REACTION_IDS)[number];
 export type LevelId = (typeof LEVEL_IDS)[number];
@@ -58,120 +60,58 @@ export type GasAmounts = Record<GasType, number>;
 export type GasLayers = Record<GasZone, GasAmounts>;
 export type GasTemperatures = Record<GasZone, number>;
 export type LiquidAmounts = Record<LiquidType, number>;
+export type StationaryAmounts = Record<StationaryType, number>;
 export type ElementalComposition = Record<string, number>;
 
 /** Opaque room instance id (ADR-0002); alias kept for signature readability. */
 // eslint-disable-next-line sonarjs/redundant-type-aliases
 export type RoomId = string;
 
-export interface Point {
-  x: number;
-  y: number;
-}
-
-export interface WorldPoint {
-  x: number;
-  elevation: number;
-}
-
-export interface GridCell {
-  column: number;
-  elevation: number;
-}
-
-export interface RoomGeometryDefinition {
-  x: number;
-  floorElevation: number;
-  width: number;
-  height: number;
-}
-
 export type ActuatorKind = "fan" | "pump" | "passive";
 
-export interface LiquidSourceDefinition {
+export interface LiquidSupplyDefinition {
   id: LiquidSourceId;
-  formula: string;
-  substance: LiquidType;
+  code: string;
+  phase: "liquid";
   capacity: number;
-  initialAmount: number;
-  chargeAmount: number;
-  chargeCost: number;
-  hostRoomId: RoomId;
+  initial: Partial<LiquidAmounts>;
+  availableFromRound: string;
+  replenishment:
+    | { kind: "unlimited"; contents: Partial<LiquidAmounts> }
+    | { kind: "matter"; contents: Partial<LiquidAmounts>; cost: number };
   accent: string;
 }
 
-export interface GasSourceDefinition {
+export interface GasSupplyDefinition {
   id: GasSourceId;
-  formula: string;
+  code: string;
+  phase: "gas";
   capacity: number;
-  /** Infinite sources hold their initial mixture forever; draws never deplete them. */
-  infinite: boolean;
-  initialGas: Partial<GasAmounts>;
-  chargeGas: Partial<GasAmounts>;
-  chargeCost: number;
-  hostRoomId: RoomId;
+  initial: Partial<GasAmounts>;
+  availableFromRound: string;
+  replenishment:
+    | { kind: "unlimited"; contents: Partial<GasAmounts> }
+    | { kind: "matter"; contents: Partial<GasAmounts>; cost: number };
   accent: string;
 }
 
-export interface GasBufferDefinition {
-  id: GasBufferId;
-  capacity: number;
-  accent: string;
-}
-
-export interface LiquidBufferDefinition {
-  id: LiquidBufferId;
-  capacity: number;
-  accent: string;
-}
-
-export interface ProcessDefinition {
-  id: ProcessId;
-  reactionId: ReactionId;
-  equipmentId: EquipmentId;
-  executor: "electrolysis";
-  outputs: readonly ProcessOutputDefinition[];
-  separatorBackflow: SeparatorBackflowDefinition | null;
-  accent: string;
-}
-
-export type ProcessOutputDefinition =
-  | {
-      phase: "gas";
-      speciesId: GasType;
-      bufferId: GasBufferId;
-      limitCode: "anode_headroom" | "cathode_headroom";
-    }
-  | {
-      phase: "liquid";
-      speciesId: LiquidType;
-      bufferId: LiquidBufferId;
-      limitCode: "outlet_headroom";
-    };
-
-export interface SeparatorBackflowDefinition {
-  leftBufferId: GasBufferId;
-  rightBufferId: GasBufferId;
-  leftSpeciesId: GasType;
-  rightSpeciesId: GasType;
-  activationDifference: number;
-  flowOffset: number;
-  rate: number;
-}
+export type SiteSupplyDefinition = GasSupplyDefinition | LiquidSupplyDefinition;
 
 export interface SpeciesDefinition {
   id: SpeciesId;
   formula: string;
-  phase: "gas" | "liquid";
+  phase: "gas" | "liquid" | "stationary";
   elements: ElementalComposition;
   molarMass: number;
   referenceDensity: number;
   color: string;
+  /** Combat attribution for every hazard rule owned by this species. */
+  damageSourceId: DamageSourceId | null;
   hazards: readonly SpeciesHazardRule[];
 }
 
 export interface SpeciesHazardRule {
-  basis: "gas_partial_ratio" | "liquid_strength";
+  basis: "gas_partial_ratio" | "liquid_strength" | "stationary_inventory";
   direction: "above" | "below";
   threshold: number;
   rate: number;
@@ -192,6 +132,23 @@ export interface ReactionDefinition {
   reactants: ReactionParticipant[];
   products: ReactionParticipant[];
   behavior: ReactionBehaviorDefinition;
+}
+
+export interface ReactionRateOrder {
+  species: SpeciesId;
+  order: number;
+}
+
+export interface MassActionDirectionDefinition {
+  rateConstant: number;
+  rateOrders: readonly ReactionRateOrder[];
+  activationTemperature: number;
+  fullActivationTemperature: number;
+  /** Rate begins falling here and reaches zero at inactiveTemperature. */
+  deactivationTemperature?: number;
+  inactiveTemperature?: number;
+  minimumPressureRatio?: number;
+  fullPressureRatio?: number;
 }
 
 export type ReactionBehaviorDefinition =
@@ -237,6 +194,19 @@ export type ReactionBehaviorDefinition =
       roomHeatPerExtent: number;
       headroom?: "gas" | "liquid";
       event?: ReactionEventTrigger;
+    }
+  | {
+      /** Simultaneous, snapshot-based room chemistry with authored first/second-order rate laws. */
+      kind: "mass_action";
+      maximumRate: number;
+      halfSaturation: number;
+      contact: "gas" | "liquid";
+      forward: MassActionDirectionDefinition;
+      reverse?: MassActionDirectionDefinition;
+      catalyst?: { species: StationaryType; halfSaturation: number };
+      inhibitors?: readonly { species: SpeciesId; halfInhibition: number }[];
+      gasHeatPerExtent: number;
+      roomHeatPerExtent: number;
     };
 
 export interface ReactionEventTrigger {
@@ -246,6 +216,7 @@ export interface ReactionEventTrigger {
 
 export interface ReactionTelemetry {
   lastRate: number;
+  direction: "forward" | "reverse" | "idle";
   limitingFactor: LimitingFactor;
 }
 
@@ -258,6 +229,7 @@ export interface RoomState {
   gas: GasLayers;
   gasTemperature: GasTemperatures;
   liquid: LiquidAmounts;
+  stationary: StationaryAmounts;
   temperature: number;
   residue: number;
   reactionIntensity: number;
@@ -273,14 +245,6 @@ export interface GasSourceState {
 }
 
 export interface LiquidSourceState {
-  liquid: LiquidAmounts;
-}
-
-export interface GasBufferState {
-  gas: GasAmounts;
-}
-
-export interface LiquidBufferState {
   liquid: LiquidAmounts;
 }
 
@@ -316,15 +280,6 @@ export interface LiquidJunctionState {
 
 export type FlowCause = (typeof FLOW_CAUSES)[number];
 
-export interface ProcessState {
-  setting: number;
-  lastRate: number;
-  totalProcessed: number;
-  limitingFactor: LimitingFactor;
-  powerDraw: number;
-  separatorLeakTotal: number;
-}
-
 export type DamageLedger = Record<DamageSourceId, HazardChannels>;
 
 export interface DamageReceipt {
@@ -332,105 +287,6 @@ export interface DamageReceipt {
   channels: HazardChannels;
   amount: number;
   elapsed: number;
-}
-
-export interface EnemyDefinition {
-  type: EnemyType;
-  health: number;
-  speed: number;
-  coreDamage: number;
-  needsOxygen: boolean;
-  flying: boolean;
-  hazardMultipliers: HazardChannels;
-  color: string;
-  residueOnDeath: number;
-  matterYield: number;
-  behavior: EnemyBehaviorDefinition;
-  presentation: {
-    appearance: EnemyAppearanceArchetype;
-  };
-}
-
-export type EnemyBehaviorDefinition =
-  | { kind: "standard" }
-  | {
-      kind: "ladder_runner";
-      locomotionMultipliers: Record<EnemyLocomotionMode, number>;
-    }
-  | {
-      kind: "armored_molt";
-      shellHealth: number;
-      exposedSpeedMultiplier: number;
-      exposedLocomotionMultipliers: Record<EnemyLocomotionMode, number>;
-    }
-  | {
-      kind: "shared_field";
-      capacity: number;
-      rechargePerSecond: number;
-      activationFraction: number;
-    }
-  | {
-      kind: "gas_emitter";
-      species: GasType;
-      reservoir: number;
-      emissionRate: number;
-    };
-
-export type EnemyAppearanceArchetype =
-  | "deckmouth"
-  | "flintjack"
-  | "shear_jelly"
-  | "splitback"
-  | "redlung"
-  | "clatter"
-  | "anchor"
-  | "glowbag";
-
-export type EnemyBehaviorState =
-  | { kind: "standard" }
-  | { kind: "ladder_runner" }
-  | {
-      kind: "armored_molt";
-      phase: "armored" | "exposed";
-      transitionHealth: number;
-    }
-  | {
-      kind: "shared_field";
-      charge: number;
-      maximumCharge: number;
-      active: boolean;
-    }
-  | {
-      kind: "gas_emitter";
-      reservoir: number;
-      initialReservoir: number;
-    };
-
-export interface EnemyState {
-  id: number;
-  type: EnemyType;
-  level: number;
-  health: number;
-  maxHealth: number;
-  routeId: EnemyRouteId;
-  path: EnemyPathStep[];
-  pathIndex: number;
-  progress: number;
-  mode: EnemyLocomotionMode;
-  facing: -1 | 1;
-  spawnAge: number;
-  damageTaken: number;
-  damageBySource: DamageLedger;
-  lastDamage: DamageReceipt | null;
-  behavior: EnemyBehaviorState;
-}
-
-export type EnemyLocomotionMode = (typeof ENEMY_LOCOMOTION_MODES)[number];
-
-export interface EnemyPathStep {
-  cell: GridCell;
-  mode: EnemyLocomotionMode;
-  portalId: string | null;
 }
 
 export interface WaveEntry {

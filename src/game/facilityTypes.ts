@@ -1,10 +1,17 @@
 import type {
   EquipmentId,
   EquipmentLevel,
+  EquipmentOutputId,
   EquipmentSocketId,
+  GasAmounts,
+  GasType,
   GasSourceId,
   GridCell,
+  LimitingFactor,
+  LiquidAmounts,
+  LiquidType,
   LiquidSourceId,
+  ReactionId,
   RoomId,
   ConnectionId,
 } from "./types";
@@ -40,7 +47,7 @@ export type EquipmentGradeBehavior =
       targetTemperature: number;
     }
   | {
-      kind: "membrane_cell";
+      kind: "electrolyzer";
       processRate: number;
       powerDraw: number;
     };
@@ -51,13 +58,65 @@ export interface EquipmentDefinition {
   buildCost: number;
   upgradeCosts: readonly [number, number];
   unique: boolean;
+  operation: EquipmentReactionOperationDefinition | null;
   grades: readonly [EquipmentGradeDefinition, EquipmentGradeDefinition, EquipmentGradeDefinition];
 }
 
-export interface EquipmentInstance {
+export interface EquipmentLoadout {
   equipmentId: EquipmentId;
   level: EquipmentLevel;
   enabled: boolean;
+}
+
+export interface EquipmentInstance extends EquipmentLoadout {
+  operation: EquipmentOperationState | null;
+}
+
+export interface EquipmentReactionOperationDefinition {
+  kind: "reaction";
+  reactionId: ReactionId;
+  outputs: readonly EquipmentOutputDefinition[];
+  separatorBackflow: EquipmentSeparatorBackflowDefinition | null;
+}
+
+export type EquipmentOutputDefinition =
+  | {
+      id: EquipmentOutputId;
+      phase: "gas";
+      speciesId: GasType;
+      capacity: number;
+      accent: string;
+      limitCode: "anode_headroom" | "cathode_headroom";
+    }
+  | {
+      id: EquipmentOutputId;
+      phase: "liquid";
+      speciesId: LiquidType;
+      capacity: number;
+      accent: string;
+      limitCode: "outlet_headroom";
+    };
+
+export interface EquipmentSeparatorBackflowDefinition {
+  leftOutputId: EquipmentOutputId;
+  rightOutputId: EquipmentOutputId;
+  leftSpeciesId: GasType;
+  rightSpeciesId: GasType;
+  activationDifference: number;
+  flowOffset: number;
+  rate: number;
+}
+
+export type EquipmentOutputState =
+  { phase: "gas"; gas: GasAmounts } | { phase: "liquid"; liquid: LiquidAmounts };
+
+export interface EquipmentOperationState {
+  lastRate: number;
+  totalProcessed: number;
+  limitingFactor: LimitingFactor;
+  powerDraw: number;
+  separatorLeakTotal: number;
+  outputs: Record<EquipmentOutputId, EquipmentOutputState | null>;
 }
 
 export type RoomEquipment = Record<EquipmentSocketId, EquipmentInstance | null>;

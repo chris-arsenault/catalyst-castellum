@@ -297,7 +297,7 @@ The deterministic intended-policy run recorded by the Codex review produced:
 | 2 — Make the Reagent   | Fail, 0% core after one round |
 | 3 — Acid Line          | Fail, 0% core after one round |
 | 4 — Stored Chlorine    | Fail, 0% core after one round |
-| 5 — Commissioning Exam | Pass, 100% core               |
+| 5 — Morrow Pocket | Pass, 100% core               |
 
 The unit tests prove that levels require actions and use typed conduits. They do not prove that the
 authored reference policy can complete every level. The evaluator prints failures but exits

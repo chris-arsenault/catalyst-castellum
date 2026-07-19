@@ -1,4 +1,4 @@
-import type { DamageSourceId, HazardChannels } from "../game/types";
+import { DAMAGE_SOURCE_IDS, type DamageSourceId, type HazardChannels } from "../game/types";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
 
@@ -38,24 +38,16 @@ export const createDamageCopy = (translator: Translator) => ({
     ])
   ) as Record<DamageChannel, string>,
   sourceLabel: Object.fromEntries(
-    [
-      "atmospheric_exposure",
-      "surface_corrosion",
-      "thermal_exposure",
-      "catastrophic_overpressure",
-      "radiation_field",
-      "hydrogen_oxygen_combustion",
-    ].map((source) => [source, localized(translator, `damage.source.${source}.label`)])
+    DAMAGE_SOURCE_IDS.map((source) => [
+      source,
+      localized(translator, `damage.source.${source}.label`),
+    ])
   ) as Record<DamageSourceId, string>,
   sourceDetail: Object.fromEntries(
-    [
-      "atmospheric_exposure",
-      "surface_corrosion",
-      "thermal_exposure",
-      "catastrophic_overpressure",
-      "radiation_field",
-      "hydrogen_oxygen_combustion",
-    ].map((source) => [source, localized(translator, `damage.source.${source}.detail`)])
+    DAMAGE_SOURCE_IDS.map((source) => [
+      source,
+      localized(translator, `damage.source.${source}.detail`),
+    ])
   ) as Record<DamageSourceId, string>,
 });
 
@@ -66,11 +58,18 @@ export const damageSourceLabel = DEFAULT_DAMAGE_COPY.sourceLabel;
 export const damageSourceDetail = DEFAULT_DAMAGE_COPY.sourceDetail;
 
 export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"> = {
-  atmospheric_exposure: "continuous",
-  surface_corrosion: "continuous",
+  asphyxiation: "continuous",
+  carbon_monoxide: "continuous",
+  chlorine_gas: "continuous",
+  hydrogen_chloride_gas: "continuous",
+  liquid_corrosion: "continuous",
+  nitrogen_chemistry: "continuous",
+  nickel_carbonyl: "continuous",
+  hydrogen_fluoride: "continuous",
+  fluorine: "continuous",
+  uranium_chemistry: "continuous",
   thermal_exposure: "continuous",
   catastrophic_overpressure: "continuous",
-  radiation_field: "continuous",
   hydrogen_oxygen_combustion: "impact",
 };
 

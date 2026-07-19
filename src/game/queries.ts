@@ -4,6 +4,7 @@ import type { EnemyState, RoomId } from "./types";
 import type { MapCarrier } from "./world/instances";
 import { definitionForMap } from "./world/activeDefinition";
 import * as campaign from "./engine/campaign";
+import * as enemyLevel from "./engine/enemyLevel";
 import * as enemyPosition from "./engine/enemyPosition";
 import * as equipment from "./engine/equipment";
 import * as flashReaction from "./engine/flashReaction";
@@ -44,11 +45,15 @@ export const createGameQueries = (definition: GameDefinition) =>
   Object.freeze({
     enemyGasZone: (enemy: EnemyState, carrier: MapCarrier = definition) =>
       enemyPosition.enemyGasZone(enemy, carrier.map),
+    resolveEnemyLevel: enemyLevel.resolveEnemyLevel,
     enemyRoomId: (enemy: EnemyState, carrier: MapCarrier = definition) =>
       enemyPosition.enemyRoomId(enemy, carrier.map),
     enemyWorldPosition: enemyPosition.enemyWorldPosition,
     levelDefinitionFor: bindDefinition(campaign.levelDefinitionFor, definition),
     roundDefinitionFor: bindDefinition(campaign.roundDefinitionFor, definition),
+    supplyDefinitionsFor: bindDefinition(campaign.supplyDefinitionsFor, definition),
+    supplyDefinitionFor: bindDefinition(campaign.supplyDefinitionFor, definition),
+    supplyAvailable: bindDefinition(campaign.supplyAvailable, definition),
     roomEquipmentIsActive: equipment.roomEquipmentIsActive,
     installedEquipment: equipment.installedEquipment,
     roomEquipmentVolume: bindDefinition(equipment.roomEquipmentVolume, definition),
@@ -116,10 +121,14 @@ export const DEFAULT_GAME_QUERIES = createGameQueries(DEFAULT_GAME_DEFINITION);
 
 export const {
   enemyGasZone,
+  resolveEnemyLevel,
   enemyRoomId,
   enemyWorldPosition,
   levelDefinitionFor,
   roundDefinitionFor,
+  supplyDefinitionsFor,
+  supplyDefinitionFor,
+  supplyAvailable,
   roomEquipmentIsActive,
   installedEquipment,
   roomEquipmentVolume,

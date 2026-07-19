@@ -4,8 +4,6 @@ import type {
   EnemyState,
   EnemyType,
   GasAmounts,
-  GasBufferId,
-  GasBufferState,
   GasConduitState,
   GasJunctionState,
   GasSourceId,
@@ -14,15 +12,11 @@ import type {
   GasZone,
   GridCell,
   LiquidAmounts,
-  LiquidBufferId,
-  LiquidBufferState,
   LiquidConduitState,
   LiquidJunctionState,
   LiquidSourceId,
   LiquidSourceState,
   LiquidType,
-  ProcessId,
-  ProcessState,
   EquipmentId,
   EquipmentSocketId,
   RoomId,
@@ -48,6 +42,7 @@ export interface RoundStats {
   peakHazard: number;
   matterHarvested: number;
   fieldDamageAbsorbed: number;
+  fieldDamageAbsorbedBySource: Record<DamageSourceId, number>;
   reagentEmitted: number;
   armorTransitions: number;
   protectedAllySeconds: number;
@@ -73,8 +68,6 @@ export interface ScenarioAvailability {
   equipment: EquipmentId[];
   gasLines: ConnectionId[];
   liquidLines: ConnectionId[];
-  gasSources: GasSourceId[];
-  liquidSources: LiquidSourceId[];
 }
 
 export type EventTone = (typeof EVENT_TONES)[number];
@@ -110,7 +103,7 @@ export interface GameEventParameterMap {
   level_planning_started: Record<never, never>;
   liquid_source_charged: { sourceId: LiquidSourceId; cost: number; amount: number };
   prime_started: { primeSeconds: number };
-  process_started: { processId: ProcessId };
+  equipment_operation_started: { equipmentId: EquipmentId };
   round_advanced: Record<never, never>;
   round_completed: {
     breached: number;
@@ -175,7 +168,7 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 15;
+  version: 22;
   pack: {
     id: string;
     contentVersion: number;
@@ -197,14 +190,11 @@ export interface GameState {
   rooms: Record<RoomId, RoomState>;
   gasSources: Record<GasSourceId, GasSourceState>;
   liquidSources: Record<LiquidSourceId, LiquidSourceState>;
-  gasBuffers: Record<GasBufferId, GasBufferState>;
-  liquidBuffers: Record<LiquidBufferId, LiquidBufferState>;
   gasJunctions: Record<RoomId, GasJunctionState>;
   liquidJunctions: Record<RoomId, LiquidJunctionState>;
   gasConduits: Record<ConnectionId, GasConduitState>;
   liquidConduits: Record<ConnectionId, LiquidConduitState>;
   portalStates: Record<string, FacilityPortalState>;
-  processes: Record<ProcessId, ProcessState>;
   gasVent: GasAmounts;
   liquidDrain: LiquidAmounts;
   enemies: EnemyState[];
@@ -326,6 +316,7 @@ export type CommandRejectionCode =
   | "not_installed"
   | "occupied_socket"
   | "placement"
+  | "retained_inventory"
   | "route_unavailable"
   | "unavailable"
   | "unique_equipment";

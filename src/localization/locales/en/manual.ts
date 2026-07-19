@@ -39,6 +39,15 @@ export const MANUAL_MESSAGES = {
     "Produces chlorine, hydrogen, and sodium hydroxide into three equipment-owned outlet buffers.",
   "manual.equipment.membrane_cell.note.3":
     "The smallest reactant supply or outlet headroom sets the entire cell rate; uneven gas headers can cross-leak.",
+  "manual.equipment.fluorine_cell.designation": "FC-series anhydrous recovery cell",
+  "manual.equipment.fluorine_cell.flavor":
+    "Its two sight glasses face opposite aisles, giving each product header a dedicated operator station.",
+  "manual.equipment.fluorine_cell.note.1":
+    "Consumes two measures of dry hydrogen fluoride for each hydrogen and fluorine pair.",
+  "manual.equipment.fluorine_cell.note.2":
+    "Places both gas products in the host room, where installed ducts establish separation and recovery.",
+  "manual.equipment.fluorine_cell.note.3":
+    "Draws more power and occupies more room volume than the chlor-alkali membrane cell at every grade.",
   "manual.reactions.chlor_alkali_electrolysis.doctrine":
     "Maintain balanced liquid feed and continuous space in all three product outlets.",
   "manual.reactions.chlor_alkali_electrolysis.flavor":
@@ -67,6 +76,98 @@ export const MANUAL_MESSAGES = {
     "Deliver stored hypochlorite into an acid-rich contact room with available gas volume.",
   "manual.reactions.acid_chlorine_release.flavor":
     "CL-5 carries a red margin line in every surviving workbook. The line marks where the delayed weapon becomes immediate.",
+  "manual.reactions.water_gas_reaction.doctrine":
+    "Pass hot steam across a carbon bed to produce equal carbon monoxide and hydrogen; cooling favors their return to carbon and steam.",
+  "manual.reactions.water_gas_reaction.flavor":
+    "CS-1 turns a loaded grate and a water line into the first half of a fuel works.",
+  "manual.reactions.water_gas_shift.doctrine":
+    "Use steam and moderate heat across an iron catalyst to shift carbon monoxide toward carbon dioxide while building hydrogen inventory.",
+  "manual.reactions.water_gas_shift.flavor":
+    "Shift crews judge the bed by two gauges: the poison entering and the hydrogen leaving.",
+  "manual.reactions.boudouard_reaction.doctrine":
+    "Heat carbon with carbon dioxide to produce carbon monoxide; cool a rich monoxide stream to plate carbon back onto the room.",
+  "manual.reactions.boudouard_reaction.flavor":
+    "CS-3 writes the room’s recent temperature history in black across every exposed surface.",
+  "manual.reactions.carbon_monoxide_oxidation.doctrine":
+    "Mix carbon monoxide with oxygen above the activation range to convert it into carbon dioxide and heat.",
+  "manual.reactions.carbon_monoxide_oxidation.flavor":
+    "A clean CO reading and a hot wall often describe the same successful burn.",
+  "manual.reactions.carbon_methanation.doctrine":
+    "Hold carbon, hydrogen, and active nickel together in the warm range to store them as methane.",
+  "manual.reactions.carbon_methanation.flavor":
+    "CS-6A packs a grate and two measures of hydrogen into one pipeable fuel.",
+  "manual.reactions.methane_steam_reforming.doctrine":
+    "Drive methane and steam across active nickel at high temperature to recover carbon monoxide and hydrogen.",
+  "manual.reactions.methane_steam_reforming.flavor":
+    "CS-6B opens the fuel again, trading furnace heat for a larger moving gas stream.",
+  "manual.reactions.ammonia_synthesis.doctrine":
+    "Compress nitrogen and hydrogen over an iron catalyst, then hold the synthesis temperature to build ammonia.",
+  "manual.reactions.ammonia_synthesis.flavor":
+    "NO-1 makes the quiet bulk of a room chemically useful, one compressed charge at a time.",
+  "manual.reactions.ammonia_oxidation.doctrine":
+    "Feed ammonia and oxygen across platinum in the hot window to produce nitric oxide and steam.",
+  "manual.reactions.ammonia_oxidation.flavor":
+    "The gauze glows before the nitric line begins moving; experienced crews watch both.",
+  "manual.reactions.nitric_oxide_oxidation.doctrine":
+    "Let nitric oxide cool in oxygen-rich gas to form the denser and more dangerous nitrogen dioxide front.",
+  "manual.reactions.nitric_oxide_oxidation.flavor":
+    "NO-3 keeps working in transit, and the brown front appears downstream from its source.",
+  "manual.reactions.nitrogen_dioxide_absorption.doctrine":
+    "Contact nitrogen dioxide with water to bank nitric acid while returning nitric oxide to the gas stream.",
+  "manual.reactions.nitrogen_dioxide_absorption.flavor":
+    "The absorber clears the air by loading the floor and sending part of the gas around again.",
+  "manual.reactions.nox_ammonia_reduction.doctrine":
+    "Balance ammonia against nitric oxide in the catalyst window to recover nitrogen and steam.",
+  "manual.reactions.nox_ammonia_reduction.flavor":
+    "NO-5 closes the nitrogen ledger when feed ratio, oxygen, and temperature agree.",
+  "manual.reactions.nitrous_oxide_side_path.doctrine":
+    "Track the cooler ammonia-oxidation window where feed diverts into persistent nitrous oxide and steam.",
+  "manual.reactions.nitrous_oxide_side_path.flavor":
+    "A cold gauze still consumes ammonia; the outlet tells the crew what it made.",
+  "manual.reactions.hematite_carbon_monoxide_reduction.doctrine":
+    "Pass carbon monoxide across charged hematite to produce carbon dioxide while storing the transferred oxygen as magnetite history.",
+  "manual.reactions.hematite_carbon_monoxide_reduction.flavor":
+    "FE-1 cleans a gas stream by spending oxygen that entered the room on an earlier shift.",
+  "manual.reactions.hematite_hydrogen_reduction.doctrine":
+    "Pass hydrogen across charged hematite to produce steam and leave the carrier in its reduced magnetite state.",
+  "manual.reactions.hematite_hydrogen_reduction.flavor":
+    "FE-2 leaves a wet outlet and a bed ready for air.",
+  "manual.reactions.magnetite_reoxidation.doctrine":
+    "Feed oxygen through magnetite to recharge hematite while carrying the released heat away.",
+  "manual.reactions.magnetite_reoxidation.flavor":
+    "The carrier takes its next charge from the room atmosphere and gives the heat back immediately.",
+  "manual.reactions.nickel_oxide_reduction.doctrine":
+    "Warm nickel oxide in hydrogen to expose active surface nickel and release steam.",
+  "manual.reactions.nickel_oxide_reduction.flavor":
+    "NI-1 wakes the metal before the transport line can pick it up.",
+  "manual.reactions.nickel_carbonyl_formation.doctrine":
+    "Cool a carbon-monoxide-rich stream over surface nickel to carry the metal away as nickel carbonyl.",
+  "manual.reactions.nickel_carbonyl_formation.flavor":
+    "A clear plate and a quiet gauge can mean the nickel has entered the air.",
+  "manual.reactions.nickel_carbonyl_deposition.doctrine":
+    "Heat nickel carbonyl downstream to plate nickel onto that room and release four measures of carbon monoxide.",
+  "manual.reactions.nickel_carbonyl_deposition.flavor":
+    "NI-3 moves the metal’s effect farther than the metal bed that supplied it.",
+  "manual.reactions.nickel_deposit_oxidation.doctrine":
+    "Expose surface nickel to warm oxygen to passivate the coating as recoverable nickel oxide.",
+  "manual.reactions.nickel_deposit_oxidation.flavor":
+    "An oxide coat quiets the catalyst while keeping every measure of nickel in the room.",
+  "manual.reactions.nickel_catalyzed_methanation.doctrine":
+    "Bring carbon monoxide and hydrogen across surface nickel in the warm window to produce methane, steam, and heat.",
+  "manual.reactions.nickel_catalyzed_methanation.flavor":
+    "A plated room keeps changing later gas fronts long after the transport cloud clears.",
+  "manual.reactions.uranium_hexafluoride_hydrolysis.doctrine":
+    "Keep uranium hexafluoride dry during transport; water vapor converts it into settled uranyl fluoride and hydrogen fluoride.",
+  "manual.reactions.uranium_hexafluoride_hydrolysis.flavor":
+    "UF-1 makes the first damp room the place where a moving release becomes a lasting cleanup.",
+  "manual.reactions.uranyl_fluoride_recovery.doctrine":
+    "Heat a dry uranyl fluoride deposit in fluorine to recover uranium hexafluoride and oxygen.",
+  "manual.reactions.uranyl_fluoride_recovery.flavor":
+    "UF-2 lifts the settled carrier back into the pipe and exposes every trace of retained water.",
+  "manual.reactions.hydrogen_fluoride_electrolysis.doctrine":
+    "Feed separated, dry hydrogen fluoride through a powered recovery cell to return hydrogen and fluorine to their headers.",
+  "manual.reactions.hydrogen_fluoride_electrolysis.flavor":
+    "UF-3 closes the fluorine ledger at the price of current, heat, and two dangerous outlet streams.",
   "manual.enemies.deckmouth.classification": "Small Cthonic wreck-feeder",
   "manual.enemies.deckmouth.habitat": "Pressurized wrecks and freshly opened claims",
   "manual.enemies.deckmouth.blurb":
@@ -141,4 +242,12 @@ export const MANUAL_MESSAGES = {
   "manual.mechanics.contact.mixing":
     "The liquid mixing factor reaches full strength at {amount} mol-eq.",
   "manual.mechanics.contact.heat": "Each extent adds {heat}°C-equivalent room heat.",
+  "manual.mechanics.massAction.rate":
+    "The simultaneous reaction network caps this path at {rate} extent/s before equipment multiplication.",
+  "manual.mechanics.massAction.temperature":
+    "Forward activity begins at {start}°C and reaches full thermal activation at {full}°C.",
+  "manual.mechanics.massAction.catalyst":
+    "Local {catalyst} inventory raises the rate and remains outside the stoichiometric ledger.",
+  "manual.mechanics.massAction.orders":
+    "Authored first- and second-order activities set the rate from the current room snapshot.",
 } as const;

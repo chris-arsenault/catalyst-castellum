@@ -31,14 +31,16 @@ describe("facility manual content", () => {
     }
   });
 
-  it("covers every simulated reaction with derived mechanics and linked equipment", () => {
+  it("covers every reaction with derived mechanics and links every room reaction to equipment", () => {
     expect(Object.keys(REACTION_MANUAL)).toEqual([...REACTION_IDS]);
     for (const reactionId of REACTION_IDS) {
       const entry = REACTION_MANUAL[reactionId];
       expect(entry.doctrine.length).toBeGreaterThan(30);
       expect(entry.flavor.length).toBeGreaterThan(40);
       expect(reactionMechanics(REACTION_DEFINITIONS[reactionId]).length).toBeGreaterThanOrEqual(3);
-      expect(equipmentForReaction(reactionId).length).toBeGreaterThan(0);
+      const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+      if (behavior.kind !== "electrolysis" || reactionId === "chlor_alkali_electrolysis")
+        expect(equipmentForReaction(reactionId).length).toBeGreaterThan(0);
     }
   });
 });

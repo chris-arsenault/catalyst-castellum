@@ -1,70 +1,24 @@
 import type {
-  GasBufferDefinition,
-  GasBufferId,
-  GasSourceDefinition,
-  GasSourceId,
-  LiquidBufferDefinition,
-  LiquidBufferId,
-  LiquidSourceDefinition,
-  LiquidSourceId,
+  GasAmounts,
+  GasSupplyDefinition,
+  LiquidAmounts,
+  LiquidSupplyDefinition,
 } from "../types";
 
-export const GAS_SOURCES: Record<GasSourceId, GasSourceDefinition> = {
-  starter_gas_header: {
-    id: "starter_gas_header",
-    formula: "2 H₂(g) + O₂(g)",
-    capacity: 150,
-    infinite: true,
-    initialGas: { hydrogen: 100, oxygen: 50 },
-    chargeGas: { hydrogen: 20, oxygen: 10 },
-    chargeCost: 8,
-    hostRoomId: "core",
-    accent: "#ed9a48",
-  },
-};
+export const GAS_RESERVOIR_ID = "gas_reservoir";
+export const SPECIALTY_GAS_RESERVOIR_ID = "specialty_gas_reservoir";
+export const LIQUID_RESERVOIR_A_ID = "liquid_reservoir_a";
+export const LIQUID_RESERVOIR_B_ID = "liquid_reservoir_b";
 
-export const LIQUID_SOURCES: Record<LiquidSourceId, LiquidSourceDefinition> = {
-  water_tank: {
-    id: "water_tank",
-    formula: "H₂O(l)",
-    substance: "water",
-    capacity: 180,
-    initialAmount: 112,
-    chargeAmount: 28,
-    chargeCost: 7,
-    hostRoomId: "core",
-    accent: "#41baf5",
-  },
-  sodium_chloride_tank: {
-    id: "sodium_chloride_tank",
-    formula: "NaCl(aq)",
-    substance: "sodium_chloride",
-    capacity: 180,
-    initialAmount: 112,
-    chargeAmount: 28,
-    chargeCost: 10,
-    hostRoomId: "core",
-    accent: "#60cce4",
-  },
-};
+export const REACTANT_GAS_CHARGE: Partial<GasAmounts> = { hydrogen: 20, oxygen: 10 };
+export const WATER_CHARGE: Partial<LiquidAmounts> = { water: 28 };
+export const BRINE_CHARGE: Partial<LiquidAmounts> = { sodium_chloride: 28 };
 
-export const GAS_BUFFERS: Record<GasBufferId, GasBufferDefinition> = {
-  anode_header: {
-    id: "anode_header",
-    capacity: 18,
-    accent: "#c5f540",
-  },
-  cathode_header: {
-    id: "cathode_header",
-    capacity: 18,
-    accent: "#f5a249",
-  },
-};
+export const gasSupply = (definition: Omit<GasSupplyDefinition, "phase">): GasSupplyDefinition => ({
+  ...definition,
+  phase: "gas",
+});
 
-export const LIQUID_BUFFERS: Record<LiquidBufferId, LiquidBufferDefinition> = {
-  cell_liquor: {
-    id: "cell_liquor",
-    capacity: 30,
-    accent: "#b555f5",
-  },
-};
+export const liquidSupply = (
+  definition: Omit<LiquidSupplyDefinition, "phase">
+): LiquidSupplyDefinition => ({ ...definition, phase: "liquid" });

@@ -129,8 +129,6 @@ test("an unauthored pair routes through preview and confirm at the corridor exam
     equipment: [...exam.availability.equipment],
     gasLines: [...exam.availability.gasLines],
     liquidLines: [...exam.availability.liquidLines],
-    gasSources: [...exam.availability.gasSources],
-    liquidSources: [...exam.availability.liquidSources],
   };
   const encoded = encodeGame(state, DEFAULT_GAME_DEFINITION);
   await page.addInitScript(

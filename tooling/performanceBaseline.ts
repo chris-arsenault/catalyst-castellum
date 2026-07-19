@@ -2,7 +2,7 @@
 import { performance } from "node:perf_hooks";
 import { roomRenderModel } from "../src/components/gameMap/roomRenderModel";
 import { DEFAULT_GAME_RUNTIME } from "../src/game/runtime";
-import { LEVEL_PLAYTEST_PLANS } from "../src/game/content/playtestPlans";
+import { primaryReferenceBuildFor } from "../src/game/content/playtestPortfolios";
 import { cloneGame } from "../src/game/engine/roomState";
 import { decodeGame, encodeGame } from "../src/game/save";
 import type { GameState } from "../src/game/types";
@@ -36,10 +36,10 @@ const measure = (iterations: number, operation: () => void): Measurement => {
 
 const representativeState = (): GameState => {
   const runtime = DEFAULT_GAME_RUNTIME;
-  let state = runtime.execute(runtime.createScenario("commissioning_exam"), {
+  let state = runtime.execute(runtime.createScenario("morrow_pocket"), {
     type: "begin_level",
   }).state;
-  for (const command of LEVEL_PLAYTEST_PLANS.commissioning_exam.commands) {
+  for (const command of primaryReferenceBuildFor("morrow_pocket").rounds[0]!.commands) {
     const result = runtime.execute(state, command);
     if (result.accepted) state = result.state;
   }
@@ -51,7 +51,7 @@ const baseline = (): PerformanceBaseline => {
   const state = representativeState();
   const encoded = encodeGame(state);
   return {
-    scenario: "commissioning_exam after prime plus 8 simulated seconds",
+    scenario: "morrow_pocket after prime plus 8 simulated seconds",
     saveBytes: Buffer.byteLength(encoded, "utf8"),
     clone: measure(200, () => {
       cloneGame(state);

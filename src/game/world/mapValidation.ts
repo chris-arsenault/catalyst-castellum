@@ -55,6 +55,15 @@ const validateRoom = (
     const sourceIds = room.taps[phase].sourceIds;
     if (new Set(sourceIds).size !== sourceIds.length)
       push(issues, `${path}.taps.${phase}.sourceIds`, "Tap source ids must be unique.");
+    for (const sourceId of sourceIds) {
+      if (!(sourceId in map.utilityNodes)) {
+        push(
+          issues,
+          `${path}.taps.${phase}.sourceIds`,
+          `Tap source ${sourceId} has no utility node.`
+        );
+      }
+    }
   }
   for (const hardpoint of room.hardpoints) {
     if (!roomContains(map, roomId, hardpoint.cell))
@@ -141,10 +150,14 @@ const validateConnections = (map: WorldMap, issues: MapIssue[]): void => {
 
 const validateUtilityNodes = (map: WorldMap, issues: MapIssue[]): void => {
   for (const [nodeId, node] of Object.entries(map.utilityNodes)) {
-    if (!(node.hostRoomId in map.rooms))
+    const hostExists = node.hostRoomId in map.rooms;
+    if (!hostExists)
       push(issues, `utilityNodes.${nodeId}`, `Unknown host room ${node.hostRoomId}.`);
     if (!inBounds(map, node.cell))
       push(issues, `utilityNodes.${nodeId}`, "Utility node cell is outside the map.");
+    if (hostExists && !roomContains(map, node.hostRoomId, node.cell)) {
+      push(issues, `utilityNodes.${nodeId}`, "Utility node cell is outside its host room.");
+    }
   }
 };
 

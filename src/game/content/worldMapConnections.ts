@@ -272,6 +272,16 @@ export const WORLD_MAP_CONNECTIONS: readonly MapConnection[] = [
     route: cellAbsorberRoute,
   }),
   gasLine({
+    rooms: ["reservoir", "gallery"],
+    direction: ["reservoir", "gallery"],
+    actuator: "fan",
+    actuatorHead: 1.5,
+    maxFlow: 1.2,
+    volumePerCell: 0.24,
+    buildCost: 7,
+    route: orthogonalGridPath(cell(32, 24), cell(32, 22), cell(31, 22)),
+  }),
+  gasLine({
     rooms: ["furnace", "gallery"],
     direction: ["furnace", "gallery"],
     actuator: "fan",

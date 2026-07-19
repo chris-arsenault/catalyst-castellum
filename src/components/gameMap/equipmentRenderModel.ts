@@ -15,6 +15,7 @@ export const EQUIPMENT_MAP_CODES: Record<EquipmentId, string> = {
   wet_contactor: "WET",
   thermal_coil: "HEAT",
   membrane_cell: "CELL",
+  fluorine_cell: "F₂",
 };
 
 export interface EquipmentRenderModel {

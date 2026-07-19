@@ -59,8 +59,8 @@ pnpm playtest --level flash_point --runs 500
 pnpm campaign:health
 ```
 
-It runs the pure engine without React or Pixi, compares do-nothing and intended reference policies,
-then groups seeded randomized policies by action count, pass rate, and remaining core. The full
+It runs the pure engine without React or Pixi, evaluates each site's reference-build portfolio,
+then groups seeded reference mutations by action count, pass rate, and remaining Core. The full
 `make ci` gate includes a bounded deterministic health assertion; exploratory randomized runs
 remain opt-in.
 
@@ -91,7 +91,7 @@ header containing a 2:1 H₂/O₂ mixture, and one empty physical duct reaches b
 agitator and switching on that duct's single fan creates a repeating OX-1 pressure/heat weapon. Later
 checkpoints introduce membrane electrolysis, hot HCl formation, transport construction, NaOCl
 storage, and delayed chlorine release. The former fully preinstalled factory is retained as the final
-**Commissioning Exam**, not presented as the tutorial starting state.
+**Morrow Pocket**, not presented as the tutorial starting state.
 
 In that full process, the cell's three products occupy separated outlet inventories. One `Cl₂`
 branch and part of the `H₂` stream reach R-02, where a removable thermal coil and gas agitator create
@@ -134,11 +134,12 @@ facility, materials, reactions, equipment, hazards, transport, enemies, and camp
 browser and headless adapters share one scoped runtime, while tests can run a second definition in
 the same process.
 
-Save V12 identifies its owning game pack and content version, is structurally decoded, migrates
-supported V7–V11 formats, and is semantically validated before execution. A runtime rejects saves
-owned by another pack. Browser restoration is explicit application initialization rather than an
-import side effect. See [ARCHITECTURE.md](ARCHITECTURE.md) for ownership, extension, localization,
-performance, and CI contracts.
+Save V17 identifies its owning game pack and content version, is structurally decoded, and is
+semantically validated before execution. This pre-release build accepts only the current schema; it
+does not carry migration code for obsolete saves. A runtime rejects saves owned by another pack.
+Browser restoration is explicit application initialization rather than an import side effect. See
+[ARCHITECTURE.md](ARCHITECTURE.md) for ownership, extension, localization, performance, and CI
+contracts.
 
 ## Authoring and copy workflows
 
@@ -148,6 +149,10 @@ names, briefings, entity descriptions, command rejections, events, manual entrie
 readouts live under `src/localization/locales/en/`. The pack compiler rejects broken references,
 unbalanced reactions, invalid routes/loadouts, and noncumulative round availability before a
 scenario starts.
+
+All player-facing prose follows the
+[narrative and copy style guide](docs/narrative/style-guide.md); campaign canon lives in the
+[lore bible](docs/narrative/lore-bible.md).
 
 ```bash
 pnpm locales:check   # missing/extra keys and placeholder parity
@@ -161,11 +166,11 @@ not engine or component branches. `ARCHITECTURE.md` contains the exact extension
 
 Gas conduits, liquid conduits, and monster corridors are independent networks in the MVP. Feedstock
 tanks, the vent, and liquid recovery are distinct ports hosted by the Core utility manifold; their
-inventories do not mix with the Core atmosphere. Room-local junctions connect those ports, equipment
-buffers, and room inventory to physical conduits without adding player-visible sub-lines. The cell's
-anode, cathode, and liquor outlets remain explicit buffers beside R-05's separated manifold. Ring
-rules constrain equipment availability, but ordinary rooms share one generic socket-and-environment
-model.
+inventories do not mix with the Core atmosphere. Room-local junctions connect those ports, installed
+equipment outputs, and room inventory to physical conduits without adding player-visible sub-lines.
+Each cell instance owns its anode, cathode, and liquor inventories beside the host room's separated
+manifold. Ring rules constrain equipment availability, but ordinary rooms share one generic
+socket-and-environment model.
 
 Rooms and process lines are conserved finite volumes. Liquid consumes room volume and compresses the
 remaining atmosphere; gas pressure includes quantity, free volume, and temperature. Passive gas

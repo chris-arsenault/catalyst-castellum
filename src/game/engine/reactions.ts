@@ -14,7 +14,7 @@ import { roomContactReactionMultiplier, roomGasReactionMultiplier } from "./equi
 import { addEvent } from "./events";
 import { simulateHydrogenOxygenFlash } from "./flashReaction";
 import { clamp } from "./math";
-import { simulateProcesses } from "./processExecutor";
+import { simulateEquipmentOperations } from "./equipmentOperations";
 import {
   applyReactionExtent,
   reactionReactantCandidates,
@@ -23,6 +23,7 @@ import {
 import { analyzeRoom, liquidTotal, roomGasHeadroom, roomLiquidHeadroom } from "./roomState";
 import { roomState } from "../world/instances";
 import { definitionRoom } from "../world/instances";
+import { simulateMassActionNetwork } from "./massActionReactions";
 
 const PRESSURE_PULSE_DECAY_PER_SECOND = 160;
 const rate = (amount: number, dt: number): number => amount / Math.max(dt, 0.0001);
@@ -38,6 +39,7 @@ const setTelemetry = (
   if (!telemetry) throw new Error(`Room telemetry is missing reaction ${reactionId}`);
   if (amount > 0) {
     telemetry.lastRate += rate(amount, dt);
+    telemetry.direction = "forward";
     telemetry.limitingFactor = limitingFactor;
     room.reactionIntensity = Math.max(room.reactionIntensity, rate(amount, dt));
   } else if (telemetry.lastRate <= 0) {
@@ -247,7 +249,7 @@ const simulateFlash: RoomReactionStrategy = ({ state, room, reaction, dt, bursts
   }
 };
 
-type RoomBehaviorKind = Exclude<ReactionBehaviorDefinition["kind"], "electrolysis">;
+type RoomBehaviorKind = Exclude<ReactionBehaviorDefinition["kind"], "electrolysis" | "mass_action">;
 
 export const ROOM_REACTION_STRATEGIES: Readonly<Record<RoomBehaviorKind, RoomReactionStrategy>> =
   Object.freeze({
@@ -287,10 +289,14 @@ const simulateRoomChemistry = (
   bursts: HazardBurst[],
   definition: GameDefinition
 ): void => {
-  for (const telemetry of Object.values(room.reactions)) telemetry.lastRate = 0;
+  for (const telemetry of Object.values(room.reactions)) {
+    telemetry.lastRate = 0;
+    telemetry.direction = "idle";
+  }
   room.pressurePulse = Math.max(0, room.pressurePulse - PRESSURE_PULSE_DECAY_PER_SECOND * dt);
   for (const reaction of Object.values(definition.reactions)) {
-    if (reaction.behavior.kind === "electrolysis") continue;
+    if (reaction.behavior.kind === "electrolysis" || reaction.behavior.kind === "mass_action")
+      continue;
     ROOM_REACTION_STRATEGIES[reaction.behavior.kind]({
       state,
       room,
@@ -300,6 +306,7 @@ const simulateRoomChemistry = (
       definition,
     });
   }
+  state.stats.reactions += simulateMassActionNetwork(room, dt, definition);
   simulatePhaseChanges(room, dt, definition);
   const baseline = definitionRoom(state, room.id).ambientTemperature;
   room.temperature += (baseline - room.temperature) * 0.03 * dt;
@@ -313,7 +320,7 @@ export const simulateReactions = (
   definition: GameDefinition
 ): HazardBurst[] => {
   const bursts: HazardBurst[] = [];
-  simulateProcesses(state, dt, definition);
+  simulateEquipmentOperations(state, dt, definition);
   for (const roomId of state.world.rooms)
     simulateRoomChemistry(state, roomState(state, roomId), dt, bursts, definition);
   return bursts;

@@ -1,12 +1,16 @@
 import {
   ENEMY_TYPES,
+  REACTION_IDS,
   type EnemyType,
   type EquipmentId,
-  type ReactionDefinition,
   type ReactionId,
 } from "../game/types";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
+import { REACTION_DEFINITIONS } from "./defaultGame";
+import { createReactionMechanics } from "./reactionMechanics";
+
+export { createReactionMechanics } from "./reactionMechanics";
 
 export type EquipmentCategory = "atmosphere" | "contact" | "thermal" | "process";
 
@@ -35,15 +39,7 @@ const createReactionManual = (
   translator: Translator
 ): Record<ReactionId, { doctrine: string; flavor: string }> =>
   Object.fromEntries(
-    [
-      "chlor_alkali_electrolysis",
-      "hydrogen_oxygen_combustion",
-      "hydrogen_chlorine_recombination",
-      "hydrogen_chloride_absorption",
-      "acid_neutralization",
-      "hypochlorite_formation",
-      "acid_chlorine_release",
-    ].map((reactionId) => [
+    REACTION_IDS.map((reactionId) => [
       reactionId,
       {
         doctrine: text(translator, `manual.reactions.${reactionId}.doctrine`),
@@ -65,7 +61,31 @@ const createEnemyBestiary = (translator: Translator): Record<EnemyType, EnemyBes
     ])
   ) as Record<EnemyType, EnemyBestiaryEntry>;
 
+const kineticReactionGroups = () => {
+  const massAction = REACTION_IDS.filter(
+    (reactionId) => REACTION_DEFINITIONS[reactionId].behavior.kind === "mass_action"
+  );
+  const gas = massAction.filter((reactionId) => {
+    const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+    return behavior.kind === "mass_action" && behavior.contact === "gas";
+  });
+  const liquid = massAction.filter((reactionId) => {
+    const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+    return behavior.kind === "mass_action" && behavior.contact === "liquid";
+  });
+  const heated = massAction.filter((reactionId) => {
+    const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+    return behavior.kind === "mass_action" && behavior.forward.activationTemperature > 22;
+  });
+  return { gas, heated, liquid };
+};
+
 export const createManualContent = (translator: Translator) => {
+  const {
+    gas: gasKineticReactionIds,
+    heated: heatedKineticReactionIds,
+    liquid: liquidKineticReactionIds,
+  } = kineticReactionGroups();
   const equipmentCategoryLabels: Record<EquipmentCategory, string> = {
     atmosphere: translator.text("manual.categories.atmosphere"),
     contact: translator.text("manual.categories.contact"),
@@ -80,7 +100,11 @@ export const createManualContent = (translator: Translator) => {
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.gas_agitator.note.${index}`)
       ),
-      reactionIds: ["hydrogen_oxygen_combustion", "hydrogen_chlorine_recombination"],
+      reactionIds: [
+        "hydrogen_oxygen_combustion",
+        "hydrogen_chlorine_recombination",
+        ...gasKineticReactionIds,
+      ],
     },
     wet_contactor: {
       category: "contact",
@@ -94,6 +118,7 @@ export const createManualContent = (translator: Translator) => {
         "acid_neutralization",
         "hypochlorite_formation",
         "acid_chlorine_release",
+        ...liquidKineticReactionIds,
       ],
     },
     thermal_coil: {
@@ -103,7 +128,7 @@ export const createManualContent = (translator: Translator) => {
       operationalNotes: [1, 2, 3].map((index) =>
         text(translator, `manual.equipment.thermal_coil.note.${index}`)
       ),
-      reactionIds: ["hydrogen_chlorine_recombination"],
+      reactionIds: ["hydrogen_chlorine_recombination", ...heatedKineticReactionIds],
     },
     membrane_cell: {
       category: "process",
@@ -113,6 +138,15 @@ export const createManualContent = (translator: Translator) => {
         text(translator, `manual.equipment.membrane_cell.note.${index}`)
       ),
       reactionIds: ["chlor_alkali_electrolysis"],
+    },
+    fluorine_cell: {
+      category: "process",
+      designation: translator.text("manual.equipment.fluorine_cell.designation"),
+      flavor: translator.text("manual.equipment.fluorine_cell.flavor"),
+      operationalNotes: [1, 2, 3].map((index) =>
+        text(translator, `manual.equipment.fluorine_cell.note.${index}`)
+      ),
+      reactionIds: ["hydrogen_fluoride_electrolysis"],
     },
   };
   const reactionManual = createReactionManual(translator);
@@ -126,79 +160,19 @@ export const EQUIPMENT_MANUAL = DEFAULT_MANUAL_CONTENT.equipmentManual;
 export const REACTION_MANUAL = DEFAULT_MANUAL_CONTENT.reactionManual;
 export const ENEMY_BESTIARY = DEFAULT_MANUAL_CONTENT.enemyBestiary;
 
-export const equipmentForReaction = (reactionId: ReactionId): EquipmentId[] =>
-  (Object.entries(EQUIPMENT_MANUAL) as [EquipmentId, EquipmentManualEntry][]).flatMap(
-    ([equipmentId, entry]) => (entry.reactionIds.includes(reactionId) ? [equipmentId] : [])
+export const equipmentForReaction = (reactionId: ReactionId): EquipmentId[] => {
+  const linked = (
+    Object.entries(EQUIPMENT_MANUAL) as [EquipmentId, EquipmentManualEntry][]
+  ).flatMap(([equipmentId, entry]) =>
+    entry.reactionIds.includes(reactionId) ? [equipmentId] : []
   );
-
-const concise = (value: number): string => String(Number(value.toFixed(2)));
-
-export const createReactionMechanics =
-  (translator: Translator) =>
-  (reaction: ReactionDefinition): string[] => {
-    const behavior = reaction.behavior;
-    switch (behavior.kind) {
-      case "electrolysis":
-        return [
-          translator.text("manual.mechanics.electrolysis.rate"),
-          translator.text("manual.mechanics.electrolysis.heat", {
-            heat: concise(behavior.roomHeatPerExtent),
-          }),
-          translator.text("manual.mechanics.electrolysis.limits"),
-        ];
-      case "flash":
-        return [
-          translator.text("manual.mechanics.flash.ignition", {
-            hydrogen: concise(behavior.minimumHydrogenFraction * 100),
-            oxygen: concise(behavior.minimumOxygenFraction * 100),
-          }),
-          translator.text("manual.mechanics.flash.extent", {
-            extent: concise(behavior.maximumExtent),
-            cooldown: concise(behavior.cooldownSeconds),
-          }),
-          translator.text("manual.mechanics.flash.pressure", {
-            base: concise(behavior.pressurePulseBase),
-            gain: concise(behavior.pressurePulsePerExtent),
-          }),
-        ];
-      case "gas_recombination":
-        return [
-          translator.text("manual.mechanics.recombination.activation", {
-            start: concise(behavior.activationTemperature),
-            full: concise(behavior.activationTemperature + behavior.activationRange),
-          }),
-          translator.text("manual.mechanics.recombination.rate", {
-            rate: concise(behavior.maximumRate),
-          }),
-          translator.text("manual.mechanics.recombination.heat", {
-            heat: concise(behavior.gasHeatPerExtent),
-          }),
-        ];
-      case "absorption":
-        return [
-          translator.text("manual.mechanics.absorption.rate", {
-            rate: concise(behavior.maximumRate),
-          }),
-          translator.text("manual.mechanics.absorption.solvent", {
-            amount: concise(behavior.solventInventoryScale),
-          }),
-          translator.text("manual.mechanics.absorption.ceiling", {
-            percent: concise(behavior.maximumProductFraction * 100),
-          }),
-        ];
-      case "mixed_contact":
-        return [
-          translator.text("manual.mechanics.contact.rate", {
-            rate: concise(behavior.maximumRate),
-          }),
-          translator.text("manual.mechanics.contact.mixing", {
-            amount: concise(behavior.mixingInventoryScale),
-          }),
-          translator.text("manual.mechanics.contact.heat", {
-            heat: concise(behavior.roomHeatPerExtent),
-          }),
-        ];
-    }
-  };
+  const behavior = REACTION_DEFINITIONS[reactionId].behavior;
+  if (behavior.kind !== "mass_action") return linked;
+  const kineticEquipment: EquipmentId[] = [
+    behavior.contact === "gas" ? "gas_agitator" : "wet_contactor",
+  ];
+  if (behavior.forward.activationTemperature > 22) kineticEquipment.push("thermal_coil");
+  return [...new Set([...linked, ...kineticEquipment])];
+};
 
 export const reactionMechanics = createReactionMechanics(DEFAULT_TRANSLATOR);

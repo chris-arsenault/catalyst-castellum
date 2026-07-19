@@ -6,8 +6,7 @@ export const MACHINE_FRAME_SIZE = 128;
 const outline = `stroke="#14201d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"`;
 const steel = "#253b35";
 
-const machineBase = (accent: string): string => `
-  <ellipse cx="64" cy="111" rx="46" ry="8" fill="#020706" opacity=".62"/>
+const machineBase = (accent: string): string => `<ellipse cx="64" cy="111" rx="46" ry="8" fill="#020706" opacity=".62"/>
   <path d="M27 101 L23 113 H37 L40 101 M88 101 L92 113 H106 L101 101" fill="${steel}" ${outline}/>
   <path d="M19 103 H109 L103 112 H25Z" fill="#1c2d28" ${outline}/>
   <path d="M27 105 H101" stroke="${accent}" stroke-width="1.4" opacity=".58"/>`;
@@ -119,6 +118,34 @@ const membraneCell = (phase: number, frame: number): string => {
   </g>`;
 };
 
+const fluorineCell = (phase: number, frame: number): string => {
+  const current = 0.55 + (Math.sin(phase) + 1) * 0.18;
+  const bubbles = (x: number, offset: number, color: string): string =>
+    Array.from({ length: 3 }, (_, index) => {
+      const age = ((frame + index * 3 + offset) % 8) / 8;
+      return `<circle cx="${fixed(x + Math.sin(phase + index) * 3)}" cy="${fixed(87 - age * 32)}" r="${fixed(1.3 + age)}" fill="${color}" opacity="${fixed(0.84 - age * 0.32)}"/>`;
+    }).join("");
+  const arc = 0.35 + current * 0.45;
+  return `<g filter="url(#shadow)">
+    ${machineBase("#e5ef62")}
+    <path d="M18 42 L27 25 H98 L110 42 V99 Q105 106 97 106 H31 Q22 105 18 99Z" fill="url(#body)" ${outline}/>
+    <path d="M26 46 H101 V94 H26Z" fill="#101c1b" stroke="#c8d45b" stroke-width="1.8"/>
+    <path d="M31 51 H57 V89 H31Z" fill="#163d4d" stroke="#79c9dd" stroke-width="1.3"/>
+    <path d="M68 51 H95 V89 H68Z" fill="#41451a" stroke="#e5ef62" stroke-width="1.3"/>
+    ${bubbles(44, 0, "#9ee9ff")}${bubbles(82, 2, "#f3ff84")}
+    <path d="M61 47 V92" stroke="#e0e8c7" stroke-width="7"/><path d="M61 48 V91" stroke="#68715b" stroke-width="2"/>
+    <path d="M38 54 V86 M50 54 V86 M75 54 V86 M88 54 V86" stroke="#d8e4dc" stroke-width="2" opacity=".48"/>
+    <path d="M42 25 V14 H55 V25 M75 25 V14 H90 V25" fill="none" stroke="#687f76" stroke-width="7"/>
+    <path d="M42 14 H55 M75 14 H90" stroke="#d4e1db" stroke-width="1.8" opacity=".7"/>
+    <path d="M55 14 Q64 ${fixed(9 + Math.sin(phase) * 2)} 75 14" fill="none" stroke="#f4ff9a" stroke-width="2.5" opacity="${fixed(arc)}" filter="url(#soft-glow)"/>
+    <path d="M18 58 H9 V88 H19" fill="none" stroke="#5e776e" stroke-width="7"/><path d="M18 58 H9 V88 H19" fill="none" stroke="#b3c7bd" stroke-width="1.3"/>
+    <path d="M104 52 H118 V82 H106" fill="none" stroke="#6d7441" stroke-width="7"/><path d="M104 52 H118 V82 H106" fill="none" stroke="#e6ec9b" stroke-width="1.3"/>
+    <path d="M108 88 l7 12 h-14Z" fill="#e5ef62" stroke="#1d2722" stroke-width="1.5"/><path d="M108 92 v4" stroke="#1d2722" stroke-width="1.5"/><circle cx="108" cy="98" r="1" fill="#1d2722"/>
+    <circle cx="28" cy="42" r="3" fill="#f1ff7c" stroke="#17221f" stroke-width="1.4"/>
+    <path d="M23 45 Q43 31 69 35" fill="none" stroke="#fbffe5" stroke-width="2" opacity=".28"/>
+  </g>`;
+};
+
 export const MACHINE_SPRITE_DESIGNS = {
   gas_agitator: {
     label: "Gas agitator",
@@ -166,6 +193,18 @@ export const MACHINE_SPRITE_DESIGNS = {
       glow: "#e8ff93",
     },
     render: membraneCell,
+    frameSize: MACHINE_FRAME_SIZE,
+  },
+  fluorine_cell: {
+    label: "Fluorine recovery cell",
+    palette: {
+      dark: "#4a4e25",
+      body: "#777b3e",
+      light: "#c9cc87",
+      accent: "#e5ef62",
+      glow: "#f4ff9a",
+    },
+    render: fluorineCell,
     frameSize: MACHINE_FRAME_SIZE,
   },
 } satisfies Record<string, SpriteSheetDesign>;

@@ -27,6 +27,7 @@ export const makeStats = (): RoundStats => ({
   peakHazard: 0,
   matterHarvested: 0,
   fieldDamageAbsorbed: 0,
+  fieldDamageAbsorbedBySource: emptySourceTotals(),
   reagentEmitted: 0,
   armorTransitions: 0,
   protectedAllySeconds: 0,

@@ -1,7 +1,17 @@
 import type { LevelDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
-import { ALL_AVAILABILITY } from "./fullPlant";
+import { ACT_I_AVAILABILITY } from "./fullPlant";
 import { emptyLoadout, gasRun, liquidRun } from "./helpers";
+import {
+  BRINE_CHARGE,
+  GAS_RESERVOIR_ID,
+  LIQUID_RESERVOIR_A_ID,
+  LIQUID_RESERVOIR_B_ID,
+  REACTANT_GAS_CHARGE,
+  WATER_CHARGE,
+  gasSupply,
+  liquidSupply,
+} from "../supplies";
 
 export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   id: "stored_chlorine",
@@ -12,6 +22,35 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   startingMatter: 42,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  supplies: [
+    gasSupply({
+      id: GAS_RESERVOIR_ID,
+      code: "G-1",
+      capacity: 150,
+      initial: { hydrogen: 100, oxygen: 50 },
+      availableFromRound: "store",
+      replenishment: { kind: "unlimited", contents: REACTANT_GAS_CHARGE },
+      accent: "#ed9a48",
+    }),
+    liquidSupply({
+      id: LIQUID_RESERVOIR_A_ID,
+      code: "L-1",
+      capacity: 180,
+      initial: { water: 150 },
+      availableFromRound: "store",
+      replenishment: { kind: "matter", contents: WATER_CHARGE, cost: 7 },
+      accent: "#41baf5",
+    }),
+    liquidSupply({
+      id: LIQUID_RESERVOIR_B_ID,
+      code: "L-2",
+      capacity: 180,
+      initial: { sodium_chloride: 150 },
+      availableFromRound: "store",
+      replenishment: { kind: "matter", contents: BRINE_CHARGE, cost: 10 },
+      accent: "#60cce4",
+    }),
+  ],
   site: null,
   loadout: {
     ...emptyLoadout(),
@@ -38,14 +77,13 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
       "liquid:reservoir__washlock": liquidRun(false),
       "liquid:core__reservoir": liquidRun(false),
     },
-    liquidSourceAmounts: { water_tank: 150, sodium_chloride_tank: 150 },
   },
   rounds: [
     {
       id: "store",
       primeSeconds: 34,
       wave: enemySequence(4, "deckmouth", 6, 4),
-      availability: ALL_AVAILABILITY,
+      availability: ACT_I_AVAILABILITY,
     },
     {
       id: "release",
@@ -53,7 +91,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
       wave: [...enemySequence(2, "redlung", 4, 4), ...enemySequence(3, "splitback", 6, 4)].sort(
         (left, right) => left.at - right.at
       ),
-      availability: ALL_AVAILABILITY,
+      availability: ACT_I_AVAILABILITY,
     },
     {
       id: "recirculate",
@@ -63,7 +101,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
         ...enemySequence(2, "shear_jelly", 4, 3),
         ...enemySequence(2, "glowbag", 3, 4),
       ].sort((left, right) => left.at - right.at),
-      availability: ALL_AVAILABILITY,
+      availability: ACT_I_AVAILABILITY,
     },
     {
       id: "armored_storage",
@@ -73,7 +111,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
         ...enemySequence(3, "redlung", 3, 3.8),
         ...enemySequence(1, "anchor", 4, 1),
       ].sort((left, right) => left.at - right.at),
-      availability: ALL_AVAILABILITY,
+      availability: ACT_I_AVAILABILITY,
     },
     {
       id: "release_exam",
@@ -86,7 +124,7 @@ export const STORED_CHLORINE_LEVEL: LevelDefinition = {
         ...enemySequence(2, "glowbag", 4, 4),
         ...enemySequence(1, "anchor", 5, 1),
       ].sort((left, right) => left.at - right.at),
-      availability: ALL_AVAILABILITY,
+      availability: ACT_I_AVAILABILITY,
     },
   ],
 };

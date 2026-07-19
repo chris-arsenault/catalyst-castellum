@@ -4,16 +4,16 @@ import { useGamePresentation } from "../../application/presentationContext";
 import { roomDefinition } from "../../presentation/defaultGame";
 
 export const CellOutletTooltip = ({
-  bufferId,
+  outputId,
   game,
 }: {
-  bufferId: CellOutletId | null;
+  outputId: CellOutletId | null;
   game: GameState;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  if (!bufferId) return null;
+  if (!outputId) return null;
   const assembly = cellOutletAssemblyModel(game, translator);
-  const outlet = assembly?.outlets.find((candidate) => candidate.bufferId === bufferId);
+  const outlet = assembly?.outlets.find((candidate) => candidate.outputId === outputId);
   if (!assembly || !outlet) return null;
   const room = roomDefinition(game, assembly.roomId);
   return (

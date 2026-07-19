@@ -1,9 +1,11 @@
 import type { GameDefinition } from "../definitionTypes";
 import {
   EQUIPMENT_SOCKET_IDS,
+  EQUIPMENT_OUTPUT_IDS,
   type EquipmentGradeDefinition,
   type EquipmentId,
   type EquipmentInstance,
+  type EquipmentLoadout,
   type EquipmentLevel,
   type EquipmentSocketId,
   type GameState,
@@ -11,12 +13,44 @@ import {
   type RoomId,
   type RoomState,
 } from "../types";
+import { emptyGas, emptyLiquid } from "../materials";
 import { clamp } from "./math";
 import { definitionRoom, type MapCarrier } from "../world/instances";
 
 export const NATURAL_REACTION_MULTIPLIER = 0.55;
 
 export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket_b: null });
+
+export const createEquipmentInstance = (
+  loadout: EquipmentLoadout,
+  definition: GameDefinition
+): EquipmentInstance => {
+  const operationDefinition = definition.equipment[loadout.equipmentId].operation;
+  const outputs = Object.fromEntries(EQUIPMENT_OUTPUT_IDS.map((id) => [id, null])) as NonNullable<
+    EquipmentInstance["operation"]
+  >["outputs"];
+  if (!operationDefinition) return { ...loadout, operation: null };
+  for (const output of operationDefinition.outputs) {
+    outputs[output.id] =
+      output.phase === "gas"
+        ? { phase: "gas", gas: emptyGas() }
+        : { phase: "liquid", liquid: emptyLiquid() };
+  }
+  const firstReactant = definition.reactions[operationDefinition.reactionId].reactants[0];
+  if (!firstReactant)
+    throw new Error(`Equipment ${loadout.equipmentId} operation has no reactant.`);
+  return {
+    ...loadout,
+    operation: {
+      lastRate: 0,
+      totalProcessed: 0,
+      limitingFactor: { kind: "species", speciesId: firstReactant.species, zone: null },
+      powerDraw: 0,
+      separatorLeakTotal: 0,
+      outputs,
+    },
+  };
+};
 
 export const roomSocketIds = (roomId: RoomId, carrier: MapCarrier): EquipmentSocketId[] =>
   EQUIPMENT_SOCKET_IDS.slice(0, definitionRoom(carrier, roomId).socketCount);
@@ -36,7 +70,7 @@ export const findRoomEquipment = (
 export const findEquipmentInstallation = (
   state: GameState,
   equipmentId: EquipmentId,
-  definition: GameDefinition
+  _definition: GameDefinition
 ): { roomId: RoomId; socketId: EquipmentSocketId; instance: EquipmentInstance } | null => {
   for (const [roomId, room] of Object.entries(state.rooms) as [RoomId, RoomState][]) {
     for (const socketId of roomSocketIds(roomId, state)) {
@@ -124,16 +158,26 @@ export const equipmentDismantleRefund = (
   definition: GameDefinition
 ): number => Math.floor(equipmentInvestedMatter(instance, definition) * 0.75);
 
-const membraneCellBehavior = (level: EquipmentLevel, definition: GameDefinition) => {
-  const behavior = gradeFor("membrane_cell", level, definition).behavior;
-  if (behavior.kind !== "membrane_cell") throw new Error("Invalid membrane cell grade behavior");
+const electrolyzerBehavior = (
+  equipmentId: EquipmentId,
+  level: EquipmentLevel,
+  definition: GameDefinition
+) => {
+  const behavior = gradeFor(equipmentId, level, definition).behavior;
+  if (behavior.kind !== "electrolyzer") throw new Error(`Invalid electrolyzer ${equipmentId}`);
   return behavior;
 };
 
-export const membraneCellRate = (level: EquipmentLevel, definition: GameDefinition): number =>
-  membraneCellBehavior(level, definition).processRate;
-export const membraneCellPower = (level: EquipmentLevel, definition: GameDefinition): number =>
-  membraneCellBehavior(level, definition).powerDraw;
+export const electrolyzerRate = (
+  equipmentId: EquipmentId,
+  level: EquipmentLevel,
+  definition: GameDefinition
+): number => electrolyzerBehavior(equipmentId, level, definition).processRate;
+export const electrolyzerPower = (
+  equipmentId: EquipmentId,
+  level: EquipmentLevel,
+  definition: GameDefinition
+): number => electrolyzerBehavior(equipmentId, level, definition).powerDraw;
 
 const heatRoom = (room: RoomState, target: number, dt: number): void => {
   const wallStep = clamp(target - room.temperature, 0, 18 * dt);

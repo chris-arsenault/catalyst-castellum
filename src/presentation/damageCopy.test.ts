@@ -21,6 +21,8 @@ describe("damage presentation", () => {
     expect(damageChannelStyle[channel]).toEqual({ color: "#ff755c", label: "THERMAL" });
     expect(damageSourceLabel.hydrogen_oxygen_combustion).toBe("OX-1 flash");
     expect(damageSourceLabel.thermal_exposure).toBe("hot gas exposure");
+    expect(damageSourceLabel.hydrogen_fluoride).toBe("hydrogen fluoride");
+    expect(damageSourceLabel.uranium_chemistry).toBe("uranium chemistry");
   });
 
   it("gives every damage channel a distinct color", () => {
@@ -33,6 +35,7 @@ describe("damage presentation", () => {
     expect(formatDamageAmount(1.04)).toBe("1");
     expect(formatDamageAmount(18.8)).toBe("19");
     expect(damageSourceDisplay.thermal_exposure).toBe("continuous");
+    expect(damageSourceDisplay.fluorine).toBe("continuous");
     expect(damageSourceDisplay.hydrogen_oxygen_combustion).toBe("impact");
   });
 });

@@ -1,26 +1,22 @@
-import { GAS_BUFFERS, LIQUID_BUFFERS } from "../../presentation/defaultGame";
-import {
-  type GasBufferId,
-  type GameState,
-  type LiquidBufferId,
-  type RoomId,
-} from "../../game/types";
+import { EQUIPMENT_DEFINITIONS, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
+import { type EquipmentOutputId, type GameState, type RoomId } from "../../game/types";
 import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { equipmentRenderModels } from "./equipmentRenderModel";
 import { colorNumber, mapViewFor } from "./mapGeometry";
-import { bufferCopy } from "../../presentation/entityCopy";
+import { equipmentOutputCopy } from "../../presentation/entityCopy";
 import { DEFAULT_TRANSLATOR, type Translator } from "../../localization/translator";
 import { roomDefinition } from "../../presentation/defaultGame";
+import { roomState } from "../../game/world/instances";
 
-export type CellOutletId = GasBufferId | LiquidBufferId;
+export type CellOutletId = EquipmentOutputId;
 
 export interface CellOutletRenderModel {
   accent: number;
   amount: number;
-  bufferId: CellOutletId;
+  outputId: CellOutletId;
   capacity: number;
   fill: number;
-  formula: "Cl₂" | "H₂" | "NaOH";
+  formula: string;
   name: string;
   phase: "gas" | "liquid";
   roomId: RoomId;
@@ -52,29 +48,23 @@ export const cellOutletAssemblyModel = (
   const room = mapViewFor(game.map).roomMapRect(installation.roomId);
   const centerX = clamp(installation.x, room.left + 45, room.left + room.width - 45);
   const rowY = clamp(installation.y - 54, room.top + 31, room.top + room.height - 39);
-  const definitions = [
-    {
-      bufferId: "anode_header" as const,
-      formula: "Cl₂" as const,
-      phase: "gas" as const,
-      amount: gasAmountTotal(game.gasBuffers.anode_header.gas),
-      definition: GAS_BUFFERS.anode_header,
-    },
-    {
-      bufferId: "cathode_header" as const,
-      formula: "H₂" as const,
-      phase: "gas" as const,
-      amount: gasAmountTotal(game.gasBuffers.cathode_header.gas),
-      definition: GAS_BUFFERS.cathode_header,
-    },
-    {
-      bufferId: "cell_liquor" as const,
-      formula: "NaOH" as const,
-      phase: "liquid" as const,
-      amount: liquidAmountTotal(game.liquidBuffers.cell_liquor.liquid),
-      definition: LIQUID_BUFFERS.cell_liquor,
-    },
-  ];
+  const instance = roomState(game, installation.roomId).equipment[installation.socketId];
+  const operation = EQUIPMENT_DEFINITIONS.membrane_cell.operation;
+  if (!instance?.operation || !operation) return null;
+  const definitions = operation.outputs.flatMap((definition) => {
+    const output = instance.operation?.outputs[definition.id];
+    if (!output) return [];
+    return [
+      {
+        outputId: definition.id,
+        formula: SPECIES_DEFINITIONS[definition.speciesId].formula,
+        phase: definition.phase,
+        amount:
+          output.phase === "gas" ? gasAmountTotal(output.gas) : liquidAmountTotal(output.liquid),
+        definition,
+      },
+    ];
+  });
 
   return {
     header: translator.text("ui.map.outlet.header", {
@@ -82,14 +72,14 @@ export const cellOutletAssemblyModel = (
     }),
     installationX: installation.x,
     installationY: installation.y,
-    outlets: definitions.map(({ amount, bufferId, definition, formula, phase }, index) => ({
+    outlets: definitions.map(({ amount, outputId, definition, formula, phase }, index) => ({
       accent: colorNumber(definition.accent),
       amount,
-      bufferId,
+      outputId,
       capacity: definition.capacity,
       fill: amount / definition.capacity,
       formula,
-      name: bufferCopy(definition, translator).name,
+      name: equipmentOutputCopy(definition, translator).name,
       phase,
       roomId: installation.roomId,
       x: centerX + (index - 1) * 34,

@@ -7,6 +7,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     buildCost: 12,
     upgradeCosts: [10, 17],
     unique: false,
+    operation: null,
     grades: [
       {
         level: 1,
@@ -31,6 +32,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     buildCost: 14,
     upgradeCosts: [12, 20],
     unique: false,
+    operation: null,
     grades: [
       {
         level: 1,
@@ -55,6 +57,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     buildCost: 10,
     upgradeCosts: [9, 16],
     unique: false,
+    operation: null,
     grades: [
       {
         level: 1,
@@ -79,21 +82,90 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     buildCost: 20,
     upgradeCosts: [17, 28],
     unique: true,
+    operation: {
+      kind: "reaction",
+      reactionId: "chlor_alkali_electrolysis",
+      outputs: [
+        {
+          id: "anode_header",
+          phase: "gas",
+          speciesId: "chlorine",
+          capacity: 18,
+          accent: "#c5f540",
+          limitCode: "anode_headroom",
+        },
+        {
+          id: "cathode_header",
+          phase: "gas",
+          speciesId: "hydrogen",
+          capacity: 18,
+          accent: "#f5a249",
+          limitCode: "cathode_headroom",
+        },
+        {
+          id: "cell_liquor",
+          phase: "liquid",
+          speciesId: "sodium_hydroxide",
+          capacity: 30,
+          accent: "#b555f5",
+          limitCode: "outlet_headroom",
+        },
+      ],
+      separatorBackflow: {
+        leftOutputId: "anode_header",
+        rightOutputId: "cathode_header",
+        leftSpeciesId: "chlorine",
+        rightSpeciesId: "hydrogen",
+        activationDifference: 0.48,
+        flowOffset: 0.42,
+        rate: 0.16,
+      },
+    },
     grades: [
       {
         level: 1,
         occupiedVolume: 5,
-        behavior: { kind: "membrane_cell", processRate: 0.56, powerDraw: 67 },
+        behavior: { kind: "electrolyzer", processRate: 0.56, powerDraw: 67 },
       },
       {
         level: 2,
         occupiedVolume: 6,
-        behavior: { kind: "membrane_cell", processRate: 0.82, powerDraw: 98 },
+        behavior: { kind: "electrolyzer", processRate: 0.82, powerDraw: 98 },
       },
       {
         level: 3,
         occupiedVolume: 8,
-        behavior: { kind: "membrane_cell", processRate: 1.12, powerDraw: 134 },
+        behavior: { kind: "electrolyzer", processRate: 1.12, powerDraw: 134 },
+      },
+    ],
+  },
+  fluorine_cell: {
+    id: "fluorine_cell",
+    accent: "#e5ef62",
+    buildCost: 34,
+    upgradeCosts: [27, 43],
+    unique: true,
+    operation: {
+      kind: "reaction",
+      reactionId: "hydrogen_fluoride_electrolysis",
+      outputs: [],
+      separatorBackflow: null,
+    },
+    grades: [
+      {
+        level: 1,
+        occupiedVolume: 6,
+        behavior: { kind: "electrolyzer", processRate: 0.3, powerDraw: 118 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 8,
+        behavior: { kind: "electrolyzer", processRate: 0.46, powerDraw: 172 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 10,
+        behavior: { kind: "electrolyzer", processRate: 0.66, powerDraw: 241 },
       },
     ],
   },

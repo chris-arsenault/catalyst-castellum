@@ -102,7 +102,7 @@ test("the facility cross-section remains usable at a compact desktop viewport", 
   await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("room-inspector")).toBeVisible();
   await expect(page.getByTestId("begin-prime")).toBeInViewport();
-  await expect(page.getByTestId("source-starter_gas_header")).toBeVisible();
+  await expect(page.getByTestId("source-gas_reservoir")).toBeVisible();
 });
 
 test("the authored cross-section zooms and returns to a complete fit view", async ({ page }) => {

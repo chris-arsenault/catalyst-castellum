@@ -2,12 +2,18 @@ import type { LevelDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { availability, emptyLoadout, gasRun, liquidRun } from "./helpers";
 import { CHLOR_ALKALI_SITE, CHLOR_ALKALI_TUTORIAL_SEED } from "../sites/chlorAlkali";
+import {
+  BRINE_CHARGE,
+  LIQUID_RESERVOIR_A_ID,
+  LIQUID_RESERVOIR_B_ID,
+  WATER_CHARGE,
+  liquidSupply,
+} from "../supplies";
 
 const reagentRoundOne = availability({
   equipment: ["membrane_cell"],
   gasLines: ["gas:lower_intake__reservoir"],
   liquidLines: ["liquid:core__lower_intake"],
-  liquidSources: ["water_tank", "sodium_chloride_tank"],
 });
 
 const reagentRoundTwo = availability({
@@ -25,7 +31,6 @@ const acidRounds = availability({
     "gas:gallery__washlock",
   ],
   liquidLines: ["liquid:core__lower_intake"],
-  liquidSources: ["water_tank", "sodium_chloride_tank"],
 });
 
 export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
@@ -37,6 +42,26 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   startingMatter: 28,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
+  supplies: [
+    liquidSupply({
+      id: LIQUID_RESERVOIR_A_ID,
+      code: "L-1",
+      capacity: 180,
+      initial: { water: 120 },
+      availableFromRound: "co_products",
+      replenishment: { kind: "matter", contents: WATER_CHARGE, cost: 7 },
+      accent: "#41baf5",
+    }),
+    liquidSupply({
+      id: LIQUID_RESERVOIR_B_ID,
+      code: "L-2",
+      capacity: 180,
+      initial: { sodium_chloride: 120 },
+      availableFromRound: "co_products",
+      replenishment: { kind: "matter", contents: BRINE_CHARGE, cost: 10 },
+      accent: "#60cce4",
+    }),
+  ],
   loadout: {
     ...emptyLoadout(),
     gasConduits: {
@@ -47,7 +72,6 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
       "gas:gallery__washlock": gasRun(false),
     },
     liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
-    liquidSourceAmounts: { water_tank: 120, sodium_chloride_tank: 120 },
   },
   site: { kind: "generated", seed: CHLOR_ALKALI_TUTORIAL_SEED, spec: CHLOR_ALKALI_SITE },
   rounds: [

@@ -20,8 +20,6 @@ const buildableState = (): GameState => {
     equipment: [...exam.availability.equipment],
     gasLines: [...exam.availability.gasLines],
     liquidLines: [...exam.availability.liquidLines],
-    gasSources: [...exam.availability.gasSources],
-    liquidSources: [...exam.availability.liquidSources],
   };
   return state;
 };

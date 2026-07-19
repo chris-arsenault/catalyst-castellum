@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   FACILITY_MAP,
-  GAS_SOURCES,
-  LIQUID_SOURCES,
+  LEVEL_DEFINITIONS,
   ROOM_VOLUME_PER_CELL,
   WORLD_LINE_BLUEPRINTS,
   facilityCellDefinition,
@@ -20,13 +19,7 @@ import {
   roomPortHeight,
   roomVolume,
 } from "./config";
-import {
-  GAS_SOURCE_IDS,
-  LIQUID_SOURCE_IDS,
-  type CellRect,
-  type GridCell,
-  type RoomId,
-} from "./types";
+import { type CellRect, type GridCell, type RoomId } from "./types";
 import { findEnemyPath, findEnemyPathBetween, pathMovementModes } from "./simulation";
 import { mapViewFor } from "../components/gameMap/mapGeometry";
 import { instance } from "./world/instances";
@@ -162,14 +155,12 @@ describe("room-derived physical capacity", () => {
       expect(inFacilityBounds(node.cell)).toBe(true);
       expect(roomContainsWorldPoint(node.hostRoomId, gridCellToWorldPoint(node.cell))).toBe(true);
     }
-    for (const sourceId of GAS_SOURCE_IDS)
-      expect(instance(FACILITY_MAP.utilityNodes, sourceId, "utility node").hostRoomId).toBe(
-        GAS_SOURCES[sourceId].hostRoomId
+    for (const supply of LEVEL_DEFINITIONS.morrow_pocket.supplies) {
+      const node = instance(FACILITY_MAP.utilityNodes, supply.id, "utility node");
+      expect(FACILITY_MAP.rooms[node.hostRoomId]?.taps[supply.phase].sourceIds).toContain(
+        supply.id
       );
-    for (const sourceId of LIQUID_SOURCE_IDS)
-      expect(instance(FACILITY_MAP.utilityNodes, sourceId, "utility node").hostRoomId).toBe(
-        LIQUID_SOURCES[sourceId].hostRoomId
-      );
+    }
   });
 
   it("fills liquid upward through canonical row capacities rather than a room rectangle", () => {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { emptyDamageLedger, emptyHazardChannels } from "./engine/damage";
 import { decodeGame, encodeGame } from "./save";
-import { createScenarioGame, findEnemyPath } from "./simulation";
+import { createScenarioGame, executeCommand, findEnemyPath } from "./simulation";
 import { type EnemyState, type GameState } from "./types";
-import { gasConduitState } from "./world/instances";
+import { gasConduitState, roomState } from "./world/instances";
 import { DEFAULT_GAME_DEFINITION } from "./definition";
 import { initialEnemyBehaviorState } from "./engine/enemyBehaviors";
 
@@ -34,12 +34,33 @@ const persistedEnemy = (game: GameState): EnemyState => {
   };
 };
 
+const membraneCellOperation = (game: GameState) => {
+  const operation = roomState(game, "lower_intake").equipment.socket_a?.operation;
+  const anode = operation?.outputs.anode_header;
+  if (!operation || !anode || anode.phase !== "gas")
+    throw new Error("Expected an installed membrane cell.");
+  return { anode, operation };
+};
+
+const morrowPocketWithMembraneCell = (): GameState => {
+  const entered = executeCommand(createScenarioGame("morrow_pocket"), { type: "begin_level" });
+  const installed = executeCommand(entered.state, {
+    type: "install_equipment",
+    roomId: "lower_intake",
+    socketId: "socket_a",
+    equipmentId: "membrane_cell",
+  });
+  if (!entered.accepted || !installed.accepted) throw new Error("Could not install membrane cell.");
+  return installed.state;
+};
+
 describe("current persistence", () => {
   it("round-trips conduit routes, damage ledgers, and structured incidents", () => {
     const game = createScenarioGame("flash_point");
     game.phase = "assault";
     gasConduitState(game, "gas:core__furnace").enabled = true;
     gasConduitState(game, "gas:core__furnace").gas.hydrogen = 4;
+    game.rooms.furnace!.stationary.surface_nickel = 2.5;
     game.enemies.push(persistedEnemy(game));
     game.nextEnemyId = 10;
     game.enemies[0]!.damageBySource.hydrogen_oxygen_combustion.pressure = 53;
@@ -73,7 +94,7 @@ describe("current persistence", () => {
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the current save to decode.");
-    expect(decoded.version).toBe(15);
+    expect(decoded.version).toBe(22);
     expect(gasConduitState(decoded, "gas:core__furnace").route).toEqual(
       gasConduitState(game, "gas:core__furnace").route
     );
@@ -87,7 +108,24 @@ describe("current persistence", () => {
       facing: 1,
     });
     expect(decoded.incidents[0]?.targets[0]?.healthAfter).toBe(21);
+    expect(decoded.rooms.furnace?.stationary.surface_nickel).toBe(2.5);
     expect(decoded.portalStates).toEqual(game.portalStates);
+  });
+
+  it("round-trips each installed machine's operation telemetry and port inventory", () => {
+    const game = morrowPocketWithMembraneCell();
+    const { anode, operation } = membraneCellOperation(game);
+    operation.totalProcessed = 12.5;
+    operation.lastRate = 0.56;
+    anode.gas.chlorine = 7.25;
+
+    const decoded = decodeGame(encodeGame(game));
+    if (!decoded) throw new Error("Expected operation state to decode.");
+    const restored = membraneCellOperation(decoded);
+
+    expect(restored.operation.totalProcessed).toBeCloseTo(12.5, 8);
+    expect(restored.operation.lastRate).toBeCloseTo(0.56, 8);
+    expect(restored.anode.gas.chlorine).toBeCloseTo(7.25, 8);
   });
 });
 
@@ -136,6 +174,16 @@ describe("save decoding", () => {
   it("rejects malformed state", () => {
     expect(decodeGame("not-json")).toBeNull();
     expect(decodeGame(JSON.stringify({ format: "catalyst-castellum-save", game: {} }))).toBeNull();
+  });
+
+  it("rejects installed operation state that differs from its equipment definition", () => {
+    const game = morrowPocketWithMembraneCell();
+    const envelope = JSON.parse(encodeGame(game)) as { game: GameState };
+    const cell = envelope.game.rooms.lower_intake?.equipment.socket_a;
+    if (!cell) throw new Error("Expected an installed membrane cell.");
+    cell.operation = null;
+
+    expect(decodeGame(JSON.stringify(envelope))).toBeNull();
   });
 });
 

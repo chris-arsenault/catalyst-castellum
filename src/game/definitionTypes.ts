@@ -4,25 +4,15 @@ import type {
   EnemyType,
   EquipmentDefinition,
   EquipmentId,
-  EquipmentInstance,
+  EquipmentLoadout,
   EquipmentSocketId,
   FacilityPortalState,
   FacilityRing,
   FacilityTerrainKind,
   GasAmounts,
-  GasBufferDefinition,
-  GasBufferId,
-  GasSourceDefinition,
-  GasSourceId,
   GridCell,
   LevelId,
   LiquidAmounts,
-  LiquidBufferDefinition,
-  LiquidBufferId,
-  LiquidSourceDefinition,
-  LiquidSourceId,
-  ProcessDefinition,
-  ProcessId,
   ReactionDefinition,
   ReactionId,
   RoomGeometryDefinition,
@@ -30,6 +20,8 @@ import type {
   ScenarioAvailability,
   SpeciesDefinition,
   SpeciesId,
+  StationaryAmounts,
+  SiteSupplyDefinition,
   WaveEntry,
   WorldPoint,
 } from "./types";
@@ -43,7 +35,7 @@ import type { ModuleId, ModuleTemplate } from "./world/modules";
 import type { GeneratedLevelSite } from "./world/siteGeneratorTypes";
 
 export type ScenarioRoomEquipment = Partial<
-  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentInstance>>>
+  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentLoadout>>>
 >;
 
 export interface GasConduitLoadout {
@@ -62,10 +54,8 @@ export interface FacilityLoadout {
   /** Presence in either conduit record means the physical line begins installed. */
   gasConduits: Partial<Record<ConnectionId, GasConduitLoadout>>;
   liquidConduits: Partial<Record<ConnectionId, LiquidConduitLoadout>>;
-  gasSourceGas: Partial<Record<GasSourceId, Partial<GasAmounts>>>;
-  liquidSourceAmounts: Partial<Record<LiquidSourceId, number>>;
-  gasBuffers: Partial<Record<GasBufferId, Partial<GasAmounts>>>;
-  liquidBuffers: Partial<Record<LiquidBufferId, Partial<LiquidAmounts>>>;
+  /** Room-bound solids seeded into authored rooms. */
+  stationary: Partial<Record<RoomId, Partial<StationaryAmounts>>>;
 }
 
 export interface RoundDefinition {
@@ -85,6 +75,8 @@ export interface LevelDefinition {
   startingMatter: number;
   startingCoreIntegrity: number;
   assaultTheme: "standard" | "boss";
+  /** Physical feedstock reservoirs and their site-specific economy. */
+  supplies: readonly SiteSupplyDefinition[];
   loadout: FacilityLoadout;
   rounds: RoundDefinition[];
   /** Null levels use the pack's authored map; generated sites use a fixed tutorial seed. */
@@ -140,13 +132,8 @@ export interface GamePackSource {
   readonly species: Readonly<Record<SpeciesId, SpeciesDefinition>>;
   readonly reactions: Readonly<Record<ReactionId, ReactionDefinition>>;
   readonly equipment: Readonly<Record<EquipmentId, EquipmentDefinition>>;
-  readonly processes: Readonly<Record<ProcessId, ProcessDefinition>>;
   readonly enemies: Readonly<Record<EnemyType, EnemyDefinition>>;
   readonly levels: Readonly<Record<LevelId, LevelDefinition>>;
-  readonly gasSources: Readonly<Record<GasSourceId, GasSourceDefinition>>;
-  readonly liquidSources: Readonly<Record<LiquidSourceId, LiquidSourceDefinition>>;
-  readonly gasBuffers: Readonly<Record<GasBufferId, GasBufferDefinition>>;
-  readonly liquidBuffers: Readonly<Record<LiquidBufferId, LiquidBufferDefinition>>;
   readonly ambientGas: GasAmounts;
   readonly environmentHazards: EnvironmentHazardRules;
 }

@@ -25,20 +25,20 @@ flowchart LR
 
 ## Route table
 
-|   # | Site           | Code    | Region                | Enemy level | Mechanical binding   | Narrative job                                                                                           |
-| --: | -------------- | ------- | --------------------- | ----------: | -------------------- | ------------------------------------------------------------------------------------------------------- |
-|   1 | Claim 8-Delta  | RAT-08D | Long Rake Verge       |          20 | `flash_point`        | Establish licensed Ratter work, remote cutter operation, and the first unexplained telemetry hush.      |
-|   2 | Harker’s Brace | RAT-HB4 | Long Rake Verge       |          21 | `make_the_reagent`   | Recover a brine seam; Surveyor makes first contact after coherent off-boundary timing appears.          |
-|   3 | Twelve-Cask    | RAT-12C | Caskward Drift        |          22 | `stored_chlorine`    | Recover wet oxidizer; Buyer requests the discard fraction while Surveyor requests its phase history.    |
-|   4 | Morrow Pocket  | IND-MP7 | Morrow Spur           |          23 | `commissioning_exam` | Complete the first independent mixed-grade claim and discover that separated fractions share one grade. |
-|   5 | Kettleblack    | IND-KB2 | Kettleblack Drifts    |          28 | —                    | Mark dark grains across a split field; force Surveyor to offer a direct meeting.                        |
-|   6 | Cordon 41      | DC-C41  | Outer Pell Approach   |          33 | —                    | Reveal Vela Norr and recover a sensor wall that occupies both sides of its cordon.                      |
-|   7 | Junction L-6   | CM-L06  | Pell Freight Lattice  |          38 | —                    | Reveal Daro Venn, qualify industrial feed rates, and schedule the synchronized scale test.              |
-|   8 | Pell Cut       | CM-PC9  | Pell Freight Lattice  |          44 | —                    | Run Coremark’s parallel arrays; trigger the Pell emergence and the first voice-like distress signal.    |
-|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          50 | —                    | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
-|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          57 | —                    | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
-|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          64 | —                    | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
-|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          72 | —                    | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
+|   # | Site           | Code    | Region                | Enemy level | Mechanical binding | Narrative job                                                                                           |
+| --: | -------------- | ------- | --------------------- | ----------: | ------------------ | ------------------------------------------------------------------------------------------------------- |
+|   1 | Claim 8-Delta  | RAT-08D | Long Rake Verge       |          20 | `flash_point`      | Establish licensed Ratter work, remote cutter operation, and the first unexplained telemetry hush.      |
+|   2 | Harker’s Brace | RAT-HB4 | Long Rake Verge       |          21 | `make_the_reagent` | Recover a brine seam; Surveyor makes first contact after coherent off-boundary timing appears.          |
+|   3 | Twelve-Cask    | RAT-12C | Caskward Drift        |          22 | `stored_chlorine`  | Recover wet oxidizer; Buyer requests the discard fraction while Surveyor requests its phase history.    |
+|   4 | Morrow Pocket  | IND-MP7 | Morrow Spur           |          23 | `morrow_pocket`    | Complete the first independent mixed-grade claim and discover that separated fractions share one grade. |
+|   5 | Kettleblack    | IND-KB2 | Kettleblack Drifts    |          24 | `kettleblack`      | Mark dark grains across a split field; force Surveyor to offer a direct meeting.                        |
+|   6 | Cordon 41      | DC-C41  | Outer Pell Approach   |          25 | `cordon_41`        | Reveal Vela Norr and recover a sensor wall that occupies both sides of its cordon.                      |
+|   7 | Junction L-6   | CM-L06  | Pell Freight Lattice  |          26 | `junction_l6`      | Reveal Daro Venn, qualify industrial feed rates, and schedule the synchronized scale test.              |
+|   8 | Pell Cut       | CM-PC9  | Pell Freight Lattice  |          27 | `pell_cut`         | Run Coremark’s parallel arrays; trigger the Pell emergence and the first voice-like distress signal.    |
+|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          28 | —                  | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
+|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          29 | —                  | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
+|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          30 | —                  | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
+|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          31 | —                  | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
 
 Enemy level belongs to the site rather than the enemy type. A future level definition adopts its site’s authored baseline, then each spawn receives that level unless a wave intentionally applies an offset. This lets the same creature remain recognizable across the route while health and other level-derived attributes follow the campaign curve.
 

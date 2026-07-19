@@ -4,12 +4,17 @@ import {
   type DamageSourceId,
   type GameCommand,
   type GameState,
+  type HazardChannels,
   type LevelId,
   type RoundReport,
 } from "../types";
-import { doNothingPlan, intendedPlan, randomPlan, seededRandom } from "./policies";
+import { playtestPortfolioFor } from "../content/playtestPortfolios";
+import { doNothingPlan, mutatedReferencePlan, referencePlans, seededRandom } from "./policies";
 import type {
   ActionBand,
+  BuildProfile,
+  DiversityEvaluation,
+  DiversityRequirement,
   EvaluationOptions,
   LevelEvaluation,
   PlaytestPlan,
@@ -22,7 +27,6 @@ const STEP_SECONDS = 2;
 interface PlannedCommand {
   command: GameCommand;
   complete: boolean;
-  lastRoundAttempt: number | null;
 }
 
 interface TrialCounters {
@@ -31,9 +35,6 @@ interface TrialCounters {
   reports: RoundReport[];
 }
 
-const recurring = (command: GameCommand): boolean =>
-  command.type === "charge_gas_source" || command.type === "charge_liquid_source";
-
 const attemptCommand = (
   source: GameState,
   planned: PlannedCommand,
@@ -41,17 +42,13 @@ const attemptCommand = (
   runtime: GameRuntime
 ): { state: GameState; progressed: boolean } => {
   if (planned.complete) return { state: source, progressed: false };
-  if (recurring(planned.command) && planned.lastRoundAttempt === source.campaign.roundIndex) {
-    return { state: source, progressed: false };
-  }
   const result = runtime.execute(source, planned.command);
-  planned.lastRoundAttempt = source.campaign.roundIndex;
   if (!result.accepted) {
     counters.rejected += 1;
     return { state: source, progressed: false };
   }
   counters.accepted += 1;
-  if (!recurring(planned.command)) planned.complete = true;
+  planned.complete = true;
   return { state: result.state, progressed: true };
 };
 
@@ -94,6 +91,63 @@ const recordReport = (report: RoundReport | null, counters: TrialCounters): void
   if (!exists) counters.reports.push(report);
 };
 
+const sourceTotals = (
+  reports: readonly RoundReport[],
+  key: "damageBySource" | "killsBySource" | "fieldDamageAbsorbedBySource"
+): Record<DamageSourceId, number> =>
+  Object.fromEntries(
+    DAMAGE_SOURCE_IDS.map((sourceId) => [
+      sourceId,
+      reports.reduce((total, report) => total + report[key][sourceId], 0),
+    ])
+  ) as Record<DamageSourceId, number>;
+
+const damageChannels = (reports: readonly RoundReport[]): HazardChannels =>
+  reports.reduce<HazardChannels>(
+    (total, report) => ({
+      atmosphere: total.atmosphere + report.damageByChannel.atmosphere,
+      corrosion: total.corrosion + report.damageByChannel.corrosion,
+      heat: total.heat + report.damageByChannel.heat,
+      pressure: total.pressure + report.damageByChannel.pressure,
+      radiation: total.radiation + report.damageByChannel.radiation,
+    }),
+    { atmosphere: 0, corrosion: 0, heat: 0, pressure: 0, radiation: 0 }
+  );
+
+const buildProfileFor = (
+  state: GameState,
+  damageBySource: Record<DamageSourceId, number>
+): BuildProfile => ({
+  equipment: Object.values(state.rooms)
+    .flatMap((room) =>
+      Object.entries(room.equipment).flatMap(([socketId, instance]) =>
+        instance
+          ? [
+              `${room.id}:${socketId}:${instance.equipmentId}:${instance.level}:${instance.enabled ? "on" : "off"}`,
+            ]
+          : []
+      )
+    )
+    .sort(),
+  enabledGasLines: Object.entries(state.gasConduits)
+    .flatMap(([id, conduit]) => (conduit.enabled ? [id] : []))
+    .sort(),
+  enabledLiquidLines: Object.entries(state.liquidConduits)
+    .flatMap(([id, conduit]) => (conduit.enabled ? [id] : []))
+    .sort(),
+  activeDamageSources: DAMAGE_SOURCE_IDS.filter((sourceId) => damageBySource[sourceId] > 0.01),
+});
+
+const buildSignatureFor = (profile: BuildProfile): string =>
+  [
+    ...profile.equipment.map((entry) => `equipment:${entry}`),
+    ...profile.enabledGasLines.map((id) => `gas-line:${id}`),
+    ...profile.enabledLiquidLines.map((id) => `liquid-line:${id}`),
+    ...profile.activeDamageSources.map((sourceId) => `damage:${sourceId}`),
+  ]
+    .sort()
+    .join("|");
+
 const finishResult = (
   state: GameState,
   plan: PlaytestPlan,
@@ -104,16 +158,24 @@ const finishResult = (
 ): PlaytestResult => {
   recordReport(state.lastReport, counters);
   const success = state.phase === "level_complete" || state.phase === "victory";
-  const sourceTotals = (key: "damageBySource" | "killsBySource") =>
-    Object.fromEntries(
-      DAMAGE_SOURCE_IDS.map((sourceId) => [
-        sourceId,
-        counters.reports.reduce((total, report) => total + report[key][sourceId], 0),
-      ])
-    ) as Record<DamageSourceId, number>;
+  const damageBySource = sourceTotals(counters.reports, "damageBySource");
+  const killsBySource = sourceTotals(counters.reports, "killsBySource");
+  const damageByChannel = damageChannels(counters.reports);
+  const buildProfile = buildProfileFor(state, damageBySource);
+  const buildSignature = buildSignatureFor(buildProfile);
+  const pulseDamage = damageBySource.hydrogen_oxygen_combustion;
+  const continuousDamage = DAMAGE_SOURCE_IDS.filter(
+    (sourceId) => sourceId !== "hydrogen_oxygen_combustion"
+  ).reduce((total, sourceId) => total + damageBySource[sourceId], 0);
+  const matterHarvested = counters.reports.reduce(
+    (total, report) => total + report.matterHarvested,
+    0
+  );
+  const startingMatter = runtime.definition.levels[state.campaign.levelId].startingMatter;
   return {
     levelId: state.campaign.levelId,
     planName: plan.name,
+    archetype: plan.archetype,
     success,
     terminalPhase: state.phase,
     coreIntegrity: state.coreIntegrity,
@@ -127,9 +189,16 @@ const finishResult = (
       (total, report) => total + report.fieldDamageAbsorbed,
       0
     ),
-    damageBySource: sourceTotals("damageBySource"),
-    killsBySource: sourceTotals("killsBySource"),
-    plannedActions: plan.commands.length,
+    fieldDamageAbsorbedBySource: sourceTotals(counters.reports, "fieldDamageAbsorbedBySource"),
+    damageBySource,
+    killsBySource,
+    damageByChannel,
+    pulseDamage,
+    continuousDamage,
+    matterSpent: startingMatter + matterHarvested - state.matter,
+    buildProfile,
+    buildSignature,
+    plannedActions: plan.rounds.reduce((total, round) => total + round.commands.length, 0),
     acceptedActions: counters.accepted,
     rejectedActions: counters.rejected,
     simulatedSeconds,
@@ -144,6 +213,37 @@ const enterLevel = (levelId: LevelId, runtime: GameRuntime): GameState => {
   return result.state;
 };
 
+const terminal = (state: GameState): boolean =>
+  state.phase === "level_complete" || state.phase === "victory" || state.phase === "defeat";
+
+const plannedTransition = (
+  state: GameState,
+  plan: PlaytestPlan,
+  commandsByRound: PlannedCommand[][],
+  counters: TrialCounters,
+  runtime: GameRuntime
+): GameState | null => {
+  if (state.phase === "build") {
+    const configured = applyPlan(
+      state,
+      commandsByRound[state.campaign.roundIndex] ?? [],
+      counters,
+      runtime
+    );
+    return runtime.execute(configured, { type: "start_prime" }).state;
+  }
+  if (state.phase === "round_result") {
+    recordReport(state.lastReport, counters);
+    return runtime.execute(state, { type: "continue_round" }).state;
+  }
+  if (state.phase !== "prime") return null;
+  const primeFraction = plan.rounds[state.campaign.roundIndex]?.primeFraction ?? 1;
+  const earlyLockAt = runtime.round(state).primeSeconds * primeFraction;
+  return state.phaseTime >= earlyLockAt
+    ? runtime.execute(state, { type: "start_assault" }).state
+    : null;
+};
+
 export const runPlan = (
   levelId: LevelId,
   plan: PlaytestPlan,
@@ -151,37 +251,58 @@ export const runPlan = (
 ): PlaytestResult => {
   let state = enterLevel(levelId, runtime);
   let simulatedSeconds = 0;
-  const commands = plan.commands.map((command) => ({
-    command,
-    complete: false,
-    lastRoundAttempt: null,
-  }));
+  const commandsByRound = plan.rounds.map((round) =>
+    round.commands.map((command) => ({ command, complete: false }))
+  );
   const counters: TrialCounters = { accepted: 0, rejected: 0, reports: [] };
   while (simulatedSeconds < MAX_SIMULATED_SECONDS) {
-    if (state.phase === "build") {
-      state = applyPlan(state, commands, counters, runtime);
-      state = runtime.execute(state, { type: "start_prime" }).state;
-      continue;
-    }
-    if (state.phase === "round_result") {
-      recordReport(state.lastReport, counters);
-      state = runtime.execute(state, { type: "continue_round" }).state;
-      continue;
-    }
-    if (["level_complete", "victory", "defeat"].includes(state.phase)) {
+    if (terminal(state)) {
       return finishResult(state, plan, counters, simulatedSeconds, true, runtime);
     }
-    if (state.phase === "prime") {
-      const earlyLockAt = runtime.round(state).primeSeconds * plan.primeFraction;
-      if (state.phaseTime >= earlyLockAt) {
-        state = runtime.execute(state, { type: "start_assault" }).state;
-        continue;
-      }
+    const transitioned = plannedTransition(state, plan, commandsByRound, counters, runtime);
+    if (transitioned) {
+      state = transitioned;
+      continue;
     }
     state = runtime.step(state, STEP_SECONDS);
     simulatedSeconds += STEP_SECONDS;
   }
   return finishResult(state, plan, counters, simulatedSeconds, false, runtime);
+};
+
+export const evaluateDiversity = (
+  requirements: DiversityRequirement,
+  references: PlaytestResult[]
+): DiversityEvaluation => {
+  const passing = references.filter((result) => result.success && result.stable);
+  const passingArchetypes = [
+    ...new Set(passing.flatMap((result) => (result.archetype === null ? [] : [result.archetype]))),
+  ].sort();
+  const distinctPassingSignatures = new Set(passing.map((result) => result.buildSignature)).size;
+  const issues: string[] = [];
+  if (passing.length < requirements.minimumPassingBuilds) {
+    issues.push(
+      `${passing.length}/${requirements.minimumPassingBuilds} required reference builds pass.`
+    );
+  }
+  if (passingArchetypes.length < requirements.minimumPassingArchetypes) {
+    issues.push(
+      `${passingArchetypes.length}/${requirements.minimumPassingArchetypes} required archetypes pass.`
+    );
+  }
+  if (distinctPassingSignatures < requirements.minimumDistinctSignatures) {
+    issues.push(
+      `${distinctPassingSignatures}/${requirements.minimumDistinctSignatures} required build signatures pass.`
+    );
+  }
+  return {
+    ...requirements,
+    passingBuilds: passing.length,
+    passingArchetypes,
+    distinctPassingSignatures,
+    satisfied: issues.length === 0,
+    issues,
+  };
 };
 
 const actionBands = (trials: PlaytestResult[]): ActionBand[] => {
@@ -207,15 +328,23 @@ export const evaluateLevel = (
   runtime: GameRuntime = DEFAULT_GAME_RUNTIME
 ): LevelEvaluation => {
   const random = seededRandom(options.seed);
-  const randomTrials = Array.from({ length: options.runs }, () => {
+  const mutationTrials = Array.from({ length: options.runs }, () => {
     const quality = random.next();
-    return runPlan(options.levelId, randomPlan(options.levelId, quality, random), runtime);
+    return runPlan(
+      options.levelId,
+      mutatedReferencePlan(options.levelId, quality, random),
+      runtime
+    );
   });
+  const references = referencePlans(options.levelId).map((plan) =>
+    runPlan(options.levelId, plan, runtime)
+  );
   return {
     levelId: options.levelId,
     doNothing: runPlan(options.levelId, doNothingPlan(), runtime),
-    intended: runPlan(options.levelId, intendedPlan(options.levelId), runtime),
-    randomTrials,
-    actionBands: actionBands(randomTrials),
+    references,
+    mutationTrials,
+    actionBands: actionBands(mutationTrials),
+    diversity: evaluateDiversity(playtestPortfolioFor(options.levelId).requirements, references),
   };
 };

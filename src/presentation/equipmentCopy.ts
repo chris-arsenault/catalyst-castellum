@@ -20,7 +20,7 @@ export const createEquipmentGradeEffect =
         return translator.text("presentation.equipment.coil", {
           temperature: formatters.number(behavior.targetTemperature),
         });
-      case "membrane_cell":
+      case "electrolyzer":
         return translator.text("presentation.equipment.cell", {
           rate: formatters.number(behavior.processRate),
           power: formatters.number(behavior.powerDraw),

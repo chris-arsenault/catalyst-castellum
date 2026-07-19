@@ -8,7 +8,7 @@ const makeReagentStages = (): GuideConceptStage[] => {
   const recovery = definition.lineBlueprints["gas:core__lower_intake"];
   const transfer = definition.lineBlueprints["gas:lower_intake__reservoir"];
   const grade = definition.equipment.membrane_cell.grades[0];
-  if (!feed || !recovery || !transfer || grade?.behavior.kind !== "membrane_cell") {
+  if (!feed || !recovery || !transfer || grade?.behavior.kind !== "electrolyzer") {
     throw new Error("Make the Reagent concept requires its cell and transport runs");
   }
   const speciesCoefficient = (species: string): number =>

@@ -8,6 +8,8 @@ import {
   type HazardChannels,
   type LiquidAmounts,
   type LimitingFactor,
+  type EquipmentInstance,
+  type EquipmentOutputState,
   type RoomAnalysis,
   type RoomState,
 } from "../types";
@@ -36,6 +38,29 @@ const cloneDamageLedger = (ledger: GameState["enemies"][number]["damageBySource"
     Object.entries(ledger).map(([sourceId, channels]) => [sourceId, cloneHazards(channels)])
   ) as GameState["enemies"][number]["damageBySource"];
 
+const cloneEquipmentOutput = (output: EquipmentOutputState | null): EquipmentOutputState | null => {
+  if (!output) return null;
+  return output.phase === "gas"
+    ? { phase: "gas", gas: { ...output.gas } }
+    : { phase: "liquid", liquid: { ...output.liquid } };
+};
+
+const cloneEquipment = (instance: EquipmentInstance): EquipmentInstance => ({
+  ...instance,
+  operation: instance.operation
+    ? {
+        ...instance.operation,
+        limitingFactor: cloneLimitingFactor(instance.operation.limitingFactor),
+        outputs: Object.fromEntries(
+          Object.entries(instance.operation.outputs).map(([id, output]) => [
+            id,
+            cloneEquipmentOutput(output),
+          ])
+        ) as NonNullable<EquipmentInstance["operation"]>["outputs"],
+      }
+    : null,
+});
+
 const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
   Object.fromEntries(
     Object.entries(rooms).map(([id, room]) => [
@@ -49,6 +74,7 @@ const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
         gasTemperature: { ...room.gasTemperature },
         flashCooldown: { ...room.flashCooldown },
         liquid: { ...room.liquid },
+        stationary: { ...room.stationary },
         reactions: Object.fromEntries(
           Object.entries(room.reactions).map(([reactionId, telemetry]) => [
             reactionId,
@@ -61,7 +87,7 @@ const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
         equipment: Object.fromEntries(
           Object.entries(room.equipment).map(([socketId, instance]) => [
             socketId,
-            instance ? { ...instance } : null,
+            instance ? cloneEquipment(instance) : null,
           ])
         ) as RoomState["equipment"],
       },
@@ -70,10 +96,7 @@ const cloneRooms = (rooms: GameState["rooms"]): GameState["rooms"] =>
 
 const cloneMaterialState = (
   state: GameState
-): Pick<
-  GameState,
-  "gasSources" | "liquidSources" | "gasBuffers" | "liquidBuffers" | "gasVent" | "liquidDrain"
-> => ({
+): Pick<GameState, "gasSources" | "liquidSources" | "gasVent" | "liquidDrain"> => ({
   gasSources: Object.fromEntries(
     Object.entries(state.gasSources).map(([id, source]) => [id, { gas: { ...source.gas } }])
   ) as GameState["gasSources"],
@@ -83,15 +106,6 @@ const cloneMaterialState = (
       { liquid: { ...source.liquid } },
     ])
   ) as GameState["liquidSources"],
-  gasBuffers: Object.fromEntries(
-    Object.entries(state.gasBuffers).map(([id, buffer]) => [id, { gas: { ...buffer.gas } }])
-  ) as GameState["gasBuffers"],
-  liquidBuffers: Object.fromEntries(
-    Object.entries(state.liquidBuffers).map(([id, buffer]) => [
-      id,
-      { liquid: { ...buffer.liquid } },
-    ])
-  ) as GameState["liquidBuffers"],
   gasVent: { ...state.gasVent },
   liquidDrain: { ...state.liquidDrain },
 });
@@ -151,6 +165,7 @@ const cloneCombatState = (
     ...state.stats,
     damageByChannel: cloneHazards(state.stats.damageByChannel),
     damageBySource: { ...state.stats.damageBySource },
+    fieldDamageAbsorbedBySource: { ...state.stats.fieldDamageAbsorbedBySource },
     killsBySource: { ...state.stats.killsBySource },
   },
   lastReport: state.lastReport
@@ -158,6 +173,9 @@ const cloneCombatState = (
         ...state.lastReport,
         damageByChannel: cloneHazards(state.lastReport.damageByChannel),
         damageBySource: { ...state.lastReport.damageBySource },
+        fieldDamageAbsorbedBySource: {
+          ...state.lastReport.fieldDamageAbsorbedBySource,
+        },
         killsBySource: { ...state.lastReport.killsBySource },
       }
     : null,
@@ -195,8 +213,6 @@ export const cloneGame = (state: GameState): GameState => ({
     equipment: [...state.availability.equipment],
     gasLines: [...state.availability.gasLines],
     liquidLines: [...state.availability.liquidLines],
-    gasSources: [...state.availability.gasSources],
-    liquidSources: [...state.availability.liquidSources],
   },
   rooms: cloneRooms(state.rooms),
   ...cloneMaterialState(state),
@@ -207,15 +223,6 @@ export const cloneGame = (state: GameState): GameState => ({
       { ...portalState },
     ])
   ),
-  processes: Object.fromEntries(
-    Object.entries(state.processes).map(([id, process]) => [
-      id,
-      {
-        ...process,
-        limitingFactor: cloneLimitingFactor(process.limitingFactor),
-      },
-    ])
-  ) as GameState["processes"],
   ...cloneCombatState(state),
 });
 

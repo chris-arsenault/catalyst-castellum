@@ -37,6 +37,11 @@ const equipmentUpgradeTutorialAnchor = (
     ? TUTORIAL_ANCHORS.furnaceAgitatorUpgrade
     : null;
 
+const usesTwoSocketFurnaceLesson = (game: GameState): boolean =>
+  game.campaign.levelId === "make_the_reagent"
+    ? game.campaign.roundIndex >= 2
+    : game.campaign.levelId === "kettleblack" && game.campaign.roundIndex === 0;
+
 const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnchorId | null => {
   if (roomId === "lower_intake" && game.campaign.levelId === "make_the_reagent")
     return TUTORIAL_ANCHORS.lowerIntakeMembraneCell;
@@ -44,7 +49,7 @@ const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnc
     return TUTORIAL_ANCHORS.galleryAgitator;
   if (roomId !== "furnace") return null;
   if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
-  if (game.campaign.levelId === "make_the_reagent" && game.campaign.roundIndex >= 2) {
+  if (usesTwoSocketFurnaceLesson(game)) {
     const thermalInstalled = Object.values(roomState(game, "furnace").equipment).some(
       (instance) => instance?.equipmentId === "thermal_coil"
     );

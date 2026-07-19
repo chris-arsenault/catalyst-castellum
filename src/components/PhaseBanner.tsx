@@ -8,6 +8,7 @@ import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
 import { guidedPhaseActionReason } from "../tutorial/guideModel";
 import type { LocaleFormatters } from "../localization/formatters";
 import type { Translator } from "../localization/translator";
+import { WaveForecastDetails, WaveForecastStrip } from "./WaveForecast";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -197,6 +198,7 @@ const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => vo
             <dd>{phaseHudModel(game, translator, formatters, levelText.name).label}</dd>
           </div>
         </dl>
+        <WaveForecastDetails game={game} />
         <button type="button" className="secondary-action wide" onClick={onClose}>
           {translator.text("ui.phaseHud.back")}
         </button>
@@ -233,9 +235,13 @@ export const PhaseBanner = () => {
           <small>{model.detail}</small>
         </div>
         <button className="round-info-button" type="button" onClick={openBrief}>
-          <Info size={15} /> {translator.text("ui.phaseHud.roundBrief")}
+          <Info size={15} />{" "}
+          {translator.text(
+            game.phase === "build" ? "ui.phaseHud.waveForecast" : "ui.phaseHud.roundBrief"
+          )}
         </button>
         <PhaseAction game={game} />
+        {game.phase === "build" && <WaveForecastStrip game={game} />}
       </section>
       {showBrief && <RoundBriefModal game={game} onClose={closeBrief} />}
     </>

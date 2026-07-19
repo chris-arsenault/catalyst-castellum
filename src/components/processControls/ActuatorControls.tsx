@@ -1,10 +1,5 @@
-import { CirclePower, Gauge } from "lucide-react";
-import {
-  GAS_BUFFERS,
-  LIQUID_BUFFERS,
-  REACTION_DEFINITIONS,
-  SPECIES_DEFINITIONS,
-} from "../../presentation/defaultGame";
+import { CirclePower } from "lucide-react";
+import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   conduitCapacity,
   gasAmountTotal,
@@ -29,7 +24,7 @@ import {
   type ConnectionId,
 } from "../../game/types";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
-import { bufferCopy, speciesCopy, transportCopy } from "../../presentation/entityCopy";
+import { transportCopy } from "../../presentation/entityCopy";
 import { roomDefinition } from "../../presentation/defaultGame";
 import {
   gasConduitState,
@@ -52,10 +47,8 @@ const CONDUIT_TUTORIAL_ANCHORS: Partial<Record<ConnectionId, TutorialAnchorId>> 
   "gas:gallery__washlock": TUTORIAL_ANCHORS.conduitReturnFinalGas,
 };
 
-export const conduitTutorialAnchor = (
-  runId: ConnectionId,
-  phase: TransportPhase
-): TutorialAnchorId | null => CONDUIT_TUTORIAL_ANCHORS[runId] ?? null;
+export const conduitTutorialAnchor = (runId: ConnectionId): TutorialAnchorId | null =>
+  CONDUIT_TUTORIAL_ANCHORS[runId] ?? null;
 
 const gasMixtureSummary = (
   gas: GasAmounts,
@@ -119,28 +112,6 @@ const liquidFlowSummary = (
         `${SPECIES_DEFINITIONS[species].formula} ${formatters.number(Math.abs(flow[species]), 2)}`
     )
     .join(" · ");
-};
-
-const dominantGasInLine = (
-  gas: GasAmounts,
-  translator: Translator,
-  formatters: LocaleFormatters
-): string => {
-  const total = gasAmountTotal(gas);
-  if (total < 0.05) return translator.text("ui.process.empty");
-  const dominant = GAS_TYPES.reduce((best, type) => (gas[type] > gas[best] ? type : best));
-  return `${speciesCopy(SPECIES_DEFINITIONS[dominant], translator).name} ${formatters.percent(gas[dominant] / total, 0)}`;
-};
-
-const dominantLiquidInLine = (
-  liquid: LiquidAmounts,
-  translator: Translator,
-  formatters: LocaleFormatters
-): string => {
-  const total = liquidAmountTotal(liquid);
-  if (total < 0.05) return translator.text("ui.process.empty");
-  const dominant = LIQUID_TYPES.reduce((best, type) => (liquid[type] > liquid[best] ? type : best));
-  return `${speciesCopy(SPECIES_DEFINITIONS[dominant], translator).name} ${formatters.percent(liquid[dominant] / total, 0)}`;
 };
 
 const flowReading = (flow: number, formatters: LocaleFormatters): string => {
@@ -343,74 +314,9 @@ const InstalledConduitActuator = ({
         disabled={!decision.allowed}
         inactiveLabel={inactiveLabel}
         testId={`conduit-control-${runId}`}
-        tutorialAnchor={conduitTutorialAnchor(runId, phase)}
+        tutorialAnchor={conduitTutorialAnchor(runId)}
         onClick={toggle}
       />
-    </div>
-  );
-};
-
-export const OutletBuffers = () => {
-  const { formatters, limitingFactorCopy: factorCopy, translator } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
-  const anode = game.gasBuffers.anode_header.gas;
-  const cathode = game.gasBuffers.cathode_header.gas;
-  const liquor = game.liquidBuffers.cell_liquor.liquid;
-  const process = game.processes.chlor_alkali_cell;
-  const entries = [
-    {
-      id: "anode",
-      name: bufferCopy(GAS_BUFFERS.anode_header, translator).name,
-      amount: gasAmountTotal(anode),
-      capacity: GAS_BUFFERS.anode_header.capacity,
-      composition: dominantGasInLine(anode, translator, formatters),
-      contaminated: anode.hydrogen > 0.01,
-    },
-    {
-      id: "cathode",
-      name: bufferCopy(GAS_BUFFERS.cathode_header, translator).name,
-      amount: gasAmountTotal(cathode),
-      capacity: GAS_BUFFERS.cathode_header.capacity,
-      composition: dominantGasInLine(cathode, translator, formatters),
-      contaminated: cathode.chlorine > 0.01,
-    },
-    {
-      id: "liquor",
-      name: bufferCopy(LIQUID_BUFFERS.cell_liquor, translator).name,
-      amount: liquidAmountTotal(liquor),
-      capacity: LIQUID_BUFFERS.cell_liquor.capacity,
-      composition: dominantLiquidInLine(liquor, translator, formatters),
-      contaminated: false,
-    },
-  ];
-  return (
-    <div className="outlet-buffer-panel" data-tutorial-anchor={TUTORIAL_ANCHORS.lowerIntakeOutlets}>
-      <div className="control-kind-heading">
-        <Gauge size={14} /> {translator.text("ui.process.outlets")}
-      </div>
-      <div className="outlet-buffer-grid">
-        {entries.map((entry) => (
-          <div className={entry.contaminated ? "contaminated" : ""} key={entry.id}>
-            <span>{entry.name}</span>
-            <strong>
-              {formatters.number(entry.amount, 1)} / {formatters.number(entry.capacity, 1)}
-            </strong>
-            <small>
-              {entry.contaminated ? translator.text("ui.process.contaminated") : entry.composition}
-            </small>
-          </div>
-        ))}
-      </div>
-      <div className="equipment-process-readout">
-        <span>{REACTION_DEFINITIONS.chlor_alkali_electrolysis.equation}</span>
-        <strong>{formatters.measurement(process.lastRate, "mol-eq/s", 2)}</strong>
-        <small>
-          {translator.text("ui.process.limiting", {
-            power: formatters.number(process.powerDraw, 0),
-            factor: factorCopy(process.limitingFactor),
-          })}
-        </small>
-      </div>
     </div>
   );
 };

@@ -5,22 +5,19 @@ import {
   ENEMY_LOCOMOTION_MODES,
   ENEMY_TYPES,
   EQUIPMENT_IDS,
+  EQUIPMENT_OUTPUT_IDS,
   EQUIPMENT_SOCKET_IDS,
   EVENT_TONES,
   FLOW_CAUSES,
   GAME_PHASES,
   GAME_EVENT_CODES,
-  GAS_BUFFER_IDS,
-  GAS_SOURCE_IDS,
   GAS_TYPES,
   GAS_ZONES,
   LEVEL_IDS,
   LIMIT_CONDITION_CODES,
-  LIQUID_BUFFER_IDS,
-  LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
-  PROCESS_IDS,
   ROOM_REACTION_IDS,
+  STATIONARY_TYPES,
   type GameState,
 } from "../types";
 import { validateWorldMap } from "../world/mapValidation";
@@ -31,11 +28,9 @@ import { worldMapSaveSchema } from "./worldMapSaveSchema";
 const roomIdSchema = z.string().min(1);
 const phaseSchema = z.enum(GAME_PHASES);
 const levelIdSchema = z.enum(LEVEL_IDS);
-const gasSourceIdSchema = z.enum(GAS_SOURCE_IDS);
-const liquidSourceIdSchema = z.enum(LIQUID_SOURCE_IDS);
-const gasBufferIdSchema = z.enum(GAS_BUFFER_IDS);
-const liquidBufferIdSchema = z.enum(LIQUID_BUFFER_IDS);
-const processIdSchema = z.enum(PROCESS_IDS);
+const gasSourceIdSchema = z.string().min(1);
+const liquidSourceIdSchema = z.string().min(1);
+const equipmentOutputIdSchema = z.enum(EQUIPMENT_OUTPUT_IDS);
 const reactionIdSchema = z.enum(ROOM_REACTION_IDS);
 const equipmentIdSchema = z.enum(EQUIPMENT_IDS);
 const socketIdSchema = z.enum(EQUIPMENT_SOCKET_IDS);
@@ -46,10 +41,20 @@ const gasSchema = z.object({
   oxygen: z.number().nonnegative(),
   nitrogen: z.number().nonnegative(),
   carbon_dioxide: z.number().nonnegative(),
+  carbon_monoxide: z.number().nonnegative(),
   chlorine: z.number().nonnegative(),
   hydrogen: z.number().nonnegative(),
   hydrogen_chloride: z.number().nonnegative(),
   steam: z.number().nonnegative(),
+  methane: z.number().nonnegative(),
+  ammonia: z.number().nonnegative(),
+  nitric_oxide: z.number().nonnegative(),
+  nitrogen_dioxide: z.number().nonnegative(),
+  nitrous_oxide: z.number().nonnegative(),
+  nickel_carbonyl: z.number().nonnegative(),
+  uranium_hexafluoride: z.number().nonnegative(),
+  hydrogen_fluoride: z.number().nonnegative(),
+  fluorine: z.number().nonnegative(),
 });
 
 const liquidSchema = z.object({
@@ -58,7 +63,10 @@ const liquidSchema = z.object({
   sodium_hydroxide: z.number().nonnegative(),
   sodium_hypochlorite: z.number().nonnegative(),
   hydrochloric_acid: z.number().nonnegative(),
+  nitric_acid: z.number().nonnegative(),
 });
+
+const stationarySchema = z.record(z.enum(STATIONARY_TYPES), z.number().nonnegative());
 
 const hazardSchema = z.object({
   atmosphere: z.number().nonnegative(),
@@ -74,12 +82,11 @@ const gridCellSchema = z.object({ column: z.number().int(), elevation: z.number(
 const worldPointSchema = z.object({ x: z.number(), elevation: z.number() });
 const flowCauseSchema = z.enum(FLOW_CAUSES);
 
-const equipmentSchema = z.object({
-  equipmentId: equipmentIdSchema,
-  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
-  enabled: z.boolean(),
-});
-const speciesIdSchema = z.union([z.enum(GAS_TYPES), z.enum(LIQUID_TYPES)]);
+const speciesIdSchema = z.union([
+  z.enum(GAS_TYPES),
+  z.enum(LIQUID_TYPES),
+  z.enum(STATIONARY_TYPES),
+]);
 const limitingFactorSchema = z.union([
   z.object({
     kind: z.literal("species"),
@@ -92,8 +99,27 @@ const limitingFactorSchema = z.union([
     zone: z.enum(GAS_ZONES).nullable(),
   }),
 ]);
+const equipmentOutputSchema = z.union([
+  z.object({ phase: z.literal("gas"), gas: gasSchema }),
+  z.object({ phase: z.literal("liquid"), liquid: liquidSchema }),
+]);
+const equipmentOperationSchema = z.object({
+  lastRate: z.number().nonnegative(),
+  totalProcessed: z.number().nonnegative(),
+  powerDraw: z.number().nonnegative(),
+  separatorLeakTotal: z.number().nonnegative(),
+  limitingFactor: limitingFactorSchema,
+  outputs: z.record(equipmentOutputIdSchema, equipmentOutputSchema.nullable()),
+});
+const equipmentSchema = z.object({
+  equipmentId: equipmentIdSchema,
+  level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
+  enabled: z.boolean(),
+  operation: equipmentOperationSchema.nullable(),
+});
 const reactionTelemetrySchema = z.object({
   lastRate: z.number().nonnegative(),
+  direction: z.enum(["forward", "reverse", "idle"]),
   limitingFactor: limitingFactorSchema,
 });
 const roomSchema = z.object({
@@ -101,6 +127,7 @@ const roomSchema = z.object({
   gas: z.object({ lower: gasSchema, upper: gasSchema }),
   gasTemperature: z.object({ lower: z.number(), upper: z.number() }),
   liquid: liquidSchema,
+  stationary: stationarySchema,
   temperature: z.number(),
   residue: z.number().min(0).max(100),
   reactionIntensity: z.number().nonnegative(),
@@ -129,15 +156,6 @@ const liquidConduitSchema = z.object({
   lastSpeciesFlow: liquidSchema,
   blocked: z.boolean(),
   flowCause: flowCauseSchema,
-});
-
-const processSchema = z.object({
-  setting: z.number().min(0).max(1),
-  lastRate: z.number().nonnegative(),
-  totalProcessed: z.number().nonnegative(),
-  powerDraw: z.number().nonnegative(),
-  separatorLeakTotal: z.number().nonnegative(),
-  limitingFactor: limitingFactorSchema,
 });
 
 const damageReceiptSchema = z.object({
@@ -203,6 +221,7 @@ const statsSchema = z.object({
   peakHazard: z.number().min(0).max(100),
   matterHarvested: z.number().nonnegative(),
   fieldDamageAbsorbed: z.number().nonnegative().default(0),
+  fieldDamageAbsorbedBySource: sourceTotalsSchema,
   reagentEmitted: z.number().nonnegative().default(0),
   armorTransitions: z.number().int().nonnegative().default(0),
   protectedAllySeconds: z.number().nonnegative().default(0),
@@ -262,8 +281,6 @@ const availabilitySchema = z.object({
   equipment: z.array(equipmentIdSchema),
   gasLines: z.array(runIdSchema),
   liquidLines: z.array(runIdSchema),
-  gasSources: z.array(gasSourceIdSchema),
-  liquidSources: z.array(liquidSourceIdSchema),
 });
 
 const portalStateSchema = z.object({
@@ -283,13 +300,10 @@ const gameSimulationSchema = z.object({
   rooms: z.record(roomIdSchema, roomSchema),
   gasSources: z.record(gasSourceIdSchema, z.object({ gas: gasSchema })),
   liquidSources: z.record(liquidSourceIdSchema, z.object({ liquid: liquidSchema })),
-  gasBuffers: z.record(gasBufferIdSchema, z.object({ gas: gasSchema })),
-  liquidBuffers: z.record(liquidBufferIdSchema, z.object({ liquid: liquidSchema })),
   gasJunctions: z.record(roomIdSchema, z.object({ gas: gasSchema, temperature: z.number() })),
   liquidJunctions: z.record(roomIdSchema, z.object({ liquid: liquidSchema })),
   gasConduits: z.record(runIdSchema, gasConduitSchema),
   liquidConduits: z.record(runIdSchema, liquidConduitSchema),
-  processes: z.record(processIdSchema, processSchema),
   gasVent: gasSchema,
   liquidDrain: liquidSchema,
   enemies: z.array(enemySchema),
@@ -314,7 +328,7 @@ const packIdentitySchema = z.object({
 });
 
 const gameSchema = gameSimulationSchema.extend({
-  version: z.literal(15),
+  version: z.literal(22),
   pack: packIdentitySchema,
   map: worldMapSaveSchema,
   mapRevision: z.number().int().min(0),

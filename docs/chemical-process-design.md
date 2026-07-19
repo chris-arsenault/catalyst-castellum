@@ -1,7 +1,37 @@
 # Catalyst Castellum Chemical Process Design
 
-Status: chlorine–sodium MVP implemented; expansion families remain design exploration  
-Updated: 2026-07-12
+Status: all six ordinary-chemistry families implemented; campaign authoring and tuning remain
+Updated: 2026-07-18
+
+## Implementation status
+
+The runtime now includes every balanced reaction selected in this document:
+
+- Chlorine–sodium: CL-1 through CL-5 and physical HCl absorption.
+- Carbon–steam: CS-1 through CS-4 and both CS-6 directions. OX-1 is the shared implementation of
+  CS-5 hydrogen oxidation.
+- Nitrogen–oxide: NO-1 through NO-6.
+- Iron carrier: FE-1 through FE-3.
+- Nickel migration: NI-1 through NI-5.
+- Uranium–fluorine: UF-1 through UF-3, including a dedicated fluorine recovery cell.
+
+Rooms track room-bound solids beside their gas and liquid inventories. Carbon, iron oxides, nickel,
+uranyl fluoride, and catalyst media are ordinary conserved species in that one inventory. Solids
+persist with the player hull between sites and never enter ordinary gas or liquid transport. A
+reaction's catalyst field identifies a rate modifier that remains outside its stoichiometric ledger;
+it does not introduce a separate catalyst inventory system.
+
+The expansion reactions use a simultaneous mass-action pass. Each room is snapshotted once per
+step. Authored first- and second-order activities, temperature windows, pressure windows, catalysts,
+and inhibitors produce forward and reverse rate requests. A proportional allocation solve then
+limits every competing request against the shared reactant vector before applying any reaction.
+Products enter the next step's solve, which removes catalog-order feed-through and gives transported
+fronts a stable residence-time response. Reaction telemetry records the realized rate, direction,
+and limiting species or condition.
+
+The uranium branch currently produces room-bound uranyl fluoride directly. Aerosol suspension,
+transport, filtration, and resuspension are not modeled. Natural uranium contributes a deliberately
+modest radiation field; its immediate UF₆/HF danger remains atmospheric and corrosive.
 
 ## Decision summary
 
@@ -27,9 +57,9 @@ transport, automatic reactions, delayed release, storage, neutralization, incomp
 heat, and recoverable byproducts without needing unrelated chemistry.
 
 The heavy-element families are not additional MVP content. Their purpose at this stage is to keep
-the simulation's data boundaries open to stationary solids, surface deposits, aerosols, catalysts,
-and optional isotope activity. They show that later chemistry can become more consequential without
-turning the periodic table into a linear sequence of larger damage numbers.
+the simulation's data boundaries open to room-bound solids and catalyst-mediated reactions. They
+show that later chemistry can become more consequential without turning the periodic table into a
+linear sequence of larger damage numbers.
 
 ## Simulation contract
 
@@ -180,6 +210,20 @@ Equipment instances create every process role:
 - Entry and core spaces may remain structural exceptions, but ordinary defensive rooms share the
   same underlying room model.
 
+Reaction definitions and equipment operations have separate responsibilities. A reaction definition
+owns conserved stoichiometry and one reusable kinetic strategy. A powered equipment definition may
+attach an operation that references one electrolysis reaction, assigns selected products to finite
+local output ports, and optionally defines a physical separator backflow policy. Products without a
+dedicated port enter the host room in their authored phase.
+
+Every installed machine owns its operation state. Its realized rate, cumulative extent, limiting
+factor, live power draw, separator leakage, and complete port mixtures live on that equipment
+instance and persist with it. The solver visits every enabled installed operation independently,
+draws its feed from its host room, applies its own grade rating and port headroom, and exposes its
+ports only to that room's junctions. Multiple installations therefore retain separate feed,
+inventory, telemetry, and routing even when they use the same equipment definition. There is no
+facility-wide process registry, first-matching installation lookup, or global product-buffer state.
+
 Early scenarios may start with equipment already installed. Preinstallation is scenario content
 using the same equipment instances, costs, upgrades, and dismantling rules available to the player;
 it must not be baked into a specialized room class. This supports a hidden tutorial progression from
@@ -197,7 +241,7 @@ The player loop is **build → connect → choose a simple policy → observe th
 coefficients remain deep, but operating controls describe physical commitments rather than exposing
 continuous parameters.
 
-- Cells and installed process equipment are off/on. Equipment grade owns rated reaction rate.
+- Cells and installed reaction equipment are off/on. Equipment grade owns rated reaction rate.
 - Fans and pumps are off/on. Their installed hardware owns head and rated capacity.
 - Passive valves are closed/open and remain physically bidirectional while open.
 - Vents and drains are sealed/open and transport their complete mixture into retained core
@@ -209,18 +253,15 @@ continuous parameters.
 
 Plan mode permits installing, upgrading, dismantling, and constructing authored gas/liquid runs.
 Prime permits only operating installed equipment and actuators. Assault locks the configuration.
-New conduits begin empty and must prime. A conduit can be dismantled only when its conserved phase
-inventory is empty; dismantling returns 75% of construction Matter. Equipment follows the same
-three-grade install/upgrade/dismantle model and occupies room
+New conduits begin empty and must prime. A conduit or equipment installation can be dismantled only
+when its conserved line or output-port inventory is empty; dismantling returns 75% of construction
+Matter. Equipment follows the same three-grade install/upgrade/dismantle model and occupies room
 volume, so higher capability also increases pressure and flooding sensitivity.
 
-The former full-factory scenario preinstalls the following player-owned instances and is now retained
-as the **Commissioning Exam**:
-
-- R-02: Thermal Coil I and Gas Agitator I.
-- R-03: Wet Contactor I.
-- R-05: Membrane Cell I beside the explicit separated-outlet manifold.
-- R-06: Wet Contactor I.
+The former full-factory fixture has been replaced by **Morrow Pocket**, the first open-defense
+scenario. It starts with blank equipment sockets and unbuilt transport routes. The shared Act I
+catalog, site-authored supplies, room geometry, Matter budget, and visible waves support several
+complete plant topologies rather than preserving an intended factory layout.
 
 Gas agitators accelerate all eligible gas reactions and layer exchange, including unwanted
 combustion. Wet contactors accelerate all eligible gas–liquid and liquid reactions, including

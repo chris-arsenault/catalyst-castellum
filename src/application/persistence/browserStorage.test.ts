@@ -1,15 +1,7 @@
 /** @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DEFAULT_GAME_RUNTIME } from "../../game/runtime";
-import { encodeGame } from "../../game/save";
-import { saveDismissedGuideIds } from "../../tutorial/guideProgress";
-import {
-  LEGACY_UNSLOTTED_SAVE_KEYS,
-  clearSaveSlot,
-  loadSaveSlot,
-  loadSaveSlots,
-  saveGameSlot,
-} from "./browserStorage";
+import { clearSaveSlot, loadSaveSlot, loadSaveSlots, saveGameSlot } from "./browserStorage";
 import { cancelScheduledGameSave, flushScheduledGameSave, scheduleGameSave } from "./saveScheduler";
 
 beforeEach(() => {
@@ -24,7 +16,7 @@ afterEach(() => {
 
 describe("browser save-slot persistence", () => {
   it("round-trips and clears three isolated game-and-tutorial records", () => {
-    const first = DEFAULT_GAME_RUNTIME.createScenario("commissioning_exam");
+    const first = DEFAULT_GAME_RUNTIME.createScenario("morrow_pocket");
     const second = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
     saveGameSlot("slot-1", first, ["guide-a"]);
     saveGameSlot("slot-2", second, []);
@@ -33,7 +25,7 @@ describe("browser save-slot persistence", () => {
       id: "slot-1",
       dismissedGuideIds: ["guide-a"],
     });
-    expect(loadSaveSlot("slot-1")?.game.campaign.levelId).toBe("commissioning_exam");
+    expect(loadSaveSlot("slot-1")?.game.campaign.levelId).toBe("morrow_pocket");
     expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("flash_point");
 
     clearSaveSlot("slot-1");
@@ -50,27 +42,16 @@ describe("browser save-slot persistence", () => {
     expect(catalog["slot-2"]?.game.campaign.levelId).toBe("stored_chlorine");
   });
 
-  it("migrates the old single save and global tutorial record into slot one once", () => {
-    const legacy = DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent");
-    window.localStorage.setItem(LEGACY_UNSLOTTED_SAVE_KEYS[0], encodeGame(legacy));
-    saveDismissedGuideIds(["legacy-guide"]);
-
-    const catalog = loadSaveSlots();
-    expect(catalog["slot-1"]?.game.campaign.levelId).toBe("make_the_reagent");
-    expect(catalog["slot-1"]?.dismissedGuideIds).toEqual(["legacy-guide"]);
-    expect(window.localStorage.getItem(LEGACY_UNSLOTTED_SAVE_KEYS[0])).toBeNull();
-  });
-
   it("debounces repeated snapshots and persists the latest one to its named slot", () => {
     vi.useFakeTimers();
     const first = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
-    const latest = DEFAULT_GAME_RUNTIME.createScenario("commissioning_exam");
+    const latest = DEFAULT_GAME_RUNTIME.createScenario("morrow_pocket");
     scheduleGameSave("slot-3", first, []);
     scheduleGameSave("slot-3", latest, ["complete"]);
     vi.advanceTimersByTime(749);
     expect(loadSaveSlot("slot-3")).toBeNull();
     vi.advanceTimersByTime(1);
-    expect(loadSaveSlot("slot-3")?.game.campaign.levelId).toBe("commissioning_exam");
+    expect(loadSaveSlot("slot-3")?.game.campaign.levelId).toBe("morrow_pocket");
     expect(loadSaveSlot("slot-3")?.dismissedGuideIds).toEqual(["complete"]);
   });
 

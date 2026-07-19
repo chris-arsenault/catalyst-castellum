@@ -20,6 +20,74 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.common.currentAction": "Current action",
   "tutorial.common.fieldObjective": "Field objective",
   "tutorial.common.openStageControls": "Open stage controls",
+  "tutorial.kettleblack.completion.title": "Stationary media read",
+  "tutorial.kettleblack.completion.explanation":
+    "The Kettleblack bed changed the incoming gas and recorded its active direction in the room chemistry readout.",
+  "tutorial.kettleblack.completion.instruction":
+    "Start the assault and shape the remaining wreck into the defense you choose.",
+  "tutorial.kettleblack.label": "Kettleblack media lesson",
+  "tutorial.kettleblack.story.kicker": "Final process lesson",
+  "tutorial.kettleblack.story.title": "Read the material that stays in the room",
+  "tutorial.kettleblack.story.paragraph.0":
+    "Kettleblack’s dark beds stay fixed in their chambers. Gas reaches them through ordinary ducts, and the room inventory shows each solid or catalyst available there.",
+  "tutorial.kettleblack.story.paragraph.1":
+    "A reversible reaction follows the live temperature and mixture. Its readout states forward or reverse, while a catalyst changes rate and remains in the stationary inventory.",
+  "tutorial.kettleblack.mission.title": "Commission one marked bed",
+  "tutorial.kettleblack.mission.summary":
+    "Feed and condition KB-02, read a reverse reaction during Prime, then choose the assault defense for the complete wreck.",
+  "tutorial.kettleblack.task.routeFeed": "Build and start the Core → KB-02 gas feed.",
+  "tutorial.kettleblack.task.conditionBed": "Run a Thermal Coil and Gas Agitator in KB-02.",
+  "tutorial.kettleblack.task.readDirection": "Observe CS-1 running in reverse during Prime.",
+  "tutorial.kettleblack.task.holdReturn": "Hold the first Kettleblack return.",
+  "tutorial.kettleblack.step.openPipeBoard.title": "Open process-line construction",
+  "tutorial.kettleblack.step.openPipeBoard.explanation":
+    "KB-02 contains carbon and iron catalyst inventory. An ordinary gas line connects that stationary media to the Core feed.",
+  "tutorial.kettleblack.step.openPipeBoard.instruction":
+    "Open the process-line construction board.",
+  "tutorial.kettleblack.step.openPipeBoard.result": "Gas and liquid route options are visible.",
+  "tutorial.kettleblack.step.routeFeed.title": "Route gas to the marked bed",
+  "tutorial.kettleblack.step.routeFeed.explanation":
+    "The Kettleblack packet carries steam, carbon oxides, hydrogen, and oxygen. KB-02’s stationary material reacts with that moving mixture.",
+  "tutorial.kettleblack.step.routeFeed.instruction":
+    "Build the Core → KB-02 gas line and switch its fan ON.",
+  "tutorial.kettleblack.step.routeFeed.result": "The Core feed can now charge KB-02.",
+  "tutorial.kettleblack.step.installCoil.title": "Condition the bed temperature",
+  "tutorial.kettleblack.step.installCoil.explanation":
+    "A Thermal Coil brings CS-1 into its low-temperature reverse window as the feed arrives.",
+  "tutorial.kettleblack.step.installCoil.instruction":
+    "Install a Thermal Coil in an open KB-02 socket and keep it running.",
+  "tutorial.kettleblack.step.installCoil.result":
+    "KB-02 now approaches the authored coil temperature.",
+  "tutorial.kettleblack.step.installAgitator.title": "Establish gas contact",
+  "tutorial.kettleblack.step.installAgitator.explanation":
+    "The Gas Agitator mixes both atmospheric layers and increases eligible gas-reaction rates in the room.",
+  "tutorial.kettleblack.step.installAgitator.instruction":
+    "Install a Gas Agitator in KB-02’s second socket and keep it running.",
+  "tutorial.kettleblack.step.installAgitator.result":
+    "The incoming mixture now contacts the stationary bed at an increased rate.",
+  "tutorial.kettleblack.step.beginPrime.title": "Start the bed test",
+  "tutorial.kettleblack.step.beginPrime.explanation":
+    "Prime advances duct fill, room temperature, gas contact, and every eligible reaction on the same clock.",
+  "tutorial.kettleblack.step.beginPrime.instruction": "Begin the timed prime.",
+  "tutorial.kettleblack.step.beginPrime.result": "The feed is moving toward the conditioned bed.",
+  "tutorial.kettleblack.step.observeDirection.title": "Read the reaction direction",
+  "tutorial.kettleblack.step.observeDirection.explanation":
+    "At this temperature, carbon monoxide and hydrogen drive CS-1 in reverse. Carbon joins the stationary inventory while steam returns to the gas phase.",
+  "tutorial.kettleblack.step.observeDirection.instruction":
+    "Watch KB-02’s chemistry readout until CS-1 reports reverse flow.",
+  "tutorial.kettleblack.step.observeDirection.result":
+    "The readout confirms the live direction, rate, and limiting input.",
+  "tutorial.kettleblack.step.startAssault.title": "Open the defense trial",
+  "tutorial.kettleblack.step.startAssault.explanation":
+    "The stationary bed continues following room conditions. Every established and newly observed process remains available for the assault.",
+  "tutorial.kettleblack.step.startAssault.instruction":
+    "Start the assault with the defense configuration you choose.",
+  "tutorial.kettleblack.step.startAssault.result":
+    "Kettleblack’s first return is crossing the live foundry.",
+  "tutorial.kettleblack.reason.feed": "Build and start the Core → KB-02 gas feed.",
+  "tutorial.kettleblack.reason.coil": "Install and run a Thermal Coil in KB-02.",
+  "tutorial.kettleblack.reason.agitator": "Install and run a Gas Agitator in KB-02.",
+  "tutorial.kettleblack.reason.direction": "Observe CS-1 running in reverse during Prime.",
   "tutorial.reagent.coProducts.completion.title": "Three co-products established",
   "tutorial.reagent.coProducts.completion.explanation":
     "The membrane cell converted mixed liquid feed into separated chlorine, hydrogen, and sodium hydroxide outlets.",
@@ -65,7 +133,7 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.reagent.coProducts.step.accelerate.result": "The process network is advancing at 2×.",
   "tutorial.reagent.coProducts.step.observeProducts.title": "Read all three outlets",
   "tutorial.reagent.coProducts.step.observeProducts.explanation":
-    "Every CL-1 extent places chlorine in the anode header, hydrogen in the cathode header, and sodium hydroxide in the liquor buffer.",
+    "Every CL-1 extent places chlorine in the anode header, hydrogen in the cathode header, and sodium hydroxide in the cell-liquor outlet.",
   "tutorial.reagent.coProducts.step.observeProducts.instruction":
     "Watch the separated outlet panel until CL-1 records production.",
   "tutorial.reagent.coProducts.step.observeProducts.result":

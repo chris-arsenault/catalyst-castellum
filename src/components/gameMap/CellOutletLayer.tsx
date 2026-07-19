@@ -38,7 +38,7 @@ const drawOutlet = (graphics: Graphics, model: CellOutletRenderModel): void => {
 
 interface OutletNodeProps {
   model: CellOutletRenderModel;
-  onHover: (bufferId: CellOutletId | null) => void;
+  onHover: (outputId: CellOutletId | null) => void;
   onSelectRoom: (roomId: RoomId) => void;
 }
 
@@ -50,7 +50,7 @@ const OutletNode = ({ model, onHover, onSelectRoom }: OutletNodeProps) => {
         draw={draw}
         eventMode="static"
         cursor="help"
-        onPointerOver={() => onHover(model.bufferId)}
+        onPointerOver={() => onHover(model.outputId)}
         onPointerOut={() => onHover(null)}
         onPointerTap={() => onSelectRoom(model.roomId)}
       />
@@ -78,7 +78,7 @@ export const CellOutletLayer = ({
   onSelectRoom,
 }: {
   game: GameState;
-  onHover: (bufferId: CellOutletId | null) => void;
+  onHover: (outputId: CellOutletId | null) => void;
   onSelectRoom: (roomId: RoomId) => void;
 }) => {
   const { translator } = useGamePresentation();
@@ -110,7 +110,7 @@ export const CellOutletLayer = ({
       />
       {model.outlets.map((outlet) => (
         <OutletNode
-          key={outlet.bufferId}
+          key={outlet.outputId}
           model={outlet}
           onHover={onHover}
           onSelectRoom={onSelectRoom}

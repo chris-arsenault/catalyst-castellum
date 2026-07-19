@@ -118,8 +118,8 @@ This produces a firm division of responsibility:
 
 ## Implemented progression decision
 
-Every site authors a baseline level and every wave entry may author a small integer offset. Resolved
-levels range from 1 through 99.
+Every site authors a baseline level and every wave entry may author an integer offset for a local
+spike, recovery cohort, or teaching target. Resolved levels range from 1 through 99.
 
 ```text
 health(L)       = referenceHealth * 1.10^(L - 20)
@@ -138,22 +138,57 @@ archetype or encounter controls.
 
 The initial site baselines are:
 
-| Site               | Level | Health relative to level 20 |
-| ------------------ | ----: | --------------------------: |
-| Flash Point        |    20 |                      1.000x |
-| Make the Reagent   |    21 |                      1.100x |
-| Stored Chlorine    |    22 |                      1.210x |
-| Commissioning Exam |    23 |                      1.331x |
+| Site             | Level | Health relative to level 20 |
+| ---------------- | ----: | --------------------------: |
+| Flash Point      |    20 |                      1.000x |
+| Make the Reagent |    21 |                      1.100x |
+| Stored Chlorine  |    22 |                      1.210x |
+| Morrow Pocket    |    23 |                      1.331x |
+| Kettleblack      |    24 |                      1.464x |
+| Cordon 41        |    25 |                      1.611x |
+| Junction L-6     |    26 |                      1.772x |
+| Pell Cut         |    27 |                      1.949x |
+| Station 14       |    28 |                      2.144x |
+| Vasker Store     |    29 |                      2.358x |
+| Lane Six         |    30 |                      2.594x |
+| Pell Cordon      |    31 |                      2.853x |
 
 ## Validation result
 
-After the level curve was introduced, the second-order sensitivity solve required family-wide
-corrections to chlorine and liquid delivery. Applying those corrections made the workbook converge
-back to relative scales of OX-1 `1.000`, chlorine `1.001`, HCl `1.000`, liquid corrosion `0.999`, and
-secondary hazards `1.000`.
+After the level curve was introduced, the second-order sensitivity solve measured the gap between a
+controlled room exposure and a physical campaign process. Direct families converge at approximately
+`1.000`. HCl, liquid corrosion, reactive nitrogen, and nickel carbonyl require campaign-delivery
+premiums of `5.632`, `3.067`, `4.082`, and `2.556`; their applied first-order normalizers are `0.178`,
+`0.323`, `0.243`, and `0.381`. Multiplying each pair returns combined relative roles of `1.005`,
+`0.992`, `0.993`, and `0.974`. This exposes the cost of reaction time, transport, phase contact, and
+feed contention rather than folding those losses into enemy health.
 
-Exact intended-policy replay finishes the four sites at 100%, 100%, 60%, and 80% core integrity.
+The sensitivity trajectory uses high-HP, zero-Core-damage probes and effectively unlimited probe
+Matter so a single trajectory measures every damage column. Authoritative normal-HP replay then
+applies lethal clipping, real Matter income, and command costs. Local response sweeps distinguish
+coefficient misses from topology: doubling liquid corrosion changed no Vasker deaths because all
+breaches were flyers. Extending the continuous HCl network into its agitated Switchyard and applying
+the measured HCl correction clears that lane; a reactive-nitrogen correction crosses Pell Cordon's
+discrete hybrid threshold.
+
+Exact intended-policy replay finishes the four Act I sites at 100%, 100%, 79%, and 100% Core
+integrity.
 This replay, rather than the closed-form curve alone, is the final balance authority.
+
+Act II validates the broader portfolio rather than one intended solution. Five distinct builds clear
+each site while idle defense loses. Surviving Core integrity spans 74–100% at Kettleblack, 51–100% at
+Cordon 41, 69–100% at Junction L-6, and 51–100% at Pell Cut. These bands preserve efficient counters,
+general defenses, hybrids, and site-specialist chemistry inside one viable envelope.
+
+Act III's mechanical acceptance also clears five physical portfolios per site while idle defense
+loses. The balance audit found that the common HF-bearing gas header caused otherwise distinct gas
+networks to converge on the same dominant damage channel. Pell Cut and Act III now host HF in a
+dedicated Reservoir-side G-2 supply, and specialist portfolios route it to their Gallery Fluorine
+Cell. Ordinary G-1 defenses retain their distinct OX-1, carbon, nitrogen, chlorine, HCl, liquid, and
+hybrid damage signatures. Exact replay measures Pell Cut at roughly 3,636 fluorine damage with 61
+incidental HF damage, while Station 14 produces roughly 3,625 fluorine and 1,839 uranium damage with
+zero HF exposure. Core integrity spans 54–100% at Station 14, 54–100% at Vasker Store, 100% at Lane
+Six, and 50–100% at Pell Cordon.
 
 ## Follow-on question
 

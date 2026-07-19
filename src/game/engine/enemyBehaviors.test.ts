@@ -71,6 +71,7 @@ describe("enemy behavior mechanics", () => {
     expect(first.damageTaken).toBeCloseTo(15, 8);
     expect(second.damageTaken).toBeCloseTo(15, 8);
     expect(state.stats.fieldDamageAbsorbed).toBeCloseTo(170, 8);
+    expect(state.stats.fieldDamageAbsorbedBySource.hydrogen_oxygen_combustion).toBeCloseTo(170, 8);
     expect(anchor.behavior).toMatchObject({ kind: "shared_field", charge: 0, active: false });
   });
 

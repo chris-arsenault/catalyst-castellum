@@ -9,8 +9,6 @@ export const availability = (options: Partial<ScenarioAvailability>): ScenarioAv
   equipment: options.equipment ?? [],
   gasLines: options.gasLines ?? [],
   liquidLines: options.liquidLines ?? [],
-  gasSources: options.gasSources ?? [],
-  liquidSources: options.liquidSources ?? [],
 });
 
 export const emptyLoadout = (): FacilityLoadout => ({
@@ -18,10 +16,7 @@ export const emptyLoadout = (): FacilityLoadout => ({
   initialTemperatures: {},
   gasConduits: {},
   liquidConduits: {},
-  gasSourceGas: {},
-  liquidSourceAmounts: {},
-  gasBuffers: {},
-  liquidBuffers: {},
+  stationary: {},
 });
 
 export const gasRun = (

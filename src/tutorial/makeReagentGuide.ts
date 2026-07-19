@@ -17,7 +17,10 @@ const liquidFeedEnabled = (game: GameState): boolean =>
   game.liquidConduits["liquid:core__lower_intake"]?.enabled ?? false;
 
 const coProductsEstablished = (game: GameState): boolean =>
-  game.processes.chlor_alkali_cell.totalProcessed >= 0.05;
+  Object.values(roomState(game, "lower_intake").equipment).some(
+    (instance) =>
+      instance?.equipmentId === "membrane_cell" && (instance.operation?.totalProcessed ?? 0) >= 0.05
+  );
 
 const recoveryEnabled = (game: GameState): boolean =>
   game.gasConduits["gas:core__lower_intake"]?.enabled ?? false;

@@ -2,9 +2,8 @@ import type { GameDefinition } from "../definitionTypes";
 import type {
   EquipmentId,
   GameState,
-  GasSourceId,
-  LiquidSourceId,
   ScenarioAvailability,
+  SiteSupplyDefinition,
   TransportPhase,
   ConnectionId,
 } from "../types";
@@ -30,8 +29,6 @@ export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailabi
   equipment: [...source.equipment],
   gasLines: [...source.gasLines],
   liquidLines: [...source.liquidLines],
-  gasSources: [...source.gasSources],
-  liquidSources: [...source.liquidSources],
 });
 
 export const equipmentAvailable = (state: GameState, equipmentId: EquipmentId): boolean =>
@@ -54,8 +51,26 @@ export const connectionAvailable = (state: GameState, connectionId: ConnectionId
   ) ??
     false);
 
-export const gasSourceAvailable = (state: GameState, sourceId: GasSourceId): boolean =>
-  state.availability.gasSources.includes(sourceId);
+export const supplyDefinitionsFor = (
+  state: GameState,
+  definition: GameDefinition
+): readonly SiteSupplyDefinition[] => levelDefinitionFor(state, definition).supplies;
 
-export const liquidSourceAvailable = (state: GameState, sourceId: LiquidSourceId): boolean =>
-  state.availability.liquidSources.includes(sourceId);
+export const supplyDefinitionFor = (
+  state: GameState,
+  sourceId: string,
+  definition: GameDefinition
+): SiteSupplyDefinition | null =>
+  supplyDefinitionsFor(state, definition).find((supply) => supply.id === sourceId) ?? null;
+
+export const supplyAvailable = (
+  state: GameState,
+  sourceId: string,
+  definition: GameDefinition
+): boolean => {
+  const level = levelDefinitionFor(state, definition);
+  const supply = level.supplies.find((candidate) => candidate.id === sourceId);
+  if (!supply) return false;
+  const availableIndex = level.rounds.findIndex((round) => round.id === supply.availableFromRound);
+  return availableIndex >= 0 && state.campaign.roundIndex >= availableIndex;
+};

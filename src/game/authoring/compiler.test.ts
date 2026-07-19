@@ -9,7 +9,7 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(7);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(13);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
@@ -58,6 +58,20 @@ describe("game pack compiler", () => {
     ).toThrow(/unbalanced/);
   });
 
+  it("requires exact combat attribution for every hazardous species", () => {
+    const chlorine = DEFAULT_GAME_DEFINITION.species.chlorine;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        species: {
+          ...DEFAULT_GAME_DEFINITION.species,
+          chlorine: { ...chlorine, damageSourceId: null },
+        },
+      })
+    ).toThrow(/requires a combat damage source/);
+  });
+});
+
+describe("game pack extension", () => {
   it("adds a balanced reaction through an existing strategy without engine changes", () => {
     const fixtureId = "fixture_contact_reaction" as ReactionId;
     const source = DEFAULT_GAME_DEFINITION.reactions.acid_neutralization;
@@ -75,6 +89,74 @@ describe("game pack compiler", () => {
       lastRate: 0,
       limitingFactor: { kind: "condition", code: "conditions", zone: null },
     });
+  });
+});
+
+describe("mass-action reaction authoring", () => {
+  it("rejects a rate order that references a species outside its consumed side", () => {
+    const reaction = DEFAULT_GAME_DEFINITION.reactions.water_gas_reaction;
+    if (reaction.behavior.kind !== "mass_action") throw new Error("Expected mass-action fixture.");
+    const behavior = reaction.behavior;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        reactions: {
+          ...DEFAULT_GAME_DEFINITION.reactions,
+          water_gas_reaction: {
+            ...reaction,
+            behavior: {
+              ...behavior,
+              forward: {
+                ...behavior.forward,
+                rateOrders: [{ species: "carbon_monoxide", order: 1 }],
+              },
+            },
+          },
+        },
+      })
+    ).toThrow(/is not consumed/);
+  });
+});
+
+describe("equipment operation authoring", () => {
+  it("rejects a powered operation backed by an incompatible reaction strategy", () => {
+    const membraneCell = DEFAULT_GAME_DEFINITION.equipment.membrane_cell;
+    const operation = membraneCell.operation;
+    if (!operation) throw new Error("Expected membrane-cell operation.");
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        equipment: {
+          ...DEFAULT_GAME_DEFINITION.equipment,
+          membrane_cell: {
+            ...membraneCell,
+            operation: { ...operation, reactionId: "acid_neutralization" },
+          },
+        },
+      })
+    ).toThrow(/require electrolysis/);
+  });
+
+  it("rejects a dedicated port for a species the operation does not produce", () => {
+    const membraneCell = DEFAULT_GAME_DEFINITION.equipment.membrane_cell;
+    const operation = membraneCell.operation;
+    if (!operation) throw new Error("Expected membrane-cell operation.");
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        equipment: {
+          ...DEFAULT_GAME_DEFINITION.equipment,
+          membrane_cell: {
+            ...membraneCell,
+            operation: {
+              ...operation,
+              outputs: operation.outputs.map((output) =>
+                output.phase === "gas" && output.speciesId === "chlorine"
+                  ? { ...output, speciesId: "oxygen" as const }
+                  : output
+              ),
+            },
+          },
+        },
+      })
+    ).toThrow(/is not produced/);
   });
 });
 

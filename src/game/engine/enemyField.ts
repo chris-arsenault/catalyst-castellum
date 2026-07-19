@@ -1,8 +1,13 @@
 import type { GameDefinition } from "../definitionTypes";
-import type { EnemyState, GameState } from "../types";
+import { DAMAGE_SOURCE_IDS, type EnemyState, type GameState } from "../types";
 import type { WorldMap } from "../world/map";
 import { roomState } from "../world/instances";
-import { requestedDamageForPackets, type DamagePacket, type HazardBurst } from "./damage";
+import {
+  requestedDamageBySourceForPackets,
+  requestedDamageForPackets,
+  type DamagePacket,
+  type HazardBurst,
+} from "./damage";
 import { enemyGasZone, enemyRoomId } from "./enemyPosition";
 import { environmentalDamagePackets } from "./exposureIncidents";
 
@@ -60,14 +65,14 @@ const spendRoomField = (
   if (!anchor || anchor.behavior.kind !== "shared_field") return;
   const requests = occupants
     .filter((enemy) => enemy.id !== anchor.id)
-    .map((enemy) => ({
-      enemy,
-      damage: requestedDamageForPackets(
+    .map((enemy) => {
+      const packets = damagePacketsForEnemy(state, enemy, dt, bursts, definition);
+      return {
         enemy,
-        damagePacketsForEnemy(state, enemy, dt, bursts, definition),
-        definition
-      ),
-    }));
+        damage: requestedDamageForPackets(enemy, packets, definition),
+        damageBySource: requestedDamageBySourceForPackets(enemy, packets, definition),
+      };
+    });
   const requested = requests.reduce((total, entry) => total + entry.damage, 0);
   if (requested <= 0) return;
   const absorbed = Math.min(anchor.behavior.charge, requested);
@@ -78,6 +83,13 @@ const spendRoomField = (
   anchor.behavior.charge -= absorbed;
   if (anchor.behavior.charge <= 0.001) anchor.behavior.active = false;
   state.stats.fieldDamageAbsorbed += absorbed;
+  for (const sourceId of DAMAGE_SOURCE_IDS) {
+    const sourceRequested = requests.reduce(
+      (total, request) => total + request.damageBySource[sourceId],
+      0
+    );
+    state.stats.fieldDamageAbsorbedBySource[sourceId] += absorbed * (sourceRequested / requested);
+  }
 };
 
 /** Resolves each room's single authored Anchor as a simultaneous proportional transaction. */

@@ -13,16 +13,17 @@ import {
   stepGame,
 } from "./simulation";
 import {
-  GAS_BUFFER_IDS,
-  GAS_SOURCE_IDS,
   GAS_TYPES,
-  LIQUID_BUFFER_IDS,
-  LIQUID_SOURCE_IDS,
   LIQUID_TYPES,
+  STATIONARY_TYPES,
   type ElementalComposition,
+  type EquipmentOutputState,
+  type GasAmounts,
   type GameCommand,
   type GameState,
+  type LiquidAmounts,
   type SpeciesId,
+  type StationaryAmounts,
 } from "./types";
 import {
   gasConduitState,
@@ -45,32 +46,72 @@ const addSpecies = (totals: ElementalComposition, species: SpeciesId, amount: nu
   }
 };
 
+const addGasToLedger = (totals: ElementalComposition, gas: GasAmounts): void => {
+  for (const species of GAS_TYPES) addSpecies(totals, species, gas[species]);
+};
+
+const addLiquidToLedger = (totals: ElementalComposition, liquid: LiquidAmounts): void => {
+  for (const species of LIQUID_TYPES) addSpecies(totals, species, liquid[species]);
+};
+
+const addStationaryToLedger = (
+  totals: ElementalComposition,
+  stationary: StationaryAmounts
+): void => {
+  for (const species of STATIONARY_TYPES) addSpecies(totals, species, stationary[species]);
+};
+
+const addEquipmentToLedger = (
+  totals: ElementalComposition,
+  state: GameState,
+  roomId: (typeof ROOM_ORDER)[number]
+): void => {
+  for (const instance of Object.values(roomState(state, roomId).equipment)) {
+    for (const output of Object.values(instance?.operation?.outputs ?? {})) {
+      if (output?.phase === "gas") addGasToLedger(totals, output.gas);
+      else if (output?.phase === "liquid") addLiquidToLedger(totals, output.liquid);
+    }
+  }
+};
+
 const elementalLedger = (state: GameState): ElementalComposition => {
   const totals: ElementalComposition = {};
-  const addGas = (gas: Record<(typeof GAS_TYPES)[number], number>) => {
-    for (const species of GAS_TYPES) addSpecies(totals, species, gas[species]);
-  };
-  const addLiquid = (liquid: Record<(typeof LIQUID_TYPES)[number], number>) => {
-    for (const species of LIQUID_TYPES) addSpecies(totals, species, liquid[species]);
-  };
   for (const roomId of ROOM_ORDER) {
-    addGas(roomState(state, roomId).gas.lower);
-    addGas(roomState(state, roomId).gas.upper);
-    addLiquid(roomState(state, roomId).liquid);
-    addGas(gasJunctionState(state, roomId).gas);
-    addLiquid(liquidJunctionState(state, roomId).liquid);
+    addGasToLedger(totals, roomState(state, roomId).gas.lower);
+    addGasToLedger(totals, roomState(state, roomId).gas.upper);
+    addLiquidToLedger(totals, roomState(state, roomId).liquid);
+    addStationaryToLedger(totals, roomState(state, roomId).stationary);
+    addGasToLedger(totals, gasJunctionState(state, roomId).gas);
+    addLiquidToLedger(totals, liquidJunctionState(state, roomId).liquid);
+    addEquipmentToLedger(totals, state, roomId);
   }
-  for (const id of GAS_SOURCE_IDS) addGas(state.gasSources[id].gas);
-  for (const id of LIQUID_SOURCE_IDS) addLiquid(state.liquidSources[id].liquid);
-  for (const id of GAS_BUFFER_IDS) addGas(state.gasBuffers[id].gas);
-  for (const id of LIQUID_BUFFER_IDS) addLiquid(state.liquidBuffers[id].liquid);
+  for (const source of Object.values(state.gasSources)) addGasToLedger(totals, source.gas);
+  for (const source of Object.values(state.liquidSources)) addLiquidToLedger(totals, source.liquid);
   for (const line of Object.values(state.map.connections).filter(isProcessLine)) {
-    if (line.kind === "gas_line") addGas(gasConduitState(state, line.id).gas);
-    else addLiquid(liquidConduitState(state, line.id).liquid);
+    if (line.kind === "gas_line") addGasToLedger(totals, gasConduitState(state, line.id).gas);
+    else addLiquidToLedger(totals, liquidConduitState(state, line.id).liquid);
   }
-  addGas(state.gasVent);
-  addLiquid(state.liquidDrain);
+  addGasToLedger(totals, state.gasVent);
+  addLiquidToLedger(totals, state.liquidDrain);
   return totals;
+};
+
+const requireOutputPhase = <Phase extends EquipmentOutputState["phase"]>(
+  output: EquipmentOutputState | null | undefined,
+  phase: Phase,
+  label: string
+): Extract<EquipmentOutputState, { phase: Phase }> => {
+  if (output?.phase !== phase) throw new Error(`Membrane cell ${label} is missing.`);
+  return output as Extract<EquipmentOutputState, { phase: Phase }>;
+};
+
+const membraneOutputs = (state: GameState) => {
+  const operation = roomState(state, "lower_intake").equipment.socket_a?.operation;
+  return {
+    anode: requireOutputPhase(operation?.outputs.anode_header, "gas", "anode"),
+    cathode: requireOutputPhase(operation?.outputs.cathode_header, "gas", "cathode"),
+    liquor: requireOutputPhase(operation?.outputs.cell_liquor, "liquid", "liquor outlet"),
+  };
 };
 
 const advance = (source: GameState, seconds: number): GameState => {
@@ -111,25 +152,27 @@ describe("finite-volume spatial rooms", () => {
 });
 
 /**
- * Infinite sources are open boundaries by design, so conservation is asserted
- * against a derived pack whose starter header is a sealed finite stock.
+ * Unlimited supplies are open boundaries by design, so conservation is asserted
+ * against a derived pack whose gas reservoir is a sealed finite stock.
  */
 const finiteRuntime = createGameRuntime(
   deriveGame(DEFAULT_GAME_DEFINITION, {
-    gasSources: {
-      starter_gas_header: {
-        ...DEFAULT_GAME_DEFINITION.gasSources.starter_gas_header,
-        infinite: false,
-      },
-    },
     levels: {
       ...DEFAULT_GAME_DEFINITION.levels,
       flash_point: {
         ...DEFAULT_GAME_DEFINITION.levels.flash_point,
-        loadout: {
-          ...DEFAULT_GAME_DEFINITION.levels.flash_point.loadout,
-          gasSourceGas: { starter_gas_header: { hydrogen: 100, oxygen: 50 } },
-        },
+        supplies: DEFAULT_GAME_DEFINITION.levels.flash_point.supplies.map((supply) =>
+          supply.phase === "gas"
+            ? {
+                ...supply,
+                replenishment: {
+                  kind: "matter" as const,
+                  contents: supply.replenishment.contents,
+                  cost: 8,
+                },
+              }
+            : supply
+        ),
       },
     },
   })
@@ -181,17 +224,19 @@ describe("complete-state conservation", () => {
     state = command(state, { type: "start_prime" });
     state = advance(state, 12);
 
+    const { anode, cathode, liquor } = membraneOutputs(state);
     const chlorine =
-      state.gasBuffers.anode_header.gas.chlorine +
+      anode.gas.chlorine +
       gasJunctionState(state, "lower_intake").gas.chlorine +
       gasConduitState(state, "gas:lower_intake__reservoir").gas.chlorine;
     const hydrogen =
-      state.gasBuffers.cathode_header.gas.hydrogen +
+      cathode.gas.hydrogen +
       gasJunctionState(state, "lower_intake").gas.hydrogen +
       gasConduitState(state, "gas:lower_intake__reservoir").gas.hydrogen;
     const caustic =
-      state.liquidBuffers.cell_liquor.liquid.sodium_hydroxide +
-      liquidJunctionState(state, "lower_intake").liquid.sodium_hydroxide;
+      liquor.liquid.sodium_hydroxide +
+      liquidJunctionState(state, "lower_intake").liquid.sodium_hydroxide +
+      liquidConduitState(state, "liquid:core__lower_intake").liquid.sodium_hydroxide;
     expect(chlorine).toBeGreaterThan(0);
     expect(hydrogen).toBeGreaterThan(0);
     expect(caustic).toBeGreaterThan(0);

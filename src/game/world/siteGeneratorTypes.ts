@@ -50,7 +50,8 @@ export interface GeneratedSiteSpec {
   chunkOrders: readonly (readonly string[])[];
   patterns: readonly SiteRoutePattern[];
   processLines: readonly SiteProcessLineSpec[];
-  utilityNodes: Readonly<Partial<Record<string, MapUtilityNode>>>;
+  /** Site utility-node cells are local to their host chunk room. */
+  utilityNodes: Readonly<Record<string, MapUtilityNode>>;
 }
 
 export interface GeneratedLevelSite {

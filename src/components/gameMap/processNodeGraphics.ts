@@ -1,17 +1,12 @@
 import type { Graphics } from "pixi.js";
-import { GAS_SOURCES, LIQUID_SOURCES } from "../../presentation/defaultGame";
-import {
-  GAS_SOURCE_IDS,
-  LIQUID_SOURCE_IDS,
-  type GameState,
-  type WorldPoint,
-} from "../../game/types";
-import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
+import { type GameState, type WorldPoint } from "../../game/types";
 import { colorNumber, mapViewFor } from "./mapGeometry";
 import type { MapView } from "./mapGeometry";
 import { gridCellToWorldPoint } from "../../game/spatial";
 import { instance } from "../../game/world/instances";
 import type { FacilityUtilityNodeId } from "../../game/types";
+import type { SupplyCardCopy } from "../../presentation/supplyCopy";
+import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 
 const drawTank = (
   graphics: Graphics,
@@ -55,20 +50,23 @@ const drawTerminal = (
     .stroke({ color, width: 1.5, alpha: 0.72 });
 };
 
-export const drawProcessNodes = (graphics: Graphics, state: GameState): void => {
+export const drawProcessNodes = (
+  graphics: Graphics,
+  state: GameState,
+  supplies: readonly SupplyCardCopy[]
+): void => {
   const view = mapViewFor(state.map);
   const nodeWorldPoint = (nodeId: FacilityUtilityNodeId): WorldPoint =>
     gridCellToWorldPoint(instance(state.map.utilityNodes, nodeId, "utility node").cell);
   graphics.clear();
-  for (const sourceId of GAS_SOURCE_IDS) {
-    const definition = GAS_SOURCES[sourceId];
-    const fill = gasAmountTotal(state.gasSources[sourceId].gas) / definition.capacity;
-    drawTank(graphics, view, nodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
-  }
-  for (const sourceId of LIQUID_SOURCE_IDS) {
-    const definition = LIQUID_SOURCES[sourceId];
-    const fill = liquidAmountTotal(state.liquidSources[sourceId].liquid) / definition.capacity;
-    drawTank(graphics, view, nodeWorldPoint(sourceId), colorNumber(definition.accent), fill);
+  for (const supply of supplies) {
+    drawTank(
+      graphics,
+      view,
+      nodeWorldPoint(supply.id),
+      colorNumber(supply.accent),
+      supply.amount / supply.capacity
+    );
   }
   drawTerminal(
     graphics,

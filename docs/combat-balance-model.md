@@ -59,6 +59,11 @@ r_j <= transport rate / coefficient   for each supplied reactant
 The report propagates CL-1 output through CL-2, P-1, CL-4, and CL-5. It also derives OX-1 charge
 rate from the starter header's exact `2 H2 : 1 O2` mixture. For starter flow `f`, OX-1 extent arrives
 at `f / 3`, so a full-charge interval is `maximumExtent / (f / 3)`, bounded below by cooldown.
+Every one of the 30 authored reactions reports its maximum extent rate, minimum ideal proc interval,
+reactant demand, product output, and powered-equipment grade caps. Every site reservoir reports its
+mixture, local-port rate, ideal depletion time, and Matter price. These are first-order capacity
+bounds; the transient replay supplies kinetic activation, catalysts, inhibitors, headroom, and
+shared-feed contention.
 
 Every conduit reports routed length `L`, inventory hold-up `L * volumePerCell`, length-adjusted
 maximum flow, and ideal prime time `hold-up / flow`. The second-order pass uses actual pressure,
@@ -115,36 +120,47 @@ pressure = pressureDamageBase + extent * pressureDamagePerExtent
 heat     = extent * heatDamagePerExtent
 ```
 
-The model keeps seven independent columns:
+The model keeps thirteen independent columns:
 
 1. OX-1 flash;
 2. chlorine gas;
 3. hydrogen chloride gas;
 4. liquid corrosion (NaOH, NaOCl, and HCl(aq));
-5. oxygen deficiency / carbon dioxide;
-6. steam and environmental heat;
-7. catastrophic static overpressure.
+5. carbon monoxide;
+6. reactive nitrogen (NH3, NO, NO2, and HNO3);
+7. nickel carbonyl;
+8. hydrogen fluoride;
+9. fluorine;
+10. uranium chemistry (UF6 and UO2F2);
+11. oxygen deficiency / carbon dioxide;
+12. steam and environmental heat;
+13. catastrophic static overpressure.
 
-This separation prevents a large late pressure field from being mistaken for HCl or chlorine
-performance.
+Each hazardous species owns an exact combat source ID, and environmental heat and pressure own
+their independent source IDs. Anchor absorption is allocated proportionally by source in the same
+transaction as its incoming-damage scale. This separation prevents HF, uranium, a late pressure
+field, or any other broad channel from being mistaken for the output of a different process chain.
 
 ## First-order solve
 
-The analytical pass fixes one reference exposure: four percentage points of gas partial-pressure
-excess, eight liquid-strength units of excess, 40 C of thermal excess, or 0.3 atmosphere of
-catastrophic-pressure excess. Continuous damage is integrated across one enemy-specific average
-room residence; OX-1 uses one packet.
+The analytical pass fixes one named representative exposure for each family. Common gases use
+family-specific partial-pressure excesses, floor hazards use a two-strength mixed-liquid sample,
+UO2F2 adds ten stationary inventory units, environmental heat uses 40 C of excess, and static
+pressure uses 0.3 atmosphere of excess. Continuous damage is integrated across one
+enemy-specific average room residence; OX-1 uses one packet. The values live in
+`FAMILY_REFERENCE_EXPOSURES` rather than in spreadsheet cells.
 
-For the four intended weapon families, `A` is the Deckmouth damage matrix and `b` is the desired
-fraction of Deckmouth HP. The bounded ridge solve is
+For all ten offensive families, `A` is the Deckmouth damage matrix and `b` is the desired
+family-specific fraction of Deckmouth HP. The bounded ridge solve is
 
 ```text
 minimize ||W(Ax - b)||^2 + lambda ||x - 1||^2
-subject to 0.2 <= x_j <= 5
+subject to 0.05 <= x_j <= 20
 ```
 
-This pass answers whether raw OX-1, Cl2, HCl, and liquid slopes are on the same useful scale before
-campaign timing. It deliberately cannot decide whether a pulse occurs while a target occupies the
+This pass answers whether raw OX-1, chlorine, HCl, liquids, carbon monoxide, reactive nitrogen,
+nickel carbonyl, HF, fluorine, and uranium slopes occupy their declared role before campaign timing.
+It deliberately cannot decide whether a pulse or product front occurs while a target occupies the
 room.
 
 Enemy health is solved after reference damage. Each archetype declares the number of reference
@@ -180,41 +196,59 @@ charge at `2 H2 : 1 O2` and discharges over ten ideal seconds.
 
 ## Second-order transient solve
 
-The static answer is only the initial point. The transient pass runs the exact engine once per
-damage family with:
+The static answer is only the initial point. Exact source attribution lets the transient pass run
+the exact engine once per authored reference build, while recording every damage family from the
+same trajectory, with:
 
-- one family enabled and every other damage slope at zero;
-- unchanged chemistry, transport, reactions, temperature, pressure, and movement;
+- every family active together through unchanged chemistry, transport, reactions, temperature,
+  pressure, and movement;
 - very high probe HP so lethal caps never discard exposure;
 - zero probe core damage so every authored round completes;
 - sufficient probe build matter so later availability can be measured independently of probe death.
 
-It records one row per authored round. Each row therefore includes its real prime duration, wave
-timing, equipment availability, reaction history, feed depletion, conduit inventory, room state,
-proc cadence, path residence, slowdown, and susceptibility.
+It records one row per build and authored round. Each row therefore includes its real prime
+duration, wave timing, equipment availability, reaction history, feed depletion, conduit inventory,
+room state, proc cadence, path residence, slowdown, susceptibility, and Anchor absorption. One
+probe now produces the complete source vector, eliminating the previous seven-times replay cost and
+removing cross-run chemistry drift from the sensitivity matrix.
 
-Campaign targets are minimum coverage inequalities, not equalities. Useful overkill is valid; only
-undercoverage contributes loss:
+Campaign targets are minimum coverage inequalities, not equalities. Flash Point retains a strict
+100-Core contract. Every other site reserves a 45-Core safety floor, divides the available Core-loss
+budget across its rounds, and converts each wave's potential Core damage into a required
+neutralization fraction:
+
+```text
+roundLeakBudget = (startingCore - minimumCore) / roundCount
+requiredFraction = max(0, 1 - roundLeakBudget / wavePotentialCoreDamage)
+targetDamage = effectiveWaveHP * requiredFraction * 1.05
+```
+
+Rows with a zero target are setup waves whose full breach cost fits the round budget. Useful
+overkill is valid; only undercoverage contributes loss:
 
 ```text
 minimize 1/2 sum_i w_i max(0, 1 - A_i x)^2 + lambda/2 ||x - prior||^2
 subject to family-specific lower_j <= x_j <= upper_j
 ```
 
-Projected gradient descent solves this convex hinge-loss system. The OX-1 lower bound is derived
-from `Deckmouth HP * 1.05 / ignition-extent pulse damage`, preserving an individually meaningful
-pulse. Asphyxiation, thermal damage, and catastrophic pressure are measured columns with absolute
+Projected gradient descent solves this convex hinge-loss system with a ridge prior at the
+first-order role. OX-1 remains at its first-order pulse role because its one-room negative tutorial
+control is an exact upper guardrail. Asphyxiation, thermal damage, and catastrophic pressure are measured columns with absolute
 design guardrails: 72.5 oxygen-deficiency and 30 carbon-dioxide DPS slopes, 7.3 steam and 0.014
 environmental heat slopes, and a 36 static-pressure slope. Each guardrail averages its
 `absolute target / current coefficient` ratios, making an applied workbook converge to a relative
 scale of one on its next run. Chemical columns absorb the required coverage, so the chemical exam
-cannot be solved primarily by unrelated environmental damage.
+cannot be solved primarily by unrelated environmental damage. HF, fluorine, and uranium also
+remain at their first-order roles in this pass because their isolated specialist portfolios already
+clear; this prevents free site deposits or unprocessed specialist feed from becoming a universal
+late-game correction.
 
-Finally, the proposed coefficients, HP, and speed are compiled into an in-memory definition and the
-ordinary intended policy is replayed with normal HP, core damage, matter income, command costs, and
-lethal clipping. This live verification is authoritative for pass/fail; the matrices explain the
-result and propose coefficients, while exact replay catches proc thresholds, resource feedback, and
-discrete breaches.
+Finally, the proposed coefficients, HP, and speed are compiled into an in-memory definition and
+every reference build is replayed with normal HP, core damage, Matter income, command costs, and
+lethal clipping. The report includes Matter spent, damage per Matter, dominant family, and dominant
+share for each build. This live verification is authoritative for pass/fail; the matrices explain
+the result and propose coefficients, while exact replay catches proc thresholds, resource feedback,
+and discrete breaches.
 
 ## Applied baseline
 
@@ -231,17 +265,54 @@ The July 2026 solve establishes these authored roles:
 | Anchor      | 75  | 0.100 | 27.73 s   | 41.60 s       | 45.43 s        | 72.67 s       |
 | Glowbag     | 75  | 0.140 | 19.73 s   | 29.59 s       | 19.73 s        | 31.57 s       |
 
-After applying the enemy-level curve, the converged relative coefficient solve is OX-1 `1.000`, Cl₂
-`1.000`, HCl `1.000`, liquid corrosion `1.000`, and each secondary family `1.000`. The matrix-derived
-corrections are folded into the authored definition. Exact intended-policy replay finishes Flash
-Point, Make the Reagent, Stored Chlorine, and Commissioning Exam at 100%, 100%, 58%, and 80% core
-integrity respectively.
+After applying the enemy-level curve, the controlled-exposure solve returns approximately `1.000`
+for the direct families: OX-1, chlorine, carbon monoxide, HF, fluorine, and uranium chemistry. Four
+families carry explicit campaign-delivery premiums because their real process chains lose time to
+reaction, transport, phase contact, and feed contention:
+
+| Family            | Authored transient premium | Applied first-order normalizer | Combined role |
+| ----------------- | -------------------------: | -----------------------------: | ------------: |
+| HCl gas           |                     5.6316 |                         0.1784 |        1.0047 |
+| Liquid corrosion  |                     3.0674 |                         0.3234 |        0.9919 |
+| Reactive nitrogen |                     4.0824 |                         0.2432 |        0.9928 |
+| Nickel carbonyl   |                     2.5560 |                         0.3809 |        0.9736 |
+
+The normalizer is the inverse controlled-exposure result produced after the premium is authored;
+the product is the family's combined role. This makes delivery compensation visible instead of
+hiding it in enemy health. The same solve returns every enemy's authored HP and speed.
+
+Act II uses five-build acceptance portfolios. Exact replay leaves the Core at 74–100% for
+Kettleblack, 51–100% for Cordon 41, 69–100% for Junction L-6, and 51–100% for Pell Cut. Each site also
+fails under an idle policy. The spread is deliberate: direct counters remain efficient while
+established general defenses and the site's optional specialist chain remain viable.
+
+Act III exact replay leaves the Core at 54–100% for Station 14, 54–100% for Vasker Store, 100% for
+Lane Six, and 50–100% for Pell Cordon. Every site clears all five physical strategy archetypes while
+its idle policy loses.
+
+Pell Cut and Act III now place HF in a physical G-2 specialist reservoir hosted by an isolated
+service room. The common Core G-1 header carries the ordinary H2/O2/N2/CO feed. The fluorine and
+uranium reference builds route G-2 from the Reservoir through a Gallery Fluorine Cell; established
+defenses remain connected to G-1.
+This removes the measured common-header convergence while preserving conserved transport, visible
+reservoir economy, and a player-authored specialist route. On the corrected 1x specialist roles,
+Pell Cut records about 3,636 fluorine damage and 61 incidental HF damage; Station 14 records about
+3,625 fluorine damage plus 1,839 uranium-chemistry damage and zero HF damage.
+
+The high-HP sensitivity trajectory intentionally removes lethal clipping and grants effectively
+unlimited probe Matter so one run can measure all source columns. Exact normal-HP replay then catches
+nonlinear misses from lethal thresholds, Matter income, and later construction timing. A local
+response sweep found that Vasker's acid-line breaches were exclusively flyers: doubling floor
+corrosion changed zero deaths. The Act III continuous reference therefore extends HCl from the
+Gallery into an agitated Switchyard, and the exact delivery solve adds a `1.25` HCl correction. Pell
+Cordon's hybrid crosses its discrete round-two threshold with a `1.10` reactive-nitrogen correction.
+These are family-wide or physical-build corrections, never per-site health exceptions.
 
 ## Workflow
 
 1. Change mechanics or content at its owning definition.
 2. Run `pnpm balance:combat -- --first-order` while iterating on local coefficients.
-3. Run `pnpm balance:combat` for the full per-family/per-round transient solve.
+3. Run `pnpm balance:combat` for the full per-build/per-round transient solve.
 4. Review the sensitivity matrix and live verification together.
 5. Update authored values from the stable solution, then run `pnpm check` and
    `pnpm campaign:health`.

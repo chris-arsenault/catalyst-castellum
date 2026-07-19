@@ -1,8 +1,10 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
 import {
+  DAMAGE_SOURCE_IDS,
   GAS_TYPES,
   LIQUID_TYPES,
+  type DamageSourceId,
   type GasAmounts,
   type GasType,
   type GasZone,
@@ -10,6 +12,7 @@ import {
   type LiquidAmounts,
   type LiquidType,
   type RoomState,
+  type SpeciesId,
   type SpeciesHazardRule,
 } from "../types";
 import { clamp, sumRecord } from "./math";
@@ -242,30 +245,62 @@ const hazardExcess = (value: number, rule: SpeciesHazardRule): number =>
     ? Math.max(0, value - rule.threshold)
     : Math.max(0, rule.threshold - value);
 
-const speciesHazards = (
+const speciesHazardBasis = (
+  room: RoomState,
+  speciesId: SpeciesId,
+  rule: SpeciesHazardRule,
+  zone: GasZone,
+  definition: GameDefinition
+): number => {
+  if (rule.basis === "gas_partial_ratio")
+    return gasPartialRatio(room, speciesId as GasType, zone, definition);
+  if (rule.basis === "liquid_strength") return liquidStrength(room, speciesId as LiquidType);
+  return room.stationary[speciesId as keyof RoomState["stationary"]];
+};
+
+const emptyHazardChannels = (): HazardChannels => ({
+  atmosphere: 0,
+  corrosion: 0,
+  heat: 0,
+  pressure: 0,
+  radiation: 0,
+});
+
+const emptyHazardsBySource = (): Record<DamageSourceId, HazardChannels> =>
+  Object.fromEntries(
+    DAMAGE_SOURCE_IDS.map((sourceId) => [sourceId, emptyHazardChannels()])
+  ) as Record<DamageSourceId, HazardChannels>;
+
+export const roomHazardsBySource = (
   room: RoomState,
   floorContact: boolean,
   needsOxygen: boolean,
   zone: GasZone,
   definition: GameDefinition
-): HazardChannels => {
-  const hazards: HazardChannels = {
-    atmosphere: 0,
-    corrosion: 0,
-    heat: 0,
-    pressure: 0,
-    radiation: 0,
-  };
+): Record<DamageSourceId, HazardChannels> => {
+  const hazards = emptyHazardsBySource();
   for (const species of Object.values(definition.species)) {
-    const value =
-      species.phase === "gas"
-        ? gasPartialRatio(room, species.id as GasType, zone, definition)
-        : liquidStrength(room, species.id as LiquidType);
+    if (species.hazards.length > 0 && species.damageSourceId === null) {
+      throw new Error(`Hazardous species ${species.id} needs a damage source.`);
+    }
+    if (species.damageSourceId === null) continue;
     for (const rule of species.hazards) {
       if (!hazardExposureApplies(rule, floorContact, needsOxygen)) continue;
-      hazards[rule.channel] += hazardExcess(value, rule) * rule.rate;
+      const value = speciesHazardBasis(room, species.id, rule, zone, definition);
+      hazards[species.damageSourceId][rule.channel] += hazardExcess(value, rule) * rule.rate;
     }
   }
+  hazards.thermal_exposure.heat +=
+    Math.max(
+      0,
+      room.gasTemperature[zone] - definition.environmentHazards.gasTemperature.threshold
+    ) * definition.environmentHazards.gasTemperature.rate;
+  hazards.catastrophic_overpressure.pressure +=
+    Math.max(
+      0,
+      roomStaticPressure(room, definition) / STANDARD_PRESSURE -
+        definition.environmentHazards.staticPressure.ratioThreshold
+    ) * definition.environmentHazards.staticPressure.rate;
   return hazards;
 };
 
@@ -276,18 +311,16 @@ export const roomHazards = (
   zone: GasZone = floorContact ? "lower" : "upper",
   definition: GameDefinition
 ): HazardChannels => {
-  const hazards = speciesHazards(room, floorContact, needsOxygen, zone, definition);
-  hazards.heat +=
-    Math.max(
-      0,
-      room.gasTemperature[zone] - definition.environmentHazards.gasTemperature.threshold
-    ) * definition.environmentHazards.gasTemperature.rate;
-  hazards.pressure +=
-    Math.max(
-      0,
-      roomStaticPressure(room, definition) / STANDARD_PRESSURE -
-        definition.environmentHazards.staticPressure.ratioThreshold
-    ) * definition.environmentHazards.staticPressure.rate;
+  const hazards = emptyHazardChannels();
+  for (const sourceHazards of Object.values(
+    roomHazardsBySource(room, floorContact, needsOxygen, zone, definition)
+  )) {
+    hazards.atmosphere += sourceHazards.atmosphere;
+    hazards.corrosion += sourceHazards.corrosion;
+    hazards.heat += sourceHazards.heat;
+    hazards.pressure += sourceHazards.pressure;
+    hazards.radiation += sourceHazards.radiation;
+  }
   return hazards;
 };
 

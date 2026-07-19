@@ -207,7 +207,9 @@ const ReactionEntry = ({
           ))}
         </ul>
       </section>
-      <ReactionEquipmentLinks equipmentIds={equipmentIds} onOpenEquipment={onOpenEquipment} />
+      {equipmentIds.length > 0 ? (
+        <ReactionEquipmentLinks equipmentIds={equipmentIds} onOpenEquipment={onOpenEquipment} />
+      ) : null}
     </article>
   );
 };

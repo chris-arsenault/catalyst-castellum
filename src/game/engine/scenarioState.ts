@@ -1,14 +1,9 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import type { FacilityLoadout } from "../definitionTypes";
-import { emptyGas, emptyLiquid } from "../materials";
+import { emptyGas, emptyLiquid, emptyStationary } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
 import {
-  GAS_BUFFER_IDS,
-  GAS_SOURCE_IDS,
   GAS_TYPES,
-  LIQUID_BUFFER_IDS,
-  LIQUID_SOURCE_IDS,
-  PROCESS_IDS,
   type GameState,
   type GasAmounts,
   type LevelId,
@@ -17,7 +12,7 @@ import {
   type RoomReactionId,
   type RoomState,
 } from "../types";
-import { emptyRoomEquipment, roomEquipmentVolume } from "./equipment";
+import { createEquipmentInstance, emptyRoomEquipment, roomEquipmentVolume } from "./equipment";
 import { makeStats } from "./events";
 import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
@@ -32,6 +27,7 @@ import { validateWorldMap } from "../world/mapValidation";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
   lastRate: 0,
+  direction: "idle",
   limitingFactor: { kind: "condition", code: "conditions", zone: null },
 });
 
@@ -55,7 +51,11 @@ const makeRoom = (
   const scenarioEquipment = loadout.equipment[id];
   if (scenarioEquipment) {
     for (const [socketId, instance] of Object.entries(scenarioEquipment)) {
-      if (instance) equipment[socketId as keyof typeof equipment] = { ...instance };
+      if (instance)
+        equipment[socketId as keyof typeof equipment] = createEquipmentInstance(
+          instance,
+          definition
+        );
     }
   }
   const temperature =
@@ -82,6 +82,7 @@ const makeRoom = (
     },
     gasTemperature: { lower: temperature, upper: temperature },
     liquid: emptyLiquid(),
+    stationary: { ...emptyStationary(), ...loadout.stationary[id] },
     temperature,
     residue: 0,
     reactionIntensity: 0,
@@ -102,10 +103,7 @@ const emptyFacilityLoadout = (): FacilityLoadout => ({
   initialTemperatures: {},
   gasConduits: {},
   liquidConduits: {},
-  gasSourceGas: {},
-  liquidSourceAmounts: {},
-  gasBuffers: {},
-  liquidBuffers: {},
+  stationary: {},
 });
 
 const makeRooms = (
@@ -117,46 +115,24 @@ const makeRooms = (
     Object.keys(map.rooms).map((id) => [id, makeRoom(id, loadout, definition, map)])
   ) as Record<RoomId, RoomState>;
 
-const makeGasSources = (
-  loadout: FacilityLoadout,
-  definition: GameDefinition
-): GameState["gasSources"] =>
+const makeGasSources = (levelId: LevelId, definition: GameDefinition): GameState["gasSources"] =>
   Object.fromEntries(
-    GAS_SOURCE_IDS.map((id) => [
-      id,
-      {
-        gas: definition.gasSources[id].infinite
-          ? { ...emptyGas(), ...definition.gasSources[id].initialGas }
-          : { ...emptyGas(), ...loadout.gasSourceGas[id] },
-      },
-    ])
+    definition.levels[levelId].supplies.flatMap((supply) =>
+      supply.phase === "gas" ? [[supply.id, { gas: { ...emptyGas(), ...supply.initial } }]] : []
+    )
   ) as GameState["gasSources"];
 
 const makeLiquidSources = (
-  loadout: FacilityLoadout,
+  levelId: LevelId,
   definition: GameDefinition
 ): GameState["liquidSources"] =>
   Object.fromEntries(
-    LIQUID_SOURCE_IDS.map((id) => {
-      const liquid = emptyLiquid();
-      const source = definition.liquidSources[id];
-      liquid[source.substance] = loadout.liquidSourceAmounts[id] ?? 0;
-      return [id, { liquid }];
-    })
+    definition.levels[levelId].supplies.flatMap((supply) =>
+      supply.phase === "liquid"
+        ? [[supply.id, { liquid: { ...emptyLiquid(), ...supply.initial } }]]
+        : []
+    )
   ) as GameState["liquidSources"];
-
-const makeGasBuffers = (loadout: FacilityLoadout): GameState["gasBuffers"] =>
-  Object.fromEntries(
-    GAS_BUFFER_IDS.map((id) => [id, { gas: { ...emptyGas(), ...loadout.gasBuffers[id] } }])
-  ) as GameState["gasBuffers"];
-
-const makeLiquidBuffers = (loadout: FacilityLoadout): GameState["liquidBuffers"] =>
-  Object.fromEntries(
-    LIQUID_BUFFER_IDS.map((id) => [
-      id,
-      { liquid: { ...emptyLiquid(), ...loadout.liquidBuffers[id] } },
-    ])
-  ) as GameState["liquidBuffers"];
 
 const makeGasJunctions = (map: WorldMap): GameState["gasJunctions"] =>
   Object.fromEntries(
@@ -209,29 +185,12 @@ const makeLiquidConduits = (loadout: FacilityLoadout, map: WorldMap): GameState[
     })
   ) as GameState["liquidConduits"];
 
-const makeProcesses = (): GameState["processes"] =>
-  Object.fromEntries(
-    PROCESS_IDS.map((id) => [
-      id,
-      {
-        setting: 1,
-        lastRate: 0,
-        totalProcessed: 0,
-        limitingFactor: { kind: "species", speciesId: "sodium_chloride", zone: null },
-        powerDraw: 0,
-        separatorLeakTotal: 0,
-      },
-    ])
-  ) as GameState["processes"];
-
 const copyAvailability = (
   availability: RoundDefinition["availability"]
 ): GameState["availability"] => ({
   equipment: [...availability.equipment],
   gasLines: [...availability.gasLines],
   liquidLines: [...availability.liquidLines],
-  gasSources: [...availability.gasSources],
-  liquidSources: [...availability.liquidSources],
 });
 
 const scenarioStartedEvent = (levelId: LevelId): GameState["events"][number] => ({
@@ -309,13 +268,17 @@ const activeScenarioMap = (
 
 /**
  * Carry durable hull installations into a fresh site. Atmosphere, liquids, heat,
- * reaction residue, conduit contents, and damage telemetry reset during travel.
+ * gases, liquids, heat, reaction residue, conduit contents, and damage telemetry reset during
+ * travel. Installed equipment and stationary material remain aboard the hull.
  */
 const seedHullContents = (state: GameState, hull: HullFragment | null): void => {
   if (!hull) return;
   for (const [roomId, roomState] of Object.entries(hull.roomStates)) {
     const destination = state.rooms[roomId];
-    if (destination) destination.equipment = structuredClone(roomState.equipment);
+    if (destination) {
+      destination.equipment = structuredClone(roomState.equipment);
+      destination.stationary = structuredClone(roomState.stationary);
+    }
   }
   for (const [id, conduit] of Object.entries(hull.gasConduits)) {
     const destination = state.gasConduits[id];
@@ -338,7 +301,7 @@ export const createScenarioGame = (
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
   const map = activeScenarioMap(site.map, level.loadout, site.hull, definition);
   const state: GameState = {
-    version: 15,
+    version: 22,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {
@@ -356,16 +319,13 @@ export const createScenarioGame = (
     phaseTime: 0,
     elapsed: 0,
     rooms: makeRooms(level.loadout, definition, map),
-    gasSources: makeGasSources(level.loadout, definition),
-    liquidSources: makeLiquidSources(level.loadout, definition),
-    gasBuffers: makeGasBuffers(level.loadout),
-    liquidBuffers: makeLiquidBuffers(level.loadout),
+    gasSources: makeGasSources(levelId, definition),
+    liquidSources: makeLiquidSources(levelId, definition),
     gasJunctions: makeGasJunctions(map),
     liquidJunctions: makeLiquidJunctions(map),
     gasConduits: makeGasConduits(level.loadout, map),
     liquidConduits: makeLiquidConduits(level.loadout, map),
     portalStates: facilityModelForMap(map).initialPortalStates(),
-    processes: makeProcesses(),
     gasVent: emptyGas(),
     liquidDrain: emptyLiquid(),
     enemies: [],

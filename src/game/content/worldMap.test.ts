@@ -19,6 +19,7 @@ const EXPECTED_GAS_ORDER = [
   "gas:furnace__lower_intake",
   "gas:core__lower_intake",
   "gas:lower_intake__reservoir",
+  "gas:gallery__reservoir",
   "gas:furnace__gallery",
   "gas:gallery__washlock",
   "gas:gallery__switchyard",
@@ -64,11 +65,11 @@ describe("the authored world map", () => {
       expect(node.hostRoomId).toBe("core");
     }
     expect(Object.keys(WORLD_MAP.utilityNodes).sort()).toEqual([
+      "gas_reservoir",
       "gas_vent",
       "liquid_drain",
-      "sodium_chloride_tank",
-      "starter_gas_header",
-      "water_tank",
+      "liquid_reservoir_a",
+      "liquid_reservoir_b",
     ]);
   });
 

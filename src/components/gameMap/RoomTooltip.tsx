@@ -4,6 +4,7 @@ import { roomHazards, STANDARD_PRESSURE } from "../../game/queries";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
+  STATIONARY_TYPES,
   type GasAmounts,
   type GasZone,
   type GameState,
@@ -135,13 +136,11 @@ const RoomReadout = ({
   analysis,
   gasInflow,
   room,
-  roomId,
   volume,
 }: {
   analysis: RoomViewModel;
   gasInflow: RoomGasInflow;
   room: RoomState;
-  roomId: RoomId;
   volume: number;
 }) => {
   const { formatters, translator } = useGamePresentation();
@@ -165,6 +164,23 @@ const RoomReadout = ({
           })}
         </dd>
       </div>
+      {STATIONARY_TYPES.some((species) => room.stationary[species] > 0.001) ? (
+        <div>
+          <dt>{translator.text("ui.map.room.stationary")}</dt>
+          <dd>
+            {STATIONARY_TYPES.filter((species) => room.stationary[species] > 0.001)
+              .map(
+                (species) =>
+                  `${SPECIES_DEFINITIONS[species].formula} ${formatters.measurement(
+                    room.stationary[species],
+                    "mol-eq",
+                    1
+                  )}`
+              )
+              .join(" · ")}
+          </dd>
+        </div>
+      ) : null}
       {gasInflow.rate > 0.002 && (
         <div>
           <dt>{translator.text("ui.map.room.feed")}</dt>
@@ -238,7 +254,6 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
         analysis={analysis}
         gasInflow={gasInflow}
         room={room}
-        roomId={roomId}
         volume={facilityModelForMap(game.map).roomVolume(roomId)}
       />
       <div className="room-pressure-explanation">{pressureExplanation}</div>
