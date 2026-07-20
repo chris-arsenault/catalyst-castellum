@@ -8,6 +8,8 @@ import { PRESENTATION_MESSAGES } from "./presentation";
 import { DAMAGE_MESSAGES } from "./damage";
 import { TUTORIAL_MESSAGES } from "./tutorials";
 import { NARRATIVE_MESSAGES } from "./narrative";
+import { DEBUG_MESSAGES } from "./debug";
+import { POSTURE_MESSAGES } from "./posture";
 
 export const EN_LOCALE = {
   locale: "en",
@@ -22,5 +24,7 @@ export const EN_LOCALE = {
     ...DAMAGE_MESSAGES,
     ...TUTORIAL_MESSAGES,
     ...NARRATIVE_MESSAGES,
+    ...DEBUG_MESSAGES,
+    ...POSTURE_MESSAGES,
   },
 } as const;

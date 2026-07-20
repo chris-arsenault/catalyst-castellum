@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { FACILITY_MAP, gridCellToWorldPoint } from "../../src/game/config";
+import { createScenarioGame } from "../../src/game/simulation";
 import { isProcessLine } from "../../src/game/world/map";
 import type { WorldPoint } from "../../src/game/types";
 import { mapViewFor, type CameraTransform } from "../../src/components/gameMap/mapGeometry";
@@ -26,17 +27,17 @@ const worldClientPoint = async (page: Page, worldPoint: WorldPoint) => {
 
 const startGuidedTutorial = async (page: Page): Promise<void> => {
   await page.getByTestId("new-game-slot-1").click();
+  await page.getByTestId("act-continue").click();
   const appError = new Promise<Error>((resolve) => page.once("pageerror", resolve));
   await page.getByTestId("enter-control-room").click();
   const startupError = await Promise.race([
     page
-      .getByTestId("tutorial-stage-intro")
+      .getByTestId("tutorial-task-card")
       .waitFor({ state: "visible" })
       .then(() => null),
     appError,
   ]);
   expect(startupError).toBeNull();
-  await page.getByTestId("enter-stage-controls").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
 };
 
@@ -149,19 +150,34 @@ test("hovering a shared conduit exposes all measured species on that physical ro
 }) => {
   await startGuidedTutorial(page);
   await skipGuidance(page);
-  const connection = instance(FACILITY_MAP.connections, "gas:core__furnace", "connection");
+  const siteMap = createScenarioGame("flash_point").map;
+  const connection = instance(siteMap.connections, "gas:core__furnace", "connection");
   if (!isProcessLine(connection)) throw new Error("Flash Point gas route is not authored.");
   // Hover an open-space segment of the route: the pipe hit layer sits beneath the
   // rooms, so a route cell that crosses a room body shows the room, not the pipe.
   const inAnyRoom = (cell: { column: number; elevation: number }) =>
-    Object.values(FACILITY_MAP.rooms).some(
+    Object.values(siteMap.rooms).some(
       (room) =>
         cell.column >= room.bounds.column &&
         cell.column < room.bounds.column + room.bounds.width &&
         cell.elevation >= room.bounds.elevation &&
         cell.elevation < room.bounds.elevation + room.bounds.height
     );
-  const openCell = connection.route.find((cell) => !inAnyRoom(cell));
+  // Aim for the middle of the longest open stretch: cells at a room's edge can
+  // land inside the room's padded hover area and surface the room tooltip.
+  const openRuns: { column: number; elevation: number }[][] = [];
+  let currentRun: { column: number; elevation: number }[] = [];
+  for (const cell of connection.route) {
+    if (inAnyRoom(cell)) {
+      if (currentRun.length > 0) openRuns.push(currentRun);
+      currentRun = [];
+      continue;
+    }
+    currentRun.push(cell);
+  }
+  if (currentRun.length > 0) openRuns.push(currentRun);
+  const longestRun = openRuns.sort((left, right) => right.length - left.length)[0];
+  const openCell = longestRun?.[Math.floor(longestRun.length / 2)];
   if (!openCell) throw new Error("Flash Point gas route has no open-space segment.");
   const routePoint = await worldClientPoint(page, gridCellToWorldPoint(openCell));
   await page.mouse.move(routePoint.x, routePoint.y);

@@ -117,7 +117,6 @@ describe("guide registration extension", () => {
       dismissalId: "fixture-guide",
       firstFlashTeachingBreak: false,
       label: "tutorial.common.tasks",
-      showStageIntro: false,
       gatesPhaseActions: false,
       story: {
         kicker: "tutorial.common.tasks",
@@ -246,7 +245,6 @@ describe("Flash Point follow-up guidance", () => {
     if (!guide) throw new Error("Stored Momentum guide missing");
 
     expect(guide.id).toContain("stored_momentum");
-    expect(guide.showStageIntro).toBe(false);
     expect(guide.gatesPhaseActions).toBe(false);
     expect(guide.dismissalId).toBe("flash_point:field_guidance:v5");
     expect(guide.steps.map((step) => step.id)).toEqual([

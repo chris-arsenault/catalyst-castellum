@@ -1,16 +1,19 @@
 import { ArrowRight, Biohazard, CheckCircle2, Gauge, LogOut, RotateCcw, X } from "lucide-react";
 import { useCallback } from "react";
+import type { ReactNode } from "react";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import { CAMPAIGN_LEVELS } from "../presentation/defaultGame";
+import { upcomingGuideDefinitionFor } from "../tutorial/guideModel";
+import { GuideIntro } from "../tutorial/GuideIntro";
+import { ReportStats, roundReportStats } from "./WaveReport";
 
 interface ProgressFrameProps {
   actionLabel: string;
   detail: string;
   eyebrow: string;
-  nextDetail: string;
-  nextLabel: string;
+  next: ReactNode;
   onAdvance: () => void;
   testId: string;
   title: string;
@@ -28,7 +31,7 @@ const ProgressFrame = (props: ProgressFrameProps) => {
       data-testid="campaign-progress-panel"
     >
       <header>
-        <div className="progress-dock-seal">
+        <div className="report-seal">
           <CheckCircle2 size={24} />
         </div>
         <div>
@@ -37,30 +40,8 @@ const ProgressFrame = (props: ProgressFrameProps) => {
         </div>
       </header>
       <p>{props.detail}</p>
-      <dl className="progress-dock-stats">
-        <div>
-          <dt>{translator.text("ui.progress.neutralized")}</dt>
-          <dd>{game.lastReport?.killed ?? 0}</dd>
-        </div>
-        <div>
-          <dt>{translator.text("ui.progress.breaches")}</dt>
-          <dd>{game.lastReport?.breached ?? 0}</dd>
-        </div>
-        <div>
-          <dt>{translator.text("ui.progress.core")}</dt>
-          <dd>{formatters.percent(game.coreIntegrity / 100, 0)}</dd>
-        </div>
-        <div>
-          <dt>{translator.text("ui.progress.reactions")}</dt>
-          <dd>{formatters.number(game.lastReport?.reactions ?? 0, 1)}</dd>
-        </div>
-      </dl>
-      <div className="progress-dock-next">
-        <span>
-          <Gauge size={15} /> {props.nextLabel}
-        </span>
-        <p>{props.nextDetail}</p>
-      </div>
+      <ReportStats entries={roundReportStats(game, translator, formatters)} />
+      {props.next}
       <footer>
         <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
           <LogOut size={15} /> {translator.text("ui.topbar.saveSlots")}
@@ -86,21 +67,35 @@ const RoundProgressModal = () => {
   } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
+  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   const level = levelDefinitionFor(game);
   const report = game.lastReport ? localizedReport(game.lastReport) : null;
   const nextRound = level.rounds[game.campaign.roundIndex + 1];
+  const upcoming = upcomingGuideDefinitionFor(game);
+  const upcomingGuide =
+    upcoming && !dismissedGuideIds.includes(upcoming.dismissalId) ? upcoming : null;
   const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
   return (
     <ProgressFrame
       actionLabel={translator.text("ui.progress.round.action")}
       detail={report?.detail ?? translator.text("ui.progress.round.frozen")}
       eyebrow={translator.text("ui.progress.round.eyebrow")}
-      nextDetail={
-        nextRound
-          ? localizedLevelCopy.round(level, nextRound).objective
-          : translator.text("ui.progress.round.continue")
+      next={
+        upcomingGuide ? (
+          <GuideIntro guide={upcomingGuide} />
+        ) : (
+          <div className="progress-dock-next">
+            <span>
+              <Gauge size={15} /> {translator.text("ui.progress.round.next")}
+            </span>
+            <p>
+              {nextRound
+                ? localizedLevelCopy.round(level, nextRound).objective
+                : translator.text("ui.progress.round.continue")}
+            </p>
+          </div>
+        )
       }
-      nextLabel={translator.text("ui.progress.round.next")}
       onAdvance={advance}
       testId="continue-round"
       title={report?.headline ?? translator.text("ui.progress.round.complete")}
@@ -134,7 +129,7 @@ export const OutcomeModal = () => {
       aria-labelledby="outcome-title"
     >
       <div className={`outcome-modal ${victory ? "outcome-victory" : "outcome-defeat"}`}>
-        <div className="outcome-seal">
+        <div className="report-seal outcome-seal">
           {victory ? <CheckCircle2 size={42} /> : <Biohazard size={42} />}
         </div>
         <div className="eyebrow">
@@ -153,26 +148,23 @@ export const OutcomeModal = () => {
                 round: game.campaign.roundIndex + 1,
               })}
         </p>
-        <div className="outcome-stats">
-          <div>
-            <span>{translator.text("ui.outcome.levels")}</span>
-            <strong>
-              {completedCampaignSites(game.campaign.completedLevelIds)} / {CAMPAIGN_LEVELS.length}
-            </strong>
-          </div>
-          <div>
-            <span>{translator.text("ui.outcome.core")}</span>
-            <strong>{formatters.percent(game.coreIntegrity / 100, 0)}</strong>
-          </div>
-          <div>
-            <span>{translator.text("ui.outcome.kills")}</span>
-            <strong>{game.stats.killed}</strong>
-          </div>
-          <div>
-            <span>{translator.text("ui.outcome.hazard")}</span>
-            <strong>{formatters.number(game.stats.peakHazard, 0)}</strong>
-          </div>
-        </div>
+        <ReportStats
+          entries={[
+            {
+              label: translator.text("ui.outcome.levels"),
+              value: `${completedCampaignSites(game.campaign.completedLevelIds)} / ${CAMPAIGN_LEVELS.length}`,
+            },
+            {
+              label: translator.text("ui.outcome.core"),
+              value: formatters.percent(game.coreIntegrity / 100, 0),
+            },
+            { label: translator.text("ui.outcome.kills"), value: String(game.stats.killed) },
+            {
+              label: translator.text("ui.outcome.hazard"),
+              value: formatters.number(game.stats.peakHazard, 0),
+            },
+          ]}
+        />
         <div className="modal-footer-actions">
           <button className="menu-return-button" type="button" onClick={returnToMainMenu}>
             <LogOut size={15} /> {translator.text("ui.topbar.saveSlots")}

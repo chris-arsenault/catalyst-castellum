@@ -6,7 +6,9 @@ export const MACHINE_FRAME_SIZE = 128;
 const outline = `stroke="#14201d" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"`;
 const steel = "#253b35";
 
-const machineBase = (accent: string): string => `<ellipse cx="64" cy="111" rx="46" ry="8" fill="#020706" opacity=".62"/>
+const machineBase = (
+  accent: string
+): string => `<ellipse cx="64" cy="111" rx="46" ry="8" fill="#020706" opacity=".62"/>
   <path d="M27 101 L23 113 H37 L40 101 M88 101 L92 113 H106 L101 101" fill="${steel}" ${outline}/>
   <path d="M19 103 H109 L103 112 H25Z" fill="#1c2d28" ${outline}/>
   <path d="M27 105 H101" stroke="${accent}" stroke-width="1.4" opacity=".58"/>`;

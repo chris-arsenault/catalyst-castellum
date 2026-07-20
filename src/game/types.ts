@@ -114,6 +114,8 @@ export interface SpeciesHazardRule {
   basis: "gas_partial_ratio" | "liquid_strength" | "stationary_inventory";
   direction: "above" | "below";
   threshold: number;
+  /** Dose-response excess at which this hazard reaches its maximum effective rate. */
+  maximumExcess: number | null;
   rate: number;
   channel: keyof HazardChannels;
   exposure: "all" | "oxygen_breathers" | "floor_contact";

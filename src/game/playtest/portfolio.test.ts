@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { LEVEL_DEFINITIONS } from "../config";
-import { LEVEL_PLAYTEST_PORTFOLIOS } from "../content/playtestPortfolios";
+import {
+  LEVEL_FAILURE_CONTROL_BUILDS,
+  LEVEL_PLAYTEST_PORTFOLIOS,
+} from "../content/playtestPortfolios";
 import { DAMAGE_SOURCE_IDS, type DamageSourceId } from "../types";
 import { evaluateDiversity } from "./runner";
 import type { BuildArchetypeId, PlaytestResult } from "./types";
@@ -52,6 +55,7 @@ const result = (
 describe("reference-build portfolios", () => {
   it("covers every mechanical level with valid round-aware plans", () => {
     expect(Object.keys(LEVEL_PLAYTEST_PORTFOLIOS)).toEqual(Object.keys(LEVEL_DEFINITIONS));
+    expect(Object.keys(LEVEL_FAILURE_CONTROL_BUILDS)).toEqual(Object.keys(LEVEL_DEFINITIONS));
     for (const [levelId, portfolio] of Object.entries(LEVEL_PLAYTEST_PORTFOLIOS)) {
       expect(portfolio.levelId).toBe(levelId);
       expect(portfolio.referenceBuilds.length, levelId).toBeGreaterThanOrEqual(

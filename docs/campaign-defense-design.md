@@ -126,87 +126,48 @@ round. Reaction presentation exposes equation, current direction, rate, limiting
 inhibitor, temperature window, and pressure window so later chemistry can be understood without a
 tutorial.
 
-## Implementation sequence
+## Implemented campaign systems
 
-Current status:
+### Diversity-aware evaluation
 
-- Diversity-aware evaluation is implemented with round-aware reference portfolios and derived build
-  signatures.
-- The build-phase wave forecast is implemented with runtime-bound composition, levels, approximate
-  formations, cadence, physical approach, and localized mechanical traits.
-- Site-authored supply economy is implemented with physical reservoirs, explicit conserved charge
-  packets, capacity, Matter cost, replenishment policy, and stable round availability owned by each
-  site.
-- Morrow Pocket is implemented as the first complete open-defense acceptance site. It starts with
-  blank equipment sockets and unbuilt routes, exposes only established Act I tools, defeats an idle
-  Core, and supports five independently constructed defenses with five derived build signatures.
-- Act II is mechanically bound from Kettleblack through Pell Cut. Each site has a generated geometry,
-  site-owned economy, five mixed waves, and five reference portfolios. Kettleblack contains the
-  final guided Prime lesson; Cordon 41 onward uses concise process descriptions and open assaults.
-  Exact campaign replay clears all twenty Act II references at 51–100% Core integrity while idle
-  defense loses every site.
-- Act III is mechanically bound from Station 14 through Pell Cordon. Each site has cumulative
-  equipment access, a distinct generated geometry and economy, five mixed waves, and five physical
-  reference portfolios. Station 14 contains the campaign's single uranium description; later sites
-  introduce no controls. Exact replay clears all twenty Act III references at 50–100% Core
-  integrity while idle defense loses every site.
+Each open site owns a portfolio of named, round-aware reference builds. A portfolio can extend,
+upgrade, refill, and change operating state between waves. Evaluation records success, Core
+integrity, Matter economy, footprint, combat rooms, damage sources, pulse and continuous
+contribution, and slowdown-created residence. Derived signatures enforce actual physical diversity
+rather than authored strategy labels.
 
-### 1. Diversity-aware evaluation
+Seeded mutations measure robustness around a valid build. The reference portfolio remains the
+acceptance authority for materially distinct strategies.
 
-Replace the singular intended plan with a portfolio of named reference builds. Plans own actions and
-prime timing per round so they can extend, upgrade, refill, or change operating state between waves.
-Evaluation records success, Core integrity, Matter economy, footprint, combat rooms, damage channels,
-reaction sources, pulse/continuous contribution, and slowdown-created residence. It derives a build
-signature from those facts and applies the encounter-diversity requirements above.
+### Wave forecast
 
-Random exploration must construct valid strategies from the available command grammar. Removing or
-misplacing pieces of one reference plan is useful robustness testing, but it is not solution search.
+The build-phase forecast presents enemy types and levels, approximate formations, cadence, physical
+approach, and localized movement/support/emission traits. Tooling retains exact spawn times for
+replay and balance analysis.
 
-### 2. Wave forecast
+### Site-authored supply economy
 
-Add the build-phase wave forecast and localized trait summaries. Keep exact simulation timings
-available to tooling while presenting approximate cohorts and cadence to the player.
+Each supply binds to a same-phase tap and physical utility node. Initial inventory and refill
+packets list explicit species quantities, capacity, Matter price, availability round, and
+replenishment behavior. Compilation validates phase, host room, tap, node geometry, packet content,
+capacity, and price.
 
-### 3. Site-authored supply economy
+### Open-defense progression
 
-Generalize supply authoring beyond the introductory hydrogen/oxygen header, water tank, and brine
-tank. Site supply offers declare conserved charge contents, capacity, Matter cost, and availability.
-Elements, equipment, and physical inventories determine available chemistry; reactions do not gain
-arbitrary campaign locks.
+Morrow Pocket is the first complete open-defense acceptance site. It begins with blank sockets and
+unbuilt routes, exposes the established Act I vocabulary, supports five independently constructed
+defenses, and loses under idle play.
 
-Each supply belongs to a level and binds to a same-phase tap and physical utility node in the site
-map. Its initial inventory and refill packet list explicit species quantities. Replenishment is
-either continuous or a conserved packet purchased with Matter. The authoring compiler validates
-phase, capacity, price, availability round, host room, tap, and utility-node geometry. Adding a new
-feedstock therefore requires site data and physical placement, not a new command, UI branch, or
-reaction gate.
+Act II runs from Kettleblack through Pell Cut on distinct generated geometry, site economy, five
+mixed waves, and five reference portfolios. Kettleblack contains the final guided process lesson;
+Cordon 41 onward uses concise process descriptions and open assaults.
 
-### 4. Morrow Pocket diversity proof
+Act III runs from Station 14 through Pell Cordon with cumulative equipment access and the same
+five-portfolio contract. Station 14 contains the campaign's uranium description. Vasker Store, Lane
+Six, and Pell Cordon introduce no controls and test composition, adaptation, scale, feed economy,
+and campaign-wide synthesis.
 
-Morrow Pocket is the first complete acceptance case. Its open plant supports OX-1 burst, continuous
-chlorine/HCl, corrosive liquid with slowdown, stored hypochlorite release, and hybrid flash/corrosion
-defenses. Each reference defense purchases its own equipment and transport topology from the same
-Act I vocabulary. Automated acceptance runs the complete waves through the authoritative command
-and simulation path, verifies five surviving archetypes and five physical signatures, and verifies
-that an undefended Core falls.
-
-### 5. Act II mechanical sites
-
-Kettleblack through Pell Cut are complete mechanical level definitions. Their identities come from
-cadence, locomotion, support composition, generated geometry, and site economy rather than a named
-victory process. Kettleblack teaches stationary inventory, live reaction direction, and catalyst
-behavior during Prime, then releases the player into an open assault. Cordon 41, Junction L-6, and
-Pell Cut add optional nitrogen, nickel, and fluorine strategies through established controls.
-
-### 6. Act III mechanical sites
-
-Station 14 through Pell Cordon are complete mechanical level definitions with cumulative equipment
-access. Station 14 supplies the single uranium description and room-bound UO₂F₂ stock. Recovery uses
-the established Fluorine Cell, dry heat, gas transport, wet conversion, and stationary inventory.
-Vasker Store, Lane Six, and Pell Cordon introduce no controls; their waves test composition,
-adaptation, scale, feed economy, and complete-campaign synthesis.
-
-### 7. Mathematical balance
+### Mathematical balance
 
 The source-of-truth workbook runs first-order and transient second-order balance against every
 reference build. It covers 30 reaction capacities, site reservoir feed and depletion, conduit

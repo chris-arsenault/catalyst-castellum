@@ -377,6 +377,91 @@
   color: #ffb0a5;
 }
 
+.debug-campaign-launcher {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(150px, 0.7fr) minmax(240px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px dashed #8b753e;
+  border-radius: 6px;
+  background: rgba(38, 31, 16, 0.88);
+  box-shadow: inset 0 0 24px rgba(170, 132, 46, 0.06);
+}
+
+.debug-campaign-heading {
+  display: flex;
+  align-items: center;
+  align-self: center;
+  gap: 10px;
+  color: #d9bd65;
+}
+
+.debug-campaign-heading strong,
+.debug-campaign-heading span {
+  display: block;
+}
+
+.debug-campaign-heading strong {
+  margin-bottom: 5px;
+  font: 700 10px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.debug-campaign-heading span {
+  color: #a49058;
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.debug-campaign-launcher > label {
+  display: grid;
+  gap: 6px;
+  color: #a49058;
+  font: 700 8px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.debug-campaign-launcher select {
+  min-width: 0;
+  min-height: 36px;
+  padding: 0 9px;
+  border: 1px solid #766331;
+  border-radius: 4px;
+  background: #17150e;
+  color: #e1cf91;
+  font: 700 9px/1 var(--mono);
+}
+
+.debug-campaign-action > button {
+  display: inline-flex;
+  min-height: 36px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 13px;
+  border: 1px solid #9b8140;
+  border-radius: 4px;
+  background: #2c2513;
+  color: #e7cb72;
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.debug-campaign-action > button:hover {
+  border-color: #d2b557;
+  background: #3b3117;
+}
+
+.debug-campaign-action .save-slot-inline-confirmation {
+  min-width: 250px;
+  margin-top: 0;
+}
+
 .save-selection-footer {
   border-top: 1px solid rgba(71, 116, 101, 0.42);
 }
@@ -387,6 +472,13 @@
   }
   .save-slot-card {
     min-height: 360px;
+  }
+  .debug-campaign-launcher {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+  .debug-campaign-action > button {
+    width: 100%;
   }
   .save-selection-footer,
   .save-selection-status {

@@ -16,6 +16,7 @@ export const installEquipment = async (
 
 export const startNewGame = async (page: Page, slot = 1): Promise<void> => {
   await page.getByTestId(`new-game-slot-${slot}`).click();
+  await page.getByTestId("act-continue").click();
   await expect(page.getByTestId("enter-control-room")).toBeVisible();
   await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("phase-banner")).toContainText("Site briefing");
@@ -24,17 +25,7 @@ export const startNewGame = async (page: Page, slot = 1): Promise<void> => {
 export const startGuidedTutorial = async (page: Page): Promise<void> => {
   await startNewGame(page);
   await expect(page.getByTestId("tutorial-enabled")).toBeChecked();
-  const appError = new Promise<Error>((resolve) => page.once("pageerror", resolve));
-  await page.getByTestId("enter-control-room").click();
-  const startupError = await Promise.race([
-    page
-      .getByTestId("tutorial-stage-intro")
-      .waitFor({ state: "visible" })
-      .then(() => null),
-    appError,
-  ]);
-  expect(startupError).toBeNull();
-  const intro = page.getByTestId("tutorial-stage-intro");
+  const intro = page.getByTestId("guide-intro");
   await expect(intro).toContainText("Turn R-02 into a combustion trap");
   await expect(intro).toContainText(/deckmouth column is moving along the service route/i);
   await expect(intro).toContainText("Commission the OX-1 cycle");
@@ -45,7 +36,16 @@ export const startGuidedTutorial = async (page: Page): Promise<void> => {
   await expect(intro).toContainText("H₂ ≥ 7.5% · O₂ ≥ 12% · 2 H₂ + 1 O₂");
   await expect(intro).not.toContainText("Install and run a Gas Agitator in R-02.");
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
-  await page.getByTestId("enter-stage-controls").click();
+  const appError = new Promise<Error>((resolve) => page.once("pageerror", resolve));
+  await page.getByTestId("enter-control-room").click();
+  const startupError = await Promise.race([
+    page
+      .getByTestId("tutorial-coach")
+      .waitFor({ state: "visible" })
+      .then(() => null),
+    appError,
+  ]);
+  expect(startupError).toBeNull();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
     "install-agitator"
@@ -78,6 +78,7 @@ export const continueIntoStoredMomentum = async (
   const progress = page.getByTestId("campaign-progress-panel");
   await expect(progress).toBeVisible({ timeout: 60_000 });
   await expect(progress).toContainText("Round analysis");
+  await expect(progress.getByTestId("guide-intro")).toContainText("Hold Stored Momentum");
   await expect(page.getByTestId("tutorial-task-card")).toBeVisible();
   await expect(page.getByTestId("tutorial-task-card")).toContainText("Lesson complete");
   await expect(page.getByTestId("game-map")).toBeVisible();
@@ -92,7 +93,6 @@ export const continueIntoStoredMomentum = async (
     "data-guide-step",
     "prepare-followup"
   );
-  await expect(page.getByTestId("tutorial-stage-intro")).toHaveCount(0);
 };
 
 export const verifyStoredMomentumHasNoTeachingBreak = async (page: Page): Promise<void> => {

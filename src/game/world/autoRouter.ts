@@ -3,10 +3,8 @@ import { cell } from "../spatial";
 import type { ProcessLineKind, WorldMap } from "./map";
 
 /**
- * Deterministic orthogonal auto-router (ADR-0005): same map + same request ⇒ the same
- * route, so player builds replay identically. Weights steer routes out of room
- * interiors and off existing lanes without forbidding them — a map with no clean
- * corridor still routes.
+ * Deterministic shortest orthogonal auto-router (ADR-0006): same map + same request ⇒
+ * the same route, so previews and player builds replay identically.
  */
 
 const STEP_COST = 1;

@@ -152,7 +152,9 @@ const familyChannels = (family: DamageFamily, definition: GameDefinition): Hazar
         liquid_strength: exposure.liquidStrengthExcess,
         stationary_inventory: exposure.stationaryInventoryExcess,
       }[hazard.basis];
-      channels[hazard.channel] += hazard.rate * excess;
+      const effectiveExcess =
+        hazard.maximumExcess === null ? excess : Math.min(excess, hazard.maximumExcess);
+      channels[hazard.channel] += hazard.rate * effectiveExcess;
     }
   }
   if (family === "thermal") {

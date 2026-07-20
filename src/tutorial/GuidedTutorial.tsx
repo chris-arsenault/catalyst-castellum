@@ -17,7 +17,6 @@ import { GuideTooltip } from "./GuideTooltip";
 import { FirstFlashExplanation } from "./FirstFlashExplanation";
 import { tutorialAnchorSelector } from "./anchors";
 import { TutorialTaskCard } from "./TutorialTaskCard";
-import { TutorialStageIntro } from "./TutorialStageIntro";
 import { tutorialText } from "./tutorialCopy";
 
 const TASK_SLOT = '[data-tutorial="task-slot"]';
@@ -60,25 +59,8 @@ const stepIsSatisfied = (
   ui: GuideUiState
 ): boolean => Boolean(step && step.kind !== "complete" && step.completed(game, ui));
 
-const stageIntroShouldShow = (
-  guide: GuideDefinition,
-  game: GameState,
-  ui: GuideUiState,
-  guideDismissed: boolean,
-  acknowledgedStageIntroIds: string[]
-): boolean =>
-  guide.showStageIntro &&
-  !acknowledgedStageIntroIds.includes(guide.id) &&
-  !guideDismissed &&
-  game.phase === "build" &&
-  guide.steps[0]?.completed(game, ui) === false;
-
-const guideShouldRun = (
-  game: GameState,
-  dismissed: boolean,
-  showHelp: boolean,
-  showStageIntro: boolean
-): boolean => guideCanRun(game) && !dismissed && !showHelp && !showStageIntro;
+const guideShouldRun = (game: GameState, dismissed: boolean, showHelp: boolean): boolean =>
+  guideCanRun(game) && !dismissed && !showHelp;
 
 const teachingBreakFor = (game: GameState, guide: GuideDefinition, run: boolean) => {
   if (!run || !guide.firstFlashTeachingBreak || game.phase !== "prime") return null;
@@ -90,10 +72,8 @@ interface TutorialPresentationProps {
   game: Parameters<GuideDefinition["steps"][number]["completed"]>[0];
   guide: GuideDefinition;
   onCloseTeachingBreak: () => void;
-  onEnterStage: () => void;
   run: boolean;
   showTaskCard: boolean;
-  showStageIntro: boolean;
   stepIndex: number;
   steps: Step[];
   teachingBreak: ReturnType<typeof primeFlashIncident>;
@@ -119,16 +99,13 @@ const TutorialPresentation = ({
   game,
   guide,
   onCloseTeachingBreak,
-  onEnterStage,
   run,
   showTaskCard,
-  showStageIntro,
   stepIndex,
   steps,
   teachingBreak,
 }: TutorialPresentationProps) => (
   <>
-    {showStageIntro && <TutorialStageIntro guide={guide} onEnter={onEnterStage} />}
     {showTaskCard && <TaskCardPortal activeStep={activeStep} guide={guide} game={game} />}
     {activeStep && (
       <Joyride
@@ -153,30 +130,16 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
   const dispatch = useGameStore((state) => state.dispatch);
   const showHelp = useGameStore((state) => state.showHelp);
   const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
-  const acknowledgedStageIntroIds = useGameStore((state) => state.acknowledgedStageIntroIds);
-  const acknowledgeStageIntro = useGameStore((state) => state.acknowledgeStageIntro);
   const pipeMode = useGameStore((state) => state.pipeMode);
   const ui: GuideUiState = { pipeMode };
   const stepIndex = guideStepIndexFor(game, guide, ui);
   const steps = useMemo(() => stepsFor(guide, translator), [guide, translator]);
   const activeStep = guide.steps[stepIndex] ?? null;
   const dismissed = dismissedGuideIds.includes(guide.dismissalId);
-  const showStageIntro = stageIntroShouldShow(
-    guide,
-    game,
-    ui,
-    dismissed,
-    acknowledgedStageIntroIds
-  );
-  const enterStage = useCallback(
-    () => acknowledgeStageIntro(guide.id),
-    [acknowledgeStageIntro, guide.id]
-  );
-  const run = guideShouldRun(game, dismissed, showHelp, showStageIntro);
+  const run = guideShouldRun(game, dismissed, showHelp);
   const showTaskCard =
     !dismissed &&
     !showHelp &&
-    !showStageIntro &&
     (guideCanRun(game) || game.phase === "round_result" || game.phase === "level_complete");
   const satisfied = stepIsSatisfied(activeStep, game, ui);
   const teachingBreak = teachingBreakFor(game, guide, run);
@@ -197,17 +160,15 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
     return () => element.classList.remove("tutorial-active-target");
   }, [activeStep, run, satisfied]);
 
-  if (!showTaskCard && !teachingBreak && !showStageIntro) return null;
+  if (!showTaskCard && !teachingBreak) return null;
   return (
     <TutorialPresentation
       activeStep={activeStep}
       game={game}
       guide={guide}
       onCloseTeachingBreak={closeTeachingBreak}
-      onEnterStage={enterStage}
       run={run}
       showTaskCard={showTaskCard}
-      showStageIntro={showStageIntro}
       stepIndex={stepIndex}
       steps={steps}
       teachingBreak={teachingBreak}

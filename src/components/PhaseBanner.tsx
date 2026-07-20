@@ -9,6 +9,7 @@ import { guidedPhaseActionReason } from "../tutorial/guideModel";
 import type { LocaleFormatters } from "../localization/formatters";
 import type { Translator } from "../localization/translator";
 import { WaveForecastDetails, WaveForecastStrip } from "./WaveForecast";
+import { DefensivePostureStrip } from "./DefensivePosture";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -242,6 +243,7 @@ export const PhaseBanner = () => {
         </button>
         <PhaseAction game={game} />
         {game.phase === "build" && <WaveForecastStrip game={game} />}
+        {game.phase === "prime" && <DefensivePostureStrip game={game} />}
       </section>
       {showBrief && <RoundBriefModal game={game} onClose={closeBrief} />}
     </>

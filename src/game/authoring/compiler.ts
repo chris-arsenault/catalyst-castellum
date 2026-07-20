@@ -362,6 +362,18 @@ const validateSpeciesHazardSources = (source: GamePackSource, issues: AuthoringI
         "A hazardous species requires a combat damage source."
       );
     }
+    for (const [index, hazard] of species.hazards.entries()) {
+      if (
+        hazard.maximumExcess !== null &&
+        (!Number.isFinite(hazard.maximumExcess) || hazard.maximumExcess <= 0)
+      ) {
+        push(
+          issues,
+          `species.${speciesId}.hazards.${index}.maximumExcess`,
+          "Maximum hazard excess must be finite and positive."
+        );
+      }
+    }
   }
 };
 

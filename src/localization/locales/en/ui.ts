@@ -134,7 +134,6 @@ export const UI_MESSAGES = {
   "ui.progress.travel.detail":
     "The castellum has pulled clear of the worked-out chambers. Its hull, equipment, and stored reagents travel with it.",
   "ui.progress.travel.eyebrow": "Underway",
-  "ui.progress.travel.next": "Approaching",
   "ui.progress.travel.title": "En route to {name}",
   "ui.topbar.phase.victory": "Victory",
   "ui.topbar.phase.defeat": "Defeat",

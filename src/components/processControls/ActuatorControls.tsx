@@ -1,4 +1,5 @@
 import { CirclePower } from "lucide-react";
+import { useCallback } from "react";
 import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   conduitCapacity,
@@ -34,6 +35,7 @@ import {
 } from "../../game/world/instances";
 import { lineDefinition } from "../../presentation/defaultGame";
 import type { ProcessLineView } from "../../game/world/instances";
+import { ConduitDefensiveEffect } from "../DefensivePosture";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -246,6 +248,50 @@ export const ConduitActuator = ({
   return <InstalledConduitActuator definition={definition} phase={phase} runId={runId} />;
 };
 
+const ConduitTelemetry = ({
+  definition,
+  phase,
+  runId,
+}: {
+  definition: ProcessLineView;
+  phase: TransportPhase;
+  runId: ConnectionId;
+}) => {
+  const { formatters, translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
+  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
+  const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
+  return (
+    <details className="conduit-telemetry">
+      <summary>{translator.text("ui.posture.telemetry")}</summary>
+      <small>
+        {translator.text("ui.process.conduitSummary", {
+          from: roomDefinition(game, definition.direction[0]).code,
+          to: roomDefinition(game, definition.direction[1]).code,
+          noun: readout.noun,
+          rate: formatters.measurement(definition.maxFlow, "mol-eq/s", 2),
+        })}
+      </small>
+      <span>
+        {translator.text("ui.process.conduitReading", {
+          flow: flowReading(conduit.lastFlow, formatters),
+          amount: formatters.number(readout.amount, 1),
+          capacity: formatters.number(conduitCapacity(game, runId, phase), 1),
+          physical: readout.physical,
+          state: conduit.blocked
+            ? translator.text("ui.process.stalled")
+            : flowCauseLabel(conduit.flowCause, translator),
+        })}
+      </span>
+      <small>{translator.text("ui.process.conduitMixture", { mixture: readout.mixture })}</small>
+      <small>
+        {translator.text("ui.process.upstreamJunction", { mixture: readout.junctionMixture })}
+      </small>
+      <small>{translator.text("ui.process.measuredFlow", { flow: readout.measuredSpecies })}</small>
+    </details>
+  );
+};
+
 const InstalledConduitActuator = ({
   definition,
   phase,
@@ -255,58 +301,49 @@ const InstalledConduitActuator = ({
   phase: TransportPhase;
   runId: ConnectionId;
 }) => {
-  const { formatters, selectors, translator } = useGamePresentation();
+  const { defensivePosture, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
+  const setDefensivePosturePreview = useGameStore((state) => state.setDefensivePosturePreview);
   const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
   const active = conduit.enabled;
   const command = { type: "set_conduit", connectionId: runId, enabled: !active } as const;
   const decision = selectors.commandDecision(game, command);
-  const toggle = () => dispatch({ type: "set_conduit", connectionId: runId, enabled: !active });
+  const toggle = useCallback(
+    () => dispatch({ type: "set_conduit", connectionId: runId, enabled: !active }),
+    [active, dispatch, runId]
+  );
 
   const [activeLabel, inactiveLabel] = actuatorLabels(
     definition.actuator,
     definition.destinationKind,
     translator
   );
-  const from = roomDefinition(game, definition.direction[0]).code;
-  const to = roomDefinition(game, definition.direction[1]).code;
-  const capacity = conduitCapacity(game, runId, phase);
-  const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
+  const defensiveEffect = defensivePosture.conduitImpact(game, runId, !active);
+  const showDefensiveEffect = useCallback(
+    () =>
+      setDefensivePosturePreview({
+        connectionId: runId,
+        rooms: Object.fromEntries(defensiveEffect.rooms.map((room) => [room.roomId, room.tone])),
+      }),
+    [defensiveEffect.rooms, runId, setDefensivePosturePreview]
+  );
+  const clearDefensiveEffect = useCallback(
+    () => setDefensivePosturePreview(null),
+    [setDefensivePosturePreview]
+  );
 
   return (
     <div
       className={`actuator-row ${active ? "active" : "inactive"} ${conduit.blocked ? "blocked" : ""}`}
       data-conduit-state={active ? "open" : "closed"}
+      onPointerEnter={showDefensiveEffect}
+      onPointerLeave={clearDefensiveEffect}
     >
       <div className="actuator-copy">
         <strong>{transportCopy(game, runId, translator).name}</strong>
-        <small>
-          {translator.text("ui.process.conduitSummary", {
-            from,
-            to,
-            noun: readout.noun,
-            rate: formatters.measurement(definition.maxFlow, "mol-eq/s", 2),
-          })}
-        </small>
-        <span>
-          {translator.text("ui.process.conduitReading", {
-            flow: flowReading(conduit.lastFlow, formatters),
-            amount: formatters.number(readout.amount, 1),
-            capacity: formatters.number(capacity, 1),
-            physical: readout.physical,
-            state: conduit.blocked
-              ? translator.text("ui.process.stalled")
-              : flowCauseLabel(conduit.flowCause, translator),
-          })}
-        </span>
-        <small>{translator.text("ui.process.conduitMixture", { mixture: readout.mixture })}</small>
-        <small>
-          {translator.text("ui.process.upstreamJunction", { mixture: readout.junctionMixture })}
-        </small>
-        <small>
-          {translator.text("ui.process.measuredFlow", { flow: readout.measuredSpecies })}
-        </small>
+        <ConduitDefensiveEffect impact={defensiveEffect} />
+        <ConduitTelemetry definition={definition} phase={phase} runId={runId} />
       </div>
       <BinaryControl
         active={active}

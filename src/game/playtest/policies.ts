@@ -2,7 +2,11 @@ import { WORLD_MAP } from "../config";
 import type { GameCommand, LevelId, RoomId } from "../types";
 import type { RandomSource } from "../world/seededRandom";
 import type { PlaytestPlan } from "./types";
-import { primaryReferenceBuildFor, referenceBuildsFor } from "../content/playtestPortfolios";
+import {
+  failureControlBuildsFor,
+  primaryReferenceBuildFor,
+  referenceBuildsFor,
+} from "../content/playtestPortfolios";
 
 export { seededRandom } from "../world/seededRandom";
 
@@ -44,6 +48,9 @@ export const doNothingPlan = (): PlaytestPlan => ({
 });
 
 export const referencePlans = (levelId: LevelId): PlaytestPlan[] => referenceBuildsFor(levelId);
+
+export const failureControlPlans = (levelId: LevelId): PlaytestPlan[] =>
+  failureControlBuildsFor(levelId);
 
 export const primaryReferencePlan = (levelId: LevelId): PlaytestPlan =>
   primaryReferenceBuildFor(levelId);

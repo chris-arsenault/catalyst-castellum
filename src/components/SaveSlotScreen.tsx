@@ -5,6 +5,9 @@ import { useGamePresentation } from "../application/presentationContext";
 import { SAVE_SLOT_IDS, type SaveSlotId, type SaveSlotRecord } from "../application/saveSlots";
 import { levelDefinitionFor } from "../game/queries";
 import type { Translator } from "../localization/translator";
+import { DebugCampaignLauncher } from "./DebugCampaignLauncher";
+
+const DEBUG_BUILD = import.meta.env.DEV;
 
 const slotNumber = (slotId: SaveSlotId): string => slotId.slice(-1);
 
@@ -244,6 +247,7 @@ export const SaveSlotScreen = () => {
             );
           })}
         </div>
+        {DEBUG_BUILD ? <DebugCampaignLauncher saveSlots={saveSlots} /> : null}
       </section>
 
       <footer className="save-selection-footer">

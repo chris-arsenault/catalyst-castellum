@@ -1,5 +1,5 @@
 import { ArrowRight, Blocks, CheckCircle2, Gauge, LogOut, Navigation } from "lucide-react";
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useGamePresentation } from "../application/presentationContext";
 import { useGameStore } from "../application/store";
 import {
@@ -13,6 +13,10 @@ import { GraftBoard } from "./GraftBoard";
 import { CampaignRouteMap } from "./CampaignRouteMap";
 import { ClaimRigGraphic } from "./ClaimRigGraphic";
 import { NarrativeDialogue } from "./NarrativeDialogue";
+import { ReportStats, roundReportStats } from "./WaveReport";
+
+/** Transit plays as a timed transition; docking needs no extra click. */
+const TRAVEL_TRANSIT_MS = 2600;
 
 const NarrativeTransitVisual = ({
   currentSite,
@@ -49,26 +53,7 @@ const NarrativeTransitVisual = ({
 const SummaryStats = () => {
   const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  return (
-    <dl className="intermission-stats">
-      <div>
-        <dt>{translator.text("ui.progress.neutralized")}</dt>
-        <dd>{game.lastReport?.killed ?? 0}</dd>
-      </div>
-      <div>
-        <dt>{translator.text("ui.progress.breaches")}</dt>
-        <dd>{game.lastReport?.breached ?? 0}</dd>
-      </div>
-      <div>
-        <dt>{translator.text("ui.progress.core")}</dt>
-        <dd>{formatters.percent(game.coreIntegrity / 100, 0)}</dd>
-      </div>
-      <div>
-        <dt>{translator.text("ui.progress.reactions")}</dt>
-        <dd>{formatters.number(game.lastReport?.reactions ?? 0, 1)}</dd>
-      </div>
-    </dl>
-  );
+  return <ReportStats entries={roundReportStats(game, translator, formatters)} />;
 };
 
 const IntermissionChoices = ({
@@ -163,7 +148,7 @@ const IntermissionSummary = () => {
         <NarrativeTransitVisual currentSite={currentSite} destination={null} />
         <article className="intermission-summary">
           <header>
-            <span className="intermission-seal">
+            <span className="report-seal intermission-seal">
               <CheckCircle2 size={28} />
             </span>
             <div>
@@ -197,7 +182,16 @@ const TravelRecovery = () => {
   const nextLevel = nextId ? LEVEL_DEFINITIONS[nextId] : null;
   const currentSite = narrativeSiteForLevel(game.campaign.levelId);
   const nextSite = nextLevel ? narrativeSiteForLevel(nextLevel.id) : null;
-  const dock = useCallback(() => dispatch({ type: "dock_at_site" }), [dispatch]);
+  const dockedRef = useRef(false);
+  const dock = useCallback(() => {
+    if (dockedRef.current) return;
+    dockedRef.current = true;
+    dispatch({ type: "dock_at_site" });
+  }, [dispatch]);
+  useEffect(() => {
+    const timer = window.setTimeout(dock, TRAVEL_TRANSIT_MS);
+    return () => window.clearTimeout(timer);
+  }, [dock]);
   return (
     <main className="intermission-stage" data-testid="travel-intermission">
       <section className="travel-recovery">
@@ -217,7 +211,7 @@ const TravelRecovery = () => {
           data-testid="travel-to-next-site"
           onClick={dock}
         >
-          <ArrowRight size={20} /> {translator.text("ui.intermission.travel.action")}
+          <ArrowRight size={20} /> {translator.text("ui.progress.travel.action")}
         </button>
       </section>
     </main>

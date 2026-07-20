@@ -1,6 +1,8 @@
 import { createStore } from "zustand/vanilla";
 import { describe, expect, it, vi } from "vitest";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
+import { LEVEL_IDS } from "../game/types";
+import { guideDefinitionFor } from "../tutorial/guideModel";
 import { emptySaveSlotCatalog, type SaveSlotRecord } from "./saveSlots";
 import { createGameStoreState, type GameStore, type GameStoreDependencies } from "./store";
 import { DEFAULT_GAME_PRESENTATION } from "../presentation/services";
@@ -91,6 +93,52 @@ describe("game store composition", () => {
   });
 });
 
+describe("debug save-slot starts", () => {
+  it("starts the existing chlorine tutorial from its empty authored checkpoint", () => {
+    const store = createStore<GameStore>(createGameStoreState(dependencies()));
+    store.getState().initialize();
+
+    store.getState().startNewGameAtLevel("slot-2", "make_the_reagent");
+
+    expect(store.getState().game.phase).toBe("level_briefing");
+    expect(
+      Object.values(store.getState().game.rooms).flatMap((room) =>
+        Object.values(room.equipment).filter((equipment) => equipment !== null)
+      )
+    ).toEqual([]);
+
+    expect(store.getState().dispatch({ type: "begin_level" })).toBe(true);
+    expect(guideDefinitionFor(store.getState().game)?.id).toBe("make_the_reagent:co_products:v1");
+  });
+
+  it("starts a debug campaign at an authored level with earlier sites completed", () => {
+    const adapters = dependencies();
+    const store = createStore<GameStore>(createGameStoreState(adapters));
+    store.getState().initialize();
+
+    store.getState().startNewGameAtLevel("slot-2", "pell_cut");
+
+    const game = store.getState().game;
+    expect(game).toMatchObject({
+      phase: "level_briefing",
+      campaign: {
+        levelId: "pell_cut",
+        levelIndex: LEVEL_IDS.indexOf("pell_cut"),
+        roundIndex: 0,
+        completedLevelIds: LEVEL_IDS.slice(0, LEVEL_IDS.indexOf("pell_cut")),
+      },
+    });
+    expect(DEFAULT_GAME_RUNTIME.validate(game)).toEqual([]);
+    expect(store.getState()).toMatchObject({
+      activeSlotId: "slot-2",
+      selectedRoomId: DEFAULT_GAME_RUNTIME.level(game).focusRoomId,
+      dismissedGuideIds: [],
+      tutorialSessionRevision: 1,
+    });
+    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", game, []);
+  });
+});
+
 describe("active save-slot lifecycle", () => {
   it("persists accepted commands and live ticks to the active slot", () => {
     const adapters = dependencies();
@@ -113,7 +161,6 @@ describe("active save-slot lifecycle", () => {
     store.getState().initialize();
     store.getState().startNewGame("slot-1");
     store.setState({ dismissedGuideIds: ["flash_point:first_spark:v3"] });
-    store.getState().acknowledgeStageIntro("flash_point:first_spark:v5");
     store.getState().selectRoom("washlock");
     const revision = store.getState().tutorialSessionRevision;
 
@@ -125,7 +172,6 @@ describe("active save-slot lifecycle", () => {
     expect(store.getState()).toMatchObject({
       activeSlotId: "slot-1",
       dismissedGuideIds: [],
-      acknowledgedStageIntroIds: [],
       selectedRoomId: "furnace",
       tutorialSessionRevision: revision + 1,
     });

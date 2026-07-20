@@ -46,6 +46,7 @@ export const GameMap = ({
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
   const pipePreview = useGameStore((state) => state.pipePreview);
+  const defensivePosturePreview = useGameStore((state) => state.defensivePosturePreview);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
   const camera = useMapCamera(game.map);
@@ -88,6 +89,7 @@ export const GameMap = ({
         pipePreview={pipePreview}
         selectedRoomId={selectedRoomId}
         selectedSpecies={selectedSpecies}
+        defensivePosturePreview={defensivePosturePreview}
       />
       <PipePreviewPopup />
       <MapChrome

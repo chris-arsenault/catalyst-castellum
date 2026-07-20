@@ -9,7 +9,13 @@ import {
   type RoundReport,
 } from "../types";
 import { playtestPortfolioFor } from "../content/playtestPortfolios";
-import { doNothingPlan, mutatedReferencePlan, referencePlans, seededRandom } from "./policies";
+import {
+  doNothingPlan,
+  failureControlPlans,
+  mutatedReferencePlan,
+  referencePlans,
+  seededRandom,
+} from "./policies";
 import type {
   ActionBand,
   BuildProfile,
@@ -339,10 +345,14 @@ export const evaluateLevel = (
   const references = referencePlans(options.levelId).map((plan) =>
     runPlan(options.levelId, plan, runtime)
   );
+  const failureControls = failureControlPlans(options.levelId).map((plan) =>
+    runPlan(options.levelId, plan, runtime)
+  );
   return {
     levelId: options.levelId,
     doNothing: runPlan(options.levelId, doNothingPlan(), runtime),
     references,
+    failureControls,
     mutationTrials,
     actionBands: actionBands(mutationTrials),
     diversity: evaluateDiversity(playtestPortfolioFor(options.levelId).requirements, references),

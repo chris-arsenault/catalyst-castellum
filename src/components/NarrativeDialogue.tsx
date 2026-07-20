@@ -1,5 +1,5 @@
 import { ArrowRight, MessageSquareText, Radio, UserRound } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGamePresentation } from "../application/presentationContext";
 import type {
   NarrativeDialogueLineDefinition,
@@ -7,16 +7,12 @@ import type {
   NarrativeSpeakerId,
 } from "../presentation/defaultGame";
 
-type NarrativeDialogueProps =
-  | Readonly<{
-      phase: "briefing";
-      site: NarrativeSiteDefinition;
-      onComplete: () => void;
-    }>
-  | Readonly<{
-      phase: "debrief";
-      site: NarrativeSiteDefinition;
-    }>;
+export type NarrativeDialoguePhase = "briefing" | "debrief";
+
+interface NarrativeDialogueProps {
+  readonly phase: NarrativeDialoguePhase;
+  readonly site: NarrativeSiteDefinition;
+}
 
 const speakerInitials = (name: string): string =>
   name
@@ -26,45 +22,44 @@ const speakerInitials = (name: string): string =>
     .slice(0, 2)
     .toUpperCase();
 
-const SpeakerPortrait = ({ name, speakerId }: { name: string; speakerId: NarrativeSpeakerId }) => {
+const SpeakerAvatar = ({ name, speakerId }: { name: string; speakerId: NarrativeSpeakerId }) => {
   const telemetry = speakerId === "rig_telemetry";
   const concealed = speakerId === "surveyor" || speakerId === "buyer";
   return (
     <div
-      className={`speaker-portrait speaker-${speakerId}${concealed ? " concealed" : ""}`}
+      className={`dialogue-avatar speaker-${speakerId}${concealed ? " concealed" : ""}`}
       aria-label={name}
     >
-      <div className="speaker-portrait-image" aria-hidden="true">
-        {telemetry ? <Radio /> : <UserRound />}
-        <span>{concealed ? "••" : speakerInitials(name)}</span>
-      </div>
-      <i aria-hidden="true" />
+      {telemetry ? <Radio /> : <UserRound />}
+      <span>{concealed ? "••" : speakerInitials(name)}</span>
     </div>
   );
 };
 
 const dialogueLines = (
-  phase: NarrativeDialogueProps["phase"],
+  phase: NarrativeDialoguePhase,
   site: NarrativeSiteDefinition
 ): readonly NarrativeDialogueLineDefinition[] =>
   phase === "briefing" ? site.briefingDialogue : site.debriefDialogue;
 
-export const NarrativeDialogue = (props: NarrativeDialogueProps) => {
+/**
+ * Channel transcript: each advance reveals the next line while every earlier
+ * line stays on screen. The conversation never gates surrounding actions.
+ */
+export const NarrativeDialogue = ({ phase, site }: NarrativeDialogueProps) => {
   const { narrativeCopy, translator } = useGamePresentation();
-  const { phase, site } = props;
   const lines = dialogueLines(phase, site);
-  const [lineIndex, setLineIndex] = useState(0);
-  const line = lines[lineIndex]!;
-  const speaker = narrativeCopy.speaker({ id: line.speakerId });
-  const finalLine = lineIndex === lines.length - 1;
-  const advance = useCallback(() => {
-    if (!finalLine) {
-      setLineIndex((current) => current + 1);
-      return;
-    }
-    if (props.phase === "briefing") props.onComplete();
-  }, [finalLine, props]);
-  const showAdvance = !finalLine || phase === "briefing";
+  const [revealedCount, setRevealedCount] = useState(1);
+  const feedRef = useRef<HTMLOListElement>(null);
+  const allRevealed = revealedCount >= lines.length;
+  const advance = useCallback(
+    () => setRevealedCount((current) => Math.min(current + 1, lines.length)),
+    [lines.length]
+  );
+  useEffect(() => {
+    if (revealedCount === 1) return;
+    feedRef.current?.lastElementChild?.scrollIntoView?.({ block: "nearest" });
+  }, [revealedCount]);
 
   return (
     <section className={`narrative-dialogue ${phase}`}>
@@ -77,32 +72,37 @@ export const NarrativeDialogue = (props: NarrativeDialogueProps) => {
         </span>
         <small>
           {translator.text("narrative.ui.dialogue.progress", {
-            current: lineIndex + 1,
+            current: revealedCount,
             total: lines.length,
           })}
         </small>
       </header>
-      <div className="dialogue-turn" key={`${line.speakerId}.${line.id}`}>
-        <SpeakerPortrait name={speaker.name} speakerId={line.speakerId} />
-        <article>
-          <header>
-            <strong>{speaker.name}</strong>
-            <span>{speaker.role}</span>
-          </header>
-          <p>{narrativeCopy.dialogue(site, phase, line)}</p>
-        </article>
-      </div>
-      {showAdvance && (
+      <ol className="dialogue-feed" ref={feedRef} data-testid="dialogue-feed">
+        {lines.slice(0, revealedCount).map((line) => {
+          const speaker = narrativeCopy.speaker({ id: line.speakerId });
+          return (
+            <li className="dialogue-message" key={`${line.speakerId}.${line.id}`}>
+              <SpeakerAvatar name={speaker.name} speakerId={line.speakerId} />
+              <div className="dialogue-message-body">
+                <header>
+                  <strong>{speaker.name}</strong>
+                  <span>{speaker.role}</span>
+                </header>
+                <p>{narrativeCopy.dialogue(site, phase, line)}</p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      {!allRevealed && (
         <footer>
           <button
             className="dialogue-next-button"
             type="button"
-            data-testid={finalLine ? "dialogue-open-mission" : "dialogue-next"}
+            data-testid="dialogue-next"
             onClick={advance}
           >
-            {translator.text(
-              finalLine ? "narrative.ui.dialogue.openBriefing" : "narrative.ui.dialogue.continue"
-            )}
+            {translator.text("narrative.ui.dialogue.continue")}
             <ArrowRight size={17} />
           </button>
         </footer>

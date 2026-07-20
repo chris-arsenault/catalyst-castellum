@@ -19,7 +19,6 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.common.missionTasks": "Mission tasks",
   "tutorial.common.currentAction": "Current action",
   "tutorial.common.fieldObjective": "Field objective",
-  "tutorial.common.openStageControls": "Open stage controls",
   "tutorial.kettleblack.completion.title": "Stationary media read",
   "tutorial.kettleblack.completion.explanation":
     "The Kettleblack bed changed the incoming gas and recorded its active direction in the room chemistry readout.",

@@ -107,9 +107,9 @@ The initial campaign baselines are:
 | Lane Six         |          30 |                 2.594x |
 | Pell Cordon      |          31 |                 2.853x |
 
-Flash Point's former anonymous health multipliers are represented as level offsets. The conversion
-uses `round(log(oldScale) / log(1.10))`, making the authored veteran intent visible. Make the
-Reagent's first training cohort resolves to level 3, preserving its deliberately low durability.
+Wave-specific veterans and training targets use visible integer level offsets. Make the Reagent's
+first training cohort resolves to level 3, giving the demonstration target deliberately low
+durability while retaining the same level formula.
 
 ## Authoring and verification
 

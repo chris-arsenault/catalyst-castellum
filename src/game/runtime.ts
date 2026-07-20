@@ -9,6 +9,26 @@ import { validateGameState, type StateValidationIssue } from "./engine/stateVali
 import type { CommandDecision, CommandResult, GameCommand, GameState, LevelId } from "./types";
 import { createGameQueries, type GameQueries } from "./queries";
 import { decodeGame, encodeGame } from "./persistence/saveCodec";
+import {
+  defensivePosture,
+  type DefensiveEnemyPosture,
+  type DefensivePosture,
+  type DefensiveRoomPosture,
+} from "./engine/defensivePosture";
+import {
+  conduitDefensiveImpact,
+  projectedDefensivePosture,
+  type ConduitDefensiveImpact,
+  type DefensiveRoomImpact,
+} from "./engine/defensivePostureProjection";
+
+export type {
+  ConduitDefensiveImpact,
+  DefensiveEnemyPosture,
+  DefensivePosture,
+  DefensiveRoomImpact,
+  DefensiveRoomPosture,
+};
 
 export interface GameRuntime {
   readonly definition: GameDefinition;
@@ -25,6 +45,16 @@ export interface GameRuntime {
   validate: (state: GameState) => StateValidationIssue[];
   level: (state: GameState) => LevelDefinition;
   round: (state: GameState) => RoundDefinition;
+  posture: {
+    current: (state: GameState) => DefensivePosture;
+    projected: (state: GameState, seconds?: number) => DefensivePosture;
+    conduitImpact: (
+      state: GameState,
+      connectionId: Parameters<typeof conduitDefensiveImpact>[1],
+      enabled: boolean,
+      seconds?: number
+    ) => ConduitDefensiveImpact;
+  };
 }
 
 export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
@@ -45,6 +75,17 @@ export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
     validate: (state: GameState) => validateGameState(state, definition),
     level: (state: GameState) => levelDefinitionFor(state, definition),
     round: (state: GameState) => roundDefinitionFor(state, definition),
+    posture: Object.freeze({
+      current: (state: GameState) => defensivePosture(state, definition),
+      projected: (state: GameState, seconds?: number) =>
+        projectedDefensivePosture(state, definition, seconds),
+      conduitImpact: (
+        state: GameState,
+        connectionId: Parameters<typeof conduitDefensiveImpact>[1],
+        enabled: boolean,
+        seconds?: number
+      ) => conduitDefensiveImpact(state, connectionId, enabled, definition, seconds),
+    }),
   });
 
 export const DEFAULT_GAME_RUNTIME = createGameRuntime(DEFAULT_GAME_DEFINITION);

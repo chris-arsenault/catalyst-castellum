@@ -240,10 +240,13 @@ const hazardExposureApplies = (
   (rule.exposure === "floor_contact" && floorContact) ||
   (rule.exposure === "oxygen_breathers" && needsOxygen);
 
-const hazardExcess = (value: number, rule: SpeciesHazardRule): number =>
-  rule.direction === "above"
-    ? Math.max(0, value - rule.threshold)
-    : Math.max(0, rule.threshold - value);
+const hazardExcess = (value: number, rule: SpeciesHazardRule): number => {
+  const excess =
+    rule.direction === "above"
+      ? Math.max(0, value - rule.threshold)
+      : Math.max(0, rule.threshold - value);
+  return rule.maximumExcess === null ? excess : Math.min(excess, rule.maximumExcess);
+};
 
 const speciesHazardBasis = (
   room: RoomState,

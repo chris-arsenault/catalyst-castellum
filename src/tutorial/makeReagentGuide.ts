@@ -46,7 +46,6 @@ const coProductsGuide: GuideDefinition = {
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.reagent.coProducts.label",
   firstFlashTeachingBreak: false,
-  showStageIntro: true,
   gatesPhaseActions: true,
   story: {
     kicker: "tutorial.reagent.coProducts.story.kicker",
@@ -174,7 +173,6 @@ const sharedReliefGuide: GuideDefinition = {
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.reagent.sharedRelief.label",
   firstFlashTeachingBreak: false,
-  showStageIntro: false,
   gatesPhaseActions: true,
   story: {
     kicker: "tutorial.reagent.sharedRelief.story.kicker",

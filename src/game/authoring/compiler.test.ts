@@ -9,7 +9,7 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(13);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(14);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
@@ -57,7 +57,9 @@ describe("game pack compiler", () => {
       })
     ).toThrow(/unbalanced/);
   });
+});
 
+describe("species hazard authoring", () => {
   it("requires exact combat attribution for every hazardous species", () => {
     const chlorine = DEFAULT_GAME_DEFINITION.species.chlorine;
     expect(() =>
@@ -68,6 +70,23 @@ describe("game pack compiler", () => {
         },
       })
     ).toThrow(/requires a combat damage source/);
+  });
+
+  it("rejects invalid saturating hazard bounds", () => {
+    const chlorine = DEFAULT_GAME_DEFINITION.species.chlorine;
+    expect(() =>
+      deriveGame(DEFAULT_GAME_DEFINITION, {
+        species: {
+          ...DEFAULT_GAME_DEFINITION.species,
+          chlorine: {
+            ...chlorine,
+            hazards: chlorine.hazards.map((hazard, index) =>
+              index === 0 ? { ...hazard, maximumExcess: 0 } : hazard
+            ),
+          },
+        },
+      })
+    ).toThrow(/Maximum hazard excess must be finite and positive/);
   });
 });
 

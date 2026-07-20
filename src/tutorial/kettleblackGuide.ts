@@ -31,7 +31,6 @@ const guide: GuideDefinition = {
   dismissalId: "kettleblack:stationary_media:v1",
   label: "tutorial.kettleblack.label",
   firstFlashTeachingBreak: false,
-  showStageIntro: true,
   gatesPhaseActions: true,
   story: {
     kicker: "tutorial.kettleblack.story.kicker",

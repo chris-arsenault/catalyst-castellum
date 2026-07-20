@@ -31,9 +31,13 @@ const clickMapRoom = async (page: Page, roomId: RoomId): Promise<void> => {
 test("lesson equipment uses universal room sockets and visible catalog locks", async ({ page }) => {
   await page.goto("/");
   await page.getByTestId("new-game-slot-1").click();
+  await page.getByTestId("act-continue").click();
   await page.getByTestId("tutorial-enabled").uncheck();
   await page.getByTestId("enter-control-room").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
+  const taskCard = page.getByTestId("tutorial-task-card");
+  if (await taskCard.isVisible())
+    await taskCard.getByRole("button", { name: "Skip guided lesson" }).click();
 
   await clickMapRoom(page, "switchyard");
   await page.getByTestId("open-equipment-build-switchyard-socket_a").click();

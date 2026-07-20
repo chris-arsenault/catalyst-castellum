@@ -289,15 +289,8 @@
 }
 
 .intermission-seal {
-  display: grid;
   width: 48px;
   height: 48px;
-  flex: 0 0 auto;
-  place-items: center;
-  border: 1px solid #8fab56;
-  border-radius: 50%;
-  background: rgba(199, 224, 92, 0.06);
-  color: var(--lime);
 }
 
 .intermission-summary em,
@@ -331,71 +324,8 @@
   margin: 0 0 18px;
 }
 
-.intermission-summary .dialogue-turn {
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 13px;
-  min-height: 142px;
-  padding: 13px;
-}
-
-.intermission-summary .speaker-portrait {
-  min-height: 112px;
-}
-
-.intermission-summary .speaker-portrait-image {
-  min-height: 96px;
-  gap: 7px;
-}
-
-.intermission-summary .speaker-portrait-image svg {
-  width: 45px;
-  height: 45px;
-}
-
-.intermission-summary .speaker-portrait-image span {
-  font-size: 10px;
-}
-
-.intermission-summary .dialogue-turn > article {
-  gap: 9px;
-}
-
-.intermission-summary .dialogue-turn > article strong {
-  font-size: 13px;
-}
-
-.intermission-summary .dialogue-turn > article p {
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-.intermission-stats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  margin: 0;
-  border: 1px solid #2b5647;
-  border-radius: 6px;
-}
-
-.intermission-stats div {
-  padding: 11px;
-  border-right: 1px solid #2b5647;
-}
-
-.intermission-stats div:last-child {
-  border-right: 0;
-}
-
-.intermission-stats dt {
-  color: #668d7d;
-  font: 700 8px/1 var(--mono);
-  text-transform: uppercase;
-}
-
-.intermission-stats dd {
-  margin: 7px 0 0;
-  color: #dce8df;
-  font: 800 14px/1 var(--mono);
+.intermission-summary .dialogue-feed {
+  max-height: 240px;
 }
 
 .intermission-next {
@@ -732,13 +662,13 @@
     padding: 24px 18px;
   }
   .intermission-choice,
-  .intermission-stats {
+  .intermission-summary .report-stats {
     grid-template-columns: 1fr 1fr;
   }
-  .intermission-stats div:nth-child(2) {
+  .intermission-summary .report-stats > div:nth-child(2) {
     border-right: 0;
   }
-  .intermission-stats div:nth-child(-n + 2) {
+  .intermission-summary .report-stats > div:nth-child(-n + 2) {
     border-bottom: 1px solid #2b5647;
   }
   .graft-screen-header {
@@ -925,6 +855,7 @@
 }
 
 .hull-enemy-route {
+  pointer-events: none;
   fill: none;
   stroke: #ffb451;
   stroke-width: 4;
@@ -1025,6 +956,10 @@
 .hull-cell-target.editable:focus rect {
   fill: rgba(106, 210, 255, 0.38);
   stroke: #d2f4ff;
+}
+
+.hull-route-entry {
+  pointer-events: none;
 }
 
 .hull-route-entry path {

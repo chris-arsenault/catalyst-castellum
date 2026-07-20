@@ -72,7 +72,6 @@ const hotMixGuide: GuideDefinition = {
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.acid.hotMix.label",
   firstFlashTeachingBreak: false,
-  showStageIntro: true,
   gatesPhaseActions: true,
   story: {
     kicker: "tutorial.acid.hotMix.story.kicker",
@@ -238,7 +237,6 @@ const residenceTimeGuide: GuideDefinition = {
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.acid.residence.label",
   firstFlashTeachingBreak: false,
-  showStageIntro: false,
   gatesPhaseActions: false,
   story: {
     kicker: "tutorial.acid.residence.story.kicker",

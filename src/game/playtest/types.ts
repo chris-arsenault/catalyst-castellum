@@ -85,6 +85,7 @@ export interface LevelEvaluation {
   levelId: LevelId;
   doNothing: PlaytestResult;
   references: PlaytestResult[];
+  failureControls: PlaytestResult[];
   mutationTrials: PlaytestResult[];
   actionBands: ActionBand[];
   diversity: DiversityEvaluation;

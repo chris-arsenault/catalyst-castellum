@@ -1,7 +1,5 @@
 # Tutorial information architecture
 
-Status: accepted implementation direction, July 2026.
-
 This document defines how Catalyst Castellum teaches. It complements
 [`tutorial-campaign.md`](./tutorial-campaign.md), which defines _what_ each checkpoint teaches.
 This document defines _where_, _when_, and _how much_ tutorial information appears.
@@ -145,19 +143,13 @@ The guided layer needs tests beyond “the tooltip rendered”:
 - clicking the marked target keeps the card stable and reveals its result explanation;
 - unrelated room and map controls remain usable before the player continues;
 - Continue advances to the next authored prompt only after its predicate is satisfied;
-- unrelated UI cannot be clicked through the mask;
+- unrelated rooms and controls remain usable because the guide creates no interaction mask;
 - a reload resumes at the prompt implied by the restored plant state;
 - the prime observation requires a real zero-target combustion incident;
 - the combat observation requires a real assault incident with an attributed enemy kill;
 - skip removes the layer and replay restores it;
 - the experience remains usable at the compact desktop viewport.
 
-The standalone Monte Carlo playtester remains UI-independent. Tutorial overlays must not enter the
-simulation engine or the normal CI play loop.
-
-Browser interaction tests use `?e2eTest=1`. That flag is honored only by a Vite development build:
-it freezes the interval clock, then uses the same conserved OX-1 reaction, central damage resolver,
-incident recorder, and guide predicates to create deterministic prime and assault evidence after
-the required player actions. It does not inject a tutorial-complete flag or bypass domain rules.
-The production build ignores the query flag, and the simulation command API contains no test-only
-command.
+The standalone playtester remains UI-independent. Browser scenarios drive the same command,
+simulation, incident, and guide-predicate path as the production application. Tutorial overlays
+remain outside the simulation engine and headless campaign loop.

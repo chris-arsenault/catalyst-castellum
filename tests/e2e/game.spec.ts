@@ -74,9 +74,9 @@ test("resetting the active save restarts the tutorial at its first step", async 
   await expect(coach).toHaveAttribute("data-guide-step", "open-pipe-board");
   await page.getByRole("button", { name: "Restart current save" }).click();
   await page.getByTestId("confirm-restart-save").click();
+  await page.getByTestId("act-continue").click();
   await expect(page.getByTestId("enter-control-room")).toBeVisible();
   await page.getByTestId("enter-control-room").click();
-  await page.getByTestId("enter-stage-controls").click();
 
   await expect(coach).toHaveAttribute("data-guide-step", "install-agitator");
   await expect(page.getByTestId("open-equipment-build-furnace-socket_a")).toBeVisible();
@@ -97,8 +97,8 @@ test("new game overwrites an occupied slot with a complete tutorial reset", asyn
   await page.getByTestId("overwrite-slot-1").click();
   await expect(page.getByTestId("confirmation-overwrite-slot-1")).toBeVisible();
   await page.getByTestId("confirm-overwrite-slot-1").click();
+  await page.getByTestId("act-continue").click();
   await page.getByTestId("enter-control-room").click();
-  await page.getByTestId("enter-stage-controls").click();
 
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
@@ -118,7 +118,6 @@ test("save slots remain isolated when starting and loading different campaigns",
 
   await startNewGame(page, 2);
   await page.getByTestId("enter-control-room").click();
-  await page.getByTestId("enter-stage-controls").click();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
     "install-agitator"
@@ -142,7 +141,7 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(page.getByTestId("phase-banner")).toContainText("Planning");
   await expect(page.getByTestId("save-slots-button")).toContainText("Save slots");
   await expect(page.getByTestId("begin-prime")).toBeDisabled();
-  await page.getByRole("button", { name: "Round brief" }).click();
+  await page.getByRole("button", { name: "Wave forecast" }).click();
   await expect(page.getByRole("dialog", { name: "First spark" })).toContainText("First spark");
   await page.getByRole("button", { name: "Back to the map" }).click();
 
@@ -183,15 +182,20 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(flashExplanation).toContainText("The pressure impulse is the kill mechanism");
   await expect(page.getByTestId("tutorial-task-card")).toContainText("3 / 4");
   await expect(page.locator(".paused-overlay")).toContainText("Simulation paused");
-  await expect(page.getByTestId("recent-incidents-furnace")).toContainText("0 hit · 0 killed");
+  await expect(page.getByTestId("recent-incidents-furnace")).toContainText("0 affected · 0 killed");
   await expect(coach).toHaveAttribute("data-guide-step", "start-assault");
   await flashExplanation.getByRole("button", { name: "Start first assault" }).click();
   await expect(page.locator(".paused-overlay")).toBeHidden();
   await expect(page.getByTestId("phase-banner")).toContainText("Autonomous assault");
   await expect(coach).toHaveAttribute("data-guide-step", "observe-combat-flash");
 
-  await expect(page.getByTestId("recent-incidents-furnace")).toContainText("1 hit · 1 killed");
-  await expect(page.getByTestId("recent-incidents-furnace")).toContainText("pressure");
+  await expect(page.getByTestId("recent-incidents-furnace")).toContainText(
+    "1 affected · 1 killed",
+    {
+      timeout: 30_000,
+    }
+  );
+  await expect(page.getByTestId("recent-incidents-furnace")).toContainText("PRESSURE");
   await expect(page.locator(".paused-overlay")).toBeHidden();
   await expect(coach).toBeHidden();
   await expect(page.getByTestId("tutorial-task-card")).toBeVisible();
@@ -347,13 +351,13 @@ test("disabling the tutorial starts directly in lesson two", async ({ page }) =>
   const checkbox = page.getByTestId("tutorial-enabled");
   await expect(checkbox).toBeChecked();
   await checkbox.uncheck();
-  await expect(page.getByTestId("enter-control-room")).toContainText("Begin lesson 2");
+  await expect(page.getByTestId("enter-control-room")).toContainText("Skip to Make the Reagent");
 
   await page.getByTestId("enter-control-room").click();
 
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
   await expect(page.getByTestId("phase-banner")).toContainText("Planning");
-  await page.getByRole("button", { name: "Round brief" }).click();
+  await page.getByRole("button", { name: "Wave forecast" }).click();
   await expect(page.getByRole("dialog", { name: "Co-products" })).toContainText("Co-products");
   await page.getByRole("button", { name: "Back to the map" }).click();
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");

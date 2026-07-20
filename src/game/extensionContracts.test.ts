@@ -59,6 +59,31 @@ describe("definition extension contracts", () => {
     expect(hazardous.atmosphere + hazardous.corrosion).toBeGreaterThan(0);
     expect(inert.atmosphere + inert.corrosion).toBe(0);
   });
+
+  it("saturates species damage at its authored effective-excess bound", () => {
+    const moderate = createScenarioGame("flash_point");
+    roomState(moderate, "furnace").gas.lower.chlorine = 20;
+    const concentrated = createScenarioGame("flash_point");
+    roomState(concentrated, "furnace").gas.lower.chlorine = 60;
+
+    const moderateHazard = roomHazards(
+      roomState(moderate, "furnace"),
+      true,
+      true,
+      "lower",
+      DEFAULT_GAME_DEFINITION
+    );
+    const concentratedHazard = roomHazards(
+      roomState(concentrated, "furnace"),
+      true,
+      true,
+      "lower",
+      DEFAULT_GAME_DEFINITION
+    );
+
+    expect(concentratedHazard.atmosphere).toBeCloseTo(moderateHazard.atmosphere, 8);
+    expect(concentratedHazard.corrosion).toBeCloseTo(moderateHazard.corrosion, 8);
+  });
 });
 
 describe("powered equipment extension contracts", () => {

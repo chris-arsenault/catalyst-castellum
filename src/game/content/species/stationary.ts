@@ -71,6 +71,7 @@ export const STATIONARY_DEFINITIONS = {
         basis: "stationary_inventory",
         direction: "above",
         threshold: 0,
+        maximumExcess: null,
         rate: 0.02453,
         channel: "radiation",
         exposure: "all",

@@ -7,6 +7,7 @@ import type {
   GameCommand,
   GameState,
   GridCell,
+  LevelId,
   RoomId,
 } from "../game/types";
 import type { SaveSlotCatalog, SaveSlotId } from "./saveSlots";
@@ -20,6 +21,7 @@ export interface ApplicationLifecycleSlice {
   initialize: () => void;
   selectSaveSlot: (slotId: SaveSlotId) => void;
   startNewGame: (slotId: SaveSlotId) => void;
+  startNewGameAtLevel: (slotId: SaveSlotId, levelId: LevelId) => void;
   deleteSaveSlot: (slotId: SaveSlotId) => void;
   returnToMainMenu: () => void;
   reset: () => void;
@@ -74,9 +76,16 @@ export interface GraftPreview {
   options: GraftPreviewOption[];
 }
 
+export type DefensivePostureRoomTone = "gain" | "loss" | "mixed" | "support";
+
+/** Temporary map feedback for the defensive effect of the conduit action under inspection. */
+export interface DefensivePosturePreview {
+  connectionId: ConnectionId;
+  rooms: Partial<Record<RoomId, DefensivePostureRoomTone>>;
+}
+
 export interface UiSlice {
   selectedRoomId: RoomId;
-  acknowledgedStageIntroIds: string[];
   showHelp: boolean;
   manualSection: ManualSection;
   equipmentBuildTarget: EquipmentBuildTarget | null;
@@ -87,12 +96,13 @@ export interface UiSlice {
   pipePreview: PipePreview | null;
   graftMode: boolean;
   graftPreview: GraftPreview | null;
-  acknowledgeStageIntro: (guideId: string) => void;
+  defensivePosturePreview: DefensivePosturePreview | null;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
   setPipePreview: (preview: PipePreview | null) => void;
   setGraftMode: (graftMode: boolean) => void;
   setGraftPreview: (preview: GraftPreview | null) => void;
+  setDefensivePosturePreview: (preview: DefensivePosturePreview | null) => void;
   showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;

@@ -26,7 +26,6 @@ describe("Make the Reagent guidance", () => {
     if (!guide) throw new Error("Make the Reagent guide missing");
 
     expect(guide.id).toContain("co_products");
-    expect(guide.showStageIntro).toBe(true);
     expect(guide.firstFlashTeachingBreak).toBe(false);
     expect(guide.story.model?.stages.map((stage) => stage.kind)).toEqual([
       "feed",
@@ -75,7 +74,6 @@ describe("Make the Reagent guidance", () => {
     if (!guide) throw new Error("Shared Relief guide missing");
 
     expect(guide.id).toContain("shared_relief");
-    expect(guide.showStageIntro).toBe(false);
     expect(guide.firstFlashTeachingBreak).toBe(false);
     expect(guide.steps[0]?.target).toBe(TUTORIAL_ANCHORS.conduitCoreCellGas);
     expect(guide.mission.tasks.map((task) => task.id)).toEqual([

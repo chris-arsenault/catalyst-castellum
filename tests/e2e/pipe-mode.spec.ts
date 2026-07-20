@@ -69,7 +69,7 @@ test("the first lesson exposes its route and complete equipment catalog", async 
   await page.getByTestId("pipe-mode-toggle").click();
   const board = page.getByTestId("pipe-board");
   await expect(board.getByText("Core–R-02 gas duct", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toContainText("OPEN");
+  await expect(page.getByTestId("conduit-panel-gas:core__furnace")).toContainText("CLOSED");
   await expect(page.locator('[data-testid^="conduit-panel-"]')).toHaveCount(1);
   await expect(page.locator('[data-testid^="conduit-control-"]')).toHaveCount(1);
   await expect(page.getByTestId("pipe-run-gas:core__gallery")).toHaveCount(0);

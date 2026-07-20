@@ -10,6 +10,7 @@ import { FacilityManual } from "./manual/FacilityManual";
 import { NoticeToast } from "./Modals";
 import { PhaseBanner } from "./PhaseBanner";
 import { EquipmentSocket } from "./processControls/EquipmentControls";
+import { TransportRunPanel } from "./processControls/TransportControls";
 
 const buildState = () =>
   DEFAULT_GAME_RUNTIME.execute(DEFAULT_GAME_RUNTIME.createScenario("flash_point"), {
@@ -28,6 +29,7 @@ const publish = (game = buildState(), dismissedGuideIds: string[] = []): void =>
       showHelp: false,
       manualSection: "operations",
       equipmentBuildTarget: null,
+      defensivePosturePreview: null,
     });
   });
 };
@@ -134,5 +136,58 @@ describe("build-phase wave forecast", () => {
     const details = screen.getByTestId("wave-forecast-details");
     expect(within(details).getByText("Composition")).toBeTruthy();
     expect(within(details).getByText(/steady oxygen-breathing wreck-feeder/)).toBeTruthy();
+  });
+});
+
+describe("defensive posture feedback", () => {
+  const flashDefense = (enabled: boolean) => {
+    let game = buildState();
+    game = DEFAULT_GAME_RUNTIME.execute(game, {
+      type: "install_equipment",
+      roomId: "furnace",
+      socketId: "socket_a",
+      equipmentId: "gas_agitator",
+    }).state;
+    return DEFAULT_GAME_RUNTIME.execute(game, {
+      type: "set_conduit",
+      connectionId: "gas:core__furnace",
+      enabled,
+    }).state;
+  };
+
+  it("shows present and held-operation damage during Prime", () => {
+    const priming = DEFAULT_GAME_RUNTIME.execute(flashDefense(true), {
+      type: "start_prime",
+    }).state;
+    publish(priming);
+    render(<PhaseBanner />);
+
+    const posture = screen.getByTestId("defensive-posture-strip");
+    expect(within(posture).getByText("Defensive posture")).toBeTruthy();
+    expect(within(posture).getByText("Exposure rising")).toBeTruthy();
+    expect(
+      within(posture).getByText(/Held operation reaches .* damage per pass \/ 85 health/)
+    ).toBeTruthy();
+  });
+
+  it("puts defense before telemetry and marks the affected room on inspection", () => {
+    publish(flashDefense(false));
+    render(<TransportRunPanel runId="gas:core__furnace" />);
+
+    const effect = screen.getByTestId("conduit-defensive-effect-gas:core__furnace");
+    expect(within(effect).getByText("Route defense rises")).toBeTruthy();
+    expect(screen.getByText("Process telemetry").closest("details")?.open).toBe(false);
+
+    const actuator = screen
+      .getByTestId("conduit-control-gas:core__furnace")
+      .closest(".actuator-row");
+    if (!actuator) throw new Error("Conduit actuator row missing.");
+    fireEvent.pointerEnter(actuator);
+    expect(useGameStore.getState().defensivePosturePreview).toEqual({
+      connectionId: "gas:core__furnace",
+      rooms: { furnace: "gain" },
+    });
+    fireEvent.pointerLeave(actuator);
+    expect(useGameStore.getState().defensivePosturePreview).toBeNull();
   });
 });

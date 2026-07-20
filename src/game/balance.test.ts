@@ -3,7 +3,7 @@ import { LEVEL_DEFINITIONS } from "./config";
 import { runPlan } from "./playtest/runner";
 import { primaryReferencePlan } from "./playtest/policies";
 import type { PlaytestPlan } from "./playtest/types";
-import { primaryReferenceBuildFor } from "./content/playtestPortfolios";
+import { failureControlBuildsFor, primaryReferenceBuildFor } from "./content/playtestPortfolios";
 
 const primaryCommands = (levelId: keyof typeof LEVEL_DEFINITIONS) =>
   primaryReferenceBuildFor(levelId).rounds.flatMap((round) => round.commands);
@@ -95,5 +95,22 @@ describe("flash point reinforcement contract", () => {
     expect(reference.terminalPhase).toBe("level_complete");
     expect(reference.coreIntegrity).toBe(100);
     expect(reference.killsBySource.hydrogen_oxygen_combustion).toBeGreaterThan(0);
+  }, 60_000);
+});
+
+describe("acid-line reinforcement contract", () => {
+  it("defeats the membrane-only chlorine chamber when Hot Mix begins", () => {
+    const membraneOnly = failureControlBuildsFor("make_the_reagent")[0]!;
+    const result = runPlan("make_the_reagent", membraneOnly);
+    expect(result.terminalPhase).toBe("defeat");
+    expect(result.roundsCleared).toBe(3);
+    expect(result.damageBySource.hydrogen_chloride_gas).toBe(0);
+  }, 60_000);
+
+  it("clears the reinforced waves with measurable downstream HCl exposure", () => {
+    const result = runPlan("make_the_reagent", primaryReferencePlan("make_the_reagent"));
+    expect(result.terminalPhase).toBe("level_complete");
+    expect(result.coreIntegrity).toBe(100);
+    expect(result.damageBySource.hydrogen_chloride_gas).toBeGreaterThan(0);
   }, 60_000);
 });

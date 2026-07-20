@@ -81,7 +81,6 @@ describe("acid-line round guidance", () => {
     if (!guide) throw new Error("Hot Mix guide missing");
 
     expect(guide.id).toContain("hot_mix");
-    expect(guide.showStageIntro).toBe(true);
     expect(guide.firstFlashTeachingBreak).toBe(false);
     expect(
       guide.story.model?.stages.map((stage) => tutorialText(DEFAULT_TRANSLATOR, stage.metric))
@@ -122,7 +121,6 @@ describe("acid-line round guidance", () => {
     if (!guide) throw new Error("Residence Time guide missing");
 
     expect(guide.id).toContain("residence_time");
-    expect(guide.showStageIntro).toBe(false);
     expect(guide.gatesPhaseActions).toBe(false);
     expect(guide.firstFlashTeachingBreak).toBe(false);
     expect(guide.mission.tasks.map((task) => task.id)).toEqual([

@@ -65,7 +65,6 @@ export interface GuideDefinition {
   dismissalId: string;
   firstFlashTeachingBreak: boolean;
   label: TutorialCopyKey;
-  showStageIntro: boolean;
   gatesPhaseActions: boolean;
   story: GuideStoryDefinition;
   mission: {
@@ -82,6 +81,25 @@ export const guideDefinitionFor = (
 ): GuideDefinition | null => {
   const registration = registrations[game.campaign.levelId];
   return registration?.guideFor(game) ?? null;
+};
+
+/**
+ * The guide the next round activates. The round report renders its intro so
+ * the story lands on the surface the player already reads between rounds.
+ */
+export const upcomingGuideDefinitionFor = (
+  game: GameState,
+  registrations: GuideRegistry = GUIDE_REGISTRATIONS
+): GuideDefinition | null => {
+  if (game.phase !== "round_result") return null;
+  const peek: GameState = {
+    ...game,
+    phase: "build",
+    campaign: { ...game.campaign, roundIndex: game.campaign.roundIndex + 1 },
+  };
+  const guide = guideDefinitionFor(peek, registrations);
+  if (!guide) return null;
+  return guide.id === guideDefinitionFor(game, registrations)?.id ? null : guide;
 };
 
 export interface GuideRegistration {

@@ -31,7 +31,7 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   await page.getByTestId("intermission-graft").click();
   await expect(page.getByTestId("graft-board")).toBeVisible();
   await expect(page.getByTestId("game-map")).toHaveCount(0);
-  await page.getByTestId("graft-hardpoint-starboard").click();
+  await page.getByTestId("graft-hardpoint-forward").click();
   await expect(page.getByTestId("graft-preview")).toBeVisible();
 
   const graftPod = page.getByTestId("graft-preview-build-utility_pod");
@@ -39,7 +39,9 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   await graftPod.click();
 
   await expect(page.getByTestId("graft-preview")).toHaveCount(0);
-  await expect(page.getByTestId("graft-slot-starboard")).toContainText("POD-1");
-  await page.getByTestId("graft-dismantle-starboard").click();
-  await expect(page.getByTestId("graft-hardpoint-starboard")).toBeVisible();
+  const dismantle = page.locator('[data-testid^="graft-dismantle-"]');
+  await expect(dismantle).toContainText("POD");
+  await dismantle.click();
+  await expect(page.locator('[data-testid^="graft-dismantle-"]')).toHaveCount(0);
+  await expect(page.getByTestId("graft-hardpoint-forward")).toBeVisible();
 });

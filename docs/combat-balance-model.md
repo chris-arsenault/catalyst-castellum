@@ -194,6 +194,11 @@ occupied gas layer before reactions, so stratification, headroom, ignition thres
 time bound its realized output. Its six-unit reservoir supplies exactly one ignition-threshold OX-1
 charge at `2 H2 : 1 O2` and discharges over ten ideal seconds.
 
+Species hazards may author a maximum effective excess above their threshold. The runtime and static
+workbook apply the same bound before multiplying by the hazard slope. Chlorine saturates at the
+`0.008` partial-ratio excess used by its controlled exposure, so richer atmospheres preserve maximum
+DPS rather than producing unbounded overkill.
+
 ## Second-order transient solve
 
 The static answer is only the initial point. Exact source attribution lets the transient pass run
@@ -209,8 +214,8 @@ same trajectory, with:
 It records one row per build and authored round. Each row therefore includes its real prime
 duration, wave timing, equipment availability, reaction history, feed depletion, conduit inventory,
 room state, proc cadence, path residence, slowdown, susceptibility, and Anchor absorption. One
-probe now produces the complete source vector, eliminating the previous seven-times replay cost and
-removing cross-run chemistry drift from the sensitivity matrix.
+probe produces the complete source vector and keeps every sensitivity column on one chemistry
+trajectory.
 
 Campaign targets are minimum coverage inequalities, not equalities. Flash Point retains a strict
 100-Core contract. Every other site reserves a 45-Core safety floor, divides the available Core-loss
@@ -232,10 +237,10 @@ subject to family-specific lower_j <= x_j <= upper_j
 ```
 
 Projected gradient descent solves this convex hinge-loss system with a ridge prior at the
-first-order role. OX-1 remains at its first-order pulse role because its one-room negative tutorial
-control is an exact upper guardrail. Asphyxiation, thermal damage, and catastrophic pressure are measured columns with absolute
-design guardrails: 72.5 oxygen-deficiency and 30 carbon-dioxide DPS slopes, 7.3 steam and 0.014
-environmental heat slopes, and a 36 static-pressure slope. Each guardrail averages its
+first-order role. OX-1 remains at its first-order pulse role because its one-room tutorial failure
+control is an exact upper guardrail. Asphyxiation, thermal damage, and catastrophic pressure are
+measured columns with absolute design guardrails: 72.5 oxygen-deficiency and 30 carbon-dioxide DPS
+slopes, 7.3 steam and 0.014 environmental heat slopes, and a 36 static-pressure slope. Each guardrail averages its
 `absolute target / current coefficient` ratios, making an applied workbook converge to a relative
 scale of one on its next run. Chemical columns absorb the required coverage, so the chemical exam
 cannot be solved primarily by unrelated environmental damage. HF, fluorine, and uranium also
@@ -249,6 +254,11 @@ lethal clipping. The report includes Matter spent, damage per Matter, dominant f
 share for each build. This live verification is authoritative for pass/fail; the matrices explain
 the result and propose coefficients, while exact replay catches proc thresholds, resource feedback,
 and discrete breaches.
+
+Campaign health also replays authored failure controls. These partial builds represent an earlier
+tutorial stage that must lose once reinforcement begins. They add upper progression constraints the
+minimum-coverage solve cannot express: one Flash Point chamber loses to the corridor waves, and the
+Membrane Cell alone loses when Make the Reagent begins its acid-line waves.
 
 ## Applied baseline
 
@@ -265,7 +275,7 @@ The July 2026 solve establishes these authored roles:
 | Anchor      | 75  | 0.100 | 27.73 s   | 41.60 s       | 45.43 s        | 72.67 s       |
 | Glowbag     | 75  | 0.140 | 19.73 s   | 29.59 s       | 19.73 s        | 31.57 s       |
 
-After applying the enemy-level curve, the controlled-exposure solve returns approximately `1.000`
+With the enemy-level curve applied, the controlled-exposure solve returns approximately `1.000`
 for the direct families: OX-1, chlorine, carbon monoxide, HF, fluorine, and uranium chemistry. Four
 families carry explicit campaign-delivery premiums because their real process chains lose time to
 reaction, transport, phase contact, and feed contention:
@@ -290,7 +300,7 @@ Act III exact replay leaves the Core at 54–100% for Station 14, 54–100% for 
 Lane Six, and 50–100% for Pell Cordon. Every site clears all five physical strategy archetypes while
 its idle policy loses.
 
-Pell Cut and Act III now place HF in a physical G-2 specialist reservoir hosted by an isolated
+Pell Cut and Act III place HF in a physical G-2 specialist reservoir hosted by an isolated
 service room. The common Core G-1 header carries the ordinary H2/O2/N2/CO feed. The fluorine and
 uranium reference builds route G-2 from the Reservoir through a Gallery Fluorine Cell; established
 defenses remain connected to G-1.

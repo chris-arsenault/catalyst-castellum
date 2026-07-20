@@ -1,6 +1,7 @@
 # Catalyst Castellum narrative bible
 
-Status: working game canon for the _Catalyst Castellum_ campaign. This document distinguishes established Glass Frontier material from game-originated additions so the campaign can contribute cleanly to the larger setting.
+This document defines game canon for the _Catalyst Castellum_ campaign and distinguishes established
+Glass Frontier material from game-originated additions.
 
 ## One-sentence premise
 

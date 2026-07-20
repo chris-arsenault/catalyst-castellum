@@ -1,7 +1,7 @@
 import { Application, extend } from "@pixi/react";
 import { AnimatedSprite, Container, Graphics, Sprite, Text } from "pixi.js";
 import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
-import type { PipePreview } from "../../application/storeTypes";
+import type { DefensivePosturePreview, PipePreview } from "../../application/storeTypes";
 import { GhostRouteLayer } from "./MapLayers";
 import { EnemyNode } from "./EnemyNode";
 import { DamageNumberLayer } from "./DamageNumberLayer";
@@ -47,6 +47,7 @@ export interface MapSceneProps {
   pipePreview: PipePreview | null;
   selectedRoomId: RoomId;
   selectedSpecies: SpeciesId | null;
+  defensivePosturePreview: DefensivePosturePreview | null;
 }
 
 const enemyHasFieldProtection = (game: GameState, enemy: GameState["enemies"][number]): boolean => {
@@ -96,6 +97,7 @@ export const MapScene = ({
   pipePreview,
   selectedRoomId,
   selectedSpecies,
+  defensivePosturePreview,
 }: MapSceneProps) => (
   <Application
     width={VIEWPORT_WIDTH}
@@ -124,6 +126,7 @@ export const MapScene = ({
             onPipeDragStart={onPipeDragStart}
             onPipeDragEnd={onPipeDragEnd}
             pipeMode={pipeMode}
+            postureTone={defensivePosturePreview?.rooms[roomId] ?? null}
           />
         ))}
       </pixiContainer>

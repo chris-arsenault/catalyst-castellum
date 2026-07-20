@@ -195,11 +195,46 @@ export const LEVEL_PLAYTEST_PORTFOLIOS: Record<LevelId, LevelPlaytestPortfolio> 
   },
 };
 
+/** Authored partial builds that must lose once a later lesson or defense stage begins. */
+export const LEVEL_FAILURE_CONTROL_BUILDS: Record<LevelId, readonly ReferenceBuildDefinition[]> = {
+  flash_point: [
+    {
+      id: "single_flash_chamber",
+      archetype: "burst",
+      rounds: [round(FLASH_CORRIDOR_COMMANDS.slice(0, 2))],
+    },
+  ],
+  make_the_reagent: [
+    {
+      id: "membrane_only",
+      archetype: "continuous",
+      rounds: [round(ACID_LINE_COMMANDS.slice(0, 3))],
+    },
+  ],
+  stored_chlorine: [],
+  morrow_pocket: [],
+  kettleblack: [],
+  cordon_41: [],
+  junction_l6: [],
+  pell_cut: [],
+  station_14: [],
+  vasker_store: [],
+  lane_six: [],
+  pell_cordon: [],
+};
+
 export const playtestPortfolioFor = (levelId: LevelId): LevelPlaytestPortfolio =>
   LEVEL_PLAYTEST_PORTFOLIOS[levelId];
 
 export const referenceBuildsFor = (levelId: LevelId): PlaytestPlan[] =>
   LEVEL_PLAYTEST_PORTFOLIOS[levelId].referenceBuilds.map((build) => ({
+    name: build.id,
+    archetype: build.archetype,
+    rounds: build.rounds,
+  }));
+
+export const failureControlBuildsFor = (levelId: LevelId): PlaytestPlan[] =>
+  LEVEL_FAILURE_CONTROL_BUILDS[levelId].map((build) => ({
     name: build.id,
     archetype: build.archetype,
     rounds: build.rounds,

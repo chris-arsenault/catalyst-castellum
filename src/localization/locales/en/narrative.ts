@@ -279,7 +279,6 @@ export const NARRATIVE_MESSAGES = {
   "narrative.ui.debrief.channel": "After-action call",
   "narrative.ui.dialogue.progress": "{current} of {total}",
   "narrative.ui.dialogue.continue": "Next",
-  "narrative.ui.dialogue.openBriefing": "Open mission briefing",
   "narrative.ui.route.title": "Deep-Shear contract route",
   "narrative.ui.route.current": "Current site",
   "narrative.ui.route.secured": "Secured",

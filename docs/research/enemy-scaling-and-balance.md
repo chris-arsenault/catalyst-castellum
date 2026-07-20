@@ -136,7 +136,7 @@ Speed does not scale with level because it already changes effective durability 
 residence. Susceptibility does not scale because it defines the counter matrix. Both remain explicit
 archetype or encounter controls.
 
-The initial site baselines are:
+The campaign site baselines are:
 
 | Site             | Level | Health relative to level 20 |
 | ---------------- | ----: | --------------------------: |
@@ -155,8 +155,8 @@ The initial site baselines are:
 
 ## Validation result
 
-After the level curve was introduced, the second-order sensitivity solve measured the gap between a
-controlled room exposure and a physical campaign process. Direct families converge at approximately
+The second-order sensitivity solve measures the gap between a controlled room exposure and a
+physical campaign process. Direct families converge at approximately
 `1.000`. HCl, liquid corrosion, reactive nitrogen, and nickel carbonyl require campaign-delivery
 premiums of `5.632`, `3.067`, `4.082`, and `2.556`; their applied first-order normalizers are `0.178`,
 `0.323`, `0.243`, and `0.381`. Multiplying each pair returns combined relative roles of `1.005`,
@@ -182,7 +182,7 @@ general defenses, hybrids, and site-specialist chemistry inside one viable envel
 
 Act III's mechanical acceptance also clears five physical portfolios per site while idle defense
 loses. The balance audit found that the common HF-bearing gas header caused otherwise distinct gas
-networks to converge on the same dominant damage channel. Pell Cut and Act III now host HF in a
+networks to converge on the same dominant damage channel. Pell Cut and Act III host HF in a
 dedicated Reservoir-side G-2 supply, and specialist portfolios route it to their Gallery Fluorine
 Cell. Ordinary G-1 defenses retain their distinct OX-1, carbon, nitrogen, chlorine, HCl, liquid, and
 hybrid damage signatures. Exact replay measures Pell Cut at roughly 3,636 fluorine damage with 61
@@ -190,9 +190,9 @@ incidental HF damage, while Station 14 produces roughly 3,625 fluorine and 1,839
 zero HF exposure. Core integrity spans 54–100% at Station 14, 54–100% at Vasker Store, 100% at Lane
 Six, and 50–100% at Pell Cordon.
 
-## Follow-on question
+## Cohort capacity
 
-Level solves per-enemy exposure but intentionally does not make a larger co-located cohort require
-more room DPS. Enemy-variety mechanics can address that remaining property through shared finite
-buffers, finite reagent reservoirs, phase changes, and group-support effects. Those options are
-researched in [`enemy-variety.md`](./enemy-variety.md).
+Level solves per-enemy exposure while the Anchor's shared finite field makes a larger co-located
+cohort consume protection capacity faster. The Glowbag's finite reagent, the Splitback's phase
+transition, and locomotion-specific residence add separate transient budgets. Their research basis
+and implementation are documented in [`enemy-variety.md`](./enemy-variety.md).

@@ -64,6 +64,13 @@ const actTwoEstablished = (build: ReferenceBuildDefinition): ReferenceBuildDefin
   return build;
 };
 
+const cordonEstablished = (build: ReferenceBuildDefinition): ReferenceBuildDefinition => {
+  const deployed = actTwoEstablished(build);
+  return deployed.archetype === "control"
+    ? addCommands(deployed, 2, [...line("gas_line", "lower_intake", "furnace")])
+    : deployed;
+};
+
 const frontload = (build: ReferenceBuildDefinition): ReferenceBuildDefinition => ({
   ...build,
   rounds: [
@@ -274,7 +281,7 @@ export const ACT_TWO_REFERENCE_BUILDS = {
     frontload(carbonCarrier),
   ],
   cordon_41: [
-    ...establishedOpenBuilds.map(actTwoEstablished).map(frontload),
+    ...establishedOpenBuilds.map(cordonEstablished).map(frontload),
     frontload(nitrogenTrain),
   ],
   junction_l6: [

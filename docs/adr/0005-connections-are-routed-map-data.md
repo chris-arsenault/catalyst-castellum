@@ -1,7 +1,7 @@
 # ADR-0005: Connections are routed map data between arbitrary rooms
 
 Date: 2026-07-15
-Status: accepted
+Status: superseded by ADR-0006
 
 ## Context
 

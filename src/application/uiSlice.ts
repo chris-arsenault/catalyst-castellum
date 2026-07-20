@@ -1,6 +1,13 @@
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import type { GameStoreDependencies, StoreGet, StoreSet, UiSlice } from "./storeTypes";
 
+const graftModeUi = (graftMode: boolean) => ({
+  graftMode,
+  graftPreview: null,
+  pipeMode: false,
+  defensivePosturePreview: null,
+});
+
 export const createUiActions = (
   set: StoreSet,
   get: StoreGet,
@@ -15,19 +22,21 @@ export const createUiActions = (
   | "closeManual"
   | "dismissTutorialGuide"
   | "restartTutorialGuide"
-  | "acknowledgeStageIntro"
   | "clearNotice"
   | "setPipeMode"
   | "setPipePreview"
   | "setGraftMode"
   | "setGraftPreview"
+  | "setDefensivePosturePreview"
   | "showNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
-  setPipeMode: (pipeMode) => set({ pipeMode, pipePreview: null, graftMode: false }),
+  setPipeMode: (pipeMode) =>
+    set({ pipeMode, pipePreview: null, graftMode: false, defensivePosturePreview: null }),
   setPipePreview: (pipePreview) => set({ pipePreview }),
-  setGraftMode: (graftMode) => set({ graftMode, graftPreview: null, pipeMode: false }),
+  setGraftMode: (graftMode) => set(graftModeUi(graftMode)),
   setGraftPreview: (graftPreview) => set({ graftPreview }),
+  setDefensivePosturePreview: (defensivePosturePreview) => set({ defensivePosturePreview }),
   showNotice: (notice) => set({ notice }),
   setShowHelp: (showHelp) =>
     set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),
@@ -64,9 +73,5 @@ export const createUiActions = (
       notice: null,
     });
   },
-  acknowledgeStageIntro: (guideId) =>
-    set((state) => ({
-      acknowledgedStageIntroIds: [...new Set([...state.acknowledgedStageIntroIds, guideId])],
-    })),
   clearNotice: () => set({ notice: null }),
 });

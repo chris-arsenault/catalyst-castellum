@@ -1,6 +1,7 @@
 # Campaign site map and script index
 
-The campaign follows one twelve-site route across three acts. The first four sites bind to the current playable chemistry campaign. Sites five through twelve are fully authored narrative checkpoints with enemy levels, briefings, dialogue, and coordinates; they remain available for future mechanical scenario definitions.
+The campaign follows one playable twelve-site route across three acts. Every site binds narrative,
+enemy level, five authored waves, physical supplies, map geometry, and reference defense portfolios.
 
 ```mermaid
 flowchart LR
@@ -35,12 +36,14 @@ flowchart LR
 |   6 | Cordon 41      | DC-C41  | Outer Pell Approach   |          25 | `cordon_41`        | Reveal Vela Norr and recover a sensor wall that occupies both sides of its cordon.                      |
 |   7 | Junction L-6   | CM-L06  | Pell Freight Lattice  |          26 | `junction_l6`      | Reveal Daro Venn, qualify industrial feed rates, and schedule the synchronized scale test.              |
 |   8 | Pell Cut       | CM-PC9  | Pell Freight Lattice  |          27 | `pell_cut`         | Run Coremark’s parallel arrays; trigger the Pell emergence and the first voice-like distress signal.    |
-|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          28 | —                  | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
-|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          29 | —                  | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
-|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          30 | —                  | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
-|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          31 | —                  | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
+|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          28 | `station_14`       | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
+|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          29 | `vasker_store`     | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
+|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          30 | `lane_six`         | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
+|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          31 | `pell_cordon`      | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
 
-Enemy level belongs to the site rather than the enemy type. A future level definition adopts its site’s authored baseline, then each spawn receives that level unless a wave intentionally applies an offset. This lets the same creature remain recognizable across the route while health and other level-derived attributes follow the campaign curve.
+Enemy level belongs to the site rather than the enemy type. Each spawn receives the site's baseline
+unless its wave applies an authored offset. The same creature remains recognizable across the route
+while health and other level-derived attributes follow the campaign curve.
 
 ## Act pacing
 
@@ -88,15 +91,13 @@ The canonical English script is [`src/localization/locales/en/narrative.ts`](../
 - Act names may appear once the active site belongs to that act.
 - Map geometry is normalized from 0–100 and carries no simulation coordinates.
 
-## Mechanical implementation order
+## Encounter functions
 
-When sites five through twelve receive playable scenarios, bind them in route order and preserve these encounter functions:
-
-1. Kettleblack teaches protection fields and spatially separated support relationships.
-2. Cordon 41 tests buffer enemies and ladder-specialist pressure around constrained rooms.
+1. Kettleblack teaches stationary inventory, reversible reactions, and catalyst behavior.
+2. Cordon 41 tests protection fields and ladder-specialist pressure around constrained rooms.
 3. Junction L-6 tests reagent-emitting enemies and mixed feed-rate pressure.
 4. Pell Cut is the Act II boss escalation and introduces synchronized support groups.
-5. Station 14 foregrounds flyers above liquid and room-overlap fiction.
-6. Vasker Store uses stage-changing armored enemies in long residence-time rooms.
-7. Lane Six combines all support behaviors under high enemy levels.
-8. Pell Cordon gives the Near Voice multiple resonance stages and makes cadence disruption, rather than structure damage, the final objective.
+5. Station 14 foregrounds flyers above liquid and uranium recovery.
+6. Vasker Store alternates fast, heavy, upper-layer, and supported control of one irregular route.
+7. Lane Six combines the support vocabulary under compressed convoy cadence.
+8. Pell Cordon uses changing Near Voice formations and makes cadence disruption the final defense.

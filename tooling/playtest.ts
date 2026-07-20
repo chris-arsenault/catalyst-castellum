@@ -53,6 +53,9 @@ const printEvaluation = (evaluation: LevelEvaluation): void => {
       resultLine(`${reference.archetype ?? "untyped"}: ${reference.planName}`, reference)
     );
   }
+  for (const control of evaluation.failureControls) {
+    console.log(resultLine(`must lose: ${control.planName}`, control));
+  }
   const diversity = evaluation.diversity;
   console.log(
     `diversity                ${diversity.satisfied ? "PASS" : "FAIL"} · ${diversity.passingBuilds}/${diversity.minimumPassingBuilds} builds · ${diversity.passingArchetypes.length}/${diversity.minimumPassingArchetypes} archetypes · ${diversity.distinctPassingSignatures}/${diversity.minimumDistinctSignatures} signatures`
@@ -88,6 +91,10 @@ const evaluationFailure = (evaluation: LevelEvaluation): string | null => {
   );
   if (!evaluation.diversity.satisfied) reasons.push(...evaluation.diversity.issues);
   if (evaluation.doNothing.success) reasons.push("do-nothing policy unexpectedly passed");
+  for (const control of evaluation.failureControls) {
+    if (control.success) reasons.push(`${control.planName} failure control unexpectedly passed`);
+    if (!control.stable) reasons.push(`${control.planName} failure control was unstable`);
+  }
   return reasons.length > 0 ? `${evaluation.levelId}: ${reasons.join(", ")}` : null;
 };
 

@@ -1,8 +1,7 @@
 # Tutorial campaign and headless evaluation
 
-This document records the campaign contract introduced after the original pre-tuned chlor-alkali
-factory proved too complex to teach from. It is an implementation boundary, not transient planning
-context.
+This document defines the campaign's teaching curve, phase lifecycle, authored scenario boundary,
+and headless evaluation contract.
 
 ## Learning contract
 
@@ -89,8 +88,11 @@ structured incidents. The pre-release decoder accepts the current format only.
 
 ## Scenario boundary
 
-`src/game/content/campaign.ts` is authored data: briefings, objectives, prime limits, waves, starting
-matter, facility loadouts, availability snapshots, and reference actions.
+`src/game/content/levels/` owns mechanical level modules: prime limits, waves, starting Matter,
+facility loadouts, supplies, availability snapshots, and optional generated-site specifications.
+`src/game/content/campaign.ts` registers those modules in explicit order. Localized briefings and
+objectives live in `src/localization/locales/en/levels.ts`; reference actions live separately in
+`src/game/content/playtestPortfolios.ts` and its focused modules.
 
 `src/game/engine/scenarioState.ts` is the materializer. It creates geometry-scaled rooms, finite
 sources and buffers, local junctions, empty or explicitly precharged whole-mixture conduits,
@@ -98,7 +100,7 @@ equipment instances, and campaign state. Conduit precharge is ordinary conserved
 instant transport or an infinite source. Neither file imports React, Pixi, Zustand, or browser APIs.
 
 The UI and evaluator both act only through `executeCommand` and advance time only through `stepGame`.
-This keeps browser presentation, automated policies, and future alternative clients on one ruleset.
+Browser presentation and headless automation therefore exercise one ruleset.
 
 ## Standalone playtester
 
@@ -123,6 +125,6 @@ search should explore valid equipment, topology, and feed combinations beyond th
 [`campaign-defense-design.md`](./campaign-defense-design.md) for the campaign-wide diversity
 contract.
 
-The command is intentionally absent from `make ci`, `pnpm check`, and Vitest discovery. Unit tests
-cover campaign invariants and deterministic phase transitions; the potentially multi-minute policy
-search is a separate balancing function invoked by a designer or an explicit automation job.
+`pnpm campaign:health` runs one bounded deterministic assertion in `make ci`: every idle policy
+loses and every required portfolio/diversity contract passes. Exploratory `pnpm playtest` mutation
+search remains outside the normal CI gate because its run count is designer-controlled.
