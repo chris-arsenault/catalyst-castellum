@@ -117,6 +117,7 @@ describe("guide registration extension", () => {
       dismissalId: "fixture-guide",
       firstFlashTeachingBreak: false,
       label: "tutorial.common.tasks",
+      showStageIntro: false,
       gatesPhaseActions: false,
       story: {
         kicker: "tutorial.common.tasks",

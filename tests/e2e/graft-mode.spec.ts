@@ -26,9 +26,10 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   }, save);
   await page.goto("/");
   await page.getByTestId("load-save-slot-1").click();
-  await expect(page.getByTestId("level-intermission")).toBeVisible();
+  await expect(page.getByTestId("captains-logbook")).toBeVisible();
   await expect(page.getByTestId("game-map")).toHaveCount(0);
-  await page.getByTestId("intermission-graft").click();
+  await expect(page.getByTestId("logbook-entry")).toContainText("Site secured");
+  await page.getByTestId("logbook-hangar").click();
   await expect(page.getByTestId("graft-board")).toBeVisible();
   await expect(page.getByTestId("game-map")).toHaveCount(0);
   await page.getByTestId("graft-hardpoint-forward").click();

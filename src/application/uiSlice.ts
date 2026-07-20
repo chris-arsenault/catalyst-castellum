@@ -20,6 +20,7 @@ export const createUiActions = (
   | "openEquipmentBuild"
   | "setManualSection"
   | "closeManual"
+  | "acknowledgeStageIntro"
   | "dismissTutorialGuide"
   | "restartTutorialGuide"
   | "clearNotice"
@@ -73,5 +74,9 @@ export const createUiActions = (
       notice: null,
     });
   },
+  acknowledgeStageIntro: (guideId) =>
+    set((state) => ({
+      acknowledgedStageIntroIds: [...new Set([...state.acknowledgedStageIntroIds, guideId])],
+    })),
   clearNotice: () => set({ notice: null }),
 });

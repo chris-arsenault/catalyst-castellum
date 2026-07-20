@@ -1,0 +1,15 @@
+export const LOGBOOK_MESSAGES = {
+  "ui.logbook.title": "Captain's log",
+  "ui.logbook.act": "Act {number}",
+  "ui.logbook.actContents": "Show the sites filed under {act}",
+  "ui.logbook.openContract": "Open the {site} contract",
+  "ui.logbook.depart": "Depart for {site}",
+  "ui.logbook.entrySecured": "Site secured",
+  "ui.logbook.hangar": "Hangar",
+  "ui.logbook.hangarReady": "Graft a room onto the hull",
+  "ui.logbook.hangarSecuredOnly": "Opens once a site is secured",
+  "ui.logbook.status.current": "Current filing",
+  "ui.logbook.status.secured": "Secured",
+  "ui.logbook.status.sealed": "Sealed orders",
+  "ui.logbook.sealedCode": "Filed on arrival",
+} as const;

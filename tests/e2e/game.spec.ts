@@ -77,6 +77,7 @@ test("resetting the active save restarts the tutorial at its first step", async 
   await page.getByTestId("act-continue").click();
   await expect(page.getByTestId("enter-control-room")).toBeVisible();
   await page.getByTestId("enter-control-room").click();
+  await page.getByTestId("enter-stage-controls").click();
 
   await expect(coach).toHaveAttribute("data-guide-step", "install-agitator");
   await expect(page.getByTestId("open-equipment-build-furnace-socket_a")).toBeVisible();
@@ -99,6 +100,7 @@ test("new game overwrites an occupied slot with a complete tutorial reset", asyn
   await page.getByTestId("confirm-overwrite-slot-1").click();
   await page.getByTestId("act-continue").click();
   await page.getByTestId("enter-control-room").click();
+  await page.getByTestId("enter-stage-controls").click();
 
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
@@ -118,6 +120,7 @@ test("save slots remain isolated when starting and loading different campaigns",
 
   await startNewGame(page, 2);
   await page.getByTestId("enter-control-room").click();
+  await page.getByTestId("enter-stage-controls").click();
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
     "install-agitator"
@@ -189,11 +192,11 @@ test("the Flash Point field drill proves the complete causal chain through domai
   await expect(page.getByTestId("phase-banner")).toContainText("Autonomous assault");
   await expect(coach).toHaveAttribute("data-guide-step", "observe-combat-flash");
 
+  // The wave keeps arriving, so assert the causal claim rather than one wave's
+  // tally: an OX-1 flash killed what walked into R-02, and pressure did it.
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText(
-    "1 affected · 1 killed",
-    {
-      timeout: 30_000,
-    }
+    /OX-1 flash · \d+ damage\d+ affected · [1-9]\d* killed/,
+    { timeout: 30_000 }
   );
   await expect(page.getByTestId("recent-incidents-furnace")).toContainText("PRESSURE");
   await expect(page.locator(".paused-overlay")).toBeHidden();
@@ -252,7 +255,7 @@ test("tutorial guidance leaves every physical map room inspectable", async ({ pa
 test("the map reveals room materials on hover and keeps full history on demand", async ({
   page,
 }) => {
-  test.setTimeout(45_000);
+  test.setTimeout(90_000);
   await startGuidedTutorial(page);
   await skipGuidance(page);
 

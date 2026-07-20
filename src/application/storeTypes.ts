@@ -86,6 +86,7 @@ export interface DefensivePosturePreview {
 
 export interface UiSlice {
   selectedRoomId: RoomId;
+  acknowledgedStageIntroIds: string[];
   showHelp: boolean;
   manualSection: ManualSection;
   equipmentBuildTarget: EquipmentBuildTarget | null;
@@ -97,6 +98,7 @@ export interface UiSlice {
   graftMode: boolean;
   graftPreview: GraftPreview | null;
   defensivePosturePreview: DefensivePosturePreview | null;
+  acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
   setPipePreview: (preview: PipePreview | null) => void;

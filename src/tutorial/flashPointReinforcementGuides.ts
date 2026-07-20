@@ -25,6 +25,7 @@ export const secondChamberGuide: GuideDefinition = {
   id: "flash_point:second_chamber:v2",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.flash.secondChamber.label",
+  showStageIntro: false,
   gatesPhaseActions: true,
   firstFlashTeachingBreak: false,
   story: {
@@ -141,6 +142,7 @@ export const higherCadenceGuide: GuideDefinition = {
   id: "flash_point:higher_cadence:v1",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.flash.higherCadence.label",
+  showStageIntro: false,
   gatesPhaseActions: true,
   firstFlashTeachingBreak: false,
   story: {
@@ -219,6 +221,7 @@ export const corridorExamGuide: GuideDefinition = {
   id: "flash_point:corridor_exam:v1",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.flash.corridorExam.label",
+  showStageIntro: false,
   gatesPhaseActions: false,
   firstFlashTeachingBreak: false,
   story: {

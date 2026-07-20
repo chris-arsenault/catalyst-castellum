@@ -25,7 +25,7 @@ export const GuideIntro = ({ guide }: { guide: GuideDefinition }) => {
       <span className="guide-intro-kicker">
         <MapPinned size={15} /> {tutorialText(translator, guide.story.kicker)}
       </span>
-      <h3>{tutorialText(translator, guide.story.title)}</h3>
+      <h3 id="guide-intro-title">{tutorialText(translator, guide.story.title)}</h3>
       <div className="guide-intro-story">
         {guide.story.paragraphs.map((paragraph) => (
           <p key={paragraph}>{tutorialText(translator, paragraph)}</p>

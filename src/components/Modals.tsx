@@ -5,8 +5,6 @@ import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import { CAMPAIGN_LEVELS } from "../presentation/defaultGame";
-import { upcomingGuideDefinitionFor } from "../tutorial/guideModel";
-import { GuideIntro } from "../tutorial/GuideIntro";
 import { ReportStats, roundReportStats } from "./WaveReport";
 
 interface ProgressFrameProps {
@@ -67,13 +65,9 @@ const RoundProgressModal = () => {
   } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
-  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   const level = levelDefinitionFor(game);
   const report = game.lastReport ? localizedReport(game.lastReport) : null;
   const nextRound = level.rounds[game.campaign.roundIndex + 1];
-  const upcoming = upcomingGuideDefinitionFor(game);
-  const upcomingGuide =
-    upcoming && !dismissedGuideIds.includes(upcoming.dismissalId) ? upcoming : null;
   const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
   return (
     <ProgressFrame
@@ -81,20 +75,16 @@ const RoundProgressModal = () => {
       detail={report?.detail ?? translator.text("ui.progress.round.frozen")}
       eyebrow={translator.text("ui.progress.round.eyebrow")}
       next={
-        upcomingGuide ? (
-          <GuideIntro guide={upcomingGuide} />
-        ) : (
-          <div className="progress-dock-next">
-            <span>
-              <Gauge size={15} /> {translator.text("ui.progress.round.next")}
-            </span>
-            <p>
-              {nextRound
-                ? localizedLevelCopy.round(level, nextRound).objective
-                : translator.text("ui.progress.round.continue")}
-            </p>
-          </div>
-        )
+        <div className="progress-dock-next">
+          <span>
+            <Gauge size={15} /> {translator.text("ui.progress.round.next")}
+          </span>
+          <p>
+            {nextRound
+              ? localizedLevelCopy.round(level, nextRound).objective
+              : translator.text("ui.progress.round.continue")}
+          </p>
+        </div>
       }
       onAdvance={advance}
       testId="continue-round"

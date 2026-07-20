@@ -19,6 +19,7 @@ export const firstSparkGuide: GuideDefinition = {
   id: "flash_point:first_spark:v5",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.flash.firstSpark.label",
+  showStageIntro: true,
   gatesPhaseActions: true,
   firstFlashTeachingBreak: true,
   story: {
@@ -176,6 +177,7 @@ export const storedMomentumGuide: GuideDefinition = {
   id: "flash_point:stored_momentum:v1",
   dismissalId: "flash_point:field_guidance:v5",
   label: "tutorial.flash.storedMomentum.label",
+  showStageIntro: false,
   gatesPhaseActions: false,
   firstFlashTeachingBreak: false,
   story: {

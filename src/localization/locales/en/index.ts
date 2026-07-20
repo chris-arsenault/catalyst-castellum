@@ -10,6 +10,7 @@ import { TUTORIAL_MESSAGES } from "./tutorials";
 import { NARRATIVE_MESSAGES } from "./narrative";
 import { DEBUG_MESSAGES } from "./debug";
 import { POSTURE_MESSAGES } from "./posture";
+import { LOGBOOK_MESSAGES } from "./logbook";
 
 export const EN_LOCALE = {
   locale: "en",
@@ -26,5 +27,6 @@ export const EN_LOCALE = {
     ...NARRATIVE_MESSAGES,
     ...DEBUG_MESSAGES,
     ...POSTURE_MESSAGES,
+    ...LOGBOOK_MESSAGES,
   },
 } as const;

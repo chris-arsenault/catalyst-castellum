@@ -4,19 +4,26 @@ All notable user-visible changes are recorded here.
 
 ## Unreleased
 
+### Campaign and narrative
+
+- Added the captain's log: a full-screen campaign surface with acts as expandable headers and their
+  sites as entries, replacing the stack of briefing modals that used to open over the plant. Act
+  overviews, contract briefings, after-action records, the contract route map, and the hangar all
+  read from one page, and play starts from the current filing.
+- Moved hull grafting into the log's hangar, reachable from the same page as the route.
+
 ### Presentation
 
 - Consolidated the between-level flow into two coherent surfaces: a shared wave report (round
-  result, site completion, and campaign outcome now use one stats card and seal) and a single
-  arrival briefing that combines the contract conversation, mission objective, and tutorial field
-  story on one screen.
+  result, site completion, and campaign outcome now use one stats card and seal) and the captain's
+  log for everything between sites.
+- Tutorial field stories open as a modal on the play surface, where the chambers they name are
+  visible behind them.
 - Reworked narrative conversations into an accumulating channel transcript: each advance reveals
   the next line while the full conversation stays visible, and briefing dialogue no longer gates
   the begin action.
-- Travel now plays as a timed transit that docks at the next site automatically; the dock button
-  remains as an immediate skip.
-- Tutorial stage stories moved into the arrival briefing (level-opening guides) and the round
-  report (guides that start on a later round), removing the separate stage-intro screen.
+- Travel now plays as a timed transit that docks at the next site automatically; clicking the
+  transit docks immediately.
 
 ## v0.1.0 - 2026-07-19
 

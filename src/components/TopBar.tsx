@@ -1,23 +1,12 @@
-import {
-  CircleHelp,
-  Coins,
-  FastForward,
-  LogOut,
-  Pause,
-  Play,
-  RotateCcw,
-  Shield,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
+import { Coins, FastForward, Pause, Play, RotateCcw, Shield } from "lucide-react";
 import { useCallback, useState } from "react";
-import { setMuted, setMusicVolume, setSfxVolume, useAudioSettings } from "../audio";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { GamePhase, GameState } from "../game/types";
 import type { Translator } from "../localization/translator";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
+import { AudioControls, BrandLockup, EncyclopediaButton, SaveSlotsButton } from "./ShellControls";
 
 const localizedPhaseLabel = (phase: GamePhase, translator: Translator): string => {
   const keys = {
@@ -32,23 +21,6 @@ const localizedPhaseLabel = (phase: GamePhase, translator: Translator): string =
     defeat: "ui.topbar.phase.defeat",
   } as const;
   return translator.text(keys[phase]);
-};
-
-const BrandLockup = () => {
-  const { translator } = useGamePresentation();
-  return (
-    <div className="brand-lockup" aria-label={translator.text("ui.brand.name")}>
-      <div className="brand-mark">
-        <span />
-        <span />
-        <span />
-      </div>
-      <div>
-        <p>{translator.text("ui.brand.first")}</p>
-        <strong>{translator.text("ui.brand.second")}</strong>
-      </div>
-    </div>
-  );
 };
 
 const CycleStatus = ({ game }: { game: GameState }) => {
@@ -140,93 +112,13 @@ const RestartSaveConfirmation = ({
   );
 };
 
-const AudioControls = () => {
-  const { translator } = useGamePresentation();
-  const settings = useAudioSettings();
-  const [open, setOpen] = useState(false);
-  const muteLabel = translator.text(
-    settings.muted ? "ui.topbar.audio.unmute" : "ui.topbar.audio.mute"
-  );
-  return (
-    <div className="audio-controls" data-testid="audio-controls">
-      <button
-        className="icon-button"
-        type="button"
-        aria-label={translator.text("ui.topbar.audio.settings")}
-        title={translator.text("ui.topbar.audio.settings")}
-        aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
-      >
-        {settings.muted ? <VolumeX size={17} /> : <Volume2 size={17} />}
-      </button>
-      {open && (
-        <div
-          className="audio-popover"
-          role="group"
-          aria-label={translator.text("ui.topbar.audio.settings")}
-        >
-          <label>
-            <span>{translator.text("ui.topbar.audio.music")}</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={settings.musicVolume}
-              aria-label={translator.text("ui.topbar.audio.musicVolume")}
-              onChange={(event) => setMusicVolume(Number(event.target.value))}
-            />
-          </label>
-          <label>
-            <span>{translator.text("ui.topbar.audio.effects")}</span>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={settings.sfxVolume}
-              aria-label={translator.text("ui.topbar.audio.effectsVolume")}
-              onChange={(event) => setSfxVolume(Number(event.target.value))}
-            />
-          </label>
-          <button
-            type="button"
-            data-testid="audio-mute-toggle"
-            onClick={() => setMuted(!settings.muted)}
-          >
-            {settings.muted ? <Volume2 size={14} /> : <VolumeX size={14} />} {muteLabel}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
 const simulationPauseLabel = (game: GameState, translator: Translator): string =>
   translator.text(game.paused ? "ui.topbar.resume" : "ui.topbar.pause");
-
-const SaveSlotsButton = ({ onClick }: { onClick: () => void }) => {
-  const { translator } = useGamePresentation();
-  return (
-    <button
-      className="menu-shortcut-button"
-      type="button"
-      aria-label={translator.text("ui.topbar.returnSaveSlots")}
-      data-testid="save-slots-button"
-      title={translator.text("ui.topbar.saveSlots")}
-      onClick={onClick}
-    >
-      <LogOut size={17} /> <span>{translator.text("ui.topbar.saveSlots")}</span>
-    </button>
-  );
-};
 
 const GlobalControls = ({ game }: { game: GameState }) => {
   const { selectors, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
-  const openManual = useGameStore((state) => state.openManual);
   const reset = useGameStore((state) => state.reset);
-  const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
   const [confirmingRestart, setConfirmingRestart] = useState(false);
   const pauseCommand = { type: "toggle_pause" } as const;
   const speedCommand = { type: "set_speed", speed: game.speed === 1 ? 2 : 1 } as const;
@@ -263,16 +155,8 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       </button>
       <span className="control-divider" />
       <AudioControls />
-      <SaveSlotsButton onClick={returnToMainMenu} />
-      <button
-        className="icon-button"
-        type="button"
-        aria-label={translator.text("ui.topbar.openManual")}
-        title={translator.text("ui.topbar.manual")}
-        onClick={() => openManual("operations")}
-      >
-        <CircleHelp size={18} />
-      </button>
+      <SaveSlotsButton />
+      <EncyclopediaButton />
       <button
         className="icon-button"
         type="button"

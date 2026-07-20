@@ -32,12 +32,13 @@ const startGuidedTutorial = async (page: Page): Promise<void> => {
   await page.getByTestId("enter-control-room").click();
   const startupError = await Promise.race([
     page
-      .getByTestId("tutorial-task-card")
+      .getByTestId("tutorial-stage-intro")
       .waitFor({ state: "visible" })
       .then(() => null),
     appError,
   ]);
   expect(startupError).toBeNull();
+  await page.getByTestId("enter-stage-controls").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
 };
 

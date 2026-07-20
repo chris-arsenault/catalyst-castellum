@@ -81,7 +81,13 @@ export const CampaignRouteMap = ({ currentSite }: CampaignRouteMapProps) => {
                   {site.order}
                 </text>
                 {revealed && (
-                  <text className="route-site-name" y="6" textAnchor="middle">
+                  // Neighbouring sites alternate above and below the route so
+                  // their labels stay legible where the run bunches together.
+                  <text
+                    className="route-site-name"
+                    y={site.order % 2 === 0 ? -4 : 6}
+                    textAnchor="middle"
+                  >
                     {name}
                   </text>
                 )}

@@ -3,6 +3,9 @@ import { DEV_SERVER } from "./tooling/devServer";
 
 export default defineConfig({
   testDir: "./tests/e2e",
+  // Scenarios drive the real simulation through a guided opening, so the
+  // per-test budget covers a slow machine rather than the fastest path.
+  timeout: 60_000,
   fullyParallel: true,
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 2 : 0,

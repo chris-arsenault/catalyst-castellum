@@ -2,17 +2,16 @@ import { Pause } from "lucide-react";
 import { lazy, Suspense, useCallback } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
-import { BriefingModal } from "./components/BriefingModal";
 import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/Modals";
 import { FacilityManual } from "./components/manual/FacilityManual";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { PipeBoard } from "./components/PipeBoard";
-import { CampaignIntermission } from "./components/CampaignIntermission";
+import { Logbook } from "./components/logbook/Logbook";
 import { RoomInspector } from "./components/RoomInspector";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
-import { type RoomId } from "./game/types";
+import { type GamePhase, type RoomId } from "./game/types";
 import {
   useApplicationInitialization,
   useAudioDirector,
@@ -82,18 +81,13 @@ const SidePanel = () => {
   return <RoomInspector />;
 };
 
+/** Between sites the captain's log owns the screen; play surfaces stay put away. */
+const logbookOwnsPhase = (phase: GamePhase): boolean =>
+  phase === "level_briefing" || phase === "level_complete" || phase === "travel";
+
 const ActiveGame = () => {
   const phase = useGameStore((state) => state.game.phase);
-  if (phase === "level_complete" || phase === "travel") {
-    return (
-      <div className="app-shell intermission-shell" data-simulation-clock="static">
-        <TopBar />
-        <CampaignIntermission />
-        <FacilityManual />
-        <NoticeToast />
-      </div>
-    );
-  }
+  if (logbookOwnsPhase(phase)) return <Logbook />;
   return (
     <div className="app-shell" data-simulation-clock="live">
       <TopBar />
@@ -109,7 +103,6 @@ const ActiveGame = () => {
         <SidePanel />
       </main>
 
-      <BriefingModal />
       <CampaignProgressModal />
       <FacilityManual />
       <OutcomeModal />

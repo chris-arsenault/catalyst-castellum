@@ -1,6 +1,42 @@
 /* State-gated tutorial guidance */
 
-/* A guide's field story, rendered inside the briefing or the round report. */
+.tutorial-stage-intro-backdrop {
+  z-index: 88;
+  background: rgba(3, 9, 7, 0.56);
+  backdrop-filter: blur(2px);
+}
+.tutorial-stage-intro {
+  width: min(980px, 95vw);
+  max-height: 92vh;
+  padding: 26px 30px;
+  overflow-y: auto;
+  border: 1px solid #84a74f;
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 92% 10%, rgba(230, 129, 58, 0.15), transparent 34%),
+    linear-gradient(145deg, #14261f, #0a1512);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.64);
+}
+.tutorial-stage-intro .guide-intro {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  gap: 14px;
+}
+.tutorial-stage-intro .guide-intro h3 {
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1;
+}
+.tutorial-stage-intro .guide-intro-story p {
+  font-size: 13px;
+}
+.tutorial-stage-enter {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* A guide's field story: the modal body on the play surface. */
 .guide-intro {
   display: grid;
   gap: 10px;
@@ -36,13 +72,6 @@
   color: #9ab5a7;
   font-size: 11.5px;
   line-height: 1.6;
-}
-.briefing-content .tutorial-concept-chain,
-.progress-dock .tutorial-concept-chain {
-  grid-template-columns: 1fr 1fr;
-}
-.briefing-content .tutorial-concept-chain li:not(:last-child)::after {
-  content: none;
 }
 .tutorial-concept-model {
   margin-top: 16px;
@@ -141,7 +170,8 @@
 .guide-intro-goal {
   display: grid;
   gap: 6px;
-  padding: 12px 14px;
+  margin-top: 4px;
+  padding: 14px 16px;
   border-left: 3px solid #ef9b55;
   background: rgba(224, 111, 54, 0.08);
 }
@@ -155,7 +185,7 @@
 }
 .guide-intro-goal strong {
   color: #f2e5cf;
-  font-size: 13px;
+  font-size: 15px;
 }
 .guide-intro-goal p {
   margin: 0;

@@ -31,6 +31,7 @@ const browserDependencies: GameStoreDependencies = {
 };
 
 const CLEAN_TUTORIAL_UI = {
+  acknowledgedStageIntroIds: [],
   dismissedGuideIds: [],
   showHelp: false,
   manualSection: "operations" as const,

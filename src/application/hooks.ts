@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { attachAudioDirector } from "../audio";
 import { useGameStore } from "./store";
 import { flushScheduledGameSave } from "./persistence/saveScheduler";
@@ -41,4 +41,27 @@ export const useSimulationClock = (): void => {
 
     return () => window.clearInterval(timer);
   }, [activeSlotId, initialized, tick]);
+};
+
+export interface ExpandSet<Id extends string> {
+  readonly expanded: ReadonlySet<Id>;
+  readonly toggle: (id: Id) => void;
+  readonly set: (ids: ReadonlySet<Id>) => void;
+  readonly reset: () => void;
+}
+
+/** Multi-expand state for trees with several open branches. See ADR-020. */
+export const useExpandSet = <Id extends string>(initial: readonly Id[] = []): ExpandSet<Id> => {
+  const [expanded, setExpanded] = useState<ReadonlySet<Id>>(() => new Set(initial));
+  const toggle = useCallback((id: Id) => {
+    setExpanded((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
+  const set = useCallback((ids: ReadonlySet<Id>) => setExpanded(new Set(ids)), []);
+  const reset = useCallback(() => setExpanded(new Set<Id>()), []);
+  return { expanded, toggle, set, reset };
 };
