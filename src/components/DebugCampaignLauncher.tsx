@@ -132,9 +132,10 @@ export const DebugCampaignLauncher = ({ saveSlots }: { saveSlots: SaveSlotCatalo
   const [slotId, setSlotId] = useState<SaveSlotId>(SAVE_SLOT_IDS[0]);
   const [levelId, setLevelId] = useState<LevelId>(LEVEL_IDS[0]);
   const [confirmingOverwrite, setConfirmingOverwrite] = useState(false);
+  const [guidance, setGuidance] = useState(true);
   const launch = useCallback(
-    () => startNewGameAtLevel(slotId, levelId),
-    [levelId, slotId, startNewGameAtLevel]
+    () => startNewGameAtLevel(slotId, levelId, guidance),
+    [guidance, levelId, slotId, startNewGameAtLevel]
   );
   const requestLaunch = useCallback(() => {
     if (saveSlots[slotId]) setConfirmingOverwrite(true);
@@ -164,6 +165,15 @@ export const DebugCampaignLauncher = ({ saveSlots }: { saveSlots: SaveSlotCatalo
       <DebugSaveSlotSelect saveSlots={saveSlots} value={slotId} onChange={selectSlot} />
       <DebugLevelSelect value={levelId} onChange={selectLevel} />
       <div className="debug-campaign-action">
+        <label className="debug-guidance-choice">
+          <input
+            type="checkbox"
+            checked={guidance}
+            data-testid="debug-guidance"
+            onChange={(event) => setGuidance(event.currentTarget.checked)}
+          />
+          <span>{translator.text("ui.save.guidance.title")}</span>
+        </label>
         {confirmingOverwrite ? (
           <DebugLaunchConfirmation
             slotId={slotId}

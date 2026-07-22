@@ -15,12 +15,13 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   const save = seededSave();
   await page.addInitScript((serialized: string) => {
     window.localStorage.setItem(
-      "catalyst-castellum:save:slot-1:v1",
+      "catalyst-castellum:save:slot-1:v2",
       JSON.stringify({
-        version: 1,
+        version: 2,
         savedAt: Date.now(),
         game: serialized,
         dismissedGuideIds: ["flash_point:field_guidance:v5"],
+        guidanceEnabled: true,
       })
     );
   }, save);

@@ -9,8 +9,8 @@ import { roomRenderModel } from "./roomRenderModel";
 import { coreIntegrityColor } from "./coreDamageModel";
 import { CoreSprite } from "./CoreSprite";
 import { useGamePresentation } from "../../application/presentationContext";
-import type { DefensivePostureRoomTone } from "../../application/storeTypes";
-import { DefensePostureMarker } from "./DefensePostureMarker";
+import type { RoomEffectTone } from "../../application/storeTypes";
+import { RoomEffectMarker } from "./RoomEffectMarker";
 
 interface RoomNodeProps {
   game: GameState;
@@ -21,7 +21,7 @@ interface RoomNodeProps {
   onPipeDragStart: (roomId: RoomId) => void;
   onPipeDragEnd: (roomId: RoomId) => void;
   pipeMode: boolean;
-  postureTone: DefensivePostureRoomTone | null;
+  roomEffectTone: RoomEffectTone | null;
 }
 
 export const RoomNode = ({
@@ -33,7 +33,7 @@ export const RoomNode = ({
   onPipeDragStart,
   onPipeDragEnd,
   pipeMode,
-  postureTone,
+  roomEffectTone,
 }: RoomNodeProps) => {
   const { supplies } = useGamePresentation();
   const geometry = mapViewFor(game.map).roomMapRect(roomId);
@@ -60,11 +60,11 @@ export const RoomNode = ({
           if (pipeMode) onPipeDragEnd(roomId);
         }}
       />
-      {postureTone && (
-        <DefensePostureMarker
+      {roomEffectTone && (
+        <RoomEffectMarker
           x={model.width / 2 - 17}
           y={model.height / 2 - 17}
-          tone={postureTone}
+          tone={roomEffectTone}
         />
       )}
       {model.structure === "core" && (

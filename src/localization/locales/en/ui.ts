@@ -230,6 +230,9 @@ export const UI_MESSAGES = {
   "ui.save.newGame": "New game",
   "ui.save.deleteSlot": "Delete save slot {number}",
   "ui.save.delete": "Delete",
+  "ui.save.guidance.title": "Field guidance",
+  "ui.save.guidance.detail":
+    "Runs the campaign with coaching, the task rail, and step-by-step locks. Clear it to play every site with the controls open.",
   "ui.save.archive": "LOCAL OPERATIONS ARCHIVE",
   "ui.save.control": "CAMPAIGN CONTROL",
   "ui.save.select": "Select a save slot",

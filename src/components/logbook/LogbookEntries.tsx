@@ -1,90 +1,37 @@
 import { ArrowRight, Gauge, Play } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { useGamePresentation } from "../../application/presentationContext";
 import { useGameStore } from "../../application/store";
 import { levelDefinitionFor, roundDefinitionFor } from "../../game/queries";
 import type { GameState } from "../../game/types";
-import type { Translator } from "../../localization/translator";
 import {
-  LEVEL_DEFINITIONS,
   narrativeSiteForLevel,
   nextLevelId,
-  roomDefinition,
   type NarrativeActId,
   type NarrativeSiteDefinition,
 } from "../../presentation/defaultGame";
-import { guideDefinitionFor } from "../../tutorial/guideModel";
 import { CampaignRouteMap } from "../CampaignRouteMap";
 import { NarrativeDialogue } from "../NarrativeDialogue";
 import { ReportStats, roundReportStats } from "../WaveReport";
 
-const RoundObjective = ({
-  game,
-  tutorialSkipped,
-}: {
-  game: GameState;
-  tutorialSkipped: boolean;
-}) => {
+const RoundObjective = ({ game }: { game: GameState }) => {
   const { formatters, levelCopy, translator } = useGamePresentation();
   const round = roundDefinitionFor(game);
   const level = levelDefinitionFor(game);
-  const nextLevel = LEVEL_DEFINITIONS.make_the_reagent;
-  let detail = translator.text("ui.briefing.objective", {
-    objective: levelCopy.round(level, round).objective,
-    duration: formatters.duration(round.primeSeconds),
-  });
-  let label = translator.text("ui.briefing.roundObjective");
-  if (tutorialSkipped) {
-    detail = translator.text("ui.briefing.skipDetail", {
-      level: levelCopy.level(nextLevel).name,
-      room: roomDefinition(game, nextLevel.focusRoomId).code,
-    });
-    label = translator.text("ui.briefing.startingLesson");
-  }
   return (
     <div className="briefing-objective">
       <div>
         <Gauge size={19} />
-        <span>{label}</span>
+        <span>{translator.text("ui.briefing.roundObjective")}</span>
       </div>
-      <p>{detail}</p>
+      <p>
+        {translator.text("ui.briefing.objective", {
+          objective: levelCopy.round(level, round).objective,
+          duration: formatters.duration(round.primeSeconds),
+        })}
+      </p>
     </div>
   );
-};
-
-const TutorialStartChoice = ({
-  enabled,
-  onChange,
-}: {
-  enabled: boolean;
-  onChange: (enabled: boolean) => void;
-}) => {
-  const { translator } = useGamePresentation();
-  return (
-    <div className="tutorial-start-choice">
-      <input
-        id="tutorial-enabled"
-        type="checkbox"
-        checked={enabled}
-        data-testid="tutorial-enabled"
-        aria-describedby="tutorial-choice-detail"
-        onChange={(event) => onChange(event.currentTarget.checked)}
-      />
-      <label htmlFor="tutorial-enabled">
-        <strong>{translator.text("ui.briefing.tutorial.title")}</strong>
-        <small id="tutorial-choice-detail">{translator.text("ui.briefing.tutorial.detail")}</small>
-      </label>
-    </div>
-  );
-};
-
-const playLabel = (
-  offersOpeningDrill: boolean,
-  tutorialEnabled: boolean,
-  translator: Translator
-): string => {
-  if (!offersOpeningDrill) return translator.text("ui.briefing.beginCheckpoint");
-  return translator.text(tutorialEnabled ? "ui.briefing.beginDrill" : "ui.briefing.beginLesson");
 };
 
 const SiteHeader = ({ site, number }: { site: NarrativeSiteDefinition; number: number }) => {
@@ -115,29 +62,13 @@ const SiteHeader = ({ site, number }: { site: NarrativeSiteDefinition; number: n
 const BriefingEntry = ({ game, site }: { game: GameState; site: NarrativeSiteDefinition }) => {
   const { translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
-  const dismissTutorialGuide = useGameStore((state) => state.dismissTutorialGuide);
-  const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   const level = levelDefinitionFor(game);
-  const offersOpeningDrill =
-    game.campaign.levelId === "flash_point" && Boolean(guideDefinitionFor(game));
-  const [tutorialEnabled, setTutorialEnabled] = useState(true);
-  const play = useCallback(() => {
-    if (offersOpeningDrill && !tutorialEnabled) {
-      dismissTutorialGuide();
-      dispatch({ type: "skip_tutorial" });
-      return;
-    }
-    if (offersOpeningDrill) restartTutorialGuide();
-    dispatch({ type: "begin_level" });
-  }, [dismissTutorialGuide, dispatch, offersOpeningDrill, restartTutorialGuide, tutorialEnabled]);
+  const play = useCallback(() => dispatch({ type: "begin_level" }), [dispatch]);
   return (
     <>
       <SiteHeader site={site} number={level.number} />
       <NarrativeDialogue key={`${site.id}.briefing`} phase="briefing" site={site} />
-      <RoundObjective game={game} tutorialSkipped={offersOpeningDrill && !tutorialEnabled} />
-      {offersOpeningDrill && (
-        <TutorialStartChoice enabled={tutorialEnabled} onChange={setTutorialEnabled} />
-      )}
+      <RoundObjective game={game} />
       <footer className="logbook-entry-actions">
         <button
           className="logbook-primary-action"
@@ -145,7 +76,7 @@ const BriefingEntry = ({ game, site }: { game: GameState; site: NarrativeSiteDef
           data-testid="enter-control-room"
           onClick={play}
         >
-          <Play size={18} /> {playLabel(offersOpeningDrill, tutorialEnabled, translator)}
+          <Play size={18} /> {translator.text("ui.briefing.beginCheckpoint")}
         </button>
       </footer>
     </>

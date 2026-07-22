@@ -89,11 +89,21 @@ health, per-source ledgers, incidents, deaths, Matter rewards, and round results
 Room-wide hazards affect every occupant, while finite fields and reagents make cohort composition
 matter.
 
-The runtime also exposes a read-only defensive-posture projection. It converts present room
-hazards, reaction-pulse cadence, enemy resistance, route residence time, and movement drag into
-damage and control per enemy traversal. Conduit inspection compares equal held-operation clones
-that differ by one actuator setting; the result remains a local causal comparison rather than a
-wave-survival forecast.
+The runtime samples material inventory, temperature, reaction throughput, and conduit fill to
+measure live process change and convergence toward homeostasis during Prime. This status contains
+no enemy or combat outcome data. Conduit inspection applies one representative source packet at
+the actual target port, advances installed equipment and room chemistry for one response step, and
+compares intrinsic room hazard plus movement control. The resulting green-up, red-down, or steady
+arrow is a first-order target-room response rather than a wave-survival forecast. Hovering an
+installed line on the normal map previews the effect of its available open or close action directly
+in the target room; pipe-drawing mode is not required.
+
+The homeostasis sample normalizes material deltas by room capacity, thermal deltas by the modeled
+temperature range, reaction-rate deltas by current throughput, and line deltas by conduit fill.
+Their per-second mean is the change rate `c`; the displayed homeostasis is `exp(-35c)`. Low,
+moderate, and high change bands begin at `0`, `0.004`, and `0.015` normalized change per second.
+Room direction comes from signed inventory, hazard, and reaction-rate deltas, while line buildup is
+reported separately as priming.
 
 Every open-defense site has five reference portfolios and an idle-loss control. `pnpm
 campaign:health` executes the exact runtime and fails when a portfolio, diversity, or idle-loss

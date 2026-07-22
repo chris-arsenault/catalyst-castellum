@@ -35,7 +35,7 @@ import {
 } from "../../game/world/instances";
 import { lineDefinition } from "../../presentation/defaultGame";
 import type { ProcessLineView } from "../../game/world/instances";
-import { ConduitDefensiveEffect } from "../DefensivePosture";
+import { ConduitRoomEffect } from "../ConduitRoomEffect";
 
 const MIN_VISIBLE_AMOUNT = 0.005;
 
@@ -263,7 +263,7 @@ const ConduitTelemetry = ({
   const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
   return (
     <details className="conduit-telemetry">
-      <summary>{translator.text("ui.posture.telemetry")}</summary>
+      <summary>{translator.text("ui.process.telemetry")}</summary>
       <small>
         {translator.text("ui.process.conduitSummary", {
           from: roomDefinition(game, definition.direction[0]).code,
@@ -301,10 +301,10 @@ const InstalledConduitActuator = ({
   phase: TransportPhase;
   runId: ConnectionId;
 }) => {
-  const { defensivePosture, selectors, translator } = useGamePresentation();
+  const { roomEffect, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
-  const setDefensivePosturePreview = useGameStore((state) => state.setDefensivePosturePreview);
+  const setRoomEffectPreview = useGameStore((state) => state.setRoomEffectPreview);
   const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
   const active = conduit.enabled;
   const command = { type: "set_conduit", connectionId: runId, enabled: !active } as const;
@@ -319,30 +319,27 @@ const InstalledConduitActuator = ({
     definition.destinationKind,
     translator
   );
-  const defensiveEffect = defensivePosture.conduitImpact(game, runId, !active);
-  const showDefensiveEffect = useCallback(
+  const roomEffectEstimate = roomEffect.conduit(game, runId, !active);
+  const showRoomEffect = useCallback(
     () =>
-      setDefensivePosturePreview({
+      setRoomEffectPreview({
         connectionId: runId,
-        rooms: Object.fromEntries(defensiveEffect.rooms.map((room) => [room.roomId, room.tone])),
+        rooms: Object.fromEntries(roomEffectEstimate.rooms.map((room) => [room.roomId, room.tone])),
       }),
-    [defensiveEffect.rooms, runId, setDefensivePosturePreview]
+    [roomEffectEstimate.rooms, runId, setRoomEffectPreview]
   );
-  const clearDefensiveEffect = useCallback(
-    () => setDefensivePosturePreview(null),
-    [setDefensivePosturePreview]
-  );
+  const clearRoomEffect = useCallback(() => setRoomEffectPreview(null), [setRoomEffectPreview]);
 
   return (
     <div
       className={`actuator-row ${active ? "active" : "inactive"} ${conduit.blocked ? "blocked" : ""}`}
       data-conduit-state={active ? "open" : "closed"}
-      onPointerEnter={showDefensiveEffect}
-      onPointerLeave={clearDefensiveEffect}
+      onPointerEnter={showRoomEffect}
+      onPointerLeave={clearRoomEffect}
     >
       <div className="actuator-copy">
         <strong>{transportCopy(game, runId, translator).name}</strong>
-        <ConduitDefensiveEffect impact={defensiveEffect} />
+        <ConduitRoomEffect effect={roomEffectEstimate} />
         <ConduitTelemetry definition={definition} phase={phase} runId={runId} />
       </div>
       <BinaryControl

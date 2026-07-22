@@ -15,7 +15,8 @@ import { createRoundReportCopy } from "./roundReportCopy";
 import { createPresentationSelectors } from "./selectors";
 import { createWaveForecastPresentation } from "./waveForecast";
 import { createSupplyPresentation } from "./supplyCopy";
-import { createDefensivePosturePresentation } from "./defensivePosture";
+import { createRoomEffectPresentation } from "./roomEffect";
+import { createReactionEnginePresentation } from "./reactionEngine";
 
 export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundle) => {
   const translator = createTranslator(locale);
@@ -35,7 +36,8 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     limitingFactorCopy: createLimitingFactorCopy(translator),
     roundReportCopy: createRoundReportCopy(translator),
     waveForecast: createWaveForecastPresentation(runtime.definition, runtime.queries, translator),
-    defensivePosture: createDefensivePosturePresentation(runtime, translator, formatters),
+    roomEffect: createRoomEffectPresentation(runtime, translator),
+    reactionEngine: createReactionEnginePresentation(runtime, translator, formatters),
     supplies: createSupplyPresentation(runtime.definition, runtime.queries, translator, formatters),
   });
 };

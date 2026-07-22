@@ -22,6 +22,7 @@ const saveRecord = (overrides: Partial<SaveSlotRecord> = {}): SaveSlotRecord => 
   id: "slot-1",
   game: DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent"),
   dismissedGuideIds: ["guide-1"],
+  guidanceEnabled: true,
   savedAt: 1234,
   ...overrides,
 });
@@ -135,7 +136,10 @@ describe("debug save-slot starts", () => {
       dismissedGuideIds: [],
       tutorialSessionRevision: 1,
     });
-    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", game, []);
+    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", game, {
+      dismissedGuideIds: [],
+      guidanceEnabled: true,
+    });
   });
 });
 
@@ -152,7 +156,10 @@ describe("active save-slot lifecycle", () => {
     store.getState().tick(0.1);
     expect(store.getState().game).not.toBe(beforeTick);
     expect(adapters.scheduleSave).toHaveBeenCalledTimes(4);
-    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", store.getState().game, []);
+    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", store.getState().game, {
+      dismissedGuideIds: [],
+      guidanceEnabled: true,
+    });
   });
 
   it("resets the active slot as one game-and-tutorial transaction", () => {
@@ -168,13 +175,42 @@ describe("active save-slot lifecycle", () => {
 
     expect(adapters.cancelSave).toHaveBeenLastCalledWith("slot-1");
     expect(adapters.clearSlot).toHaveBeenLastCalledWith("slot-1");
-    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-1", store.getState().game, []);
+    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-1", store.getState().game, {
+      dismissedGuideIds: [],
+      guidanceEnabled: true,
+    });
     expect(store.getState()).toMatchObject({
       activeSlotId: "slot-1",
       dismissedGuideIds: [],
       selectedRoomId: "furnace",
       tutorialSessionRevision: revision + 1,
     });
+  });
+
+  it("carries the chosen guidance setting through a run, a reload, and a restart", () => {
+    const adapters = dependencies();
+    const store = createStore<GameStore>(createGameStoreState(adapters));
+    store.getState().initialize();
+
+    store.getState().startNewGame("slot-1", false);
+    expect(store.getState().guidanceEnabled).toBe(false);
+    expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-1", store.getState().game, {
+      dismissedGuideIds: [],
+      guidanceEnabled: false,
+    });
+
+    // Restarting the same slot keeps the run's choice rather than re-asking.
+    store.getState().reset();
+    expect(store.getState().guidanceEnabled).toBe(false);
+
+    const catalog = emptySaveSlotCatalog();
+    catalog["slot-2"] = saveRecord({ id: "slot-2", guidanceEnabled: false });
+    const reloaded = createStore<GameStore>(
+      createGameStoreState(dependencies({ loadSlots: vi.fn(() => catalog) }))
+    );
+    reloaded.getState().initialize();
+    reloaded.getState().selectSaveSlot("slot-2");
+    expect(reloaded.getState().guidanceEnabled).toBe(false);
   });
 
   it("flushes the active save and reloads the catalog before returning to the menu", () => {

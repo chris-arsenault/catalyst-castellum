@@ -420,97 +420,67 @@
   color: #e77452;
 }
 
-.conduit-defensive-effect {
+.conduit-room-effect {
   margin-top: 7px;
   padding: 7px 8px;
   border: 1px solid #345d53;
-  border-left: 3px solid #739c91;
   border-radius: 3px;
   background: #0a1714;
 }
 
-.conduit-defensive-effect.tone-gain {
-  border-left-color: #b9dc62;
-}
-
-.conduit-defensive-effect.tone-loss {
-  border-left-color: #ed745d;
-}
-
-.conduit-defensive-effect.tone-mixed,
-.conduit-defensive-effect.tone-support {
-  border-left-color: #d2aa55;
-}
-
-.conduit-defensive-effect > header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #8fb9ad;
-}
-
-.conduit-defensive-effect.tone-gain > header {
-  color: #cee97c;
-}
-
-.conduit-defensive-effect.tone-loss > header {
-  color: #f3967e;
-}
-
-.conduit-defensive-effect > header strong {
-  color: inherit;
-  font: 700 10px/1.1 var(--mono);
+.conduit-room-effect > header {
+  color: #769e92;
+  font: 700 8px/1 var(--mono);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.07em;
 }
 
-.conduit-defensive-effect ul {
+.conduit-room-effect ul {
   display: grid;
   gap: 4px;
-  margin: 7px 0 0;
+  margin: 6px 0 0;
   padding: 0;
   list-style: none;
 }
 
-.conduit-defensive-effect li {
+.conduit-room-effect li {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: 16px auto minmax(0, 1fr);
   gap: 5px 8px;
-  align-items: baseline;
+  align-items: center;
+  min-height: 20px;
 }
 
-.conduit-defensive-effect li strong {
+.conduit-room-effect li strong {
   color: #c6dcd3;
   font: 700 9px/1.2 var(--mono);
 }
 
-.conduit-defensive-effect li span,
-.conduit-defensive-effect li small,
-.conduit-support-effect,
-.conduit-effect-basis {
+.conduit-room-effect li span,
+.conduit-room-effect > small {
   color: #769e92;
   font: 600 8px/1.25 var(--mono);
 }
 
-.conduit-defensive-effect li small {
-  color: #94bdb1;
+.conduit-room-effect li[data-room-effect="increase"] {
+  color: #c9e967;
 }
 
-.conduit-support-effect {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-top: 6px;
-  color: #b99f62;
+.conduit-room-effect li[data-room-effect="decrease"] {
+  color: #f07c64;
 }
 
-.conduit-support-effect strong {
-  color: #d8bf77;
+.conduit-room-effect li[data-room-effect="steady"] {
+  color: #8caaa0;
 }
 
-.conduit-effect-basis {
+.conduit-room-effect li[data-room-effect] span {
+  color: inherit;
+}
+
+.conduit-room-effect > small {
   display: block;
-  margin-top: 6px;
+  margin-top: 5px;
   color: #52786f;
 }
 

@@ -299,11 +299,6 @@ const evaluateDismantleConnection = (
 const requirePhase = (state: GameState, phase: GameState["phase"]): CommandDecision =>
   state.phase === phase ? allow() : reject("invalid_phase");
 
-const evaluateSkipTutorial = (state: GameState): CommandDecision =>
-  state.phase === "level_briefing" && state.campaign.levelId === "flash_point"
-    ? allow()
-    : reject("invalid_phase");
-
 const evaluateStartNextLevel = (state: GameState, definition: GameDefinition): CommandDecision => {
   if (state.phase !== "level_complete") return reject("invalid_phase");
   return nextLevelIdFor(state.campaign.levelId, definition) ? allow() : reject("already_complete");
@@ -364,8 +359,6 @@ export const evaluateCommand = (
       return requirePhase(state, "prime");
     case "begin_level":
       return requirePhase(state, "level_briefing");
-    case "skip_tutorial":
-      return evaluateSkipTutorial(state);
     case "continue_round":
       return requirePhase(state, "round_result");
     case "start_next_level":

@@ -21,7 +21,6 @@ import {
   dockAtSiteCommand,
   continueRoundCommand,
   retryLevelCommand,
-  skipTutorialCommand,
   startNextLevelCommand,
 } from "./campaignCommands";
 import {
@@ -265,8 +264,6 @@ export const executeCommand = (
       return startAssault(source);
     case "begin_level":
       return beginLevelCommand(source);
-    case "skip_tutorial":
-      return skipTutorialCommand(source, definition);
     case "continue_round":
       return continueRoundCommand(source, activeDefinition);
     case "start_next_level":

@@ -9,7 +9,7 @@ import { DAMAGE_MESSAGES } from "./damage";
 import { TUTORIAL_MESSAGES } from "./tutorials";
 import { NARRATIVE_MESSAGES } from "./narrative";
 import { DEBUG_MESSAGES } from "./debug";
-import { POSTURE_MESSAGES } from "./posture";
+import { PROCESS_FEEDBACK_MESSAGES } from "./processFeedback";
 import { LOGBOOK_MESSAGES } from "./logbook";
 
 export const EN_LOCALE = {
@@ -26,7 +26,7 @@ export const EN_LOCALE = {
     ...TUTORIAL_MESSAGES,
     ...NARRATIVE_MESSAGES,
     ...DEBUG_MESSAGES,
-    ...POSTURE_MESSAGES,
+    ...PROCESS_FEEDBACK_MESSAGES,
     ...LOGBOOK_MESSAGES,
   },
 } as const;

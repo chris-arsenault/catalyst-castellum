@@ -10,7 +10,7 @@ import type {
   LevelId,
   RoomId,
 } from "../game/types";
-import type { SaveSlotCatalog, SaveSlotId } from "./saveSlots";
+import type { SaveSlotCatalog, SaveSlotId, TutorialSession } from "./saveSlots";
 import type { GameRuntime } from "../game/runtime";
 import type { GamePresentation } from "../presentation/services";
 
@@ -20,8 +20,8 @@ export interface ApplicationLifecycleSlice {
   saveSlots: SaveSlotCatalog;
   initialize: () => void;
   selectSaveSlot: (slotId: SaveSlotId) => void;
-  startNewGame: (slotId: SaveSlotId) => void;
-  startNewGameAtLevel: (slotId: SaveSlotId, levelId: LevelId) => void;
+  startNewGame: (slotId: SaveSlotId, guidanceEnabled?: boolean) => void;
+  startNewGameAtLevel: (slotId: SaveSlotId, levelId: LevelId, guidanceEnabled?: boolean) => void;
   deleteSaveSlot: (slotId: SaveSlotId) => void;
   returnToMainMenu: () => void;
   reset: () => void;
@@ -76,12 +76,12 @@ export interface GraftPreview {
   options: GraftPreviewOption[];
 }
 
-export type DefensivePostureRoomTone = "gain" | "loss" | "mixed" | "support";
+export type RoomEffectTone = "increase" | "decrease" | "steady";
 
-/** Temporary map feedback for the defensive effect of the conduit action under inspection. */
-export interface DefensivePosturePreview {
+/** Temporary map feedback for the target-room effect of the conduit action under inspection. */
+export interface RoomEffectPreview {
   connectionId: ConnectionId;
-  rooms: Partial<Record<RoomId, DefensivePostureRoomTone>>;
+  rooms: Partial<Record<RoomId, RoomEffectTone>>;
 }
 
 export interface UiSlice {
@@ -92,19 +92,20 @@ export interface UiSlice {
   equipmentBuildTarget: EquipmentBuildTarget | null;
   notice: string | null;
   dismissedGuideIds: string[];
+  guidanceEnabled: boolean;
   tutorialSessionRevision: number;
   pipeMode: boolean;
   pipePreview: PipePreview | null;
   graftMode: boolean;
   graftPreview: GraftPreview | null;
-  defensivePosturePreview: DefensivePosturePreview | null;
+  roomEffectPreview: RoomEffectPreview | null;
   acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
   setPipePreview: (preview: PipePreview | null) => void;
   setGraftMode: (graftMode: boolean) => void;
   setGraftPreview: (preview: GraftPreview | null) => void;
-  setDefensivePosturePreview: (preview: DefensivePosturePreview | null) => void;
+  setRoomEffectPreview: (preview: RoomEffectPreview | null) => void;
   showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;
@@ -123,7 +124,7 @@ export interface GameStoreDependencies {
   presentation: GamePresentation;
   loadSlots: () => SaveSlotCatalog;
   clearSlot: (slotId: SaveSlotId) => void;
-  scheduleSave: (slotId: SaveSlotId, game: GameState, dismissedGuideIds: string[]) => void;
+  scheduleSave: (slotId: SaveSlotId, game: GameState, session: TutorialSession) => void;
   cancelSave: (slotId: SaveSlotId) => void;
   flushSave: () => void;
 }

@@ -6,9 +6,10 @@ import {
   type SaveSlotCatalog,
   type SaveSlotId,
   type SaveSlotRecord,
+  type TutorialSession,
 } from "../saveSlots";
 
-const SAVE_SLOT_FORMAT_VERSION = 1;
+const SAVE_SLOT_FORMAT_VERSION = 2;
 const saveSlotKey = (slotId: SaveSlotId): string =>
   `catalyst-castellum:save:${slotId}:v${SAVE_SLOT_FORMAT_VERSION}`;
 
@@ -17,24 +18,28 @@ interface StoredSaveSlot {
   savedAt: number;
   game: string;
   dismissedGuideIds: string[];
+  guidanceEnabled: boolean;
 }
 
 const storage = (): Storage | null => (typeof window === "undefined" ? null : window.localStorage);
 
+const isStoredSaveSlot = (value: unknown): value is StoredSaveSlot => {
+  if (!value || typeof value !== "object") return false;
+  const stored = value as Partial<StoredSaveSlot>;
+  return (
+    stored.version === SAVE_SLOT_FORMAT_VERSION &&
+    typeof stored.savedAt === "number" &&
+    Number.isFinite(stored.savedAt) &&
+    typeof stored.game === "string" &&
+    Array.isArray(stored.dismissedGuideIds) &&
+    typeof stored.guidanceEnabled === "boolean"
+  );
+};
+
 const decodeSaveSlot = (slotId: SaveSlotId, raw: string): SaveSlotRecord | null => {
   try {
-    const value: unknown = JSON.parse(raw);
-    if (!value || typeof value !== "object") return null;
-    const stored = value as Partial<StoredSaveSlot>;
-    if (
-      stored.version !== SAVE_SLOT_FORMAT_VERSION ||
-      typeof stored.savedAt !== "number" ||
-      !Number.isFinite(stored.savedAt) ||
-      typeof stored.game !== "string" ||
-      !Array.isArray(stored.dismissedGuideIds)
-    ) {
-      return null;
-    }
+    const stored: unknown = JSON.parse(raw);
+    if (!isStoredSaveSlot(stored)) return null;
     const game = decodeGame(stored.game);
     if (!game) return null;
     return {
@@ -44,6 +49,7 @@ const decodeSaveSlot = (slotId: SaveSlotId, raw: string): SaveSlotRecord | null 
       dismissedGuideIds: stored.dismissedGuideIds.filter(
         (entry): entry is string => typeof entry === "string"
       ),
+      guidanceEnabled: stored.guidanceEnabled,
     };
   } catch {
     return null;
@@ -60,7 +66,7 @@ export const loadSaveSlot = (slotId: SaveSlotId): SaveSlotRecord | null => {
 export const saveGameSlot = (
   slotId: SaveSlotId,
   game: GameState,
-  dismissedGuideIds: string[]
+  session: TutorialSession
 ): void => {
   const browserStorage = storage();
   if (!browserStorage) return;
@@ -68,7 +74,8 @@ export const saveGameSlot = (
     version: SAVE_SLOT_FORMAT_VERSION,
     savedAt: Date.now(),
     game: encodeGame(game),
-    dismissedGuideIds: [...new Set(dismissedGuideIds)],
+    dismissedGuideIds: [...new Set(session.dismissedGuideIds)],
+    guidanceEnabled: session.guidanceEnabled,
   };
   try {
     browserStorage.setItem(saveSlotKey(slotId), JSON.stringify(value));

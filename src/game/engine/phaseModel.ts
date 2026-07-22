@@ -11,7 +11,7 @@ export interface PhaseDefinition {
 export const PHASE_DEFINITIONS: Record<GamePhase, PhaseDefinition> = {
   level_briefing: {
     stepMode: "static",
-    allowedCommands: ["begin_level", "skip_tutorial"],
+    allowedCommands: ["begin_level"],
     legalTransitions: ["build"],
   },
   build: {

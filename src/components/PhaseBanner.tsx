@@ -5,11 +5,11 @@ import { useGamePresentation } from "../application/presentationContext";
 import { levelDefinitionFor, roundDefinitionFor } from "../game/queries";
 import type { GamePhase, GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "../tutorial/anchors";
-import { guidedPhaseActionReason } from "../tutorial/guideModel";
+import { guidedPhaseActionReason, type TutorialCopyKey } from "../tutorial/guideModel";
 import type { LocaleFormatters } from "../localization/formatters";
 import type { Translator } from "../localization/translator";
 import { WaveForecastDetails, WaveForecastStrip } from "./WaveForecast";
-import { DefensivePostureStrip } from "./DefensivePosture";
+import { PrimeProcessStatus } from "./PrimeProcessStatus";
 
 const formatTime = (seconds: number): string => {
   const safe = Math.max(0, seconds);
@@ -114,14 +114,25 @@ const PhaseIcon = ({ phase }: { phase: GamePhase }) => {
   return <LockKeyhole size={18} />;
 };
 
+/** Guidance holds the phase action until its step lands; without it, nothing does. */
+const useGuideReason = (
+  game: GameState,
+  action: "start_prime" | "start_assault"
+): TutorialCopyKey | null => {
+  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
+  const guidanceEnabled = useGameStore((state) => state.guidanceEnabled);
+  return guidanceEnabled ? guidedPhaseActionReason(game, action, dismissedGuideIds) : null;
+};
+
 const PhaseAction = ({ game }: { game: GameState }) => {
   const { commandCopy, selectors, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
-  const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
+  const primeReason = useGuideReason(game, "start_prime");
+  const assaultReason = useGuideReason(game, "start_assault");
   if (game.phase === "build") {
     const command = { type: "start_prime" } as const;
     const decision = selectors.commandDecision(game, command);
-    const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
+    const guideReason = primeReason;
     return (
       <button
         className="primary-action"
@@ -139,7 +150,7 @@ const PhaseAction = ({ game }: { game: GameState }) => {
   if (game.phase !== "prime") return null;
   const command = { type: "start_assault" } as const;
   const decision = selectors.commandDecision(game, command);
-  const guideReason = guidedPhaseActionReason(game, command.type, dismissedGuideIds);
+  const guideReason = assaultReason;
   return (
     <button
       className="primary-action danger-action"
@@ -233,7 +244,11 @@ export const PhaseBanner = () => {
         <div className="phase-hud-copy">
           <span>{model.label}</span>
           <strong>{model.value}</strong>
-          <small>{model.detail}</small>
+          {game.phase === "prime" ? (
+            <PrimeProcessStatus game={game} />
+          ) : (
+            <small>{model.detail}</small>
+          )}
         </div>
         <button className="round-info-button" type="button" onClick={openBrief}>
           <Info size={15} />{" "}
@@ -242,8 +257,7 @@ export const PhaseBanner = () => {
           )}
         </button>
         <PhaseAction game={game} />
-        {game.phase === "build" && <WaveForecastStrip game={game} />}
-        {game.phase === "prime" && <DefensivePostureStrip game={game} />}
+        {(game.phase === "build" || game.phase === "prime") && <WaveForecastStrip game={game} />}
       </section>
       {showBrief && <RoundBriefModal game={game} onClose={closeBrief} />}
     </>

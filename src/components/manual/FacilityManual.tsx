@@ -98,7 +98,8 @@ const ManualShellFooter = () => {
   const closeManual = useGameStore((state) => state.closeManual);
   const restartTutorialGuide = useGameStore((state) => state.restartTutorialGuide);
   const returnToMainMenu = useGameStore((state) => state.returnToMainMenu);
-  const guide = guideDefinitionFor(game);
+  const guidanceEnabled = useGameStore((state) => state.guidanceEnabled);
+  const guide = guidanceEnabled ? guideDefinitionFor(game) : null;
   return (
     <footer className="manual-shell-footer">
       <div>

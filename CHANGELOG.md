@@ -6,6 +6,9 @@ All notable user-visible changes are recorded here.
 
 ### Campaign and narrative
 
+- Replaced the per-site tutorial opt-out with a campaign-wide field guidance choice, made when a
+  save is created and checked by default. Every run now plays every site, its dialogue, layouts,
+  and waves; clearing the choice runs them with the coaching, task rail, and step gates stood down.
 - Added the captain's log: a full-screen campaign surface with acts as expandable headers and their
   sites as entries, replacing the stack of briefing modals that used to open over the plant. Act
   overviews, contract briefings, after-action records, the contract route map, and the hangar all
@@ -60,9 +63,9 @@ All notable user-visible changes are recorded here.
   rooms, portals, walkways, and ladders.
 - Added an in-world Encyclopedia, bestiary, process manual, localized tutorial system, and adaptive
   stem-based music.
-- Added enemy-adjusted defensive posture during Prime plus held-operation conduit comparisons that
-  show damage per traversal, route control, production support, and affected-room markers before
-  process telemetry.
+- Added live reaction-engine change and homeostasis feedback during Prime plus first-order conduit
+  response estimates that show rough target-room effectiveness arrows on direct map hover and
+  before process telemetry.
 
 ### Bug fixes
 

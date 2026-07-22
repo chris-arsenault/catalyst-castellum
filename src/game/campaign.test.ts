@@ -63,12 +63,11 @@ describe("campaign checkpoints", () => {
     }
   });
 
-  it("skips the guided opening directly into Level 2", () => {
-    const skipped = command(createInitialGame(), { type: "skip_tutorial" });
-    expect(skipped.phase).toBe("build");
-    expect(skipped.campaign.levelId).toBe("make_the_reagent");
-    expect(skipped.campaign.completedLevelIds).toContain("flash_point");
-    expect(skipped.availability.equipment).toContain("membrane_cell");
+  it("opens every campaign run at the first site", () => {
+    const opened = command(createInitialGame(), { type: "begin_level" });
+    expect(opened.phase).toBe("build");
+    expect(opened.campaign.levelId).toBe("flash_point");
+    expect(opened.campaign.completedLevelIds).toEqual([]);
   });
 
   it("preserves room and conduit inventory between rounds", () => {

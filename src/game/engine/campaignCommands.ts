@@ -17,16 +17,6 @@ export const beginLevelCommand = (source: GameState): CommandResult => {
   return acceptCommand(state);
 };
 
-export const skipTutorialCommand = (
-  source: GameState,
-  definition: GameDefinition
-): CommandResult => {
-  const completedLevelIds = [
-    ...new Set([...source.campaign.completedLevelIds, "flash_point"]),
-  ] as GameState["campaign"]["completedLevelIds"];
-  return beginLevelCommand(createScenarioGame("make_the_reagent", completedLevelIds, definition));
-};
-
 export const continueRoundCommand = (
   source: GameState,
   definition: GameDefinition

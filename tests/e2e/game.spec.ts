@@ -112,10 +112,10 @@ test("new game overwrites an occupied slot with a complete tutorial reset", asyn
 test("save slots remain isolated when starting and loading different campaigns", async ({
   page,
 }) => {
-  await startNewGame(page, 1);
-  await page.getByTestId("tutorial-enabled").uncheck();
+  await startNewGame(page, 1, false);
   await page.getByTestId("enter-control-room").click();
-  await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
+  await expect(page.getByTestId("phase-banner")).toContainText("Planning");
   await page.getByRole("button", { name: "Return to save slots" }).click();
 
   await startNewGame(page, 2);
@@ -127,9 +127,11 @@ test("save slots remain isolated when starting and loading different campaigns",
   );
   await page.getByRole("button", { name: "Return to save slots" }).click();
 
+  // Each slot keeps its own guidance choice alongside its plant state.
   await page.getByTestId("load-save-slot-1").click();
-  await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("game-map")).toBeVisible();
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
+  await expect(page.getByTestId("tutorial-task-card")).toHaveCount(0);
 });
 
 test("the Flash Point field drill proves the complete causal chain through domain rules", async ({
@@ -349,23 +351,29 @@ test("map drag capture starts after a threshold and never selects the release ro
   await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
 });
 
-test("disabling the tutorial starts directly in lesson two", async ({ page }) => {
-  await startNewGame(page);
-  const checkbox = page.getByTestId("tutorial-enabled");
-  await expect(checkbox).toBeChecked();
-  await checkbox.uncheck();
-  await expect(page.getByTestId("enter-control-room")).toContainText("Skip to Make the Reagent");
+test("a run without guidance plays the same first site with the controls open", async ({
+  page,
+}) => {
+  await startNewGame(page, 1, false);
 
+  // The contract still reads in full: only the coaching layer stands down.
+  await expect(page.getByTestId("logbook-entry")).toContainText("Claim 8-Delta");
+  await expect(page.getByTestId("dialogue-feed")).toContainText("Malk Tern");
+  await expect(page.getByTestId("enter-control-room")).toContainText("Begin the operation");
   await page.getByTestId("enter-control-room").click();
 
+  await expect(page.getByTestId("game-map")).toBeVisible();
+  await expect(page.getByText("Level 1 · Flash Point", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("tutorial-stage-intro")).toHaveCount(0);
   await expect(page.getByTestId("tutorial-coach")).toHaveCount(0);
-  await expect(page.getByTestId("phase-banner")).toContainText("Planning");
+  await expect(page.getByTestId("tutorial-task-card")).toHaveCount(0);
+
+  // No step gate: the phase action is live from the first planning screen.
+  await expect(page.getByTestId("begin-prime")).toBeEnabled();
   await page.getByRole("button", { name: "Wave forecast" }).click();
-  await expect(page.getByRole("dialog", { name: "Co-products" })).toContainText("Co-products");
+  await expect(page.getByRole("dialog", { name: "First spark" })).toContainText("First spark");
   await page.getByRole("button", { name: "Back to the map" }).click();
-  await expect(page.getByTestId("room-name")).toHaveText("Upper Inner Bay");
-  await expect(page.getByText("Level 2 · Make the Reagent", { exact: true })).toBeVisible();
-  await expect(page.getByTestId("open-equipment-build-lower_intake-socket_a")).toBeVisible();
+  await expect(page.getByTestId("open-equipment-build-furnace-socket_a")).toBeVisible();
 });
 
 test("supplies expose actionable reserves without duplicating hidden plant inventories", async ({

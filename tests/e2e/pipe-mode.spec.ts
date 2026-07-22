@@ -134,12 +134,13 @@ test("an unauthored pair routes through preview and confirm at the corridor exam
   await page.addInitScript(
     ({ save }) => {
       window.localStorage.setItem(
-        "catalyst-castellum:save:slot-1:v1",
+        "catalyst-castellum:save:slot-1:v2",
         JSON.stringify({
-          version: 1,
+          version: 2,
           savedAt: Date.now(),
           game: save,
           dismissedGuideIds: ["flash_point_ox1"],
+          guidanceEnabled: true,
         })
       );
     },

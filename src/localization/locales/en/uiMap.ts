@@ -219,20 +219,9 @@ export const UI_MAP_MESSAGES = {
   "ui.waveForecast.trait.climber": "Ladder runner",
   "ui.waveForecast.trait.shared_field": "Shared field",
   "ui.waveForecast.trait.reagent_emitter": "Reagent emitter",
-  "ui.briefing.graphic": "FLOW DEFENSE ARRAY // CASTELLUM-01",
   "ui.briefing.objective":
     "{objective} You have {duration} of live priming before the configuration locks automatically.",
   "ui.briefing.roundObjective": "Round 1 objective",
-  "ui.briefing.skipDetail": "{level} begins at {room} with planning frozen.",
-  "ui.briefing.startingLesson": "Skipping the drill",
-  "ui.briefing.tutorial.title": "Run the Flash Point field drill",
-  "ui.briefing.tutorial.detail":
-    "Skip it, and Make the Reagent begins at CL-02 with planning frozen.",
   "ui.briefing.beginCheckpoint": "Begin the operation",
-  "ui.briefing.beginDrill": "Begin the field drill",
-  "ui.briefing.beginLesson": "Skip to Make the Reagent",
-  "ui.briefing.hint.checkpoint": "Start at {room}. {lesson}",
-  "ui.briefing.hint.lesson": "Make the Reagent opens with planning frozen at CL-02.",
-  "ui.briefing.hint.drill": "Enter the plant to take the drill assignment at {room}.",
   "ui.briefing.checkpoint": "Operation {number}",
 } as const;

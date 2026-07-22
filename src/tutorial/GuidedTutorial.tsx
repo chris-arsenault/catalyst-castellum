@@ -217,8 +217,9 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
 
 export const GuidedTutorial = () => {
   const game = useGameStore((state) => state.game);
+  const guidanceEnabled = useGameStore((state) => state.guidanceEnabled);
   const tutorialSessionRevision = useGameStore((state) => state.tutorialSessionRevision);
   const guide = guideDefinitionFor(game);
-  if (!guide) return null;
+  if (!guide || !guidanceEnabled) return null;
   return <ActiveGuidedTutorial key={`${guide.id}:${tutorialSessionRevision}`} guide={guide} />;
 };

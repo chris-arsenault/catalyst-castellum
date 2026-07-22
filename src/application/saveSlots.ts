@@ -4,10 +4,15 @@ export const SAVE_SLOT_IDS = ["slot-1", "slot-2", "slot-3"] as const;
 
 export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 
-export interface SaveSlotRecord {
+/** Guidance state belongs to the run, not the simulation. */
+export interface TutorialSession {
+  dismissedGuideIds: string[];
+  guidanceEnabled: boolean;
+}
+
+export interface SaveSlotRecord extends TutorialSession {
   id: SaveSlotId;
   game: GameState;
-  dismissedGuideIds: string[];
   savedAt: number;
 }
 

@@ -290,7 +290,6 @@ export type GameCommand =
   | { type: "start_prime" }
   | { type: "start_assault" }
   | { type: "begin_level" }
-  | { type: "skip_tutorial" }
   | { type: "continue_round" }
   | { type: "start_next_level" }
   | { type: "dock_at_site" }

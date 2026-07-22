@@ -1,4 +1,16 @@
-import type { GameSessionSlice, GameStoreDependencies, StoreGet, StoreSet } from "./storeTypes";
+import type { TutorialSession } from "./saveSlots";
+import type {
+  GameSessionSlice,
+  GameStore,
+  GameStoreDependencies,
+  StoreGet,
+  StoreSet,
+} from "./storeTypes";
+
+const tutorialSession = (state: GameStore): TutorialSession => ({
+  dismissedGuideIds: state.dismissedGuideIds,
+  guidanceEnabled: state.guidanceEnabled,
+});
 
 export const createGameSessionActions = (
   set: StoreSet,
@@ -18,7 +30,7 @@ export const createGameSessionActions = (
       return false;
     }
     const game = result.state;
-    dependencies.scheduleSave(slotId, game, get().dismissedGuideIds);
+    dependencies.scheduleSave(slotId, game, tutorialSession(get()));
     const levelChanged = current.campaign.levelId !== game.campaign.levelId;
     const checkpointRestarted = command.type === "retry_level";
     set({
@@ -36,7 +48,7 @@ export const createGameSessionActions = (
     const current = get().game;
     const game = dependencies.runtime.step(current, dt);
     if (game !== current) {
-      dependencies.scheduleSave(slotId, game, get().dismissedGuideIds);
+      dependencies.scheduleSave(slotId, game, tutorialSession(get()));
       set({ game });
     }
   },

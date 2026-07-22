@@ -9,6 +9,7 @@ import { PipePreviewPopup } from "./gameMap/PipePreviewPopup";
 import { useGameStore } from "../application/store";
 import { useMapCamera, useMapInteractions } from "./gameMap/useMapCamera";
 import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
+import { usePipeRoomEffectHover } from "./gameMap/usePipeRoomEffectHover";
 
 interface GameMapProps {
   game: GameState;
@@ -46,18 +47,18 @@ export const GameMap = ({
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
   const pipePreview = useGameStore((state) => state.pipePreview);
-  const defensivePosturePreview = useGameStore((state) => state.defensivePosturePreview);
+  const roomEffectPreview = useGameStore((state) => state.roomEffectPreview);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
+  const onHoverRun = usePipeRoomEffectHover(game, hover.onHoverRun);
   const camera = useMapCamera(game.map);
   const completePipeDrag = useCallback(
-    (roomId: RoomId) => {
-      const anchor = probePointer();
+    (roomId: RoomId) =>
       setPipeDragSourceRoomId((source) => {
+        const anchor = probePointer();
         if (source && source !== roomId) onConnectRooms(source, roomId, anchor ?? { x: 0, y: 0 });
         return null;
-      });
-    },
+      }),
     [onConnectRooms, probePointer]
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
@@ -80,7 +81,7 @@ export const GameMap = ({
         onHoverEquipment={hover.onHoverEquipment}
         onHoverEnemy={hover.onHoverEnemy}
         onHoverRoom={hover.onHoverRoom}
-        onHoverRun={hover.onHoverRun}
+        onHoverRun={onHoverRun}
         onPipeDragEnd={completePipeDrag}
         onPipeDragStart={setPipeDragSourceRoomId}
         onSelectRoom={onSelectRoom}
@@ -89,7 +90,7 @@ export const GameMap = ({
         pipePreview={pipePreview}
         selectedRoomId={selectedRoomId}
         selectedSpecies={selectedSpecies}
-        defensivePosturePreview={defensivePosturePreview}
+        roomEffectPreview={roomEffectPreview}
       />
       <PipePreviewPopup />
       <MapChrome

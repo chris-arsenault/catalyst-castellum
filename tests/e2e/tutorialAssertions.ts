@@ -15,7 +15,10 @@ export const installEquipment = async (
 };
 
 /** A new run opens in the captain's log, on the act that the first site opens. */
-export const startNewGame = async (page: Page, slot = 1): Promise<void> => {
+export const startNewGame = async (page: Page, slot = 1, guidance = true): Promise<void> => {
+  const guidanceChoice = page.getByTestId(`new-game-guidance-slot-${slot}`);
+  await expect(guidanceChoice).toBeChecked();
+  if (!guidance) await guidanceChoice.uncheck();
   await page.getByTestId(`new-game-slot-${slot}`).click();
   await expect(page.getByTestId("captains-logbook")).toBeVisible();
   await expect(page.getByTestId("game-map")).toHaveCount(0);
@@ -25,7 +28,6 @@ export const startNewGame = async (page: Page, slot = 1): Promise<void> => {
 
 export const startGuidedTutorial = async (page: Page): Promise<void> => {
   await startNewGame(page);
-  await expect(page.getByTestId("tutorial-enabled")).toBeChecked();
   const appError = new Promise<Error>((resolve) => page.once("pageerror", resolve));
   await page.getByTestId("enter-control-room").click();
   const startupError = await Promise.race([

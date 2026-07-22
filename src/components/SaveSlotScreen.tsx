@@ -1,4 +1,4 @@
-import { Database, FlaskConical, Play, Plus, RotateCcw, Trash2 } from "lucide-react";
+import { Compass, Database, FlaskConical, Play, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
@@ -26,18 +26,52 @@ const phaseLabel = (phase: SaveSlotRecord["game"]["phase"], translator: Translat
   return translator.text(keys[phase]);
 };
 
+const GuidanceChoice = ({
+  id,
+  enabled,
+  onChange,
+}: {
+  id: string;
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}) => {
+  const { translator } = useGamePresentation();
+  return (
+    <div className="save-guidance-choice">
+      <input
+        id={`guidance-${id}`}
+        type="checkbox"
+        checked={enabled}
+        data-testid={`new-game-guidance-${id}`}
+        title={translator.text("ui.save.guidance.detail")}
+        onChange={(event) => onChange(event.currentTarget.checked)}
+      />
+      <label htmlFor={`guidance-${id}`} title={translator.text("ui.save.guidance.detail")}>
+        <Compass size={13} /> {translator.text("ui.save.guidance.title")}
+      </label>
+    </div>
+  );
+};
+
 type PendingSlotAction = "overwrite" | "delete";
+
+interface GuidanceControl {
+  enabled: boolean;
+  onChange: (enabled: boolean) => void;
+}
 
 const SlotInlineConfirmation = ({
   action,
   number,
   slotId,
+  guidance,
   onCancel,
   onConfirm,
 }: {
   action: PendingSlotAction;
   number: string;
   slotId: SaveSlotId;
+  guidance: GuidanceControl | null;
   onCancel: () => void;
   onConfirm: () => void;
 }) => {
@@ -65,6 +99,9 @@ const SlotInlineConfirmation = ({
           overwrite ? "ui.save.confirm.overwrite.detail" : "ui.save.confirm.delete.detail"
         )}
       </span>
+      {guidance && (
+        <GuidanceChoice id={slotId} enabled={guidance.enabled} onChange={guidance.onChange} />
+      )}
       <div>
         <button type="button" data-testid={`cancel-${action}-${slotId}`} onClick={onCancel}>
           {translator.text("ui.save.cancel")}
@@ -86,7 +123,8 @@ const SlotInlineConfirmation = ({
 
 const EmptySlot = ({ slotId }: { slotId: SaveSlotId }) => {
   const { translator } = useGamePresentation();
-  const selectSaveSlot = useGameStore((state) => state.selectSaveSlot);
+  const startNewGame = useGameStore((state) => state.startNewGame);
+  const [guidance, setGuidance] = useState(true);
   return (
     <article className="save-slot-card empty" data-testid={`save-slot-${slotNumber(slotId)}`}>
       <header>
@@ -102,11 +140,12 @@ const EmptySlot = ({ slotId }: { slotId: SaveSlotId }) => {
         <h2>{translator.text("ui.save.newCampaign")}</h2>
         <p>{translator.text("ui.save.newDetail")}</p>
       </div>
+      <GuidanceChoice id={slotId} enabled={guidance} onChange={setGuidance} />
       <button
         className="save-slot-primary"
         type="button"
         data-testid={`new-game-${slotId}`}
-        onClick={() => selectSaveSlot(slotId)}
+        onClick={() => startNewGame(slotId, guidance)}
       >
         {translator.text("ui.save.start")} <Play size={16} />
       </button>
@@ -159,10 +198,11 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
   const deleteSaveSlot = useGameStore((state) => state.deleteSaveSlot);
   const number = slotNumber(record.id);
   const [pendingAction, setPendingAction] = useState<PendingSlotAction | null>(null);
+  const [guidance, setGuidance] = useState(true);
   const confirmPendingAction = useCallback(() => {
-    if (pendingAction === "overwrite") startNewGame(record.id);
+    if (pendingAction === "overwrite") startNewGame(record.id, guidance);
     if (pendingAction === "delete") deleteSaveSlot(record.id);
-  }, [deleteSaveSlot, pendingAction, record.id, startNewGame]);
+  }, [deleteSaveSlot, guidance, pendingAction, record.id, startNewGame]);
   const cancelPendingAction = useCallback(() => setPendingAction(null), [setPendingAction]);
 
   return (
@@ -185,6 +225,9 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
           action={pendingAction}
           number={number}
           slotId={record.id}
+          guidance={
+            pendingAction === "overwrite" ? { enabled: guidance, onChange: setGuidance } : null
+          }
           onCancel={cancelPendingAction}
           onConfirm={confirmPendingAction}
         />

@@ -33,6 +33,7 @@ const browserDependencies: GameStoreDependencies = {
 const CLEAN_TUTORIAL_UI = {
   acknowledgedStageIntroIds: [],
   dismissedGuideIds: [],
+  guidanceEnabled: true,
   showHelp: false,
   manualSection: "operations" as const,
   equipmentBuildTarget: null,
@@ -41,14 +42,15 @@ const CLEAN_TUTORIAL_UI = {
   pipePreview: null,
   graftMode: false,
   graftPreview: null,
-  defensivePosturePreview: null,
+  roomEffectPreview: null,
 };
 
 const replaceSlotWithLevel = (
   set: StoreSet,
   dependencies: GameStoreDependencies,
   slotId: Parameters<ApplicationLifecycleSlice["startNewGameAtLevel"]>[0],
-  levelId: Parameters<ApplicationLifecycleSlice["startNewGameAtLevel"]>[1]
+  levelId: Parameters<ApplicationLifecycleSlice["startNewGameAtLevel"]>[1],
+  guidanceEnabled: boolean
 ): void => {
   const levelIndex = dependencies.runtime.definition.levelOrder.indexOf(levelId);
   if (levelIndex < 0) throw new Error(`Cannot start a game at unknown level ${levelId}.`);
@@ -57,16 +59,18 @@ const replaceSlotWithLevel = (
   dependencies.clearSlot(slotId);
   const game = dependencies.runtime.createScenario(levelId, [...completedLevelIds]);
   const savedAt = Date.now();
-  dependencies.scheduleSave(slotId, game, []);
+  const session = { dismissedGuideIds: [], guidanceEnabled };
+  dependencies.scheduleSave(slotId, game, session);
   set((state) => ({
     activeSlotId: slotId,
     saveSlots: {
       ...state.saveSlots,
-      [slotId]: { id: slotId, game, dismissedGuideIds: [], savedAt },
+      [slotId]: { id: slotId, game, savedAt, ...session },
     },
     game,
     selectedRoomId: dependencies.runtime.level(game).focusRoomId,
     ...CLEAN_TUTORIAL_UI,
+    guidanceEnabled,
     tutorialSessionRevision: state.tutorialSessionRevision + 1,
   }));
 };
@@ -85,8 +89,11 @@ const createLifecycleActions = (
   | "returnToMainMenu"
   | "reset"
 > => {
-  const startNewGameAtLevel: ApplicationLifecycleSlice["startNewGameAtLevel"] = (slotId, levelId) =>
-    replaceSlotWithLevel(set, dependencies, slotId, levelId);
+  const startNewGameAtLevel: ApplicationLifecycleSlice["startNewGameAtLevel"] = (
+    slotId,
+    levelId,
+    guidanceEnabled = get().guidanceEnabled
+  ) => replaceSlotWithLevel(set, dependencies, slotId, levelId, guidanceEnabled);
 
   return {
     initialize: () => {
@@ -110,13 +117,14 @@ const createLifecycleActions = (
         selectedRoomId: dependencies.runtime.level(record.game).focusRoomId,
         ...CLEAN_TUTORIAL_UI,
         dismissedGuideIds: record.dismissedGuideIds,
+        guidanceEnabled: record.guidanceEnabled,
         tutorialSessionRevision: state.tutorialSessionRevision + 1,
       }));
     },
-    startNewGame: (slotId) => {
+    startNewGame: (slotId, guidanceEnabled = get().guidanceEnabled) => {
       const firstLevelId = dependencies.runtime.definition.levelOrder[0];
       if (!firstLevelId) throw new Error("Cannot start a game from an empty campaign.");
-      startNewGameAtLevel(slotId, firstLevelId);
+      replaceSlotWithLevel(set, dependencies, slotId, firstLevelId, guidanceEnabled);
     },
     startNewGameAtLevel,
     deleteSaveSlot: (slotId) => {

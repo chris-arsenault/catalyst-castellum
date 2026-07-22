@@ -1,5 +1,5 @@
 import type { GameState } from "../../game/types";
-import type { SaveSlotId } from "../saveSlots";
+import type { SaveSlotId, TutorialSession } from "../saveSlots";
 import { saveGameSlot } from "./browserStorage";
 
 const SAVE_DELAY_MS = 750;
@@ -7,7 +7,7 @@ const SAVE_DELAY_MS = 750;
 interface PendingSave {
   slotId: SaveSlotId;
   game: GameState;
-  dismissedGuideIds: string[];
+  session: TutorialSession;
 }
 
 let latestSave: PendingSave | null = null;
@@ -21,18 +21,18 @@ const clearTimer = (): void => {
 export const flushScheduledGameSave = (): void => {
   if (latestSave === null) return;
   clearTimer();
-  saveGameSlot(latestSave.slotId, latestSave.game, latestSave.dismissedGuideIds);
+  saveGameSlot(latestSave.slotId, latestSave.game, latestSave.session);
   latestSave = null;
 };
 
 export const scheduleGameSave = (
   slotId: SaveSlotId,
   game: GameState,
-  dismissedGuideIds: string[]
+  session: TutorialSession
 ): void => {
   if (typeof window === "undefined") return;
   if (latestSave && latestSave.slotId !== slotId) flushScheduledGameSave();
-  latestSave = { slotId, game, dismissedGuideIds };
+  latestSave = { slotId, game, session };
   if (saveTimer !== null) return;
   saveTimer = window.setTimeout(flushScheduledGameSave, SAVE_DELAY_MS);
 };

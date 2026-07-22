@@ -29,7 +29,7 @@ const publish = (game = buildState(), dismissedGuideIds: string[] = []): void =>
       showHelp: false,
       manualSection: "operations",
       equipmentBuildTarget: null,
-      defensivePosturePreview: null,
+      roomEffectPreview: null,
     });
   });
 };
@@ -139,7 +139,7 @@ describe("build-phase wave forecast", () => {
   });
 });
 
-describe("defensive posture feedback", () => {
+describe("process and room-effect feedback", () => {
   const flashDefense = (enabled: boolean) => {
     let game = buildState();
     game = DEFAULT_GAME_RUNTIME.execute(game, {
@@ -155,27 +155,33 @@ describe("defensive posture feedback", () => {
     }).state;
   };
 
-  it("shows present and held-operation damage during Prime", () => {
+  it("shows live reaction-engine convergence during Prime while retaining the round footprint", () => {
     const priming = DEFAULT_GAME_RUNTIME.execute(flashDefense(true), {
       type: "start_prime",
     }).state;
     publish(priming);
-    render(<PhaseBanner />);
+    const view = render(<PhaseBanner />);
 
-    const posture = screen.getByTestId("defensive-posture-strip");
-    expect(within(posture).getByText("Defensive posture")).toBeTruthy();
-    expect(within(posture).getByText("Exposure rising")).toBeTruthy();
+    expect(screen.getByTestId("prime-process-status")).toBeTruthy();
+    expect(screen.getByTestId("wave-forecast-strip")).toBeTruthy();
+    expect(screen.queryByText(/damage per pass/i)).toBeNull();
+
+    publish(DEFAULT_GAME_RUNTIME.step(priming, 1));
+    view.rerender(<PhaseBanner />);
     expect(
-      within(posture).getByText(/Held operation reaches .* damage per pass \/ 85 health/)
+      within(screen.getByTestId("prime-process-status")).getByText(/homeostasis/i)
     ).toBeTruthy();
   });
 
-  it("puts defense before telemetry and marks the affected room on inspection", () => {
+  it("puts target-room effectiveness arrows before telemetry and marks the room on inspection", () => {
     publish(flashDefense(false));
     render(<TransportRunPanel runId="gas:core__furnace" />);
 
-    const effect = screen.getByTestId("conduit-defensive-effect-gas:core__furnace");
-    expect(within(effect).getByText("Route defense rises")).toBeTruthy();
+    const effect = screen.getByTestId("conduit-room-effect-gas:core__furnace");
+    expect(within(effect).getByText("Target room effect")).toBeTruthy();
+    expect(within(effect).getByText("Lower Outer Bay")).toBeTruthy();
+    expect(within(effect).getByText("Effectiveness increases")).toBeTruthy();
+    expect(effect.querySelector('[data-room-effect="increase"]')).toBeTruthy();
     expect(screen.getByText("Process telemetry").closest("details")?.open).toBe(false);
 
     const actuator = screen
@@ -183,11 +189,11 @@ describe("defensive posture feedback", () => {
       .closest(".actuator-row");
     if (!actuator) throw new Error("Conduit actuator row missing.");
     fireEvent.pointerEnter(actuator);
-    expect(useGameStore.getState().defensivePosturePreview).toEqual({
+    expect(useGameStore.getState().roomEffectPreview).toEqual({
       connectionId: "gas:core__furnace",
-      rooms: { furnace: "gain" },
+      rooms: { furnace: "increase" },
     });
     fireEvent.pointerLeave(actuator);
-    expect(useGameStore.getState().defensivePosturePreview).toBeNull();
+    expect(useGameStore.getState().roomEffectPreview).toBeNull();
   });
 });

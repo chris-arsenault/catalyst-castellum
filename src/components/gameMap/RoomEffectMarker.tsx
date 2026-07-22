@@ -1,22 +1,21 @@
 import { useCallback } from "react";
 import type { Graphics } from "pixi.js";
-import type { DefensivePostureRoomTone } from "../../application/storeTypes";
+import type { RoomEffectTone } from "../../application/storeTypes";
 
-const TONE_STYLE: Record<DefensivePostureRoomTone, { color: number; glyph: string }> = {
-  gain: { color: 0xc9e967, glyph: "+" },
-  loss: { color: 0xf07c64, glyph: "−" },
-  mixed: { color: 0xdfb65d, glyph: "±" },
-  support: { color: 0xd0a85b, glyph: "~" },
+const TONE_STYLE: Record<RoomEffectTone, { color: number; glyph: string }> = {
+  increase: { color: 0xc9e967, glyph: "↑" },
+  decrease: { color: 0xf07c64, glyph: "↓" },
+  steady: { color: 0x8caaa0, glyph: "→" },
 };
 
-export const DefensePostureMarker = ({
+export const RoomEffectMarker = ({
   x,
   y,
   tone,
 }: {
   x: number;
   y: number;
-  tone: DefensivePostureRoomTone;
+  tone: RoomEffectTone;
 }) => {
   const style = TONE_STYLE[tone];
   const draw = useCallback(

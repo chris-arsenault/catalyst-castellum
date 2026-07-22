@@ -288,10 +288,3 @@ export const conduitDefensiveImpact = (
     equipment,
   };
 };
-
-export const projectedDefensivePosture = (
-  source: GameState,
-  gameDefinition: GameDefinition,
-  seconds = DEFENSIVE_POSTURE_PROJECTION_SECONDS
-): DefensivePosture =>
-  projectedPosture(operationalProjection(source, seconds, gameDefinition), gameDefinition, seconds);
