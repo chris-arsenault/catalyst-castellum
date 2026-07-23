@@ -7,6 +7,7 @@ import {
   gasSupply,
   liquidSupply,
 } from "../supplies";
+import { hazardPacketSupplies, type HazardPacketOptions } from "./actTwoShared";
 
 interface ActThreeSupplyOptions {
   gasCapacity: number;
@@ -17,6 +18,7 @@ interface ActThreeSupplyOptions {
   liquidCapacity: number;
   waterCost: number;
   brineCost: number;
+  hazard?: HazardPacketOptions;
 }
 
 /** Late sites vary feed inventory and price while preserving the established three-reservoir grammar. */
@@ -63,18 +65,23 @@ export const actThreeSupplies = (
       replenishment: { kind: "matter", contents: { water: 40 }, cost: options.waterCost },
       accent: "#41baf5",
     }),
-    liquidSupply({
-      id: LIQUID_RESERVOIR_B_ID,
-      code: "L-2",
-      capacity: options.liquidCapacity,
-      initial: { sodium_chloride: options.brine },
-      availableFromRound,
-      replenishment: {
-        kind: "matter",
-        contents: { sodium_chloride: 40 },
-        cost: options.brineCost,
-      },
-      accent: "#60cce4",
-    }),
+    ...(options.brine > 0
+      ? [
+          liquidSupply({
+            id: LIQUID_RESERVOIR_B_ID,
+            code: "L-2",
+            capacity: options.liquidCapacity,
+            initial: { sodium_chloride: options.brine },
+            availableFromRound,
+            replenishment: {
+              kind: "matter",
+              contents: { sodium_chloride: 40 },
+              cost: options.brineCost,
+            },
+            accent: "#60cce4",
+          }),
+        ]
+      : []),
+    ...hazardPacketSupplies(options.hazard ?? {}),
   ];
 };

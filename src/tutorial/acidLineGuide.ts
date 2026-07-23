@@ -3,7 +3,7 @@ import type { GameState, GasAmounts, RoomId } from "../game/types";
 import { ACID_LINE_CONCEPT_MODEL } from "./acidLineConcept";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
-import { gasConduitState, roomState } from "../game/world/instances";
+import { roomState } from "../game/world/instances";
 
 const equipmentRunning = (game: GameState, equipmentId: "gas_agitator" | "thermal_coil"): boolean =>
   roomEquipmentIsActive(roomState(game, "furnace"), equipmentId);
@@ -45,10 +45,13 @@ const hclAmount = (gas: GasAmounts): number => gas.hydrogen_chloride;
 const roomHcl = (game: GameState, roomId: RoomId): number =>
   hclAmount(roomState(game, roomId).gas.lower) + hclAmount(roomState(game, roomId).gas.upper);
 
+const conduitHcl = (game: GameState, runId: string): number =>
+  game.gasConduits[runId]?.gas.hydrogen_chloride ?? 0;
+
 const downstreamHclEstablished = (game: GameState): boolean =>
-  hclAmount(gasConduitState(game, "gas:furnace__gallery").gas) +
+  conduitHcl(game, "gas:furnace__gallery") +
     roomHcl(game, "gallery") +
-    hclAmount(gasConduitState(game, "gas:gallery__washlock").gas) +
+    conduitHcl(game, "gas:gallery__washlock") +
     roomHcl(game, "washlock") >
   0.005;
 

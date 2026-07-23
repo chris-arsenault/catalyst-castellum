@@ -36,7 +36,8 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.kettleblack.mission.summary":
     "Feed and condition KB-02, read a reverse reaction during Prime, then choose the assault defense for the complete wreck.",
   "tutorial.kettleblack.task.routeFeed": "Build and start the Core → KB-02 gas feed.",
-  "tutorial.kettleblack.task.conditionBed": "Run a Thermal Coil and Gas Agitator in KB-02.",
+  "tutorial.kettleblack.task.conditionBed":
+    "Run a Thermal Coil and a carbon-charged Packed Bed in KB-02.",
   "tutorial.kettleblack.task.readDirection": "Observe CS-1 running in reverse during Prime.",
   "tutorial.kettleblack.task.holdReturn": "Hold the first Kettleblack return.",
   "tutorial.kettleblack.step.openPipeBoard.title": "Open process-line construction",
@@ -58,13 +59,20 @@ export const TUTORIAL_MESSAGES = {
     "Install a Thermal Coil in an open KB-02 socket and keep it running.",
   "tutorial.kettleblack.step.installCoil.result":
     "KB-02 now approaches the authored coil temperature.",
-  "tutorial.kettleblack.step.installAgitator.title": "Establish gas contact",
-  "tutorial.kettleblack.step.installAgitator.explanation":
-    "The Gas Agitator mixes both atmospheric layers and increases eligible gas-reaction rates in the room.",
-  "tutorial.kettleblack.step.installAgitator.instruction":
-    "Install a Gas Agitator in KB-02’s second socket and keep it running.",
-  "tutorial.kettleblack.step.installAgitator.result":
-    "The incoming mixture now contacts the stationary bed at an increased rate.",
+  "tutorial.kettleblack.step.installBed.title": "Install the packed bed",
+  "tutorial.kettleblack.step.installBed.explanation":
+    "The Packed Bed turns KB-02’s stationary inventory into a working process surface. Solid–gas chemistry runs inside the vessel.",
+  "tutorial.kettleblack.step.installBed.instruction":
+    "Install a Packed Bed in KB-02’s second socket and keep it running.",
+  "tutorial.kettleblack.step.installBed.result":
+    "The vessel is mounted and waits for a bed charge.",
+  "tutorial.kettleblack.step.loadCharge.title": "Load the carbon charge",
+  "tutorial.kettleblack.step.loadCharge.explanation":
+    "The loaded medium selects the vessel's duty. A carbon charge puts CS-1 and its siblings on the spec plate.",
+  "tutorial.kettleblack.step.loadCharge.instruction":
+    "Select the solid carbon charge on the Packed Bed's process-medium control.",
+  "tutorial.kettleblack.step.loadCharge.result":
+    "The spec plate names the carbon duty, its equation, and its live limiting factor.",
   "tutorial.kettleblack.step.beginPrime.title": "Start the bed test",
   "tutorial.kettleblack.step.beginPrime.explanation":
     "Prime advances duct fill, room temperature, gas contact, and every eligible reaction on the same clock.",
@@ -86,8 +94,65 @@ export const TUTORIAL_MESSAGES = {
     "Kettleblack’s first return is crossing the live foundry.",
   "tutorial.kettleblack.reason.feed": "Build and start the Core → KB-02 gas feed.",
   "tutorial.kettleblack.reason.coil": "Install and run a Thermal Coil in KB-02.",
-  "tutorial.kettleblack.reason.agitator": "Install and run a Gas Agitator in KB-02.",
+  "tutorial.kettleblack.reason.bed": "Install a Packed Bed in KB-02 and load its carbon charge.",
   "tutorial.kettleblack.reason.direction": "Observe CS-1 running in reverse during Prime.",
+
+  "tutorial.cask.label": "Twelve-Cask field lesson",
+  "tutorial.cask.story.kicker": "Third field assignment",
+  "tutorial.cask.story.title": "Bank the store, spend it once",
+  "tutorial.cask.story.paragraph.0":
+    "Twelve-Cask's last crew left mid-run: the cell is mounted, the lines are hung, and every valve holds the position they shut it down in. The plant is whole — it waits on one feed valve, and reopening it is your first act on this deck.",
+  "tutorial.cask.story.paragraph.1":
+    "A continuous line bleeds a marching column; a banked release deletes a packed one. Twelve-Cask's returns arrive in dense cohorts, so route chlorine into the caustic liquor, hold the bleach in R-03, and spend the whole store on a single crossing.",
+  "tutorial.cask.mission.title": "Run the stored-release cadence",
+  "tutorial.cask.mission.summary":
+    "Bank chlorine as hypochlorite in the R-03 store, then release it into a dense cohort crossing R-06.",
+  "tutorial.cask.task.feed": "Reopen the crew's Core → R-05 brine feed.",
+  "tutorial.cask.task.bank": "Open the R-05 → R-03 chlorine duct.",
+  "tutorial.cask.task.charge": "Bank hypochlorite in the R-03 store.",
+  "tutorial.cask.task.release": "Release the store into R-06 during a crossing.",
+  "tutorial.cask.task.hold": "Hold the first two Twelve-Cask returns.",
+  "tutorial.cask.step.reopenFeed.title": "Reopen the crew's feed valve",
+  "tutorial.cask.step.reopenFeed.explanation":
+    "The salvaged machines stand idle for one reason: the departing crew shut the feed. One pump switch puts the whole plant back to work.",
+  "tutorial.cask.step.reopenFeed.instruction":
+    "Switch the Core → R-05 liquid feed ON from the pipe board.",
+  "tutorial.cask.step.reopenFeed.result": "Brine and water are moving toward the salvaged cell.",
+  "tutorial.cask.step.observeLine.title": "Read the salvaged line",
+  "tutorial.cask.step.observeLine.explanation":
+    "With the feed open, the plant produces: brine and water reach the R-05 cell and its outlets fill. Your addition to this plant is the storage cadence.",
+  "tutorial.cask.step.observeLine.instruction":
+    "Watch the R-05 cell outlets until production registers.",
+  "tutorial.cask.step.observeLine.result":
+    "The salvaged cell delivers chlorine, hydrogen, and caustic liquor.",
+  "tutorial.cask.step.openBank.title": "Bank chlorine into the store",
+  "tutorial.cask.step.openBank.explanation":
+    "Chlorine meeting sodium hydroxide in R-03 forms hypochlorite — bleach that holds chlorine's power in liquid form until you choose to spend it.",
+  "tutorial.cask.step.openBank.instruction": "Open the R-05 → R-03 gas duct on the pipe board.",
+  "tutorial.cask.step.openBank.result":
+    "Chlorine now flows into the caustic store and binds as hypochlorite.",
+  "tutorial.cask.step.observeCharge.title": "Watch the store charge",
+  "tutorial.cask.step.observeCharge.explanation":
+    "The R-03 liquid readout counts the banked hypochlorite. Every unit is a stored strike, ready the moment you open the release line.",
+  "tutorial.cask.step.observeCharge.instruction": "Bank hypochlorite in R-03.",
+  "tutorial.cask.step.observeCharge.result": "The store holds a spendable hypochlorite reserve.",
+  "tutorial.cask.step.release.title": "Spend the store on a crossing",
+  "tutorial.cask.step.release.explanation":
+    "A dense cohort packs the corridor for a few seconds. Flooding R-06 with the banked bleach puts corrosive liquid under every foot at once — one release does what minutes of continuous flow do.",
+  "tutorial.cask.step.release.instruction":
+    "Open the R-03 → R-06 release pump while a cohort is crossing.",
+  "tutorial.cask.step.release.result": "The store floods the crossing and the cohort pays for it.",
+  "tutorial.cask.step.hold.title": "Hold both cadences",
+  "tutorial.cask.step.hold.explanation":
+    "The line keeps bleeding stragglers while the store recharges for the next mass. Both cadences run from the same salvaged cell.",
+  "tutorial.cask.step.hold.instruction": "Hold Twelve-Cask through its second return.",
+  "tutorial.cask.step.hold.result":
+    "The stored-release cadence is part of your standing repertoire.",
+  "tutorial.cask.completion.title": "The store cadence is proven",
+  "tutorial.cask.completion.explanation":
+    "Banked hypochlorite deleted a dense cohort in one release while the continuous line handled the stragglers.",
+  "tutorial.cask.completion.instruction":
+    "Carry both cadences forward — the line for streams, the store for masses.",
   "tutorial.reagent.coProducts.completion.title": "Three co-products established",
   "tutorial.reagent.coProducts.completion.explanation":
     "The membrane cell converted mixed liquid feed into separated chlorine, hydrogen, and sodium hydroxide outlets.",
@@ -97,9 +162,9 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.reagent.coProducts.story.kicker": "Second field assignment",
   "tutorial.reagent.coProducts.story.title": "Commission the CL-02 membrane cell",
   "tutorial.reagent.coProducts.story.paragraph.0":
-    "The deckmouth route crosses the CL-02 cell bay and CL-03 reservoir. Chlorine production turns both rooms into active defenses.",
+    "OX-1 spends its whole charge in one flash, then waits on the next purchase. Chlorine works differently: the cell turns cheap brine and water into a standing toxic atmosphere that damages every second an enemy spends inside it, and it keeps producing while you build elsewhere.",
   "tutorial.reagent.coProducts.story.paragraph.1":
-    "A single cell current consumes water and brine together. Every reaction extent creates chlorine, hydrogen, and sodium hydroxide, so feed availability and the smallest outlet headroom control the whole process.",
+    "One cell current pays three times. Chlorine holds the corridor now, the hydrogen outlet refills the flash reservoir you drained at Claim 8-Delta, and sodium hydroxide is the base stock for stored bleach and acid control — the chemistry the next claim runs on.",
   "tutorial.reagent.coProducts.mission.title": "Establish CL-1 production",
   "tutorial.reagent.coProducts.mission.summary":
     "Mount the Membrane Cell in CL-02, verify all three conserved outputs, then neutralize the deckmouth column.",
@@ -109,7 +174,7 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.reagent.coProducts.task.holdCrossing": "Neutralize the first deckmouth column.",
   "tutorial.reagent.coProducts.step.installCell.title": "Install the membrane cell",
   "tutorial.reagent.coProducts.step.installCell.explanation":
-    "CL-02 links the Core feed, the CL-03 transfer duct, and Core recovery for this assignment.",
+    "CL-02 links the Core feed, the CL-03 transfer duct, and Core recovery. A cell here puts continuous chlorine on the deckmouth route — steady damage that complements the purchased OX-1 burst.",
   "tutorial.reagent.coProducts.step.installCell.instruction":
     "Install a Membrane Cell in an open CL-02 socket and keep it running.",
   "tutorial.reagent.coProducts.step.installCell.result":
@@ -167,15 +232,15 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.reagent.sharedRelief.mission.title": "Commission shared relief",
   "tutorial.reagent.sharedRelief.mission.summary":
     "Open Core recovery, confirm shared gas movement, and carry CL-1 production through the follow-up wave.",
-  "tutorial.reagent.sharedRelief.task.openRecovery": "Open the CL-02 → Core recovery fan.",
+  "tutorial.reagent.sharedRelief.task.openRecovery": "Build the CL-02 → Core recovery line.",
   "tutorial.reagent.sharedRelief.task.establishFlow": "Confirm Cl₂/H₂ movement into Core recovery.",
   "tutorial.reagent.sharedRelief.task.sustainCell": "Track CL-1 current through the shorter prime.",
   "tutorial.reagent.sharedRelief.task.holdWave": "Hold the Shared Relief wave.",
-  "tutorial.reagent.sharedRelief.step.openRecovery.title": "Open Core recovery",
+  "tutorial.reagent.sharedRelief.step.openRecovery.title": "Build the Core recovery line",
   "tutorial.reagent.sharedRelief.step.openRecovery.explanation":
-    "The recovery fan draws the combined chlorine-and-hydrogen junction stream toward Core recovery and restores gas-header headroom.",
+    "A recovery line draws the combined chlorine-and-hydrogen junction stream toward Core recovery and restores gas-header headroom. Lines you build start running the moment they connect.",
   "tutorial.reagent.sharedRelief.step.openRecovery.instruction":
-    "Switch the CL-02 recovery fan ON.",
+    "Build the Core → CL-02 gas line from the pipe board.",
   "tutorial.reagent.sharedRelief.step.openRecovery.result":
     "The shared gas junction now has a second active outlet.",
   "tutorial.reagent.sharedRelief.step.beginPrime.title": "Start the relief test",

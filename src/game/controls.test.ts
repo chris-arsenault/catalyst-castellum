@@ -8,7 +8,7 @@ const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import { gasConduitState, roomState } from "./world/instances";
 
 describe("simple conduit controls", () => {
-  it("locks the one actuator during assault", () => {
+  it("keeps the actuator adjustable during assault", () => {
     let state = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
     state = executeCommand(state, {
       type: "set_conduit",
@@ -22,8 +22,8 @@ describe("simple conduit controls", () => {
       connectionId: "gas:core__furnace",
       enabled: false,
     });
-    expect(result.accepted).toBe(false);
-    expect(gasConduitState(result.state, "gas:core__furnace").enabled).toBe(true);
+    expect(result.accepted).toBe(true);
+    expect(gasConduitState(result.state, "gas:core__furnace").enabled).toBe(false);
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
@@ -48,10 +48,16 @@ describe("simple conduit controls", () => {
   });
 
   it("rejects dismantling conserved retained material", () => {
-    const state = executeCommand(createScenarioGame("make_the_reagent"), {
+    let state = executeCommand(createScenarioGame("make_the_reagent"), {
       type: "begin_level",
     }).state;
     state.availability.gasLines.push("gas:furnace__lower_intake");
+    state = executeCommand(state, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "furnace",
+      toRoomId: "lower_intake",
+    }).state;
     gasConduitState(state, "gas:furnace__lower_intake").gas.hydrogen = 1;
     const result = executeCommand(state, {
       type: "dismantle_connection",

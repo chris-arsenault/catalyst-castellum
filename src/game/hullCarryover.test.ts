@@ -73,6 +73,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
       level: 2,
       enabled: true,
       operation: null,
+      medium: null,
     };
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     roomState(ending, "switchyard").liquid.water = 4;
@@ -92,6 +93,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
       level: 2,
       enabled: true,
       operation: null,
+      medium: null,
     };
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     roomState(ending, "switchyard").liquid.water = 4;
@@ -148,7 +150,9 @@ describe("the carried hull persists and translates", () => {
       width: 120,
       rooms: { core: mapB.rooms.core! },
       connections: {},
-      utilityNodes: mapB.utilityNodes,
+      utilityNodes: Object.fromEntries(
+        Object.entries(mapB.utilityNodes).filter(([, node]) => node.hostRoomId === "core")
+      ),
     });
     const site = produceAuthoredSite(
       {

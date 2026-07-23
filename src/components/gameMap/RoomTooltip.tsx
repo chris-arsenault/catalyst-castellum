@@ -20,6 +20,7 @@ import {
   type RoomGasInflow,
 } from "../../presentation/roomFlow";
 import { roomCopy } from "../../presentation/entityCopy";
+import { roomRoundCombat } from "../../presentation/combatReadout";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
@@ -191,6 +192,23 @@ const RoomReadout = ({
   );
 };
 
+const RoomCombatRow = ({ game, roomId }: { game: GameState; roomId: RoomId }) => {
+  const { formatters, translator } = useGamePresentation();
+  const combat = roomRoundCombat(game, roomId);
+  if (combat.damage < 0.5 && combat.kills === 0) return null;
+  return (
+    <div className="room-combat-row">
+      <strong>{translator.text("ui.map.room.roundCombat")}</strong>
+      <span>
+        {translator.text("ui.map.room.roundCombatValue", {
+          damage: formatters.number(combat.damage, 0),
+          kills: combat.kills,
+        })}
+      </span>
+    </div>
+  );
+};
+
 const RoomExposure = ({
   lowerHazards,
   upperHazards,
@@ -258,6 +276,7 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
       />
       <div className="room-pressure-explanation">{pressureExplanation}</div>
       <RoomExposure lowerHazards={lowerHazards} upperHazards={upperHazards} />
+      <RoomCombatRow game={game} roomId={roomId} />
       <small>{translator.text("ui.map.room.select", { room: definition.code })}</small>
     </aside>
   );

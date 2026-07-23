@@ -3,6 +3,8 @@ import type { ReactionDefinition, ReactionId } from "../../types";
 export const URANIUM_FLUORINE_REACTIONS = {
   uranium_hexafluoride_hydrolysis: {
     id: "uranium_hexafluoride_hydrolysis",
+    family: "uranium_fluorine",
+    regime: "wild",
     code: "UF-1",
     kind: "chemical",
     equation: "UF₆(g) + 2 H₂O(g) → UO₂F₂(s) + 4 HF(g)",
@@ -34,6 +36,8 @@ export const URANIUM_FLUORINE_REACTIONS = {
   },
   uranyl_fluoride_recovery: {
     id: "uranyl_fluoride_recovery",
+    family: "uranium_fluorine",
+    regime: "engineered",
     code: "UF-2",
     kind: "chemical",
     equation: "UO₂F₂(s) + 2 F₂(g) → UF₆(g) + O₂(g) + heat",
@@ -69,6 +73,8 @@ export const URANIUM_FLUORINE_REACTIONS = {
   },
   hydrogen_fluoride_electrolysis: {
     id: "hydrogen_fluoride_electrolysis",
+    family: "uranium_fluorine",
+    regime: "engineered",
     code: "UF-3",
     kind: "chemical",
     equation: "2 HF(g) → H₂(g) + F₂(g)",

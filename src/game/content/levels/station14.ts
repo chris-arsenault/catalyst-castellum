@@ -2,7 +2,15 @@ import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { ACT_THREE_SITE_SEEDS, STATION_14_SITE } from "../sites/actThree";
 import { actThreeSupplies } from "./actThreeShared";
-import { ACT_II_AVAILABILITY } from "./fullPlant";
+import { paletteAvailability } from "./fullPlant";
+import type { ProcessFamilyId } from "../../types";
+
+const STATION_14_PALETTE: readonly ProcessFamilyId[] = [
+  "uranium_fluorine",
+  "carbon_steam",
+  "chlorine_sodium",
+];
+const STATION_14_AVAILABILITY = paletteAvailability(STATION_14_PALETTE);
 import { emptyLoadout } from "./helpers";
 
 const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
@@ -11,6 +19,7 @@ const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["
 export const STATION_14_LEVEL: LevelDefinition = {
   id: "station_14",
   number: 9,
+  palette: STATION_14_PALETTE,
   enemyLevel: 28,
   focusRoomId: "reservoir",
   featuredReactionIds: [
@@ -41,8 +50,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
     ...emptyLoadout(),
     stationary: {
       furnace: { solid_carbon: 24, iron_catalyst: 4 },
-      gallery: { platinum_catalyst: 3, uranyl_fluoride: 36 },
-      lower_intake: { surface_nickel: 14, nickel_oxide: 10 },
+      gallery: { uranyl_fluoride: 36 },
     },
   },
   rounds: [
@@ -50,7 +58,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
       id: "first_beacon",
       primeSeconds: 72,
       wave: enemySequence(1, "deckmouth", 1, 1, -8),
-      availability: ACT_II_AVAILABILITY,
+      availability: STATION_14_AVAILABILITY,
     },
     {
       id: "split_position",
@@ -60,7 +68,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
         enemySequence(1, "shear_jelly", 2, 1, -7),
         enemySequence(1, "glowbag", 4, 1, -8)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: STATION_14_AVAILABILITY,
     },
     {
       id: "shielded_return",
@@ -70,7 +78,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
         enemySequence(2, "redlung", 2, 3.2, -7),
         enemySequence(1, "anchor", 4, 1, -8)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: STATION_14_AVAILABILITY,
     },
     {
       id: "fourth_signal",
@@ -81,7 +89,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
         enemySequence(3, "glowbag", 3, 2.8, -7),
         enemySequence(2, "shear_jelly", 5, 3, -6)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: STATION_14_AVAILABILITY,
     },
     {
       id: "near_echo",
@@ -96,7 +104,7 @@ export const STATION_14_LEVEL: LevelDefinition = {
         enemySequence(1, "shear_jelly", 6, 1, 1),
         enemySequence(1, "anchor", 7.5, 1, -5)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: STATION_14_AVAILABILITY,
     },
   ],
 };

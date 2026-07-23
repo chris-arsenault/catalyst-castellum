@@ -35,21 +35,20 @@ export const TUTORIAL_ACID_MESSAGES = {
     "Both gas layers now share reactants and accelerated CL-2 kinetics.",
   "tutorial.acid.hotMix.step.openFeed.title": "Open the mixed-gas feed",
   "tutorial.acid.hotMix.step.openFeed.explanation":
-    "CL-02 combines its H₂ and Cl₂ buffer inventories at one gas junction. The feed fan carries that shared mixture into heated CL-04.",
-  "tutorial.acid.hotMix.step.openFeed.instruction": "Switch the CL-02–CL-04 gas fan ON.",
+    "CL-02 combines its H₂ and Cl₂ buffer inventories at one gas junction. A feed line carries that shared mixture into heated CL-04, and runs the moment it connects.",
+  "tutorial.acid.hotMix.step.openFeed.instruction": "Build the CL-02 → CL-04 gas line.",
   "tutorial.acid.hotMix.step.openFeed.result":
     "The 1:1 H₂/Cl₂ stream can now charge the physical feed duct.",
   "tutorial.acid.hotMix.step.openFirstReturn.title": "Open the first return leg",
   "tutorial.acid.hotMix.step.openFirstReturn.explanation":
-    "The CL-04–CL-05 fan draws reacted chamber atmosphere, including HCl product, into the middle return room.",
-  "tutorial.acid.hotMix.step.openFirstReturn.instruction": "Switch the CL-04–CL-05 return fan ON.",
+    "A CL-04 → CL-05 line draws reacted chamber atmosphere, including HCl product, into the middle return room.",
+  "tutorial.acid.hotMix.step.openFirstReturn.instruction": "Build the CL-04 → CL-05 gas line.",
   "tutorial.acid.hotMix.step.openFirstReturn.result":
     "CL-04 now feeds the first downstream acid-line segment.",
   "tutorial.acid.hotMix.step.openFinalReturn.title": "Complete the return line",
   "tutorial.acid.hotMix.step.openFinalReturn.explanation":
-    "The CL-05–R-06 fan extends the HCl-bearing stream through the final combat room before the Core.",
-  "tutorial.acid.hotMix.step.openFinalReturn.instruction":
-    "Select CL-05, then switch the CL-05–R-06 gas fan ON.",
+    "A CL-05 → R-06 line extends the HCl-bearing stream through the final combat room before the Core.",
+  "tutorial.acid.hotMix.step.openFinalReturn.instruction": "Build the CL-05 → R-06 gas line.",
   "tutorial.acid.hotMix.step.openFinalReturn.result":
     "The complete CL-04 → CL-05 → R-06 gas path is active.",
   "tutorial.acid.hotMix.step.beginPrime.title": "Start acid-line commissioning",

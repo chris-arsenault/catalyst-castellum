@@ -1,10 +1,13 @@
 # Chemical process model
 
 Catalyst Castellum models chemistry as conserved species moving through finite rooms, equipment
-ports, junctions, and process lines. Thirty authored reactions span six process families. Their
-definitions are executable content: stoichiometry, direction, rate law, activation windows,
-catalysts, inhibitors, heat, pressure, and equipment requirements all feed the runtime and the
-balance workbook.
+ports, junctions, and process lines. Thirty authored reactions span six process families —
+chlorine-sodium, carbon-steam, nitrogen-oxide, iron, nickel, and uranium-fluorine — and every
+reaction carries a regime: **wild** reactions proceed spontaneously in open rooms, while
+**engineered** reactions run only inside the vessel whose duty hosts them
+([ADR-0007](adr/0007-engineered-reactions-run-in-vessels.md)). Definitions are executable
+content: stoichiometry, direction, rate law, activation windows, catalysts, inhibitors, heat,
+pressure, family, and regime all feed the runtime and the balance workbook.
 
 ## Conservation boundary
 
@@ -40,7 +43,7 @@ fill determines the physical surface used for port submergence and ground contac
 
 ## Reaction execution
 
-Ordinary multi-stage chemistry runs through a simultaneous mass-action solve:
+Wild multi-stage chemistry runs through a simultaneous mass-action solve in every room:
 
 1. Snapshot every room inventory and environmental condition once per fixed step.
 2. Evaluate each eligible forward and reverse rate request from activity, temperature, pressure,
@@ -49,9 +52,16 @@ Ordinary multi-stage chemistry runs through a simultaneous mass-action solve:
 4. Apply realized extents together and record direction, rate, and limiting factor.
 5. Expose products to reactions on the next simulation step.
 
-This ordering prevents definition order from becoming a hidden reaction priority. Four-stage and
-longer chains run whenever their rooms, inventories, equipment, and transport provide each physical
-stage.
+This ordering prevents definition order from becoming a hidden reaction priority. The wild set —
+combustion, recombination, dissolution, neutralization, hypochlorite chemistry, CO oxidation,
+ambient NO oxidation, and UF₆ hydrolysis — is exactly the chemistry that proceeds spontaneously
+in open air or water.
+
+Engineered chemistry runs through the same mass-action solve scoped to a vessel's active duty.
+The loaded medium selects the duty, the installed grade caps the process rate, the loaded
+catalyst charge satisfies the reaction's catalyst term, and ambient accelerator multipliers do
+not apply. Reversibility, activity response, catalyst saturation, and inhibition behave
+identically inside and outside vessels; the vessel supplies gating, rating, and attribution.
 
 OX-1 combustion uses a discrete flash behavior. A stoichiometric H₂/O₂ charge that clears its
 ignition thresholds burns a bounded extent, creates steam and persistent heat, applies a pressure
@@ -63,18 +73,29 @@ next proc time.
 Ordinary rooms are generic structural spaces with sockets. Installed equipment creates process
 roles:
 
-- Gas Agitators mix gas layers and accelerate eligible gas reactions.
-- Wet Contactors accelerate eligible gas-liquid and liquid reactions.
+- Gas Agitators mix gas layers and accelerate eligible wild gas reactions.
+- Wet Contactors accelerate eligible wild gas-liquid and liquid reactions.
 - Thermal Coils drive the room toward their grade's rated temperature.
 - Membrane Cells execute chlor-alkali electrolysis with separate finite outputs.
 - Fluorine Cells execute hydrogen-fluoride electrolysis with separate finite outputs.
+- Catalytic Reactors run gas-phase catalytic duties — iron charge for ammonia synthesis and
+  water-gas shift, nickel charge for methanation and steam reforming.
+- Packed Beds host the room's stationary charge — carbon, iron oxides, nickel media, or uranyl
+  fluoride — and run its solid–gas duty in place.
+- Catalytic Burners oxidize and reduce nitrogen chemistry across platinum gauze.
+- Absorber Columns absorb nitrogen dioxide into pooled water and release nitric acid.
 
-Each installed cell owns its operation state, cumulative extent, limiting factor, power draw, and
-port inventories. Multiple cells operate independently even when they use the same definition.
-Outlet headroom, feed availability, grade rate, and power state limit each operation.
+An operation is a list of duties; each duty names the stationary medium that enables it and the
+reactions it executes. The `load_vessel_medium` command selects a vessel's medium during build or
+prime, and the spec plate presents the active duty's equation, rate, power draw, and limiting
+factor. Each installed vessel owns its operation state, cumulative extent, and port inventories;
+multiple vessels operate independently even when they use the same definition. Nickel migration
+stays physical: carbonyl volatilizes from a warm nickel bed, moves by ordinary transport, and
+deposits into any hot Packed Bed.
 
-Catalysts are stationary species referenced as rate modifiers. They remain outside stoichiometric
-consumption unless a separate authored reaction changes their species.
+Catalysts are stationary species referenced as rate modifiers. A vessel's loaded charge satisfies
+its duty's catalyst term; room-bound catalyst inventory serves wild chemistry. Catalysts remain
+outside stoichiometric consumption unless a separate authored reaction changes their species.
 
 ## Transport and spatial physics
 
@@ -196,12 +217,30 @@ fluorine recover UF₆; a powered Fluorine Cell recovers fluorine from HF. Urani
 a modest persistent radiation field while its immediate chemistry remains atmospheric and
 corrosive.
 
+## Palettes and depth-one supply
+
+Each site declares a palette of one to three process families
+([ADR-0008](adr/0008-site-chemistry-palettes.md)). Supplies, seeded stationary charges, and
+per-round equipment availability derive from and are compiler-validated against the palette, so
+the concurrent possibility space at a site is the palette's eight-to-twelve reactions. Common
+precursors — hydrogen, oxygen, nitrogen, water, steam, and iron catalyst — ship under every
+palette.
+
+Every offensive family delivers a working hazard from at most one reaction on a site-supplied
+feedstock ([ADR-0009](adr/0009-damage-at-depth-one.md)). Hull hazard reservoirs (G-3 gas on the
+washlock, L-3 liquid) carry priced, capped direct-supply packets — chlorine, ammonia, nitrogen
+dioxide, hypochlorite, hydrochloric acid — while synthesis chains make the same feedstock free
+and scalable. Iron is the support family: its promise is oxygen carriage and feed recycling, and
+it is labeled as support in the encyclopedia.
+
 ## Player information
 
 The UI exposes current inventories, gas layers, liquid surface, stationary material, temperature,
 pressure, line fill, measured flow, reaction direction/rate, catalyst, inhibitor, activation
-windows, and limiting factor. It presents current state and observed causality while leaving the
-player to combine multiple process stages.
+windows, and limiting factor. Vessel spec plates present the active duty's equation, medium,
+rate, and limiting factor, and the encyclopedia labels every reaction with its family, regime,
+and — for iron — its support role. The UI presents current state and observed causality while
+leaving the player to combine multiple process stages.
 
 The Encyclopedia derives equations and mechanics from the compiled definition. Player-facing names
 and descriptions live in the locale catalog rather than mechanical content.

@@ -13,6 +13,8 @@ a product decision.
   variants while each save remains one hull and one run.
 - Expand the generated-site vocabulary into biome-specific chunk families with distinct feedstock
   taps, terrain profiles, and enemy ecologies.
+- Draw seeded chemistry palettes per generated dock through the palette system, including
+  palette-derived supply and tap synthesis ([ADR-0008](docs/adr/0008-site-chemistry-palettes.md)).
 - Give Twelve-Cask and Morrow Pocket distinct exterior maps while preserving their authored lessons
   and balance contracts.
 

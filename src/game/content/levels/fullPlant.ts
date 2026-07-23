@@ -1,5 +1,7 @@
 import type { GasConduitLoadout, LiquidConduitLoadout } from "../../definitionTypes";
-import { EQUIPMENT_IDS, type ConnectionId } from "../../types";
+import { EQUIPMENT_IDS, type ConnectionId, type ProcessFamilyId } from "../../types";
+import type { ScenarioAvailability } from "../../gameStateTypes";
+import { paletteEquipment } from "../palette";
 import { WORLD_LINE_BLUEPRINTS } from "../worldMap";
 import { availability, gasRun, liquidRun } from "./helpers";
 
@@ -14,6 +16,14 @@ export const ALL_AVAILABILITY = availability({
   liquidLines: ALL_LIQUID_RUNS,
 });
 
+/** Availability derived from a site's chemistry palette (ADR-0008). */
+export const paletteAvailability = (palette: readonly ProcessFamilyId[]): ScenarioAvailability =>
+  availability({
+    equipment: paletteEquipment(palette),
+    gasLines: ALL_GAS_RUNS,
+    liquidLines: ALL_LIQUID_RUNS,
+  });
+
 /** Every mechanism established by the end of Act I; later specialist cells stay campaign-gated. */
 export const ACT_I_AVAILABILITY = availability({
   equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell"],
@@ -21,9 +31,42 @@ export const ACT_I_AVAILABILITY = availability({
   liquidLines: ALL_LIQUID_RUNS,
 });
 
+/** Kettleblack introduces the packed bed; the catalytic vessels stay campaign-gated. */
+export const KETTLEBLACK_AVAILABILITY = availability({
+  equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell", "packed_bed"],
+  gasLines: ALL_GAS_RUNS,
+  liquidLines: ALL_LIQUID_RUNS,
+});
+
+/** Cordon 41 and Junction L-6 open the full catalytic vessel roster. */
+export const CATALYTIC_AVAILABILITY = availability({
+  equipment: [
+    "gas_agitator",
+    "wet_contactor",
+    "thermal_coil",
+    "membrane_cell",
+    "packed_bed",
+    "catalytic_reactor",
+    "catalytic_burner",
+    "absorber_column",
+  ],
+  gasLines: ALL_GAS_RUNS,
+  liquidLines: ALL_LIQUID_RUNS,
+});
+
 /** Pell Cut adds the specialist fluorine cell after every ordinary process control is established. */
 export const ACT_II_AVAILABILITY = availability({
-  equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell", "fluorine_cell"],
+  equipment: [
+    "gas_agitator",
+    "wet_contactor",
+    "thermal_coil",
+    "membrane_cell",
+    "packed_bed",
+    "catalytic_reactor",
+    "catalytic_burner",
+    "absorber_column",
+    "fluorine_cell",
+  ],
   gasLines: ALL_GAS_RUNS,
   liquidLines: ALL_LIQUID_RUNS,
 });

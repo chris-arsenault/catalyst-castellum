@@ -4,6 +4,7 @@ import { GAS_COLORS, GAS_LABELS } from "../substancePresentation";
 export const BASE_GAS_DEFINITIONS = {
   oxygen: {
     id: "oxygen",
+    family: "common",
     formula: GAS_LABELS.oxygen,
     phase: "gas",
     elements: { O: 2 },
@@ -25,6 +26,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   nitrogen: {
     id: "nitrogen",
+    family: "common",
     formula: GAS_LABELS.nitrogen,
     phase: "gas",
     elements: { N: 2 },
@@ -36,6 +38,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   carbon_dioxide: {
     id: "carbon_dioxide",
+    family: "carbon_steam",
     formula: GAS_LABELS.carbon_dioxide,
     phase: "gas",
     elements: { C: 1, O: 2 },
@@ -57,6 +60,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   carbon_monoxide: {
     id: "carbon_monoxide",
+    family: "carbon_steam",
     formula: GAS_LABELS.carbon_monoxide,
     phase: "gas",
     elements: { C: 1, O: 1 },
@@ -78,6 +82,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   chlorine: {
     id: "chlorine",
+    family: "chlorine_sodium",
     formula: GAS_LABELS.chlorine,
     phase: "gas",
     elements: { Cl: 2 },
@@ -108,6 +113,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   hydrogen: {
     id: "hydrogen",
+    family: "common",
     formula: GAS_LABELS.hydrogen,
     phase: "gas",
     elements: { H: 2 },
@@ -119,6 +125,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   hydrogen_chloride: {
     id: "hydrogen_chloride",
+    family: "chlorine_sodium",
     formula: GAS_LABELS.hydrogen_chloride,
     phase: "gas",
     elements: { H: 1, Cl: 1 },
@@ -149,6 +156,7 @@ export const BASE_GAS_DEFINITIONS = {
   },
   steam: {
     id: "steam",
+    family: "common",
     formula: GAS_LABELS.steam,
     phase: "gas",
     elements: { H: 2, O: 1 },

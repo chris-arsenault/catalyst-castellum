@@ -31,6 +31,7 @@ describe("definition extension contracts", () => {
       level: 1,
       enabled: true,
       operation: null,
+      medium: null,
     };
 
     expect(roomGasMixingRate(roomState(state, "furnace"), definition)).toBe(9);

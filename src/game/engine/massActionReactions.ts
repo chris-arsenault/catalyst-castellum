@@ -9,6 +9,7 @@ import {
   type RoomReactionId,
   type RoomState,
   type SpeciesId,
+  type StationaryType,
 } from "../types";
 import { roomContactReactionMultiplier, roomGasReactionMultiplier } from "./equipment";
 import { clamp } from "./math";
@@ -16,9 +17,16 @@ import { allocateSharedReactants } from "./massActionAllocation";
 import { pressureFactor, temperatureFactor } from "./massActionKinetics";
 import { roomStaticPressure, STANDARD_PRESSURE } from "./physics";
 
-type MassActionReaction = ReactionDefinition & {
+export type MassActionReaction = ReactionDefinition & {
   behavior: Extract<ReactionDefinition["behavior"], { kind: "mass_action" }>;
 };
+
+/** Vessel-scoped kinetics adjustments: the vessel caps rate, satisfies its loaded catalyst, and replaces ambient accelerators. */
+export interface MassActionOverrides {
+  rateCap: number;
+  loadedMedium: StationaryType | null;
+  equipmentMultiplier: number;
+}
 
 interface RoomSnapshot {
   gas: RoomState["gas"];
@@ -94,6 +102,15 @@ const inhibitorFactor = (
     return factor * (inhibitor.halfInhibition / (inhibitor.halfInhibition + amount));
   }, 1);
 
+const ambientEquipmentMultiplier = (
+  reaction: MassActionReaction,
+  room: RoomState,
+  definition: GameDefinition
+): number =>
+  reaction.behavior.contact === "liquid"
+    ? roomContactReactionMultiplier(room, definition)
+    : roomGasReactionMultiplier(room, definition);
+
 interface DirectionRate {
   activity: number;
   catalyst: number;
@@ -109,7 +126,8 @@ const directionRate = (
   snapshot: RoomSnapshot,
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition
+  definition: GameDefinition,
+  overrides: MassActionOverrides | null
 ): DirectionRate => {
   if (!direction)
     return { activity: 0, catalyst: 1, inhibitors: 1, pressure: 1, rate: 0, temperature: 1 };
@@ -122,20 +140,25 @@ const directionRate = (
     roomStaticPressure(room, definition) / STANDARD_PRESSURE
   );
   const activity = rateOrderActivity(direction, reaction, snapshot, zone, definition);
-  const catalyst = catalystFactor(reaction, snapshot, zone, definition);
+  const catalyst =
+    overrides && reaction.behavior.catalyst?.species === overrides.loadedMedium
+      ? 1
+      : catalystFactor(reaction, snapshot, zone, definition);
   const inhibitors = inhibitorFactor(reaction, snapshot, zone, definition);
-  const equipment =
-    reaction.behavior.contact === "liquid"
-      ? roomContactReactionMultiplier(room, definition)
-      : roomGasReactionMultiplier(room, definition);
+  const equipment = overrides
+    ? overrides.equipmentMultiplier
+    : ambientEquipmentMultiplier(reaction, room, definition);
+  const rateCeiling = overrides
+    ? Math.min(reaction.behavior.maximumRate, overrides.rateCap)
+    : reaction.behavior.maximumRate;
   return {
     activity,
     catalyst,
     inhibitors,
     pressure,
     rate: Math.min(
-      reaction.behavior.maximumRate * equipment,
-      reaction.behavior.maximumRate *
+      rateCeiling * equipment,
+      rateCeiling *
         direction.rateConstant *
         activity *
         temperature *
@@ -211,7 +234,8 @@ const makeProposal = (
   room: RoomState,
   zone: GasZone,
   dt: number,
-  definition: GameDefinition
+  definition: GameDefinition,
+  overrides: MassActionOverrides | null
 ): Proposal | null => {
   const forward = directionRate(
     reaction.behavior.forward,
@@ -219,7 +243,8 @@ const makeProposal = (
     snapshot,
     room,
     zone,
-    definition
+    definition,
+    overrides
   );
   const reverse = directionRate(
     reaction.behavior.reverse,
@@ -227,7 +252,8 @@ const makeProposal = (
     snapshot,
     room,
     zone,
-    definition
+    definition,
+    overrides
   );
   const netRate = forward.rate - reverse.rate;
   const direction = netRate >= 0 ? "forward" : "reverse";
@@ -345,21 +371,21 @@ const applyProposal = (
   return extent;
 };
 
-export const simulateMassActionNetwork = (
+export const simulateMassActionSet = (
   room: RoomState,
   dt: number,
-  definition: GameDefinition
+  definition: GameDefinition,
+  reactions: readonly MassActionReaction[],
+  overrides: MassActionOverrides | null
 ): number => {
   const snapshot = snapshotRoom(room);
-  const proposals = Object.values(definition.reactions)
-    .filter((reaction): reaction is MassActionReaction => reaction.behavior.kind === "mass_action")
-    .flatMap((reaction) => {
-      const zones = reaction.behavior.contact === "liquid" ? (["lower"] as const) : GAS_ZONES;
-      return zones.flatMap((zone) => {
-        const proposal = makeProposal(reaction, snapshot, room, zone, dt, definition);
-        return proposal ? [proposal] : [];
-      });
+  const proposals = reactions.flatMap((reaction) => {
+    const zones = reaction.behavior.contact === "liquid" ? (["lower"] as const) : GAS_ZONES;
+    return zones.flatMap((zone) => {
+      const proposal = makeProposal(reaction, snapshot, room, zone, dt, definition, overrides);
+      return proposal ? [proposal] : [];
     });
+  });
   allocateSharedReactants(proposals, availableByKey(snapshot, proposals, definition));
   const netByReaction = new Map<RoomReactionId, number>();
   let total = 0;
@@ -375,3 +401,22 @@ export const simulateMassActionNetwork = (
     room.reactions[reactionId].direction = net >= 0 ? "forward" : "reverse";
   return total;
 };
+
+const wildMassActionCache = new WeakMap<GameDefinition, readonly MassActionReaction[]>();
+
+const wildMassActionReactions = (definition: GameDefinition): readonly MassActionReaction[] => {
+  const cached = wildMassActionCache.get(definition);
+  if (cached) return cached;
+  const wild = Object.values(definition.reactions).filter(
+    (reaction): reaction is MassActionReaction =>
+      reaction.behavior.kind === "mass_action" && reaction.regime === "wild"
+  );
+  wildMassActionCache.set(definition, wild);
+  return wild;
+};
+
+export const simulateMassActionNetwork = (
+  room: RoomState,
+  dt: number,
+  definition: GameDefinition
+): number => simulateMassActionSet(room, dt, definition, wildMassActionReactions(definition), null);

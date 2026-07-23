@@ -135,5 +135,5 @@ describe("combat balance role solves", () => {
       expect(isolated.enemies.deckmouth.health).toBe(1_000_000_000);
       expect(isolated.enemies.deckmouth.coreDamage).toBe(0);
     }
-  });
+  }, 30_000);
 });

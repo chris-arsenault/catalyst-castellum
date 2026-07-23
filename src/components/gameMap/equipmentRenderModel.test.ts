@@ -15,6 +15,7 @@ describe("equipment map projection", () => {
       enabled: false,
       level: 2,
       operation: null,
+      medium: null,
     };
     const socket = instance(FACILITY_MAP.rooms, "furnace", "map room").socketCells.socket_b;
     if (!socket) throw new Error("R-02 socket B is absent from the facility map.");

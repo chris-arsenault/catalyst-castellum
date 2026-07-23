@@ -392,6 +392,29 @@
   gap: 7px;
   margin: 18px 0;
 }
+.manual-build-duties {
+  display: grid;
+  gap: 7px;
+  margin: 0 0 18px;
+}
+.manual-build-duty {
+  display: grid;
+  gap: 3px;
+  padding: 9px 10px;
+  border: 1px solid #294d3e;
+  border-radius: 4px;
+  background: #0e1a13;
+}
+.manual-build-duty strong {
+  color: #ceea79;
+  font: 700 10.5px/1.2 var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.manual-build-duty small {
+  color: #8fb29e;
+  font: 500 11px/1.4 var(--sans, inherit);
+}
 .manual-build-specs div {
   display: flex;
   justify-content: space-between;

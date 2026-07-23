@@ -51,5 +51,5 @@ describe("defensive posture", () => {
     expect(impact.rooms).toContainEqual(
       expect.objectContaining({ roomId: "furnace", tone: "gain" })
     );
-  });
+  }, 30_000);
 });

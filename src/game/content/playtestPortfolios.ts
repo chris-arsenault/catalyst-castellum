@@ -79,8 +79,11 @@ const ACID_LINE_COMMANDS: readonly GameCommand[] = [
     socketId: "socket_b",
     equipmentId: "gas_agitator",
   },
+  { type: "build_connection", kind: "gas_line", fromRoomId: "furnace", toRoomId: "lower_intake" },
   { type: "set_conduit", connectionId: "gas:furnace__lower_intake", enabled: true },
+  { type: "build_connection", kind: "gas_line", fromRoomId: "furnace", toRoomId: "gallery" },
   { type: "set_conduit", connectionId: "gas:furnace__gallery", enabled: true },
+  { type: "build_connection", kind: "gas_line", fromRoomId: "gallery", toRoomId: "washlock" },
   { type: "set_conduit", connectionId: "gas:gallery__washlock", enabled: true },
 ];
 

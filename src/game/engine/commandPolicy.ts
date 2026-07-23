@@ -9,7 +9,12 @@ import type {
   ConnectionId,
 } from "../types";
 import { equipmentAvailable, nextLevelIdFor, connectionAvailable } from "./campaign";
-import { equipmentDismantleRefund, findEquipmentInstallation, roomSocketIds } from "./equipment";
+import {
+  dismantleRefundRatio,
+  equipmentDismantleRefund,
+  findEquipmentInstallation,
+  roomSocketIds,
+} from "./equipment";
 import { roomUsableVolume } from "./physics";
 import { gasAmountTotal, liquidAmountTotal } from "./roomState";
 import { phaseAllowsCommand } from "./phaseModel";
@@ -45,8 +50,9 @@ const reject = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
 ): CommandDecision => ({ ...allow(values), allowed: false, code, parameters: values });
 
+/** Construction stays open through the whole round so a failing defense can be corrected mid-wave. */
 const configurationUnlocked = (state: GameState): boolean =>
-  state.phase === "build" || state.phase === "prime";
+  state.phase === "build" || state.phase === "prime" || state.phase === "assault";
 
 const simulationActive = (state: GameState): boolean =>
   state.phase === "prime" || state.phase === "assault";
@@ -88,7 +94,7 @@ const evaluateInstall = (
   command: Extract<GameCommand, { type: "install_equipment" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
   const definition = gameDefinition.equipment[command.equipmentId];
   const cost = definition.buildCost;
   const placement = evaluateInstallationPlacement(state, command, cost, gameDefinition);
@@ -98,11 +104,31 @@ const evaluateInstall = (
     level: 1,
     enabled: true,
     operation: null,
+    medium: null,
   };
   if (!equipmentFits(state, command.roomId, command.socketId, instance, gameDefinition))
     return reject("capacity", { cost });
   if (state.matter < cost) return reject("insufficient_matter", { cost });
   return allow({ cost });
+};
+
+const evaluateLoadVesselMedium = (
+  state: GameState,
+  command: Extract<GameCommand, { type: "load_vessel_medium" }>,
+  gameDefinition: GameDefinition
+): CommandDecision => {
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
+  const room = roomState(state, command.roomId);
+  const instance = room.equipment[command.socketId];
+  if (!instance) return reject("empty_socket");
+  const operation = gameDefinition.equipment[instance.equipmentId].operation;
+  if (!operation) return reject("unsupported_medium");
+  if (command.medium !== null) {
+    if (!operation.duties.some((duty) => duty.medium === command.medium))
+      return reject("unsupported_medium");
+    if (room.stationary[command.medium] <= 0) return reject("retained_inventory");
+  }
+  return allow();
 };
 
 const evaluateToggleEquipment = (
@@ -119,7 +145,7 @@ const evaluateUpgrade = (
   command: Extract<GameCommand, { type: "upgrade_equipment" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
   const instance = roomState(state, command.roomId).equipment[command.socketId];
   if (!instance) return reject("empty_socket");
   if (instance.level >= 3) return reject("already_complete");
@@ -140,7 +166,7 @@ const evaluateDismantleEquipment = (
   command: Extract<GameCommand, { type: "dismantle_equipment" }>,
   definition: GameDefinition
 ): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
   const instance = roomState(state, command.roomId).equipment[command.socketId];
   if (!instance) return reject("empty_socket");
   const retainedOutput = Object.values(instance.operation?.outputs ?? {}).some((output) =>
@@ -149,7 +175,7 @@ const evaluateDismantleEquipment = (
       : output?.phase === "liquid" && liquidAmountTotal(output.liquid) > 1e-8
   );
   if (retainedOutput) return reject("retained_inventory");
-  return allow({ refund: equipmentDismantleRefund(instance, definition) });
+  return allow({ refund: equipmentDismantleRefund(instance, state.phase, definition) });
 };
 
 const evaluateSetConduit = (
@@ -187,7 +213,7 @@ const evaluateBuildConnection = (
   command: Extract<GameCommand, { type: "build_connection" }>,
   gameDefinition: GameDefinition
 ): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
   const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
   const hullInternal = [command.fromRoomId, command.toRoomId].every(
     (roomId) => state.map.rooms[roomId]?.provenance === "hull"
@@ -283,7 +309,7 @@ const evaluateDismantleConnection = (
   state: GameState,
   command: Extract<GameCommand, { type: "dismantle_connection" }>
 ): CommandDecision => {
-  if (state.phase !== "build") return reject("invalid_phase");
+  if (!configurationUnlocked(state)) return reject("invalid_phase");
   if (!connectionAvailable(state, command.connectionId)) return reject("unavailable");
   const line = lineFor(state, command.connectionId);
   if (!line) return reject("route_unavailable");
@@ -291,7 +317,7 @@ const evaluateDismantleConnection = (
     line.kind === "gas_line"
       ? gasAmountTotal(gasConduitState(state, command.connectionId).gas)
       : liquidAmountTotal(liquidConduitState(state, command.connectionId).liquid);
-  const refund = Math.floor(line.buildCost * 0.75);
+  const refund = Math.floor(line.buildCost * dismantleRefundRatio(state.phase));
   if (amount > 0.001) return reject("capacity", { refund });
   return allow({ refund });
 };
@@ -328,6 +354,8 @@ export const evaluateCommand = (
       return evaluateUpgrade(state, command, definition);
     case "dismantle_equipment":
       return evaluateDismantleEquipment(state, command, definition);
+    case "load_vessel_medium":
+      return evaluateLoadVesselMedium(state, command, definition);
     case "set_conduit":
       return evaluateSetConduit(state, command);
     case "build_connection":

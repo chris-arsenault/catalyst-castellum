@@ -4,11 +4,21 @@ import { roomState } from "../game/world/instances";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, GuideUiState, TutorialCopyKey } from "./guideModel";
 
-const equipmentRunning = (game: GameState, equipmentId: "gas_agitator" | "thermal_coil") =>
-  roomEquipmentIsActive(roomState(game, "furnace"), equipmentId);
+const equipmentRunning = (
+  game: GameState,
+  equipmentId: "gas_agitator" | "thermal_coil" | "packed_bed"
+) => roomEquipmentIsActive(roomState(game, "furnace"), equipmentId);
+
+const bedCharged = (game: GameState): boolean =>
+  Object.values(roomState(game, "furnace").equipment).some(
+    (instance) =>
+      instance?.equipmentId === "packed_bed" &&
+      instance.enabled &&
+      instance.medium === "solid_carbon"
+  );
 
 const bedConditioned = (game: GameState): boolean =>
-  equipmentRunning(game, "thermal_coil") && equipmentRunning(game, "gas_agitator");
+  equipmentRunning(game, "thermal_coil") && bedCharged(game);
 
 const feedEnabled = (game: GameState): boolean =>
   game.gasConduits["gas:core__furnace"]?.enabled ?? false;
@@ -103,15 +113,26 @@ const guide: GuideDefinition = {
       completed: (game) => equipmentRunning(game, "thermal_coil"),
     },
     {
-      id: "install-kettleblack-agitator",
+      id: "install-kettleblack-bed",
       kind: "action",
       roomId: "furnace",
       target: TUTORIAL_ANCHORS.furnaceAgitator,
-      title: "tutorial.kettleblack.step.installAgitator.title",
-      explanation: "tutorial.kettleblack.step.installAgitator.explanation",
-      instruction: "tutorial.kettleblack.step.installAgitator.instruction",
-      result: "tutorial.kettleblack.step.installAgitator.result",
-      completed: (game) => equipmentRunning(game, "gas_agitator"),
+      title: "tutorial.kettleblack.step.installBed.title",
+      explanation: "tutorial.kettleblack.step.installBed.explanation",
+      instruction: "tutorial.kettleblack.step.installBed.instruction",
+      result: "tutorial.kettleblack.step.installBed.result",
+      completed: (game) => equipmentRunning(game, "packed_bed"),
+    },
+    {
+      id: "charge-kettleblack-bed",
+      kind: "action",
+      roomId: "furnace",
+      target: TUTORIAL_ANCHORS.furnaceMediumSelector,
+      title: "tutorial.kettleblack.step.loadCharge.title",
+      explanation: "tutorial.kettleblack.step.loadCharge.explanation",
+      instruction: "tutorial.kettleblack.step.loadCharge.instruction",
+      result: "tutorial.kettleblack.step.loadCharge.result",
+      completed: bedCharged,
     },
     {
       id: "begin-kettleblack-prime",
@@ -158,7 +179,7 @@ export const kettleblackPhaseActionReason = (
 ): TutorialCopyKey | null => {
   if (!feedEnabled(game)) return "tutorial.kettleblack.reason.feed";
   if (!equipmentRunning(game, "thermal_coil")) return "tutorial.kettleblack.reason.coil";
-  if (!equipmentRunning(game, "gas_agitator")) return "tutorial.kettleblack.reason.agitator";
+  if (!bedCharged(game)) return "tutorial.kettleblack.reason.bed";
   if (action === "start_assault" && !reverseObserved(game))
     return "tutorial.kettleblack.reason.direction";
   return null;

@@ -4,6 +4,7 @@ import { STATIONARY_COLORS, STATIONARY_LABELS } from "../substancePresentation";
 export const STATIONARY_DEFINITIONS = {
   solid_carbon: {
     id: "solid_carbon",
+    family: "carbon_steam",
     formula: STATIONARY_LABELS.solid_carbon,
     phase: "stationary",
     elements: { C: 1 },
@@ -15,6 +16,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   hematite: {
     id: "hematite",
+    family: "iron",
     formula: STATIONARY_LABELS.hematite,
     phase: "stationary",
     elements: { Fe: 2, O: 3 },
@@ -26,6 +28,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   magnetite: {
     id: "magnetite",
+    family: "iron",
     formula: STATIONARY_LABELS.magnetite,
     phase: "stationary",
     elements: { Fe: 3, O: 4 },
@@ -37,6 +40,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   nickel_oxide: {
     id: "nickel_oxide",
+    family: "nickel",
     formula: STATIONARY_LABELS.nickel_oxide,
     phase: "stationary",
     elements: { Ni: 1, O: 1 },
@@ -48,6 +52,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   surface_nickel: {
     id: "surface_nickel",
+    family: "nickel",
     formula: STATIONARY_LABELS.surface_nickel,
     phase: "stationary",
     elements: { Ni: 1 },
@@ -59,6 +64,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   uranyl_fluoride: {
     id: "uranyl_fluoride",
+    family: "uranium_fluorine",
     formula: STATIONARY_LABELS.uranyl_fluoride,
     phase: "stationary",
     elements: { U: 1, O: 2, F: 2 },
@@ -80,6 +86,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   iron_catalyst: {
     id: "iron_catalyst",
+    family: "common",
     formula: STATIONARY_LABELS.iron_catalyst,
     phase: "stationary",
     elements: { Fe: 1 },
@@ -91,6 +98,7 @@ export const STATIONARY_DEFINITIONS = {
   },
   platinum_catalyst: {
     id: "platinum_catalyst",
+    family: "nitrogen_oxide",
     formula: STATIONARY_LABELS.platinum_catalyst,
     phase: "stationary",
     elements: { Pt: 1 },

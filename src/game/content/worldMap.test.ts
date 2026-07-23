@@ -22,6 +22,7 @@ const EXPECTED_GAS_ORDER = [
   "gas:gallery__reservoir",
   "gas:furnace__gallery",
   "gas:gallery__washlock",
+  "gas:furnace__washlock",
   "gas:gallery__switchyard",
   "gas:core__washlock",
 ];
@@ -62,11 +63,13 @@ describe("the authored world map", () => {
 
   it("hosts every utility port in the core manifold", () => {
     for (const node of Object.values(WORLD_MAP.utilityNodes)) {
-      expect(node.hostRoomId).toBe("core");
+      expect(["core", "washlock"]).toContain(node.hostRoomId);
     }
     expect(Object.keys(WORLD_MAP.utilityNodes).sort()).toEqual([
       "gas_reservoir",
       "gas_vent",
+      "hazard_gas_reservoir",
+      "hazard_liquid_reservoir",
       "liquid_drain",
       "liquid_reservoir_a",
       "liquid_reservoir_b",

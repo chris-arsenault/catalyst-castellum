@@ -29,6 +29,7 @@ describe("only the owned hull travels between sites", () => {
         level: 1,
         enabled: true,
         operation: null,
+        medium: null,
       };
     });
     expect(site2.campaign.levelId).toBe("make_the_reagent");
@@ -44,6 +45,7 @@ describe("only the owned hull travels between sites", () => {
         level: 2,
         enabled: true,
         operation: null,
+        medium: null,
       };
     });
     expect(site2.map.rooms.washlock?.provenance).toBe("hull");
@@ -53,6 +55,7 @@ describe("only the owned hull travels between sites", () => {
       level: 2,
       enabled: true,
       operation: null,
+      medium: null,
     });
   });
 

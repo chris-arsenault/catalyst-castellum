@@ -13,8 +13,9 @@ import {
 } from "../../game/types";
 import type { EquipmentCategory } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
-import { equipmentCopy } from "../../presentation/entityCopy";
-import { roomDefinition } from "../../presentation/defaultGame";
+import { equipmentCopy, speciesCopy } from "../../presentation/entityCopy";
+import { roomDefinition, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
+import { dutyReactionSummaries } from "../../presentation/dutyCopy";
 
 type CategoryFilter = "all" | EquipmentCategory;
 
@@ -143,6 +144,33 @@ const EquipmentCatalogList = ({
   );
 };
 
+const BuildDuties = ({ equipmentId }: { equipmentId: EquipmentId }) => {
+  const { translator } = useGamePresentation();
+  const operation = EQUIPMENT_DEFINITIONS[equipmentId].operation;
+  if (!operation) return null;
+  return (
+    <div className="manual-build-duties">
+      <span className="manual-entry-code">{translator.text("ui.manual.build.duties")}</span>
+      {operation.duties.map((duty) => (
+        <div className="manual-build-duty" key={duty.medium ?? "standing"}>
+          <strong>
+            {duty.medium
+              ? translator.text("ui.manual.build.dutyMedium", {
+                  medium: speciesCopy(SPECIES_DEFINITIONS[duty.medium], translator).name,
+                })
+              : translator.text("ui.manual.build.dutyStanding")}
+          </strong>
+          {dutyReactionSummaries(duty, translator).map((summary) => (
+            <small key={summary.reactionId}>
+              {summary.name} — {summary.effect}
+            </small>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const BuildDetail = ({
   decision,
   equipmentId,
@@ -186,6 +214,7 @@ const BuildDetail = ({
             </dd>
           </div>
         </dl>
+        <BuildDuties equipmentId={equipmentId} />
         <div className="manual-build-actions">
           <button
             type="button"

@@ -1,5 +1,6 @@
 import type { GameDefinition } from "../definitionTypes";
 import type {
+  EquipmentDutyDefinition,
   EquipmentInstance,
   EquipmentOperationState,
   EquipmentOutputDefinition,
@@ -11,12 +12,15 @@ import type {
   GasType,
   LimitingFactor,
   LiquidType,
+  ReactionDefinition,
+  RoomReactionId,
   RoomState,
   StationaryType,
 } from "../types";
-import { electrolyzerPower, electrolyzerRate, installedEquipment } from "./equipment";
+import { installedEquipment, operationPowerDraw, operationProcessRate } from "./equipment";
 import { addEvent } from "./events";
 import { clamp } from "./math";
+import { simulateMassActionSet, type MassActionReaction } from "./massActionReactions";
 import {
   applyReactionExtent,
   reactionReactantCandidates,
@@ -143,17 +147,91 @@ const simulateSeparatorBackflow = (
 const outputCandidates = (
   instance: EquipmentInstance,
   operation: EquipmentReactionOperationDefinition,
-  definition: GameDefinition
-): Array<[LimitingFactor, number]> => {
-  const reaction = definition.reactions[operation.reactionId];
-  return operation.outputs.map((output) => {
-    const coefficient =
-      reaction.products.find((product) => product.species === output.speciesId)?.coefficient ?? 1;
+  reaction: ReactionDefinition
+): Array<[LimitingFactor, number]> =>
+  operation.outputs.flatMap((output) => {
+    const product = reaction.products.find((candidate) => candidate.species === output.speciesId);
+    if (!product) return [];
     return [
-      { kind: "condition", code: output.limitCode, zone: null },
-      outputHeadroom(instance, output) / coefficient,
+      [
+        { kind: "condition", code: output.limitCode, zone: null },
+        outputHeadroom(instance, output) / product.coefficient,
+      ] satisfies [LimitingFactor, number],
     ];
   });
+
+const activeDuty = (
+  instance: EquipmentInstance,
+  operation: EquipmentReactionOperationDefinition
+): EquipmentDutyDefinition | null =>
+  operation.duties.find((duty) => duty.medium === instance.medium) ?? null;
+
+const runElectrolysisDuty = (
+  instance: EquipmentInstance,
+  operation: EquipmentOperationState,
+  operationDefinition: EquipmentReactionOperationDefinition,
+  room: RoomState,
+  reactions: readonly ReactionDefinition[],
+  rateCap: number,
+  dt: number,
+  definition: GameDefinition
+): number => {
+  let total = 0;
+  let limitingCandidates: Array<[LimitingFactor, number]> | null = null;
+  let limitingExtent = -1;
+  for (const reaction of reactions) {
+    const behavior = reaction.behavior;
+    if (behavior.kind !== "electrolysis") continue;
+    const inventory = operationInventory(room, instance, operationDefinition, definition);
+    const maximum = Math.min(behavior.maximumRate, rateCap) * dt;
+    const candidates: Array<[LimitingFactor, number]> = [
+      ...reactionReactantCandidates(reaction, inventory),
+      ...outputCandidates(instance, operationDefinition, reaction),
+      [{ kind: "condition", code: "cell_current", zone: null }, maximum],
+    ];
+    const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
+    applyReactionExtent(reaction, inventory, reacted);
+    room.temperature = clamp(room.temperature + reacted * behavior.roomHeatPerExtent, 0, 180);
+    total += reacted;
+    if (reacted > limitingExtent) {
+      limitingExtent = reacted;
+      limitingCandidates = candidates;
+    }
+  }
+  if (limitingCandidates && limitingCandidates.length > 0)
+    operation.limitingFactor = limitingCandidates.reduce(
+      (minimum, candidate) => (candidate[1] < minimum[1] ? candidate : minimum),
+      limitingCandidates[0]!
+    )[0];
+  return total;
+};
+
+const runVesselDuty = (
+  instance: EquipmentInstance,
+  operation: EquipmentOperationState,
+  room: RoomState,
+  reactions: readonly ReactionDefinition[],
+  rateCap: number,
+  dt: number,
+  definition: GameDefinition
+): number => {
+  const massAction = reactions.filter(
+    (reaction): reaction is MassActionReaction => reaction.behavior.kind === "mass_action"
+  );
+  const total = simulateMassActionSet(room, dt, definition, massAction, {
+    rateCap,
+    loadedMedium: instance.medium,
+    equipmentMultiplier: 1,
+  });
+  const dominant = massAction.reduce<MassActionReaction | null>((best, reaction) => {
+    if (!best) return reaction;
+    const bestTelemetry = room.reactions[best.id as RoomReactionId];
+    const telemetry = room.reactions[reaction.id as RoomReactionId];
+    return telemetry.lastRate > bestTelemetry.lastRate ? reaction : best;
+  }, null);
+  if (dominant)
+    operation.limitingFactor = room.reactions[dominant.id as RoomReactionId].limitingFactor;
+  return total;
 };
 
 const setOffline = (operation: EquipmentOperationState): void => {
@@ -177,35 +255,31 @@ const simulateReactionOperation = (
     setOffline(operation);
     return;
   }
-  const reaction = definition.reactions[operationDefinition.reactionId];
-  if (reaction.behavior.kind !== "electrolysis")
-    throw new Error(`Equipment ${instance.equipmentId} reaction is not electrolysis.`);
-  const inventory = operationInventory(room, instance, operationDefinition, definition);
-  const maximum =
-    Math.min(
-      reaction.behavior.maximumRate,
-      electrolyzerRate(instance.equipmentId, instance.level, definition)
-    ) * dt;
-  const candidates: Array<[LimitingFactor, number]> = [
-    ...reactionReactantCandidates(reaction, inventory),
-    ...outputCandidates(instance, operationDefinition, definition),
-    [{ kind: "condition", code: "cell_current", zone: null }, maximum],
-  ];
-  const reacted = Math.max(0, Math.min(...candidates.map(([, available]) => available)));
-  applyReactionExtent(reaction, inventory, reacted);
-  room.temperature = clamp(
-    room.temperature + reacted * reaction.behavior.roomHeatPerExtent,
-    0,
-    180
-  );
-  operation.lastRate = reacted / Math.max(dt, 0.0001);
-  operation.limitingFactor = candidates.reduce(
-    (minimum, candidate) => (candidate[1] < minimum[1] ? candidate : minimum),
-    candidates[0]!
-  )[0];
+  const duty = activeDuty(instance, operationDefinition);
+  if (!duty) {
+    operation.lastRate = 0;
+    operation.powerDraw = 0;
+    operation.limitingFactor = { kind: "condition", code: "vessel_medium", zone: null };
+    return;
+  }
+  const rateCap = operationProcessRate(instance.equipmentId, instance.level, definition);
+  const reactions = duty.reactionIds.map((reactionId) => definition.reactions[reactionId]);
+  const total = reactions.some((reaction) => reaction.behavior.kind === "electrolysis")
+    ? runElectrolysisDuty(
+        instance,
+        operation,
+        operationDefinition,
+        room,
+        reactions,
+        rateCap,
+        dt,
+        definition
+      )
+    : runVesselDuty(instance, operation, room, reactions, rateCap, dt, definition);
+  operation.lastRate = total / Math.max(dt, 0.0001);
   operation.powerDraw =
-    reacted > 0 ? electrolyzerPower(instance.equipmentId, instance.level, definition) : 0;
-  if (reacted > 0 && operation.totalProcessed === 0)
+    total > 0 ? operationPowerDraw(instance.equipmentId, instance.level, definition) : 0;
+  if (total > 0 && operation.totalProcessed === 0)
     addEvent(
       state,
       "reaction",
@@ -213,9 +287,9 @@ const simulateReactionOperation = (
       { equipmentId: instance.equipmentId },
       room.id
     );
-  operation.totalProcessed += reacted;
+  operation.totalProcessed += total;
   room.reactionIntensity = Math.max(room.reactionIntensity, operation.lastRate);
-  state.stats.reactions += reacted;
+  state.stats.reactions += total;
   simulateSeparatorBackflow(state, room, dt, instance, operationDefinition);
 };
 

@@ -4,6 +4,7 @@ import { LIQUID_COLORS, LIQUID_LABELS } from "../substancePresentation";
 export const LIQUID_DEFINITIONS = {
   water: {
     id: "water",
+    family: "common",
     formula: LIQUID_LABELS.water,
     phase: "liquid",
     elements: { H: 2, O: 1 },
@@ -15,6 +16,7 @@ export const LIQUID_DEFINITIONS = {
   },
   sodium_chloride: {
     id: "sodium_chloride",
+    family: "chlorine_sodium",
     formula: LIQUID_LABELS.sodium_chloride,
     phase: "liquid",
     elements: { Na: 1, Cl: 1 },
@@ -26,6 +28,7 @@ export const LIQUID_DEFINITIONS = {
   },
   sodium_hydroxide: {
     id: "sodium_hydroxide",
+    family: "chlorine_sodium",
     formula: LIQUID_LABELS.sodium_hydroxide,
     phase: "liquid",
     elements: { Na: 1, O: 1, H: 1 },
@@ -47,6 +50,7 @@ export const LIQUID_DEFINITIONS = {
   },
   sodium_hypochlorite: {
     id: "sodium_hypochlorite",
+    family: "chlorine_sodium",
     formula: LIQUID_LABELS.sodium_hypochlorite,
     phase: "liquid",
     elements: { Na: 1, O: 1, Cl: 1 },
@@ -68,6 +72,7 @@ export const LIQUID_DEFINITIONS = {
   },
   hydrochloric_acid: {
     id: "hydrochloric_acid",
+    family: "chlorine_sodium",
     formula: LIQUID_LABELS.hydrochloric_acid,
     phase: "liquid",
     elements: { H: 1, Cl: 1 },
@@ -89,6 +94,7 @@ export const LIQUID_DEFINITIONS = {
   },
   nitric_acid: {
     id: "nitric_acid",
+    family: "nitrogen_oxide",
     formula: LIQUID_LABELS.nitric_acid,
     phase: "liquid",
     elements: { H: 1, N: 1, O: 3 },

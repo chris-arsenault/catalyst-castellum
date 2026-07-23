@@ -88,6 +88,26 @@ const installEquipment = (
   return acceptCommand(state);
 };
 
+const loadVesselMedium = (
+  source: GameState,
+  command: GameCommand & { type: "load_vessel_medium" }
+): CommandResult => {
+  const state = cloneGame(source);
+  const instance = roomState(state, command.roomId).equipment[command.socketId];
+  if (instance) {
+    instance.medium = command.medium;
+    if (command.medium !== null)
+      addEvent(
+        state,
+        "info",
+        "vessel_medium_loaded",
+        { equipmentId: instance.equipmentId, medium: command.medium },
+        command.roomId
+      );
+  }
+  return acceptCommand(state);
+};
+
 const toggleEquipment = (
   source: GameState,
   command: GameCommand & { type: "toggle_equipment" }
@@ -234,6 +254,8 @@ export const executeCommand = (
       return upgradeEquipment(source, command, decision);
     case "dismantle_equipment":
       return dismantleEquipment(source, command, decision);
+    case "load_vessel_medium":
+      return loadVesselMedium(source, command);
     case "build_connection":
       return buildConnectionCommand(source, command, decision, definition);
     case "dismantle_connection":

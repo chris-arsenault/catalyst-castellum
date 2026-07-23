@@ -29,18 +29,22 @@ export const createEquipmentInstance = (
   const outputs = Object.fromEntries(EQUIPMENT_OUTPUT_IDS.map((id) => [id, null])) as NonNullable<
     EquipmentInstance["operation"]
   >["outputs"];
-  if (!operationDefinition) return { ...loadout, operation: null };
+  if (!operationDefinition) return { ...loadout, operation: null, medium: null };
   for (const output of operationDefinition.outputs) {
     outputs[output.id] =
       output.phase === "gas"
         ? { phase: "gas", gas: emptyGas() }
         : { phase: "liquid", liquid: emptyLiquid() };
   }
-  const firstReactant = definition.reactions[operationDefinition.reactionId].reactants[0];
+  const primaryReactionId = operationDefinition.duties[0]?.reactionIds[0];
+  if (!primaryReactionId)
+    throw new Error(`Equipment ${loadout.equipmentId} operation has no duty.`);
+  const firstReactant = definition.reactions[primaryReactionId].reactants[0];
   if (!firstReactant)
     throw new Error(`Equipment ${loadout.equipmentId} operation has no reactant.`);
   return {
     ...loadout,
+    medium: null,
     operation: {
       lastRate: 0,
       totalProcessed: 0,
@@ -153,31 +157,38 @@ export const equipmentInvestedMatter = (
   return total;
 };
 
+/** Dismantling before the wave refunds everything; after the wave starts, salvage recovers 75%. */
+export const dismantleRefundRatio = (phase: GameState["phase"]): number =>
+  phase === "build" ? 1 : 0.75;
+
 export const equipmentDismantleRefund = (
   instance: EquipmentInstance,
+  phase: GameState["phase"],
   definition: GameDefinition
-): number => Math.floor(equipmentInvestedMatter(instance, definition) * 0.75);
+): number =>
+  Math.floor(equipmentInvestedMatter(instance, definition) * dismantleRefundRatio(phase));
 
-const electrolyzerBehavior = (
+const operationGradeBehavior = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
   definition: GameDefinition
 ) => {
   const behavior = gradeFor(equipmentId, level, definition).behavior;
-  if (behavior.kind !== "electrolyzer") throw new Error(`Invalid electrolyzer ${equipmentId}`);
+  if (behavior.kind !== "electrolyzer" && behavior.kind !== "vessel")
+    throw new Error(`Invalid operation grade ${equipmentId}`);
   return behavior;
 };
 
-export const electrolyzerRate = (
+export const operationProcessRate = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
   definition: GameDefinition
-): number => electrolyzerBehavior(equipmentId, level, definition).processRate;
-export const electrolyzerPower = (
+): number => operationGradeBehavior(equipmentId, level, definition).processRate;
+export const operationPowerDraw = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
   definition: GameDefinition
-): number => electrolyzerBehavior(equipmentId, level, definition).powerDraw;
+): number => operationGradeBehavior(equipmentId, level, definition).powerDraw;
 
 const heatRoom = (room: RoomState, target: number, dt: number): void => {
   const wallStep = clamp(target - room.temperature, 0, 18 * dt);

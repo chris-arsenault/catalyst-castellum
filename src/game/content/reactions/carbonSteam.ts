@@ -3,6 +3,8 @@ import type { ReactionDefinition, ReactionId } from "../../types";
 export const CARBON_STEAM_REACTIONS = {
   water_gas_reaction: {
     id: "water_gas_reaction",
+    family: "carbon_steam",
+    regime: "engineered",
     code: "CS-1",
     kind: "chemical",
     equation: "C(s) + H₂O(g) ⇌ CO(g) + H₂(g)",
@@ -45,6 +47,8 @@ export const CARBON_STEAM_REACTIONS = {
   },
   water_gas_shift: {
     id: "water_gas_shift",
+    family: "carbon_steam",
+    regime: "engineered",
     code: "CS-2",
     kind: "chemical",
     equation: "CO(g) + H₂O(g) ⇌ CO₂(g) + H₂(g)",
@@ -88,6 +92,8 @@ export const CARBON_STEAM_REACTIONS = {
   },
   boudouard_reaction: {
     id: "boudouard_reaction",
+    family: "carbon_steam",
+    regime: "engineered",
     code: "CS-3",
     kind: "chemical",
     equation: "C(s) + CO₂(g) ⇌ 2 CO(g)",
@@ -124,6 +130,8 @@ export const CARBON_STEAM_REACTIONS = {
   },
   carbon_monoxide_oxidation: {
     id: "carbon_monoxide_oxidation",
+    family: "carbon_steam",
+    regime: "wild",
     code: "CS-4",
     kind: "chemical",
     equation: "2 CO(g) + O₂(g) → 2 CO₂(g) + heat",
@@ -152,6 +160,8 @@ export const CARBON_STEAM_REACTIONS = {
   },
   carbon_methanation: {
     id: "carbon_methanation",
+    family: "carbon_steam",
+    regime: "engineered",
     code: "CS-6A",
     kind: "chemical",
     equation: "C(s) + 2 H₂(g) ⇌ CH₄(g)",
@@ -189,6 +199,8 @@ export const CARBON_STEAM_REACTIONS = {
   },
   methane_steam_reforming: {
     id: "methane_steam_reforming",
+    family: "carbon_steam",
+    regime: "engineered",
     code: "CS-6B",
     kind: "chemical",
     equation: "CH₄(g) + H₂O(g) ⇌ CO(g) + 3 H₂(g)",

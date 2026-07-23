@@ -14,6 +14,7 @@ export const TUTORIAL_ANCHORS = {
   galleryAgitator: "gallery-gas-agitator",
   galleryAgitatorToggle: "gallery-gas-agitator-toggle",
   galleryIncidents: "gallery-incidents",
+  furnaceMediumSelector: "furnace-medium-selector",
   furnaceReactionReadout: "furnace-reaction-readout",
   gameMap: "game-map",
   furnaceThermalCoil: "furnace-thermal-coil",

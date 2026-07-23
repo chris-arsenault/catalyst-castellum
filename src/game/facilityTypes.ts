@@ -14,6 +14,7 @@ import type {
   ReactionId,
   RoomId,
   ConnectionId,
+  StationaryType,
 } from "./types";
 
 export type FacilityRing = "outer" | "middle" | "inner" | "core";
@@ -50,6 +51,11 @@ export type EquipmentGradeBehavior =
       kind: "electrolyzer";
       processRate: number;
       powerDraw: number;
+    }
+  | {
+      kind: "vessel";
+      processRate: number;
+      powerDraw: number;
     };
 
 export interface EquipmentDefinition {
@@ -70,11 +76,20 @@ export interface EquipmentLoadout {
 
 export interface EquipmentInstance extends EquipmentLoadout {
   operation: EquipmentOperationState | null;
+  /** Stationary medium loaded into the vessel; selects the active duty (ADR-0007). */
+  medium: StationaryType | null;
+}
+
+/** One duty a vessel can run: the medium that enables it and the reactions it executes. */
+export interface EquipmentDutyDefinition {
+  /** Required loaded medium; null enables the duty with no medium loaded. */
+  medium: StationaryType | null;
+  reactionIds: readonly ReactionId[];
 }
 
 export interface EquipmentReactionOperationDefinition {
   kind: "reaction";
-  reactionId: ReactionId;
+  duties: readonly EquipmentDutyDefinition[];
   outputs: readonly EquipmentOutputDefinition[];
   separatorBackflow: EquipmentSeparatorBackflowDefinition | null;
 }

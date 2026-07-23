@@ -16,6 +16,7 @@ import { validateCatalogStructure } from "./catalogValidation";
 import { validateReactions } from "./reactionValidation";
 import { validateEquipmentOperations } from "./equipmentOperationValidation";
 import { validateLevelSupplies } from "./supplyValidation";
+import { validateLevelPalette } from "./paletteValidation";
 
 export type AuthoringIssue = EnemyAuthoringIssue;
 
@@ -192,6 +193,7 @@ const validateLevel = (
   validateLevelDefinition(source, map, level, path, issues);
   validateEquipmentLoadout(source, map, level, path, issues);
   issues.push(...validateLevelSupplies(source, map, level, path));
+  issues.push(...validateLevelPalette(source, level, path));
   validateStationaryLoadout(source, map, level, path, issues);
   validateConduitLoadout(source, map, level, path, issues);
 };

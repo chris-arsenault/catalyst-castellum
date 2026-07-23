@@ -26,6 +26,14 @@ export const ENTITY_MESSAGES = {
   "entities.rooms.core.description":
     "The central keep houses feedstock, exhaust, recovery, and the structure the facility defends.",
 
+  "entities.families.chlorine_sodium.name": "Chlorine-sodium",
+  "entities.families.carbon_steam.name": "Carbon-steam",
+  "entities.families.nitrogen_oxide.name": "Nitrogen-oxide",
+  "entities.families.iron.name": "Iron carrier",
+  "entities.families.iron.role": "Support family",
+  "entities.families.nickel.name": "Nickel",
+  "entities.families.uranium_fluorine.name": "Uranium-fluorine",
+
   "entities.equipment.gas_agitator.name": "Gas agitator",
   "entities.equipment.gas_agitator.description":
     "Recirculates the upper and lower gas layers, accelerating eligible gas reactions and combustible mixtures.",
@@ -41,6 +49,18 @@ export const ENTITY_MESSAGES = {
   "entities.equipment.fluorine_cell.name": "Fluorine recovery cell",
   "entities.equipment.fluorine_cell.description":
     "Splits dry hydrogen fluoride into hydrogen and fluorine within its host room at a high electrical load.",
+  "entities.equipment.catalytic_reactor.name": "Catalytic reactor",
+  "entities.equipment.catalytic_reactor.description":
+    "Runs the loaded catalyst charge's synthesis duty at its installed process grade.",
+  "entities.equipment.packed_bed.name": "Packed bed",
+  "entities.equipment.packed_bed.description":
+    "Hosts the room's stationary bed charge and runs its solid–gas duty in place.",
+  "entities.equipment.catalytic_burner.name": "Catalytic burner",
+  "entities.equipment.catalytic_burner.description":
+    "Oxidizes ammonia across platinum gauze inside its authored temperature window.",
+  "entities.equipment.absorber_column.name": "Absorber column",
+  "entities.equipment.absorber_column.description":
+    "Absorbs nitrogen dioxide into pooled water and delivers nitric acid to the room.",
 
   "entities.enemies.deckmouth.name": "Deckmouth",
   "entities.enemies.deckmouth.description":

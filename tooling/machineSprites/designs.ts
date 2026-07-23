@@ -148,6 +148,118 @@ const fluorineCell = (phase: number, frame: number): string => {
   </g>`;
 };
 
+const catalyticReactor = (phase: number): string => {
+  const glow = 0.5 + (Math.sin(phase) + 1) * 0.2;
+  const gaugeAngle = Math.sin(phase * 0.5) * 40;
+  const shimmer = [0, 1, 2]
+    .map((index) => {
+      const sway = Math.sin(phase + index * 1.1) * 2.5;
+      const x = 52 + index * 12;
+      return `<path d="M${x} 30 Q${fixed(x + sway)} 23 ${fixed(x - sway)} 16" fill="none" stroke="#ffb98c" stroke-width="1.5" opacity="${fixed(0.2 + index * 0.08)}"/>`;
+    })
+    .join("");
+  return `<g filter="url(#shadow)">
+    ${machineBase("#e0824f")}${shimmer}
+    <path d="M40 34 Q40 18 64 17 Q88 18 88 34 V95 Q85 104 76 105 H52 Q43 104 40 95Z" fill="url(#body)" ${outline}/>
+    <path d="M45 38 H83 V90 Q80 97 73 98 H55 Q48 97 45 90Z" fill="#241510" stroke="#e0824f" stroke-width="1.7"/>
+    <path d="M49 44 H79 M49 53 H79 M49 62 H79 M49 71 H79 M49 80 H79" stroke="#8a4f2e" stroke-width="2.2"/>
+    <path d="M52 44 V83 M60 44 V83 M68 44 V83 M76 44 V83" stroke="#5c331d" stroke-width="1.4" opacity=".8"/>
+    <path d="M49 48 H79 L49 58 H79 L49 68 H79 L49 78 H79" fill="none" stroke="#ff9a5c" stroke-width="2.6" opacity="${fixed(glow)}" filter="url(#soft-glow)"/>
+    <path d="M40 52 H26 V84 H40 M88 45 H104 V76 H89" fill="none" stroke="#6b5142" stroke-width="7"/>
+    <path d="M40 52 H26 V84 H40 M88 45 H104 V76 H89" fill="none" stroke="#c4a68f" stroke-width="1.4"/>
+    <path d="M64 17 V8" stroke="#a08a76" stroke-width="6"/><path d="M64 17 V8" stroke="#3a2a1e" stroke-width="2"/>
+    <circle cx="64" cy="27" r="7.5" fill="#1e1410" stroke="#e0824f" stroke-width="1.5"/>
+    <path d="M64 27 L${fixed(64 + Math.cos((gaugeAngle - 90) * 0.01745) * 5)} ${fixed(27 + Math.sin((gaugeAngle - 90) * 0.01745) * 5)}" stroke="#ffd0a8" stroke-width="1.8"/>
+    <rect x="92" y="86" width="14" height="18" rx="3" fill="#33241b" ${outline}/>
+    <path d="M95 90 H103 M95 94 H103 M95 98 H103" stroke="#c99b76" stroke-width="1.2" opacity=".7"/>
+    <circle cx="45" cy="33" r="3" fill="#ffd27f" stroke="#241811" stroke-width="1.4"/>
+    <path d="M44 40 Q56 30 76 32" fill="none" stroke="#fff1e0" stroke-width="2" opacity=".3"/>
+  </g>`;
+};
+
+const packedBed = (phase: number, frame: number): string => {
+  const drift = [0, 1, 2, 3]
+    .map((index) => {
+      const age = ((frame + index * 2) % 8) / 8;
+      const x = 40 + index * 14 + Math.sin(phase + index) * 1.6;
+      return `<path d="M${fixed(x)} ${fixed(92 - age * 48)} v-5" stroke="#e8d3a8" stroke-width="1.6" opacity="${fixed(0.55 - age * 0.4)}"/>`;
+    })
+    .join("");
+  const pellets = Array.from({ length: 18 }, (_, index) => {
+    const row = Math.floor(index / 6);
+    const column = index % 6;
+    const x = 39 + column * 10 + (row % 2) * 5;
+    const y = 55 + row * 12;
+    return `<circle cx="${x}" cy="${y}" r="4.2" fill="#7a5a33" stroke="#3f2d18" stroke-width="1.3"/><circle cx="${x - 1.4}" cy="${y - 1.4}" r="1.3" fill="#b0854a" opacity=".8"/>`;
+  }).join("");
+  return `<g filter="url(#shadow)">
+    ${machineBase("#b0854a")}
+    <path d="M27 40 L36 30 H92 L101 40 V97 Q97 105 89 105 H39 Q30 104 27 97Z" fill="url(#body)" ${outline}/>
+    <path d="M33 45 H95 V92 Q92 98 86 99 H42 Q36 98 33 92Z" fill="#1c1710" stroke="#b0854a" stroke-width="1.7"/>
+    <path d="M33 50 H95 M33 87 H95" stroke="#6d5430" stroke-width="2.4"/>
+    ${pellets}${drift}
+    <path d="M27 58 H15 V86 H28 M101 52 H113 V80 H100" fill="none" stroke="#5f5138" stroke-width="7"/>
+    <path d="M27 58 H15 V86 H28 M101 52 H113 V80 H100" fill="none" stroke="#bda887" stroke-width="1.3"/>
+    <rect x="48" y="20" width="32" height="10" rx="3" fill="#33291a" ${outline}/>
+    <path d="M52 25 H76" stroke="#c8ad82" stroke-width="1.4" opacity=".75"/>
+    <circle cx="38" cy="37" r="3" fill="#e9d27f" stroke="#231b10" stroke-width="1.4"/>
+    <path d="M36 42 Q54 33 78 35" fill="none" stroke="#f6ecd8" stroke-width="2" opacity=".3"/>
+  </g>`;
+};
+
+const catalyticBurner = (phase: number, frame: number): string => {
+  const flicker = 0.55 + (Math.sin(phase * 2) + 1) * 0.2;
+  const flames = [0, 1, 2, 3]
+    .map((index) => {
+      const x = 50 + index * 9;
+      const lick = Math.sin(phase * 2 + index * 1.6) * 4;
+      return `<path d="M${x} 78 Q${fixed(x + lick)} ${fixed(66 - Math.abs(lick))} ${x} ${fixed(58 - Math.abs(lick) * 1.4)}" fill="none" stroke="#ffb168" stroke-width="2.6" opacity="${fixed(0.5 + (index % 2) * 0.24)}"/>`;
+    })
+    .join("");
+  const spark = ((frame + 3) % 8) / 8;
+  return `<g filter="url(#shadow)">
+    ${machineBase("#f56262")}
+    <path d="M34 96 L46 33 H82 L94 96 Q90 104 82 105 H46 Q38 104 34 96Z" fill="url(#body)" ${outline}/>
+    <path d="M46 40 H82 L88 90 H40Z" fill="#200d0d" stroke="#f56262" stroke-width="1.7"/>
+    <path d="M44 52 H84 M43 62 H85" stroke="#95403c" stroke-width="1.6" opacity=".85"/>
+    <path d="M42 47 H86" stroke="#ffd9a1" stroke-width="3.4" opacity="${fixed(flicker)}" filter="url(#soft-glow)"/>
+    <path d="M44 47 l4 -3 M52 47 l4 -3 M60 47 l4 -3 M68 47 l4 -3 M76 47 l4 -3 M84 47 l-2 -3" stroke="#f2b98a" stroke-width="1.2" opacity=".8"/>
+    ${flames}
+    <circle cx="${fixed(64 + Math.sin(phase) * 3)}" cy="${fixed(84 - spark * 30)}" r="${fixed(1.2 + spark)}" fill="#ffd9a1" opacity="${fixed(0.8 - spark * 0.5)}"/>
+    <path d="M46 33 H82 V21 Q73 15 64 15 Q55 15 46 21Z" fill="#3a2020" ${outline}/>
+    <path d="M52 21 H76" stroke="#e59a9a" stroke-width="1.4" opacity=".7"/>
+    <path d="M34 68 H21 V90 H36 M94 68 H107 V90 H92" fill="none" stroke="#6b4444" stroke-width="7"/>
+    <path d="M34 68 H21 V90 H36 M94 68 H107 V90 H92" fill="none" stroke="#c99a9a" stroke-width="1.3"/>
+    <circle cx="64" cy="26" r="3" fill="#ffd27f" stroke="#2a1616" stroke-width="1.4"/>
+    <path d="M50 28 Q64 20 80 26" fill="none" stroke="#ffe9e0" stroke-width="2" opacity=".3"/>
+  </g>`;
+};
+
+const absorberColumn = (phase: number, frame: number): string => {
+  const droplets = [0, 1, 2, 3, 4]
+    .map((index) => {
+      const age = ((frame + index * 2) % 8) / 8;
+      const x = 52 + (index % 3) * 10 + Math.sin(phase + index) * 1.5;
+      return `<circle cx="${fixed(x)}" cy="${fixed(32 + age * 52)}" r="${fixed(1.1 + age * 0.7)}" fill="#a9d9ff" opacity="${fixed(0.85 - age * 0.4)}"/>`;
+    })
+    .join("");
+  const pool = Math.sin(phase) * 1.6;
+  return `<g filter="url(#shadow)">
+    ${machineBase("#62aef5")}
+    <path d="M44 22 Q44 12 64 11 Q84 12 84 22 V96 Q81 104 73 105 H55 Q47 104 44 96Z" fill="url(#body)" ${outline}/>
+    <path d="M49 26 H79 V92 Q76 98 70 99 H58 Q52 98 49 92Z" fill="#0e1c2b" stroke="#62aef5" stroke-width="1.7"/>
+    <path d="M49 38 H79 M49 50 H79 M49 62 H79 M49 74 H79" stroke="#33608c" stroke-width="2.4"/>
+    <path d="M52 38 l3 3 M62 38 l3 3 M72 38 l3 3 M52 50 l3 3 M62 50 l3 3 M72 50 l3 3 M52 62 l3 3 M62 62 l3 3 M72 62 l3 3" stroke="#5b87b0" stroke-width="1.2" opacity=".7"/>
+    ${droplets}
+    <path d="M49 ${fixed(84 + pool)} Q64 ${fixed(80 - pool)} 79 ${fixed(84 + pool)} V92 Q76 98 70 99 H58 Q52 98 49 92Z" fill="#2c6ea8" opacity=".65"/>
+    <path d="M44 30 H30 V58 H45 M84 78 H100 V96 H85" fill="none" stroke="#41586b" stroke-width="7"/>
+    <path d="M44 30 H30 V58 H45 M84 78 H100 V96 H85" fill="none" stroke="#9dbdd4" stroke-width="1.3"/>
+    <path d="M64 11 V4" stroke="#8fa4b5" stroke-width="5"/><path d="M64 11 V4" stroke="#2a3a48" stroke-width="1.8"/>
+    <circle cx="49" cy="21" r="3" fill="#a5e1ff" stroke="#152331" stroke-width="1.4"/>
+    <path d="M50 24 Q62 16 76 20" fill="none" stroke="#e2f3ff" stroke-width="2" opacity=".3"/>
+  </g>`;
+};
+
 export const MACHINE_SPRITE_DESIGNS = {
   gas_agitator: {
     label: "Gas agitator",
@@ -207,6 +319,54 @@ export const MACHINE_SPRITE_DESIGNS = {
       glow: "#f4ff9a",
     },
     render: fluorineCell,
+    frameSize: MACHINE_FRAME_SIZE,
+  },
+  catalytic_reactor: {
+    label: "Catalytic reactor",
+    palette: {
+      dark: "#5a3620",
+      body: "#8f5a36",
+      light: "#d8a678",
+      accent: "#e0824f",
+      glow: "#ffbd8a",
+    },
+    render: catalyticReactor,
+    frameSize: MACHINE_FRAME_SIZE,
+  },
+  packed_bed: {
+    label: "Packed bed",
+    palette: {
+      dark: "#4c3a1f",
+      body: "#7c6136",
+      light: "#cbb282",
+      accent: "#b0854a",
+      glow: "#e8d3a8",
+    },
+    render: packedBed,
+    frameSize: MACHINE_FRAME_SIZE,
+  },
+  catalytic_burner: {
+    label: "Catalytic burner",
+    palette: {
+      dark: "#5c2626",
+      body: "#94413d",
+      light: "#dc9a91",
+      accent: "#f56262",
+      glow: "#ffb168",
+    },
+    render: catalyticBurner,
+    frameSize: MACHINE_FRAME_SIZE,
+  },
+  absorber_column: {
+    label: "Absorber column",
+    palette: {
+      dark: "#24435e",
+      body: "#3f6c96",
+      light: "#9cc3e0",
+      accent: "#62aef5",
+      glow: "#a9d9ff",
+    },
+    render: absorberColumn,
     frameSize: MACHINE_FRAME_SIZE,
   },
 } satisfies Record<string, SpriteSheetDesign>;

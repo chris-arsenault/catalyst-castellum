@@ -10,7 +10,13 @@ import type {
 import { WORLD_MAP_CONNECTIONS } from "./worldMapConnections";
 import { isProcessLine } from "../world/map";
 import { routeConnection } from "../world/autoRouter";
-import { GAS_RESERVOIR_ID, LIQUID_RESERVOIR_A_ID, LIQUID_RESERVOIR_B_ID } from "./supplies";
+import {
+  GAS_RESERVOIR_ID,
+  HAZARD_GAS_RESERVOIR_ID,
+  HAZARD_LIQUID_RESERVOIR_ID,
+  LIQUID_RESERVOIR_A_ID,
+  LIQUID_RESERVOIR_B_ID,
+} from "./supplies";
 
 const horizontalCells = (fromColumn: number, toColumn: number, elevation: number): GridCell[] =>
   Array.from({ length: toColumn - fromColumn + 1 }, (_, index) =>
@@ -133,6 +139,18 @@ const WORLD_MAP_BASE: WorldMap = {
           { id: "upper", cell: cell(39, 12), facing: "up" },
         ],
         provenance: "hull",
+        taps: {
+          gas: gasTap({
+            capacity: 18,
+            includeRoomInventory: false,
+            sourceIds: [HAZARD_GAS_RESERVOIR_ID],
+          }),
+          liquid: liquidTap({
+            capacity: 20,
+            includeRoomInventory: false,
+            sourceIds: [HAZARD_LIQUID_RESERVOIR_ID],
+          }),
+        },
       }
     ),
     core: room(
@@ -165,8 +183,10 @@ const WORLD_MAP_BASE: WorldMap = {
   ),
   utilityNodes: {
     [GAS_RESERVOIR_ID]: { cell: cell(54, 16), hostRoomId: "core" },
+    [HAZARD_GAS_RESERVOIR_ID]: { cell: cell(33, 6), hostRoomId: "washlock" },
     [LIQUID_RESERVOIR_A_ID]: { cell: cell(54, 6), hostRoomId: "core" },
     [LIQUID_RESERVOIR_B_ID]: { cell: cell(58, 6), hostRoomId: "core" },
+    [HAZARD_LIQUID_RESERVOIR_ID]: { cell: cell(42, 6), hostRoomId: "washlock" },
     gas_vent: { cell: cell(64, 16), hostRoomId: "core" },
     liquid_drain: { cell: cell(64, 6), hostRoomId: "core" },
   },

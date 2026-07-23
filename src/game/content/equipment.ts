@@ -84,7 +84,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     unique: true,
     operation: {
       kind: "reaction",
-      reactionId: "chlor_alkali_electrolysis",
+      duties: [{ medium: null, reactionIds: ["chlor_alkali_electrolysis"] }],
       outputs: [
         {
           id: "anode_header",
@@ -147,7 +147,7 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
     unique: true,
     operation: {
       kind: "reaction",
-      reactionId: "hydrogen_fluoride_electrolysis",
+      duties: [{ medium: null, reactionIds: ["hydrogen_fluoride_electrolysis"] }],
       outputs: [],
       separatorBackflow: null,
     },
@@ -166,6 +166,160 @@ export const EQUIPMENT_DEFINITIONS: Record<EquipmentId, EquipmentDefinition> = {
         level: 3,
         occupiedVolume: 10,
         behavior: { kind: "electrolyzer", processRate: 0.66, powerDraw: 241 },
+      },
+    ],
+  },
+  catalytic_reactor: {
+    id: "catalytic_reactor",
+    accent: "#e0824f",
+    buildCost: 18,
+    upgradeCosts: [15, 24],
+    unique: false,
+    operation: {
+      kind: "reaction",
+      duties: [
+        { medium: "iron_catalyst", reactionIds: ["ammonia_synthesis", "water_gas_shift"] },
+        {
+          medium: "surface_nickel",
+          reactionIds: ["nickel_catalyzed_methanation", "methane_steam_reforming"],
+        },
+      ],
+      outputs: [],
+      separatorBackflow: null,
+    },
+    grades: [
+      {
+        level: 1,
+        occupiedVolume: 5,
+        behavior: { kind: "vessel", processRate: 0.35, powerDraw: 42 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 6,
+        behavior: { kind: "vessel", processRate: 0.55, powerDraw: 68 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 8,
+        behavior: { kind: "vessel", processRate: 0.8, powerDraw: 104 },
+      },
+    ],
+  },
+  packed_bed: {
+    id: "packed_bed",
+    accent: "#b0854a",
+    buildCost: 14,
+    upgradeCosts: [12, 20],
+    unique: false,
+    operation: {
+      kind: "reaction",
+      duties: [
+        {
+          medium: "solid_carbon",
+          reactionIds: ["water_gas_reaction", "boudouard_reaction", "carbon_methanation"],
+        },
+        {
+          medium: "hematite",
+          reactionIds: [
+            "hematite_carbon_monoxide_reduction",
+            "hematite_hydrogen_reduction",
+            "magnetite_reoxidation",
+          ],
+        },
+        {
+          medium: "nickel_oxide",
+          reactionIds: [
+            "nickel_oxide_reduction",
+            "nickel_carbonyl_formation",
+            "nickel_carbonyl_deposition",
+            "nickel_deposit_oxidation",
+          ],
+        },
+        { medium: "uranyl_fluoride", reactionIds: ["uranyl_fluoride_recovery"] },
+      ],
+      outputs: [],
+      separatorBackflow: null,
+    },
+    grades: [
+      {
+        level: 1,
+        occupiedVolume: 5,
+        behavior: { kind: "vessel", processRate: 0.5, powerDraw: 22 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 7,
+        behavior: { kind: "vessel", processRate: 0.8, powerDraw: 36 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 9,
+        behavior: { kind: "vessel", processRate: 1.2, powerDraw: 56 },
+      },
+    ],
+  },
+  catalytic_burner: {
+    id: "catalytic_burner",
+    accent: "#f56262",
+    buildCost: 16,
+    upgradeCosts: [14, 22],
+    unique: false,
+    operation: {
+      kind: "reaction",
+      duties: [
+        {
+          medium: "platinum_catalyst",
+          reactionIds: ["ammonia_oxidation", "nox_ammonia_reduction", "nitrous_oxide_side_path"],
+        },
+      ],
+      outputs: [],
+      separatorBackflow: null,
+    },
+    grades: [
+      {
+        level: 1,
+        occupiedVolume: 4,
+        behavior: { kind: "vessel", processRate: 0.4, powerDraw: 34 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 5,
+        behavior: { kind: "vessel", processRate: 0.6, powerDraw: 52 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 7,
+        behavior: { kind: "vessel", processRate: 0.9, powerDraw: 82 },
+      },
+    ],
+  },
+  absorber_column: {
+    id: "absorber_column",
+    accent: "#62aef5",
+    buildCost: 12,
+    upgradeCosts: [10, 16],
+    unique: false,
+    operation: {
+      kind: "reaction",
+      duties: [{ medium: null, reactionIds: ["nitrogen_dioxide_absorption"] }],
+      outputs: [],
+      separatorBackflow: null,
+    },
+    grades: [
+      {
+        level: 1,
+        occupiedVolume: 4,
+        behavior: { kind: "vessel", processRate: 0.5, powerDraw: 16 },
+      },
+      {
+        level: 2,
+        occupiedVolume: 5,
+        behavior: { kind: "vessel", processRate: 0.75, powerDraw: 26 },
+      },
+      {
+        level: 3,
+        occupiedVolume: 6,
+        behavior: { kind: "vessel", processRate: 1.1, powerDraw: 40 },
       },
     ],
   },

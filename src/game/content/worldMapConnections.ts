@@ -302,6 +302,16 @@ export const WORLD_MAP_CONNECTIONS: readonly MapConnection[] = [
     route: orthogonalGridPath(cell(32, 14), cell(32, 12), cell(40, 12), cell(40, 11)),
   }),
   gasLine({
+    rooms: ["washlock", "furnace"],
+    direction: ["washlock", "furnace"],
+    actuator: "fan",
+    actuatorHead: 1.4,
+    maxFlow: 1.0,
+    volumePerCell: 0.22,
+    buildCost: 7,
+    route: orthogonalGridPath(cell(30, 8), cell(24, 8), cell(24, 20), cell(20, 20)),
+  }),
+  gasLine({
     rooms: ["gallery", "switchyard"],
     direction: ["gallery", "switchyard"],
     actuator: "fan",

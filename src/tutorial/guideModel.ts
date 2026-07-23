@@ -9,6 +9,7 @@ import {
 } from "./flashPointGuide";
 import { makeReagentGuideFor, makeReagentPhaseActionReason } from "./makeReagentGuide";
 import { kettleblackGuideFor, kettleblackPhaseActionReason } from "./kettleblackGuide";
+import { storedChlorineGuideFor, storedChlorinePhaseActionReason } from "./storedChlorineGuide";
 import type { TutorialCopyKey } from "./copyTypes";
 
 export type { TutorialCopyKey } from "./copyTypes";
@@ -103,6 +104,10 @@ export const GUIDE_REGISTRATIONS: GuideRegistry = {
       game.campaign.roundIndex < 2
         ? makeReagentPhaseActionReason(game, action)
         : acidLinePhaseActionReason(game, action),
+  },
+  stored_chlorine: {
+    guideFor: storedChlorineGuideFor,
+    phaseActionReason: storedChlorinePhaseActionReason,
   },
   kettleblack: {
     guideFor: kettleblackGuideFor,

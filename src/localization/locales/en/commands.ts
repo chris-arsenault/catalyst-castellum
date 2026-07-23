@@ -7,6 +7,7 @@ export const COMMAND_MESSAGES = {
   "commands.rejection.invalid_phase": "The current phase keeps this action locked.",
   "commands.rejection.not_installed": "Build this conduit to activate its controls.",
   "commands.rejection.occupied_socket": "Dismantle the installed equipment to reuse this socket.",
+  "commands.rejection.unsupported_medium": "Load a medium listed on this vessel's spec plate.",
   "commands.rejection.placement": "Choose a compatible equipment socket.",
   "commands.rejection.retained_inventory":
     "Drain the installed equipment's output ports before dismantling.",

@@ -3,6 +3,8 @@ import type { ReactionDefinition, ReactionId } from "../../types";
 export const NITROGEN_OXIDE_REACTIONS = {
   ammonia_synthesis: {
     id: "ammonia_synthesis",
+    family: "nitrogen_oxide",
+    regime: "engineered",
     code: "NO-1",
     kind: "chemical",
     equation: "N₂(g) + 3 H₂(g) ⇌ 2 NH₃(g) + heat",
@@ -40,6 +42,8 @@ export const NITROGEN_OXIDE_REACTIONS = {
   },
   ammonia_oxidation: {
     id: "ammonia_oxidation",
+    family: "nitrogen_oxide",
+    regime: "engineered",
     code: "NO-2",
     kind: "chemical",
     equation: "4 NH₃(g) + 5 O₂(g) → 4 NO(g) + 6 H₂O(g) + heat",
@@ -74,6 +78,8 @@ export const NITROGEN_OXIDE_REACTIONS = {
   },
   nitric_oxide_oxidation: {
     id: "nitric_oxide_oxidation",
+    family: "nitrogen_oxide",
+    regime: "wild",
     code: "NO-3",
     kind: "chemical",
     equation: "2 NO(g) + O₂(g) → 2 NO₂(g) + heat",
@@ -104,6 +110,8 @@ export const NITROGEN_OXIDE_REACTIONS = {
   },
   nitrogen_dioxide_absorption: {
     id: "nitrogen_dioxide_absorption",
+    family: "nitrogen_oxide",
+    regime: "engineered",
     code: "NO-4",
     kind: "chemical",
     equation: "3 NO₂(g) + H₂O(l) → 2 HNO₃(aq) + NO(g) + heat",
@@ -137,6 +145,8 @@ export const NITROGEN_OXIDE_REACTIONS = {
   },
   nox_ammonia_reduction: {
     id: "nox_ammonia_reduction",
+    family: "nitrogen_oxide",
+    regime: "engineered",
     code: "NO-5",
     kind: "chemical",
     equation: "4 NH₃(g) + 4 NO(g) + O₂(g) → 4 N₂(g) + 6 H₂O(g)",
@@ -172,6 +182,8 @@ export const NITROGEN_OXIDE_REACTIONS = {
   },
   nitrous_oxide_side_path: {
     id: "nitrous_oxide_side_path",
+    family: "nitrogen_oxide",
+    regime: "engineered",
     code: "NO-6",
     kind: "chemical",
     equation: "2 NH₃(g) + 2 O₂(g) → N₂O(g) + 3 H₂O(g)",

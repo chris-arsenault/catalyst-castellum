@@ -11,6 +11,7 @@ import {
   gasSupply,
   liquidSupply,
 } from "../supplies";
+import { hazardPacketSupplies } from "./actTwoShared";
 
 const MORROW_POCKET_ROUND_IDS = [
   "claim_entry",
@@ -23,6 +24,7 @@ const MORROW_POCKET_ROUND_IDS = [
 export const MORROW_POCKET_LEVEL: LevelDefinition = {
   id: "morrow_pocket",
   number: 4,
+  palette: ["chlorine_sodium"],
   enemyLevel: 23,
   focusRoomId: "lower_intake",
   featuredReactionIds: [
@@ -65,6 +67,20 @@ export const MORROW_POCKET_LEVEL: LevelDefinition = {
       availableFromRound: "claim_entry",
       replenishment: { kind: "matter", contents: BRINE_CHARGE, cost: 10 },
       accent: "#60cce4",
+    }),
+    ...hazardPacketSupplies({
+      gas: {
+        contents: { chlorine: 60 },
+        capacity: 90,
+        cost: 18,
+        availableFromRound: "claim_entry",
+      },
+      liquid: {
+        contents: { sodium_hypochlorite: 24 },
+        capacity: 36,
+        cost: 20,
+        availableFromRound: "armored_claim",
+      },
     }),
   ],
   site: null,

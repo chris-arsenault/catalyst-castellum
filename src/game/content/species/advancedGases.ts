@@ -4,6 +4,7 @@ import { GAS_COLORS, GAS_LABELS } from "../substancePresentation";
 export const ADVANCED_GAS_DEFINITIONS = {
   methane: {
     id: "methane",
+    family: "carbon_steam",
     formula: GAS_LABELS.methane,
     phase: "gas",
     elements: { C: 1, H: 4 },
@@ -15,6 +16,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   ammonia: {
     id: "ammonia",
+    family: "nitrogen_oxide",
     formula: GAS_LABELS.ammonia,
     phase: "gas",
     elements: { N: 1, H: 3 },
@@ -45,6 +47,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   nitric_oxide: {
     id: "nitric_oxide",
+    family: "nitrogen_oxide",
     formula: GAS_LABELS.nitric_oxide,
     phase: "gas",
     elements: { N: 1, O: 1 },
@@ -66,6 +69,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   nitrogen_dioxide: {
     id: "nitrogen_dioxide",
+    family: "nitrogen_oxide",
     formula: GAS_LABELS.nitrogen_dioxide,
     phase: "gas",
     elements: { N: 1, O: 2 },
@@ -96,6 +100,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   nitrous_oxide: {
     id: "nitrous_oxide",
+    family: "nitrogen_oxide",
     formula: GAS_LABELS.nitrous_oxide,
     phase: "gas",
     elements: { N: 2, O: 1 },
@@ -107,6 +112,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   nickel_carbonyl: {
     id: "nickel_carbonyl",
+    family: "nickel",
     formula: GAS_LABELS.nickel_carbonyl,
     phase: "gas",
     elements: { Ni: 1, C: 4, O: 4 },
@@ -128,6 +134,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   uranium_hexafluoride: {
     id: "uranium_hexafluoride",
+    family: "uranium_fluorine",
     formula: GAS_LABELS.uranium_hexafluoride,
     phase: "gas",
     elements: { U: 1, F: 6 },
@@ -167,6 +174,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   hydrogen_fluoride: {
     id: "hydrogen_fluoride",
+    family: "uranium_fluorine",
     formula: GAS_LABELS.hydrogen_fluoride,
     phase: "gas",
     elements: { H: 1, F: 1 },
@@ -197,6 +205,7 @@ export const ADVANCED_GAS_DEFINITIONS = {
   },
   fluorine: {
     id: "fluorine",
+    family: "uranium_fluorine",
     formula: GAS_LABELS.fluorine,
     phase: "gas",
     elements: { F: 2 },

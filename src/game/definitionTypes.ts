@@ -14,6 +14,7 @@ import type {
   LevelId,
   LiquidAmounts,
   ReactionDefinition,
+  ProcessFamilyId,
   ReactionId,
   RoomGeometryDefinition,
   RoomId,
@@ -68,6 +69,8 @@ export interface RoundDefinition {
 export interface LevelDefinition {
   id: LevelId;
   number: number;
+  /** The site's chemistry palette: 1–3 process families its supplies, seeds, and vessels draw from (ADR-0008). */
+  palette: readonly ProcessFamilyId[];
   /** The site's baseline enemy level; wave entries may apply small authored offsets. */
   enemyLevel: number;
   focusRoomId: RoomId;

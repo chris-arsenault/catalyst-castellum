@@ -90,6 +90,23 @@ export const reactionCopy = (
   name: localized(translator, `entities.reactions.${definition.id}.name`),
 });
 
+/** Family, support role, and regime line shown beside a reaction's process kind. */
+export const reactionClassification = (
+  definition: ReactionDefinition,
+  translator: Translator = DEFAULT_TRANSLATOR
+): string => {
+  const parts = [translator.text(`entities.families.${definition.family}.name`)];
+  if (definition.family === "iron") parts.push(translator.text("entities.families.iron.role"));
+  parts.push(
+    translator.text(
+      definition.regime === "wild"
+        ? "ui.manual.encyclopedia.regime.wild"
+        : "ui.manual.encyclopedia.regime.engineered"
+    )
+  );
+  return parts.join(" · ");
+};
+
 export const sourceCopy = (
   definition: GasSupplyDefinition | LiquidSupplyDefinition,
   translator: Translator = DEFAULT_TRANSLATOR

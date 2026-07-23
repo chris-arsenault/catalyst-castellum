@@ -25,6 +25,11 @@ export const createEquipmentGradeEffect =
           rate: formatters.number(behavior.processRate),
           power: formatters.number(behavior.powerDraw),
         });
+      case "vessel":
+        return translator.text("presentation.equipment.vessel", {
+          rate: formatters.number(behavior.processRate),
+          power: formatters.number(behavior.powerDraw),
+        });
     }
   };
 

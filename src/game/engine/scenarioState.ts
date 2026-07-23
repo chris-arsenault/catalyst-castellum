@@ -301,7 +301,7 @@ export const createScenarioGame = (
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
   const map = activeScenarioMap(site.map, level.loadout, site.hull, definition);
   const state: GameState = {
-    version: 22,
+    version: 23,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {

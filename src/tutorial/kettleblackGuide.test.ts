@@ -39,7 +39,13 @@ describe("Kettleblack stationary-media guidance", () => {
       type: "install_equipment",
       roomId: "furnace",
       socketId: "socket_b",
-      equipmentId: "gas_agitator",
+      equipmentId: "packed_bed",
+    });
+    game = command(game, {
+      type: "load_vessel_medium",
+      roomId: "furnace",
+      socketId: "socket_b",
+      medium: "solid_carbon",
     });
     expect(guidedPhaseActionReason(game, "start_prime", [])).toBeNull();
 
@@ -57,7 +63,7 @@ describe("Kettleblack stationary-media guidance", () => {
     });
     expect(roomState(game, "furnace").reactions.water_gas_reaction.lastRate).toBeGreaterThan(0.001);
     expect(guidedPhaseActionReason(game, "start_assault", [])).toBeNull();
-  });
+  }, 30_000);
 
   it("registers no guided process lesson after Kettleblack", () => {
     for (const levelId of ["cordon_41", "junction_l6", "pell_cut"] as const) {

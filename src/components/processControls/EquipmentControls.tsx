@@ -1,6 +1,6 @@
 import { ChevronRight, Plus, Trash2, Wrench } from "lucide-react";
 import { useCallback } from "react";
-import { EQUIPMENT_DEFINITIONS } from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import { useGameStore } from "../../application/store";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { Translator } from "../../localization/translator";
@@ -13,7 +13,8 @@ import {
 } from "../../game/types";
 import { BinaryControl } from "./ActuatorControls";
 import { TUTORIAL_ANCHORS, type TutorialAnchorId } from "../../tutorial/anchors";
-import { equipmentCopy } from "../../presentation/entityCopy";
+import { equipmentCopy, speciesCopy } from "../../presentation/entityCopy";
+import { dutyReactionSummaries, dutyTitle } from "../../presentation/dutyCopy";
 import { roomState } from "../../game/world/instances";
 
 const socketLabel = (socketId: EquipmentSocketId, translator: Translator): string =>
@@ -211,6 +212,60 @@ const EquipmentActions = ({
   );
 };
 
+const MediumSelector = ({
+  instance,
+  roomId,
+  socketId,
+}: {
+  instance: EquipmentInstance;
+  roomId: RoomId;
+  socketId: EquipmentSocketId;
+}) => {
+  const { commandCopy, selectors, translator } = useGamePresentation();
+  const game = useGameStore((state) => state.game);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const operation = EQUIPMENT_DEFINITIONS[instance.equipmentId].operation;
+  if (!operation || !operation.duties.some((duty) => duty.medium !== null)) return null;
+  return (
+    <div
+      className="equipment-medium"
+      data-tutorial-anchor={
+        roomId === "furnace" ? TUTORIAL_ANCHORS.furnaceMediumSelector : undefined
+      }
+    >
+      <small>{translator.text("ui.process.medium")}</small>
+      <div className="equipment-medium-options">
+        {operation.duties.map((duty) => {
+          if (duty.medium === null) return null;
+          const command = {
+            type: "load_vessel_medium",
+            roomId,
+            socketId,
+            medium: duty.medium,
+          } as const;
+          const decision = selectors.commandDecision(game, command);
+          const active = instance.medium === duty.medium;
+          const summaries = dutyReactionSummaries(duty, translator);
+          return (
+            <button
+              key={duty.medium}
+              type="button"
+              className={active ? "active" : ""}
+              disabled={!active && !decision.allowed}
+              title={commandCopy(decision) ?? summaries.map(({ effect }) => effect).join("\n")}
+              data-testid={`equipment-medium-${roomId}-${socketId}-${duty.medium}`}
+              onClick={() => dispatch(active ? { ...command, medium: null } : command)}
+            >
+              <strong>{speciesCopy(SPECIES_DEFINITIONS[duty.medium], translator).name}</strong>
+              <small>{dutyTitle(duty, translator)}</small>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
 const InstalledEquipmentSocket = ({
   instance,
   roomId,
@@ -237,6 +292,7 @@ const InstalledEquipmentSocket = ({
         </strong>
         <em>{translator.text(instance.enabled ? "ui.process.running" : "ui.process.offline")}</em>
       </header>
+      <MediumSelector instance={instance} roomId={roomId} socketId={socketId} />
       <EquipmentActions instance={instance} roomId={roomId} socketId={socketId} />
     </article>
   );

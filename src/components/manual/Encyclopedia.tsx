@@ -3,7 +3,6 @@ import {
   ENEMY_DEFINITIONS,
   EQUIPMENT_DEFINITIONS,
   REACTION_DEFINITIONS,
-  SPECIES_DEFINITIONS,
 } from "../../presentation/defaultGame";
 import {
   ENEMY_TYPES,
@@ -15,7 +14,13 @@ import {
 } from "../../game/types";
 import { equipmentForReaction } from "../../presentation/manualContent";
 import { EquipmentImage } from "./EquipmentImage";
-import { enemyCopy, equipmentCopy, reactionCopy, speciesCopy } from "../../presentation/entityCopy";
+import { SpeciesSide } from "./SpeciesSide";
+import {
+  enemyCopy,
+  equipmentCopy,
+  reactionClassification,
+  reactionCopy,
+} from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import { EnemyGlyph } from "./EnemyGlyph";
 
@@ -92,35 +97,6 @@ const EquipmentEntry = ({
   );
 };
 
-const SpeciesSide = ({
-  label,
-  participants,
-}: {
-  label: string;
-  participants: (typeof REACTION_DEFINITIONS)[ReactionId]["reactants"];
-}) => {
-  const { translator } = useGamePresentation();
-  return (
-    <div className="manual-reaction-side">
-      <span>{label}</span>
-      <div>
-        {participants.map((participant) => {
-          const species = SPECIES_DEFINITIONS[participant.species];
-          return (
-            <i key={participant.species} style={{ "--species": species.color }}>
-              <strong>
-                {participant.coefficient > 1 ? participant.coefficient : ""}
-                {species.formula}
-              </strong>
-              <small>{speciesCopy(species, translator).name}</small>
-            </i>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
 const ReactionEquipmentLinks = ({
   equipmentIds,
   onOpenEquipment,
@@ -178,6 +154,8 @@ const ReactionEntry = ({
                   : "ui.manual.encyclopedia.kind.physical"
               ),
             })}
+            {" · "}
+            {reactionClassification(reaction, translator)}
           </span>
           <h2>{reactionCopy(reaction, translator).name}</h2>
           <strong>{reaction.equation}</strong>

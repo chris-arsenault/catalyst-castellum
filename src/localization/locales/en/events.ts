@@ -55,6 +55,8 @@ export const EVENT_MESSAGES = {
   "events.separator.detail":
     "Unequal outlet backpressure has contaminated an isolated product header. Balance or stop cell current before routing the mixture.",
   "events.equipmentOperation.title": "{equipment} producing",
+  "events.vesselMedium.title": "{equipment} charged with {medium}",
+  "events.vesselMedium.detail": "Duty selected in {room}.",
   "events.equipmentOperation.detail":
     "{room} is converting available feedstock and routing each product through the installed cell.",
   "events.hcl.title": "R-02 HCl production established",

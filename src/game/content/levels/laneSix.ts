@@ -2,7 +2,11 @@ import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { ACT_THREE_SITE_SEEDS, LANE_SIX_SITE } from "../sites/actThree";
 import { actThreeSupplies } from "./actThreeShared";
-import { ACT_II_AVAILABILITY } from "./fullPlant";
+import { paletteAvailability } from "./fullPlant";
+import type { ProcessFamilyId } from "../../types";
+
+const LANE_SIX_PALETTE: readonly ProcessFamilyId[] = ["carbon_steam", "nickel", "nitrogen_oxide"];
+const LANE_SIX_AVAILABILITY = paletteAvailability(LANE_SIX_PALETTE);
 import { emptyLoadout } from "./helpers";
 
 const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
@@ -11,6 +15,7 @@ const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["
 export const LANE_SIX_LEVEL: LevelDefinition = {
   id: "lane_six",
   number: 11,
+  palette: LANE_SIX_PALETTE,
   enemyLevel: 30,
   focusRoomId: "gallery",
   featuredReactionIds: [
@@ -29,12 +34,19 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
       oxygen: 180,
       nitrogen: 240,
       carbon_monoxide: 180,
-      hydrogen_fluoride: 200,
     },
     gasCost: 46,
     water: 240,
-    brine: 240,
+    brine: 0,
     liquidCapacity: 280,
+    hazard: {
+      gas: {
+        contents: { ammonia: 50, nitrogen_dioxide: 18 },
+        capacity: 100,
+        cost: 22,
+        availableFromRound: "lane_marker",
+      },
+    },
     waterCost: 14,
     brineCost: 18,
   }),
@@ -42,9 +54,8 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
   loadout: {
     ...emptyLoadout(),
     stationary: {
-      switchyard: { hematite: 26, magnetite: 12 },
       furnace: { solid_carbon: 34, iron_catalyst: 5 },
-      gallery: { platinum_catalyst: 4, surface_nickel: 18, uranyl_fluoride: 40 },
+      gallery: { platinum_catalyst: 4, surface_nickel: 18 },
       lower_intake: { nickel_oxide: 18, surface_nickel: 18 },
     },
   },
@@ -53,7 +64,7 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
       id: "lane_marker",
       primeSeconds: 72,
       wave: enemySequence(3, "deckmouth", 0.5, 1.8, -10),
-      availability: ACT_II_AVAILABILITY,
+      availability: LANE_SIX_AVAILABILITY,
     },
     {
       id: "fast_column",
@@ -62,7 +73,7 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
         enemySequence(8, "flintjack", 0.5, 1.2, -9),
         enemySequence(4, "clatter", 1.5, 1.8, -9)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: LANE_SIX_AVAILABILITY,
     },
     {
       id: "field_column",
@@ -73,7 +84,7 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
         enemySequence(2, "glowbag", 3.5, 3, -9),
         enemySequence(1, "anchor", 5, 1, -9)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: LANE_SIX_AVAILABILITY,
     },
     {
       id: "convoy_window",
@@ -85,7 +96,7 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
         enemySequence(3, "shear_jelly", 3, 2.5, -8),
         enemySequence(3, "glowbag", 4, 2.6, -8)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: LANE_SIX_AVAILABILITY,
     },
     {
       id: "whole_lane",
@@ -100,7 +111,7 @@ export const LANE_SIX_LEVEL: LevelDefinition = {
         enemySequence(2, "shear_jelly", 5, 2.7, -5),
         enemySequence(1, "anchor", 7, 1, 1)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: LANE_SIX_AVAILABILITY,
     },
   ],
 };

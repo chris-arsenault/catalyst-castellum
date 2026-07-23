@@ -40,6 +40,17 @@ export const SPECIALTY_GAS_CHARGE: GameCommand = {
   sourceId: "specialty_gas_reservoir",
 };
 
+export const HAZARD_GAS_CHARGE: GameCommand = {
+  type: "charge_gas_source",
+  sourceId: "hazard_gas_reservoir",
+};
+
+export const loadMedium = (
+  roomId: RoomId,
+  socketId: "socket_a" | "socket_b",
+  medium: Extract<GameCommand, { type: "load_vessel_medium" }>["medium"]
+): GameCommand => ({ type: "load_vessel_medium", roomId, socketId, medium });
+
 export const LIQUID_CHARGES: readonly GameCommand[] = [
   { type: "charge_liquid_source", sourceId: "liquid_reservoir_a" },
   { type: "charge_liquid_source", sourceId: "liquid_reservoir_b" },

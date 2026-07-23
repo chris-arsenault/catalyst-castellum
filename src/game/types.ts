@@ -14,7 +14,9 @@ import {
   LIQUID_TYPES,
   LIMIT_CONDITION_CODES,
   EQUIPMENT_OUTPUT_IDS,
+  PROCESS_FAMILY_IDS,
   REACTION_IDS,
+  REACTION_REGIMES,
   ROOM_REACTION_IDS,
   STATIONARY_TYPES,
   TRANSPORT_PHASES,
@@ -52,6 +54,10 @@ export type EquipmentLevel = (typeof EQUIPMENT_LEVELS)[number];
 export type TransportPhase = (typeof TRANSPORT_PHASES)[number];
 export type ReactionId = (typeof REACTION_IDS)[number];
 export type RoomReactionId = (typeof ROOM_REACTION_IDS)[number];
+export type ProcessFamilyId = (typeof PROCESS_FAMILY_IDS)[number];
+export type ReactionRegime = (typeof REACTION_REGIMES)[number];
+/** Species family; "common" marks shared precursors offered under every palette. */
+export type SpeciesFamily = ProcessFamilyId | "common";
 export type LevelId = (typeof LEVEL_IDS)[number];
 export type DamageSourceId = (typeof DAMAGE_SOURCE_IDS)[number];
 export type LimitConditionCode = (typeof LIMIT_CONDITION_CODES)[number];
@@ -100,6 +106,7 @@ export type SiteSupplyDefinition = GasSupplyDefinition | LiquidSupplyDefinition;
 export interface SpeciesDefinition {
   id: SpeciesId;
   formula: string;
+  family: SpeciesFamily;
   phase: "gas" | "liquid" | "stationary";
   elements: ElementalComposition;
   molarMass: number;
@@ -129,6 +136,9 @@ export interface ReactionParticipant {
 export interface ReactionDefinition {
   id: ReactionId;
   code: string;
+  family: ProcessFamilyId;
+  /** Wild reactions run ambiently in rooms; engineered reactions run in their vessel (ADR-0007). */
+  regime: ReactionRegime;
   kind: "chemical" | "physical";
   equation: string;
   reactants: ReactionParticipant[];

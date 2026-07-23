@@ -40,6 +40,10 @@ Tutorials demonstrate tools. Sites test defenses. Chemistry creates strategies.
   than a required reaction chain or prescribed room configuration.
 - Treat newly available chemistry as an additional strategic option. Keep established builds viable
   through soft counters, overlapping combat roles, and compounding process interactions.
+- Give every site a chemistry palette of one to three process families; supplies, seeds, and
+  vessel availability derive from it (ADR-0008). Engineered reactions run in duty vessels
+  (ADR-0007), and every offensive family damages at depth one from supplied feedstock while iron
+  stays the support family (ADR-0009).
 
 ## Player-facing copy
 

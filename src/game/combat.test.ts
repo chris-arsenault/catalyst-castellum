@@ -72,6 +72,7 @@ const gasAgitator = (enabled: boolean): EquipmentInstance => ({
   level: 1,
   enabled,
   operation: null,
+  medium: null,
 });
 
 const enemy = (health = 200): EnemyState => {

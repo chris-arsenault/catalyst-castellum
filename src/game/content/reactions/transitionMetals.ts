@@ -3,6 +3,8 @@ import type { ReactionDefinition, ReactionId } from "../../types";
 export const TRANSITION_METAL_REACTIONS = {
   hematite_carbon_monoxide_reduction: {
     id: "hematite_carbon_monoxide_reduction",
+    family: "iron",
+    regime: "engineered",
     code: "FE-1",
     kind: "chemical",
     equation: "3 Fe₂O₃(s) + CO(g) → 2 Fe₃O₄(s) + CO₂(g)",
@@ -34,6 +36,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   hematite_hydrogen_reduction: {
     id: "hematite_hydrogen_reduction",
+    family: "iron",
+    regime: "engineered",
     code: "FE-2",
     kind: "chemical",
     equation: "3 Fe₂O₃(s) + H₂(g) → 2 Fe₃O₄(s) + H₂O(g)",
@@ -65,6 +69,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   magnetite_reoxidation: {
     id: "magnetite_reoxidation",
+    family: "iron",
+    regime: "engineered",
     code: "FE-3",
     kind: "chemical",
     equation: "4 Fe₃O₄(s) + O₂(g) → 6 Fe₂O₃(s) + heat",
@@ -93,6 +99,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   nickel_oxide_reduction: {
     id: "nickel_oxide_reduction",
+    family: "nickel",
+    regime: "engineered",
     code: "NI-1",
     kind: "chemical",
     equation: "NiO(s) + H₂(g) → Ni(s) + H₂O(g)",
@@ -124,6 +132,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   nickel_carbonyl_formation: {
     id: "nickel_carbonyl_formation",
+    family: "nickel",
+    regime: "engineered",
     code: "NI-2",
     kind: "chemical",
     equation: "Ni(s) + 4 CO(g) → Ni(CO)₄(g)",
@@ -154,6 +164,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   nickel_carbonyl_deposition: {
     id: "nickel_carbonyl_deposition",
+    family: "nickel",
+    regime: "engineered",
     code: "NI-3",
     kind: "chemical",
     equation: "Ni(CO)₄(g) → Ni(s) + 4 CO(g)",
@@ -179,6 +191,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   nickel_deposit_oxidation: {
     id: "nickel_deposit_oxidation",
+    family: "nickel",
+    regime: "engineered",
     code: "NI-4",
     kind: "chemical",
     equation: "2 Ni(s) + O₂(g) → 2 NiO(s) + heat",
@@ -207,6 +221,8 @@ export const TRANSITION_METAL_REACTIONS = {
   },
   nickel_catalyzed_methanation: {
     id: "nickel_catalyzed_methanation",
+    family: "nickel",
+    regime: "engineered",
     code: "NI-5",
     kind: "chemical",
     equation: "CO(g) + 3 H₂(g) → CH₄(g) + H₂O(g) + heat",

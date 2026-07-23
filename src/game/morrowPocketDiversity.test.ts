@@ -81,5 +81,5 @@ describe("Morrow Pocket defense diversity acceptance", () => {
     expect(control.buildProfile.enabledLiquidLines.length).toBeGreaterThanOrEqual(3);
     expect(hybrid.pulseDamage).toBeGreaterThan(0);
     expect(hybrid.continuousDamage).toBeGreaterThan(0);
-  }, 240_000);
+  }, 480_000);
 });

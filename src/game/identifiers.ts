@@ -60,6 +60,10 @@ export const EQUIPMENT_IDS = [
   "thermal_coil",
   "membrane_cell",
   "fluorine_cell",
+  "catalytic_reactor",
+  "packed_bed",
+  "catalytic_burner",
+  "absorber_column",
 ] as const;
 
 export const EQUIPMENT_SOCKET_IDS = ["socket_a", "socket_b"] as const;
@@ -80,6 +84,17 @@ export const DAMAGE_SOURCE_IDS = [
   "catastrophic_overpressure",
   "hydrogen_oxygen_combustion",
 ] as const;
+
+export const PROCESS_FAMILY_IDS = [
+  "chlorine_sodium",
+  "carbon_steam",
+  "nitrogen_oxide",
+  "iron",
+  "nickel",
+  "uranium_fluorine",
+] as const;
+
+export const REACTION_REGIMES = ["wild", "engineered"] as const;
 
 export const REACTION_IDS = [
   "chlor_alkali_electrolysis",
@@ -199,6 +214,7 @@ export const GAME_EVENT_CODES = [
   "enemy_molted",
   "equipment_installed",
   "equipment_upgraded",
+  "vessel_medium_loaded",
   "flash_cycle_started",
   "flash_incident",
   "gas_source_charged",
@@ -238,6 +254,8 @@ export const LIMIT_CONDITION_CODES = [
   "reaction_pressure",
   "catalyst_inventory",
   "reaction_inhibition",
+  "vessel_medium",
+  "vessel_rate",
 ] as const;
 
 export const SIMULATION_SPEEDS = [1, 2] as const;

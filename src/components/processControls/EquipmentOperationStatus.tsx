@@ -6,7 +6,9 @@ import {
   LIQUID_TYPES,
   type EquipmentOutputDefinition,
   type EquipmentOutputState,
+  type EquipmentReactionOperationDefinition,
   type EquipmentSocketId,
+  type StationaryType,
   type GasAmounts,
   type LiquidAmounts,
   type RoomId,
@@ -15,11 +17,8 @@ import { gasAmountTotal, liquidAmountTotal } from "../../game/queries";
 import { roomState } from "../../game/world/instances";
 import type { LocaleFormatters } from "../../localization/formatters";
 import type { Translator } from "../../localization/translator";
-import {
-  EQUIPMENT_DEFINITIONS,
-  REACTION_DEFINITIONS,
-  SPECIES_DEFINITIONS,
-} from "../../presentation/defaultGame";
+import { EQUIPMENT_DEFINITIONS, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
+import { dutyReactionSummaries } from "../../presentation/dutyCopy";
 import { equipmentCopy, equipmentOutputCopy, speciesCopy } from "../../presentation/entityCopy";
 import { TUTORIAL_ANCHORS } from "../../tutorial/anchors";
 
@@ -73,6 +72,11 @@ const outputReading = (
   };
 };
 
+const activeDuty = (
+  operation: EquipmentReactionOperationDefinition,
+  medium: StationaryType | null
+) => operation.duties.find((candidate) => candidate.medium === medium) ?? operation.duties[0];
+
 export const EquipmentOperationStatus = ({
   roomId,
   socketId,
@@ -95,6 +99,8 @@ export const EquipmentOperationStatus = ({
   });
   const tutorialAnchor =
     instance.equipmentId === "membrane_cell" ? TUTORIAL_ANCHORS.lowerIntakeOutlets : undefined;
+  const duty = activeDuty(operation, instance.medium);
+  const summaries = duty ? dutyReactionSummaries(duty, translator) : [];
   return (
     <div
       className={`outlet-buffer-panel ${outputs.length === 0 ? "local-process-panel" : ""}`}
@@ -119,8 +125,16 @@ export const EquipmentOperationStatus = ({
           ))}
         </div>
       )}
+      <div className="equipment-duty-list">
+        {summaries.map((summary) => (
+          <div className="equipment-duty-row" key={summary.reactionId}>
+            <span>{summary.name}</span>
+            <strong>{summary.equation}</strong>
+            <small>{summary.effect}</small>
+          </div>
+        ))}
+      </div>
       <div className="equipment-process-readout">
-        <span>{REACTION_DEFINITIONS[operation.reactionId].equation}</span>
         <strong>{formatters.measurement(instance.operation.lastRate, "mol-eq/s", 2)}</strong>
         <small>
           {translator.text("ui.process.limiting", {

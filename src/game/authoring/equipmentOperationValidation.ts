@@ -1,8 +1,10 @@
 import type { GamePackSource } from "../definitionTypes";
 import type {
+  EquipmentDutyDefinition,
   EquipmentOutputDefinition,
   EquipmentSeparatorBackflowDefinition,
   GasType,
+  ReactionId,
   SpeciesId,
 } from "../types";
 import type { EnemyAuthoringIssue } from "./enemyValidation";
@@ -14,6 +16,9 @@ const push = (issues: AuthoringIssue[], path: string, message: string): void => 
   issues.push({ path, message });
 };
 
+const dutyReactionIds = (equipment: AuthoredEquipment): ReactionId[] =>
+  equipment.operation?.duties.flatMap((duty) => duty.reactionIds) ?? [];
+
 const validateOutput = (
   source: GamePackSource,
   equipment: AuthoredEquipment,
@@ -23,15 +28,26 @@ const validateOutput = (
 ): void => {
   const operation = equipment.operation;
   if (!operation) return;
-  const reaction = source.reactions[operation.reactionId];
+  const reactions = dutyReactionIds(equipment).flatMap((id) => {
+    const reaction = source.reactions[id];
+    return reaction ? [reaction] : [];
+  });
   if (!Number.isFinite(output.capacity) || output.capacity <= 0)
     push(issues, `${path}.capacity`, "Output capacity must be finite and positive.");
   if (source.species[output.speciesId]?.phase !== output.phase)
     push(issues, `${path}.speciesId`, `Output phase does not match ${output.speciesId}.`);
-  if (!reaction) return;
-  if (!reaction.products.some(({ species }) => species === output.speciesId))
-    push(issues, `${path}.speciesId`, `${output.speciesId} is not produced by the reaction.`);
-  if (reaction.reactants.some(({ species }) => species === output.speciesId))
+  if (reactions.length === 0) return;
+  if (
+    !reactions.some((reaction) =>
+      reaction.products.some(({ species }) => species === output.speciesId)
+    )
+  )
+    push(issues, `${path}.speciesId`, `${output.speciesId} is not produced by any duty reaction.`);
+  if (
+    reactions.some((reaction) =>
+      reaction.reactants.some(({ species }) => species === output.speciesId)
+    )
+  )
     push(issues, `${path}.speciesId`, "An output species cannot also be a reactant.");
 };
 
@@ -101,14 +117,14 @@ const validateOperation = (
   const operation = equipment.operation;
   const gradeKinds = new Set(equipment.grades.map(({ behavior }) => behavior.kind));
   if (!operation) {
-    if (gradeKinds.has("electrolyzer"))
-      push(issues, `${path}.grades`, "Electrolyzer grades require an authored operation.");
+    if (gradeKinds.has("electrolyzer") || gradeKinds.has("vessel"))
+      push(issues, `${path}.grades`, "Operation grades require an authored operation.");
     return;
   }
-  if (gradeKinds.size !== 1 || !gradeKinds.has("electrolyzer"))
-    push(issues, `${path}.grades`, "Reaction operations require electrolyzer grades.");
-  validateElectrolyzerGrades(equipment, `${path}.grades`, issues);
-  validateOperationReaction(source, equipment, `${path}.operation.reactionId`, issues);
+  if (gradeKinds.size !== 1 || !(gradeKinds.has("electrolyzer") || gradeKinds.has("vessel")))
+    push(issues, `${path}.grades`, "Reaction operations require electrolyzer or vessel grades.");
+  validateOperationGrades(equipment, `${path}.grades`, issues);
+  validateDuties(source, equipment, `${path}.operation.duties`, issues);
   const ids = operation.outputs.map(({ id }) => id);
   const species = operation.outputs.map(({ speciesId }) => speciesId as SpeciesId);
   if (new Set(ids).size !== ids.length)
@@ -121,7 +137,7 @@ const validateOperation = (
   validateSeparator(equipment, `${path}.operation.separatorBackflow`, issues);
 };
 
-const validateOperationReaction = (
+const validateDuties = (
   source: GamePackSource,
   equipment: AuthoredEquipment,
   path: string,
@@ -129,30 +145,78 @@ const validateOperationReaction = (
 ): void => {
   const operation = equipment.operation;
   if (!operation) return;
-  const reaction = source.reactions[operation.reactionId];
-  if (!reaction) {
-    push(issues, path, `Unknown reaction ${operation.reactionId}.`);
-  } else if (reaction.behavior.kind !== "electrolysis") {
-    push(issues, path, "Equipment operations require electrolysis.");
-  } else if (
-    !Number.isFinite(reaction.behavior.maximumRate) ||
-    reaction.behavior.maximumRate <= 0
-  ) {
-    push(issues, path, "Electrolysis maximum rate must be positive.");
-  }
+  const electrolyzerGrades = equipment.grades.some(
+    ({ behavior }) => behavior.kind === "electrolyzer"
+  );
+  if (operation.duties.length === 0) push(issues, path, "An operation requires at least one duty.");
+  const media = operation.duties.map((duty) => duty.medium);
+  if (new Set(media).size !== media.length)
+    push(issues, path, "Each medium may select at most one duty.");
+  operation.duties.forEach((duty, index) =>
+    validateDuty(source, duty, electrolyzerGrades, `${path}.${index}`, issues)
+  );
 };
 
-const validateElectrolyzerGrades = (
+const validateDuty = (
+  source: GamePackSource,
+  duty: EquipmentDutyDefinition,
+  electrolyzerGrades: boolean,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  if (duty.reactionIds.length === 0)
+    push(issues, `${path}.reactionIds`, "A duty requires at least one reaction.");
+  if (duty.medium !== null && source.species[duty.medium]?.phase !== "stationary")
+    push(issues, `${path}.medium`, `Duty medium ${duty.medium} must be a stationary species.`);
+  for (const reactionId of duty.reactionIds)
+    validateDutyReaction(source, reactionId, electrolyzerGrades, `${path}.reactionIds`, issues);
+};
+
+const validateDutyReaction = (
+  source: GamePackSource,
+  reactionId: keyof GamePackSource["reactions"],
+  electrolyzerGrades: boolean,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const reaction = source.reactions[reactionId];
+  if (!reaction) {
+    push(issues, path, `Unknown reaction ${reactionId}.`);
+    return;
+  }
+  const kind = reaction.behavior.kind;
+  if (electrolyzerGrades && kind !== "electrolysis")
+    push(issues, path, "Electrolyzer duties require electrolysis reactions.");
+  if (!electrolyzerGrades && kind !== "mass_action")
+    push(issues, path, "Vessel duties require mass-action reactions.");
+  validateDutyReactionRate(reaction, `${reactionId}`, path, issues);
+  if (reaction.regime === "wild")
+    push(issues, path, `Wild reaction ${reactionId} runs in rooms, not vessels.`);
+};
+
+const validateDutyReactionRate = (
+  reaction: GamePackSource["reactions"][keyof GamePackSource["reactions"]],
+  reactionId: string,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const behavior = reaction.behavior;
+  if (behavior.kind !== "electrolysis" && behavior.kind !== "mass_action") return;
+  if (!Number.isFinite(behavior.maximumRate) || behavior.maximumRate <= 0)
+    push(issues, path, `Reaction ${reactionId} maximum rate must be positive.`);
+};
+
+const validateOperationGrades = (
   equipment: AuthoredEquipment,
   path: string,
   issues: AuthoringIssue[]
 ): void => {
   equipment.grades.forEach((grade, index) => {
-    if (grade.behavior.kind !== "electrolyzer") return;
+    if (grade.behavior.kind !== "electrolyzer" && grade.behavior.kind !== "vessel") return;
     if (!Number.isFinite(grade.behavior.processRate) || grade.behavior.processRate <= 0)
       push(issues, `${path}.${index}.behavior.processRate`, "Process rate must be positive.");
-    if (!Number.isFinite(grade.behavior.powerDraw) || grade.behavior.powerDraw <= 0)
-      push(issues, `${path}.${index}.behavior.powerDraw`, "Power draw must be positive.");
+    if (!Number.isFinite(grade.behavior.powerDraw) || grade.behavior.powerDraw < 0)
+      push(issues, `${path}.${index}.behavior.powerDraw`, "Power draw must be nonnegative.");
   });
 };
 

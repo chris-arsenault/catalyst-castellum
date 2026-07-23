@@ -115,6 +115,7 @@ const equipmentSchema = z.object({
   equipmentId: equipmentIdSchema,
   level: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   enabled: z.boolean(),
+  medium: z.enum(STATIONARY_TYPES).nullable(),
   operation: equipmentOperationSchema.nullable(),
 });
 const reactionTelemetrySchema = z.object({
@@ -328,7 +329,7 @@ const packIdentitySchema = z.object({
 });
 
 const gameSchema = gameSimulationSchema.extend({
-  version: z.literal(22),
+  version: z.literal(23),
   pack: packIdentitySchema,
   map: worldMapSaveSchema,
   mapRevision: z.number().int().min(0),

@@ -16,6 +16,7 @@ const REJECTION_KEYS: Record<CommandRejectionCode, LocaleKey> = {
   route_unavailable: "commands.rejection.route_unavailable",
   unavailable: "commands.rejection.unavailable",
   unique_equipment: "commands.rejection.unique_equipment",
+  unsupported_medium: "commands.rejection.unsupported_medium",
 };
 
 type RejectionSource =

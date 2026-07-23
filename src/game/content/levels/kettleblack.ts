@@ -1,7 +1,7 @@
 import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { ACT_TWO_SITE_SEEDS, KETTLEBLACK_SITE } from "../sites/actTwo";
-import { ACT_I_AVAILABILITY } from "./fullPlant";
+import { KETTLEBLACK_AVAILABILITY } from "./fullPlant";
 import { actTwoSupplies } from "./actTwoShared";
 import { emptyLoadout } from "./helpers";
 
@@ -11,6 +11,7 @@ const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["
 export const KETTLEBLACK_LEVEL: LevelDefinition = {
   id: "kettleblack",
   number: 5,
+  palette: ["carbon_steam", "iron", "chlorine_sodium"],
   enemyLevel: 24,
   focusRoomId: "furnace",
   featuredReactionIds: [
@@ -47,13 +48,13 @@ export const KETTLEBLACK_LEVEL: LevelDefinition = {
       id: "grain_markers",
       primeSeconds: 72,
       wave: enemySequence(1, "deckmouth", 1, 1, -5),
-      availability: ACT_I_AVAILABILITY,
+      availability: KETTLEBLACK_AVAILABILITY,
     },
     {
       id: "paired_edges",
       primeSeconds: 72,
       wave: wave(enemySequence(1, "splitback", 1, 1, -6), enemySequence(2, "deckmouth", 3, 2, -3)),
-      availability: ACT_I_AVAILABILITY,
+      availability: KETTLEBLACK_AVAILABILITY,
     },
     {
       id: "carrier_return",
@@ -63,7 +64,7 @@ export const KETTLEBLACK_LEVEL: LevelDefinition = {
         enemySequence(1, "flintjack", 2, 1, -3),
         enemySequence(1, "deckmouth", 5, 1, -3)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: KETTLEBLACK_AVAILABILITY,
     },
     {
       id: "split_signal",
@@ -73,7 +74,7 @@ export const KETTLEBLACK_LEVEL: LevelDefinition = {
         enemySequence(1, "deckmouth", 1.5, 1, -2),
         enemySequence(1, "glowbag", 4, 1, -1)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: KETTLEBLACK_AVAILABILITY,
     },
     {
       id: "edge_condition",
@@ -86,7 +87,7 @@ export const KETTLEBLACK_LEVEL: LevelDefinition = {
         enemySequence(1, "glowbag", 5, 1),
         enemySequence(1, "anchor", 7, 1)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: KETTLEBLACK_AVAILABILITY,
     },
   ],
 };

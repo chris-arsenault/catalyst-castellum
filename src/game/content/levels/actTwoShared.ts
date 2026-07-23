@@ -1,6 +1,8 @@
-import type { GasAmounts, SiteSupplyDefinition } from "../../types";
+import type { GasAmounts, LiquidAmounts, SiteSupplyDefinition } from "../../types";
 import {
   GAS_RESERVOIR_ID,
+  HAZARD_GAS_RESERVOIR_ID,
+  HAZARD_LIQUID_RESERVOIR_ID,
   SPECIALTY_GAS_RESERVOIR_ID,
   LIQUID_RESERVOIR_A_ID,
   LIQUID_RESERVOIR_B_ID,
@@ -8,9 +10,63 @@ import {
   liquidSupply,
 } from "../supplies";
 
+export interface HazardPacketOptions {
+  gas?: {
+    contents: Partial<GasAmounts>;
+    capacity: number;
+    cost: number;
+    availableFromRound: string;
+  };
+  liquid?: {
+    contents: Partial<LiquidAmounts>;
+    capacity: number;
+    cost: number;
+    availableFromRound: string;
+  };
+}
+
+/** Direct-supply hazard packets back the depth-one contract (ADR-0009). */
+export const hazardPacketSupplies = (hazard: HazardPacketOptions): SiteSupplyDefinition[] => [
+  ...(hazard.gas
+    ? [
+        gasSupply({
+          id: HAZARD_GAS_RESERVOIR_ID,
+          code: "G-3",
+          capacity: hazard.gas.capacity,
+          initial: hazard.gas.contents,
+          availableFromRound: hazard.gas.availableFromRound,
+          replenishment: {
+            kind: "matter" as const,
+            contents: hazard.gas.contents,
+            cost: hazard.gas.cost,
+          },
+          accent: "#f56262",
+        }),
+      ]
+    : []),
+  ...(hazard.liquid
+    ? [
+        liquidSupply({
+          id: HAZARD_LIQUID_RESERVOIR_ID,
+          code: "L-3",
+          capacity: hazard.liquid.capacity,
+          initial: hazard.liquid.contents,
+          availableFromRound: hazard.liquid.availableFromRound,
+          replenishment: {
+            kind: "matter" as const,
+            contents: hazard.liquid.contents,
+            cost: hazard.liquid.cost,
+          },
+          accent: "#b555f5",
+        }),
+      ]
+    : []),
+];
+
 export const actTwoSupplies = (
   availableFromRound: string,
-  gas: { capacity: number; contents: Partial<GasAmounts>; cost: number }
+  gas: { capacity: number; contents: Partial<GasAmounts>; cost: number },
+  hazard: HazardPacketOptions = {}
 ): readonly SiteSupplyDefinition[] => {
   const { hydrogen_fluoride: specialtyInventory = 0, ...ordinaryGas } = gas.contents;
   const specialty =
@@ -60,5 +116,6 @@ export const actTwoSupplies = (
       replenishment: { kind: "matter", contents: { sodium_chloride: 40 }, cost: 14 },
       accent: "#60cce4",
     }),
+    ...hazardPacketSupplies(hazard),
   ];
 };

@@ -2,7 +2,15 @@ import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { ACT_THREE_SITE_SEEDS, PELL_CORDON_SITE } from "../sites/actThree";
 import { actThreeSupplies } from "./actThreeShared";
-import { ACT_II_AVAILABILITY } from "./fullPlant";
+import { paletteAvailability } from "./fullPlant";
+import type { ProcessFamilyId } from "../../types";
+
+const PELL_CORDON_PALETTE: readonly ProcessFamilyId[] = [
+  "chlorine_sodium",
+  "nitrogen_oxide",
+  "uranium_fluorine",
+];
+const PELL_CORDON_AVAILABILITY = paletteAvailability(PELL_CORDON_PALETTE);
 import { emptyLoadout } from "./helpers";
 
 const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
@@ -11,6 +19,7 @@ const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["
 export const PELL_CORDON_LEVEL: LevelDefinition = {
   id: "pell_cordon",
   number: 12,
+  palette: PELL_CORDON_PALETTE,
   enemyLevel: 31,
   focusRoomId: "furnace",
   featuredReactionIds: [
@@ -30,13 +39,26 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
       hydrogen: 420,
       oxygen: 210,
       nitrogen: 260,
-      carbon_monoxide: 180,
       hydrogen_fluoride: 260,
     },
     gasCost: 52,
     water: 260,
     brine: 260,
     liquidCapacity: 300,
+    hazard: {
+      gas: {
+        contents: { chlorine: 45, ammonia: 45, nitrogen_dioxide: 20 },
+        capacity: 140,
+        cost: 26,
+        availableFromRound: "outer_boundary",
+      },
+      liquid: {
+        contents: { sodium_hypochlorite: 28 },
+        capacity: 40,
+        cost: 24,
+        availableFromRound: "outer_boundary",
+      },
+    },
     waterCost: 15,
     brineCost: 19,
   }),
@@ -44,10 +66,8 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
   loadout: {
     ...emptyLoadout(),
     stationary: {
-      switchyard: { hematite: 30, magnetite: 14 },
-      furnace: { solid_carbon: 38, iron_catalyst: 6 },
-      gallery: { platinum_catalyst: 5, surface_nickel: 20, uranyl_fluoride: 48 },
-      lower_intake: { nickel_oxide: 20, surface_nickel: 22 },
+      furnace: { iron_catalyst: 6 },
+      gallery: { platinum_catalyst: 5, uranyl_fluoride: 48 },
     },
   },
   rounds: [
@@ -58,7 +78,7 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
         enemySequence(3, "deckmouth", 0.5, 1.8, -11),
         enemySequence(2, "clatter", 2, 2, -11)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: PELL_CORDON_AVAILABILITY,
     },
     {
       id: "copied_cadence",
@@ -68,7 +88,7 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
         enemySequence(4, "glowbag", 2, 2.5, -10),
         enemySequence(3, "shear_jelly", 3, 2.8, -10)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: PELL_CORDON_AVAILABILITY,
     },
     {
       id: "closure_load",
@@ -79,7 +99,7 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
         enemySequence(3, "clatter", 3, 2.1, -9),
         enemySequence(1, "anchor", 5, 1, -10)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: PELL_CORDON_AVAILABILITY,
     },
     {
       id: "counter_pattern",
@@ -92,7 +112,7 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
         enemySequence(3, "glowbag", 4, 2.5, -9),
         enemySequence(3, "shear_jelly", 5, 2.6, -8)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: PELL_CORDON_AVAILABILITY,
     },
     {
       id: "near_voice",
@@ -108,7 +128,7 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
         enemySequence(3, "shear_jelly", 5, 2.5, -6),
         enemySequence(1, "anchor", 7, 1, -4)
       ),
-      availability: ACT_II_AVAILABILITY,
+      availability: PELL_CORDON_AVAILABILITY,
     },
   ],
 };

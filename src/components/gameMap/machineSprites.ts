@@ -23,6 +23,10 @@ export const machineAnimationSpeed = (equipmentId: EquipmentId): number => {
     thermal_coil: 0.06,
     wet_contactor: 0.055,
     fluorine_cell: 0.07,
+    catalytic_reactor: 0.06,
+    packed_bed: 0.05,
+    catalytic_burner: 0.09,
+    absorber_column: 0.055,
   };
   return speeds[equipmentId];
 };

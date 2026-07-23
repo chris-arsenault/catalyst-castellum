@@ -17,6 +17,7 @@ import type {
   LiquidSourceId,
   LiquidSourceState,
   LiquidType,
+  StationaryType,
   EquipmentId,
   EquipmentSocketId,
   RoomId,
@@ -104,6 +105,7 @@ export interface GameEventParameterMap {
   liquid_source_charged: { sourceId: LiquidSourceId; cost: number; amount: number };
   prime_started: { primeSeconds: number };
   equipment_operation_started: { equipmentId: EquipmentId };
+  vessel_medium_loaded: { equipmentId: EquipmentId; medium: StationaryType };
   round_advanced: Record<never, never>;
   round_completed: {
     breached: number;
@@ -168,7 +170,7 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 22;
+  version: 23;
   pack: {
     id: string;
     contentVersion: number;
@@ -259,6 +261,12 @@ export type GameCommand =
   | { type: "toggle_equipment"; roomId: RoomId; socketId: EquipmentSocketId; enabled: boolean }
   | { type: "upgrade_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
   | { type: "dismantle_equipment"; roomId: RoomId; socketId: EquipmentSocketId }
+  | {
+      type: "load_vessel_medium";
+      roomId: RoomId;
+      socketId: EquipmentSocketId;
+      medium: StationaryType | null;
+    }
   | { type: "build_connection"; kind: ProcessLineKind; fromRoomId: RoomId; toRoomId: RoomId }
   | { type: "dismantle_connection"; connectionId: ConnectionId }
   | { type: "graft_module"; hostRoomId: RoomId; hardpointId: string; moduleId: string }
@@ -318,7 +326,8 @@ export type CommandRejectionCode =
   | "retained_inventory"
   | "route_unavailable"
   | "unavailable"
-  | "unique_equipment";
+  | "unique_equipment"
+  | "unsupported_medium";
 
 export interface CommandDecision {
   allowed: boolean;

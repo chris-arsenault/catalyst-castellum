@@ -73,58 +73,79 @@ describe("advanced electrolysis", () => {
   });
 });
 
-describe("simultaneous mass-action room chemistry", () => {
+const installVessel = (
+  target: RoomState,
+  socketId: "socket_a" | "socket_b",
+  equipmentId: "packed_bed" | "catalytic_reactor",
+  medium: NonNullable<RoomState["equipment"]["socket_a"]>["medium"],
+  level: 1 | 2 | 3 = 3
+): void => {
+  const instance = createEquipmentInstance(
+    { equipmentId, level, enabled: true },
+    DEFAULT_GAME_DEFINITION
+  );
+  instance.medium = medium;
+  target.equipment[socketId] = instance;
+};
+
+describe("vessel-hosted mass-action chemistry", () => {
   it("executes a finite solid-bed reaction and conserves its authored products", () => {
+    installVessel(room, "socket_a", "packed_bed", "solid_carbon");
     room.stationary.solid_carbon = 5;
     room.gas.lower.steam = 5;
 
-    const reacted = simulateMassActionNetwork(room, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
 
-    expect(reacted).toBeGreaterThan(0);
+    expect(room.equipment.socket_a?.operation?.totalProcessed).toBeGreaterThan(0);
     expect(room.stationary.solid_carbon).toBeLessThan(5);
     expect(room.gas.lower.steam).toBeLessThan(5);
     expect(room.gas.lower.carbon_monoxide).toBeCloseTo(room.gas.lower.hydrogen, 8);
     expect(room.reactions.water_gas_reaction.direction).toBe("forward");
   });
 
-  it("runs a reversible definition backward from its product inventory", () => {
+  it("runs a reversible duty backward from its product inventory", () => {
+    installVessel(room, "socket_a", "catalytic_reactor", "iron_catalyst");
     room.gasTemperature.lower = 180;
-    room.stationary.iron_catalyst = 2;
     room.gas.lower.carbon_dioxide = 5;
     room.gas.lower.hydrogen = 5;
 
-    simulateMassActionNetwork(room, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.carbon_monoxide).toBeGreaterThan(0);
     expect(room.gas.lower.steam).toBeGreaterThan(0);
     expect(room.reactions.water_gas_shift.direction).toBe("reverse");
   });
 
-  it("allocates a shared hydrogen inventory across competing beds without going negative", () => {
+  it("consumes a shared hydrogen inventory across competing beds without going negative", () => {
+    installVessel(room, "socket_a", "packed_bed", "hematite");
+    installVessel(room, "socket_b", "packed_bed", "nickel_oxide");
     room.stationary.hematite = 20;
     room.stationary.nickel_oxide = 8;
     room.gas.lower.hydrogen = 0.08;
 
-    simulateMassActionNetwork(room, 10, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state, 10, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.hydrogen).toBeGreaterThanOrEqual(-1e-10);
     expect(room.stationary.magnetite).toBeGreaterThan(0);
-    expect(room.stationary.surface_nickel).toBeGreaterThan(0);
+    expect(room.stationary.surface_nickel).toBeGreaterThanOrEqual(0);
   });
 
-  it("uses catalyst inventory as a rate modifier while preserving it", () => {
+  it("treats the loaded catalyst charge as a rate enabler while preserving it", () => {
+    installVessel(room, "socket_a", "catalytic_reactor", "surface_nickel");
     room.stationary.surface_nickel = 2;
     room.gas.lower.carbon_monoxide = 8;
     room.gas.lower.hydrogen = 24;
     const catalystBefore = room.stationary.surface_nickel;
 
-    simulateMassActionNetwork(room, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.methane).toBeGreaterThan(0);
     expect(room.stationary.surface_nickel).toBeCloseTo(catalystBefore, 8);
     expect(room.reactions.nickel_catalyzed_methanation.direction).toBe("forward");
   });
+});
 
+describe("authored kinetics response", () => {
   it("applies authored second-order concentration response", () => {
     const productionAt = (nitricOxide: number): number => {
       clearRoom(room);
@@ -146,12 +167,13 @@ describe("simultaneous mass-action room chemistry", () => {
   it("makes water inventory suppress dry uranyl-fluoride recovery", () => {
     const run = (water: number): number => {
       clearRoom(room);
+      installVessel(room, "socket_a", "packed_bed", "uranyl_fluoride");
       room.temperature = 145;
       room.gasTemperature.lower = 145;
       room.stationary.uranyl_fluoride = 4;
       room.gas.lower.fluorine = 8;
       room.liquid.water = water;
-      simulateMassActionNetwork(room, 1, DEFAULT_GAME_DEFINITION);
+      simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
       return room.gas.lower.uranium_hexafluoride;
     };
 

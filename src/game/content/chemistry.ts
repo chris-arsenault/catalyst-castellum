@@ -13,6 +13,8 @@ import { URANIUM_FLUORINE_REACTIONS } from "./reactions/uraniumFluorine";
 export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   chlor_alkali_electrolysis: {
     id: "chlor_alkali_electrolysis",
+    family: "chlorine_sodium",
+    regime: "engineered",
     code: "CL-1",
     kind: "chemical",
     equation: "2 NaCl(aq) + 2 H₂O(l) → Cl₂(g) + H₂(g) + 2 NaOH(aq)",
@@ -29,6 +31,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   hydrogen_oxygen_combustion: {
     id: "hydrogen_oxygen_combustion",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "OX-1",
     kind: "chemical",
     equation: "2 H₂(g) + O₂(g) → 2 H₂O(g) + heat + pressure",
@@ -55,6 +59,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   hydrogen_chlorine_recombination: {
     id: "hydrogen_chlorine_recombination",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "CL-2",
     kind: "chemical",
     equation: "H₂(g) + Cl₂(g) → 2 HCl(g) + heat",
@@ -75,6 +81,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   hydrogen_chloride_absorption: {
     id: "hydrogen_chloride_absorption",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "P-1",
     kind: "physical",
     equation: "HCl(g) → HCl(aq)",
@@ -89,6 +97,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   acid_neutralization: {
     id: "acid_neutralization",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "CL-3",
     kind: "chemical",
     equation: "HCl(aq) + NaOH(aq) → NaCl(aq) + H₂O(l) + heat",
@@ -109,6 +119,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   hypochlorite_formation: {
     id: "hypochlorite_formation",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "CL-4",
     kind: "chemical",
     equation: "Cl₂(g) + 2 NaOH(aq) → NaOCl(aq) + NaCl(aq) + H₂O(l)",
@@ -131,6 +143,8 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
   },
   acid_chlorine_release: {
     id: "acid_chlorine_release",
+    family: "chlorine_sodium",
+    regime: "wild",
     code: "CL-5",
     kind: "chemical",
     equation: "NaOCl(aq) + 2 HCl(aq) → NaCl(aq) + Cl₂(g) + H₂O(l)",

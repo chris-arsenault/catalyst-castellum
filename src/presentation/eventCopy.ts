@@ -3,7 +3,7 @@ import type { DamageSourceId, GameEvent } from "../game/types";
 import { DEFAULT_FORMATTERS, type LocaleFormatters } from "../localization/formatters";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
-import { enemyCopy, equipmentCopy } from "./entityCopy";
+import { enemyCopy, equipmentCopy, speciesCopy } from "./entityCopy";
 import { createLevelCopy } from "./levelCopy";
 import { definitionRoom } from "../game/world/instances";
 import { supplyFormula } from "./supplyCopy";
@@ -158,6 +158,17 @@ const processEventCopy: EventCopyHandler = (event, context) => {
       return {
         title: translator.text("events.equipmentOperation.title", { equipment }),
         detail: translator.text("events.equipmentOperation.detail", { room }),
+      };
+    }
+    case "vessel_medium_loaded": {
+      const equipment = equipmentCopy(
+        definition.equipment[event.parameters.equipmentId],
+        translator
+      ).name;
+      const medium = speciesCopy(definition.species[event.parameters.medium], translator).name;
+      return {
+        title: translator.text("events.vesselMedium.title", { equipment, medium }),
+        detail: translator.text("events.vesselMedium.detail", { room }),
       };
     }
     case "hcl_production_started":

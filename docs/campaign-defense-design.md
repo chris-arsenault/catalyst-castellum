@@ -15,17 +15,17 @@ combat roles.
 
 The construction vocabulary remains deliberately small:
 
-- gas agitator;
-- wet contactor;
-- thermal coil;
-- membrane cell;
-- fluorine cell;
+- gas agitator, wet contactor, and thermal coil (process-general accelerators);
+- membrane cell and fluorine cell;
+- catalytic reactor, packed bed, catalytic burner, and absorber column (duty vessels);
 - gas and liquid transport;
-- stationary deposits and catalytic surfaces.
+- stationary deposits, bed charges, and catalytic surfaces.
 
-Build variety comes from placement, topology, upgrades, feed allocation, storage, recirculation,
-temperature, pressure, and timing. Equipment remains process-general. An agitator accelerates every
-eligible reaction in its room; it is not a dedicated weapon tower.
+Build variety comes from placement, topology, upgrades, loaded media, feed allocation, storage,
+recirculation, temperature, pressure, and timing. Accelerators remain process-general — an
+agitator accelerates every eligible wild reaction in its room. Vessels are process-specific by
+design ([ADR-0007](adr/0007-engineered-reactions-run-in-vessels.md)): the loaded medium selects
+the duty, and the spec plate names the chemistry it runs.
 
 ## Defense archetypes
 
@@ -49,10 +49,18 @@ chlorine can remove a dense cohort while a continuous line catches stragglers.
 
 ## Site authoring contract
 
+A site declares a chemistry palette of one to three process families
+([ADR-0008](adr/0008-site-chemistry-palettes.md)). Its supplies, seeded deposits, and per-round
+equipment availability derive from the palette and are compiler-validated against it; common
+precursors ship everywhere. Every offensive family in the palette reaches damage within one
+reaction of a supplied feedstock ([ADR-0009](adr/0009-damage-at-depth-one.md)); iron is the
+support family, and its palette promise is carriage and economy.
+
 A site authors:
 
+- its chemistry palette;
 - geometry and defensive room opportunities;
-- starting feedstocks, deposits, and supply offers;
+- starting feedstocks, deposits, and supply offers, including hull hazard-packet pricing;
 - Matter budget and installed infrastructure;
 - visible wave composition, timing, and approach;
 - environmental complications;
@@ -74,20 +82,20 @@ expensive recovery route, but it must not be the site's primary answer.
 
 ## Process introduction curve
 
-| Site           | Capability introduced                             | Encounter relationship                                                  |
-| -------------- | ------------------------------------------------- | ----------------------------------------------------------------------- |
-| Claim 8-Delta  | OX-1 and basic gas defense                        | Required once to establish the game                                     |
-| Harker's Brace | Membrane chemistry and continuous hazards         | Guided demonstration followed by free construction                      |
-| Twelve-Cask    | Storage and delayed release                       | Adds a new cadence rather than prescribing the defense                  |
-| Morrow Pocket  | None                                              | First site supporting several complete builds                           |
-| Kettleblack    | Stationary deposits, reversibility, and catalysts | Final guided mechanical demonstration; established builds remain viable |
-| Cordon 41      | Nitrogen feedstock and reactions                  | Optional sustained-damage family                                        |
-| Junction L-6   | Nickel transport chemistry                        | Optional carrier and catalyst family                                    |
-| Pell Cut       | Fluorine cell                                     | One equipment description and an optional high-risk generator           |
-| Station 14     | Uranium-bearing material                          | One element description and an optional containment/radiation family    |
-| Vasker Store   | None                                              | Existing systems prepare the required boundary state                    |
-| Lane Six       | None                                              | Existing defenses answer geometry and enemy composition                 |
-| Pell Cordon    | None                                              | Campaign-wide synthesis with multiple valid portfolios                  |
+| Site           | Capability introduced                              | Encounter relationship                                                  |
+| -------------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
+| Claim 8-Delta  | OX-1 and basic gas defense                         | Required once to establish the game                                     |
+| Harker's Brace | Membrane chemistry and continuous hazards          | Guided demonstration followed by free construction                      |
+| Twelve-Cask    | Storage and delayed release                        | Adds a new cadence rather than prescribing the defense                  |
+| Morrow Pocket  | None                                               | First site supporting several complete builds                           |
+| Kettleblack    | Packed bed vessels, bed charges, and reversibility | Final guided mechanical demonstration; established builds remain viable |
+| Cordon 41      | Nitrogen palette: reactor, burner, and column      | Optional sustained-damage family with direct ammonia supply             |
+| Junction L-6   | Nickel bed duties and carbonyl migration           | Optional carrier and catalyst family                                    |
+| Pell Cut       | Fluorine cell                                      | One equipment description and an optional high-risk generator           |
+| Station 14     | Uranium-bearing material                           | One element description and an optional containment/radiation family    |
+| Vasker Store   | None                                               | Existing systems prepare the required boundary state                    |
+| Lane Six       | None                                               | Existing defenses answer geometry and enemy composition                 |
+| Pell Cordon    | None                                               | Campaign-wide synthesis with multiple valid portfolios                  |
 
 After Kettleblack, process information belongs in concise equipment, element, reaction, and mission
 entries. Later sites teach by exposing one leg of a process in a readable starting state and adding

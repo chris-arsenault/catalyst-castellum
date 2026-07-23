@@ -4,6 +4,16 @@ All notable user-visible changes are recorded here.
 
 ## Unreleased
 
+### Chemistry and construction
+
+- Reworked chemistry legibility around duty vessels, site palettes, and depth-one hazards.
+  Engineered reactions now run inside four new vessels — Catalytic Reactor, Packed Bed, Catalytic
+  Burner, and Absorber Column — whose loaded medium selects the duty shown on their spec plate,
+  while spontaneous chemistry stays ambient. Every site scopes its supplies, seeds, and build
+  catalog to a palette of one to three process families, hull hazard reservoirs sell direct
+  feedstock packets so each offensive family damages from one visible step, iron is the labeled
+  support family, and the Kettleblack lesson now teaches bed-vessel operation.
+
 ### Campaign and narrative
 
 - Replaced the per-site tutorial opt-out with a campaign-wide field guidance choice, made when a

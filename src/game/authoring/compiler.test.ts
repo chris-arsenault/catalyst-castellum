@@ -9,7 +9,7 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(14);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(15);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
@@ -147,7 +147,10 @@ describe("equipment operation authoring", () => {
           ...DEFAULT_GAME_DEFINITION.equipment,
           membrane_cell: {
             ...membraneCell,
-            operation: { ...operation, reactionId: "acid_neutralization" },
+            operation: {
+              ...operation,
+              duties: [{ medium: null, reactionIds: ["acid_neutralization"] }],
+            },
           },
         },
       })

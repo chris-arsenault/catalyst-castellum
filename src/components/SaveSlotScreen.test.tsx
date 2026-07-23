@@ -19,6 +19,6 @@ describe("debug campaign launcher", () => {
     ).toBe("LEVEL 2 · Make the Reagent · GUIDED");
     expect(
       [...siteSelect.options].find((option) => option.value === "stored_chlorine")?.textContent
-    ).toBe("LEVEL 3 · Stored Chlorine · DEFENSE");
+    ).toBe("LEVEL 3 · Stored Chlorine · GUIDED");
   });
 });

@@ -36,10 +36,11 @@ const acidRounds = availability({
 export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   id: "make_the_reagent",
   number: 2,
+  palette: ["chlorine_sodium"],
   enemyLevel: 21,
   focusRoomId: "lower_intake",
   featuredReactionIds: ["chlor_alkali_electrolysis", "hydrogen_chlorine_recombination"],
-  startingMatter: 28,
+  startingMatter: 60,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
   supplies: [
@@ -64,13 +65,7 @@ export const MAKE_THE_REAGENT_LEVEL: LevelDefinition = {
   ],
   loadout: {
     ...emptyLoadout(),
-    gasConduits: {
-      "gas:lower_intake__reservoir": gasRun(true),
-      "gas:core__lower_intake": gasRun(false),
-      "gas:furnace__lower_intake": gasRun(false),
-      "gas:furnace__gallery": gasRun(false),
-      "gas:gallery__washlock": gasRun(false),
-    },
+    gasConduits: { "gas:lower_intake__reservoir": gasRun(true) },
     liquidConduits: { "liquid:core__lower_intake": liquidRun(false) },
   },
   site: { kind: "generated", seed: CHLOR_ALKALI_TUTORIAL_SEED, spec: CHLOR_ALKALI_SITE },

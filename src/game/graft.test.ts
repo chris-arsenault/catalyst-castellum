@@ -139,6 +139,7 @@ describe("dismantling and carrying grafted modules", () => {
       level: 1,
       enabled: false,
       operation: null,
+      medium: null,
     };
     const result = executeCommand(grafted, { type: "dismantle_module", roomId }, definition);
     expect(result.accepted).toBe(false);
@@ -201,6 +202,7 @@ describe("the persistent hull route", () => {
       level: 2,
       enabled: true,
       operation: null,
+      medium: null,
     };
     roomState(grafted.state, roomId).residue = 8;
     roomState(grafted.state, roomId).pressurePulse = 12;

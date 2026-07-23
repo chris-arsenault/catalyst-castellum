@@ -1,7 +1,11 @@
 import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { ACT_TWO_SITE_SEEDS, CORDON_41_SITE } from "../sites/actTwo";
-import { ACT_I_AVAILABILITY } from "./fullPlant";
+import { paletteAvailability } from "./fullPlant";
+import type { ProcessFamilyId } from "../../types";
+
+const CORDON_41_PALETTE: readonly ProcessFamilyId[] = ["nitrogen_oxide", "chlorine_sodium"];
+const CORDON_41_AVAILABILITY = paletteAvailability(CORDON_41_PALETTE);
 import { actTwoSupplies } from "./actTwoShared";
 import { emptyLoadout } from "./helpers";
 
@@ -11,6 +15,7 @@ const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["
 export const CORDON_41_LEVEL: LevelDefinition = {
   id: "cordon_41",
   number: 6,
+  palette: CORDON_41_PALETTE,
   enemyLevel: 25,
   focusRoomId: "furnace",
   featuredReactionIds: [
@@ -22,18 +27,28 @@ export const CORDON_41_LEVEL: LevelDefinition = {
   startingMatter: 330,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
-  supplies: actTwoSupplies("sensor_wall", {
-    capacity: 1_000,
-    contents: { hydrogen: 420, oxygen: 180, nitrogen: 300 },
-    cost: 28,
-  }),
+  supplies: actTwoSupplies(
+    "sensor_wall",
+    {
+      capacity: 1_000,
+      contents: { hydrogen: 420, oxygen: 180, nitrogen: 300 },
+      cost: 28,
+    },
+    {
+      gas: {
+        contents: { ammonia: 50, nitrogen_dioxide: 15, chlorine: 15 },
+        capacity: 110,
+        cost: 20,
+        availableFromRound: "sensor_wall",
+      },
+    }
+  ),
   site: { kind: "generated", seed: ACT_TWO_SITE_SEEDS.cordon_41, spec: CORDON_41_SITE },
   loadout: {
     ...emptyLoadout(),
     stationary: {
       furnace: { iron_catalyst: 5 },
       gallery: { platinum_catalyst: 4 },
-      reservoir: { solid_carbon: 24 },
     },
   },
   rounds: [
@@ -41,7 +56,7 @@ export const CORDON_41_LEVEL: LevelDefinition = {
       id: "sensor_wall",
       primeSeconds: 72,
       wave: enemySequence(1, "clatter", 1, 1, -4),
-      availability: ACT_I_AVAILABILITY,
+      availability: CORDON_41_AVAILABILITY,
     },
     {
       id: "ladder_pressure",
@@ -50,7 +65,7 @@ export const CORDON_41_LEVEL: LevelDefinition = {
         enemySequence(1, "clatter", 0.5, 1, -3),
         enemySequence(1, "shear_jelly", 2, 1, -3)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: CORDON_41_AVAILABILITY,
     },
     {
       id: "buffer_screen",
@@ -60,7 +75,7 @@ export const CORDON_41_LEVEL: LevelDefinition = {
         enemySequence(1, "deckmouth", 2, 1, -2),
         enemySequence(1, "anchor", 4, 1, -3)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: CORDON_41_AVAILABILITY,
     },
     {
       id: "double_reading",
@@ -71,7 +86,7 @@ export const CORDON_41_LEVEL: LevelDefinition = {
         enemySequence(4, "redlung", 3, 2.7),
         enemySequence(3, "shear_jelly", 5, 3)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: CORDON_41_AVAILABILITY,
     },
     {
       id: "cordon_recovery",
@@ -84,7 +99,7 @@ export const CORDON_41_LEVEL: LevelDefinition = {
         enemySequence(2, "shear_jelly", 5, 3.2),
         enemySequence(1, "anchor", 7, 1)
       ),
-      availability: ACT_I_AVAILABILITY,
+      availability: CORDON_41_AVAILABILITY,
     },
   ],
 };

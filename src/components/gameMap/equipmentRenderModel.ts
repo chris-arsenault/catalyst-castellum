@@ -16,6 +16,10 @@ export const EQUIPMENT_MAP_CODES: Record<EquipmentId, string> = {
   thermal_coil: "HEAT",
   membrane_cell: "CELL",
   fluorine_cell: "F₂",
+  catalytic_reactor: "RXR",
+  packed_bed: "BED",
+  catalytic_burner: "BRN",
+  absorber_column: "ABS",
 };
 
 export interface EquipmentRenderModel {

@@ -51,6 +51,8 @@ export const UI_MAP_MESSAGES = {
   "ui.map.room.thresholds":
     "Thermal exposure begins above {temperature}. Static pressure exposure begins above {pressure}.",
   "ui.map.room.select": "Click to select {room}",
+  "ui.map.room.roundCombat": "This round",
+  "ui.map.room.roundCombatValue": "{damage} damage · {kills} kills",
   "ui.map.transport.flowThreshold": "Flow below measurement threshold",
   "ui.map.transport.physical": "PHYSICAL CONDUIT · {state}",
   "ui.map.transport.state.stalled": "STALLED",

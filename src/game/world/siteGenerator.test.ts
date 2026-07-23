@@ -65,11 +65,11 @@ describe("CL-1's selected generated exterior", () => {
     expect(game.map.rooms.core?.provenance).toBe("hull");
     expect(game.map.rooms.washlock?.provenance).toBe("hull");
     expect(game.map.connections["liquid:core__lower_intake"]).toBeDefined();
-    expect(game.map.connections["gas:core__lower_intake"]).toBeDefined();
     expect(game.map.connections["gas:lower_intake__reservoir"]).toBeDefined();
-    expect(game.map.connections["gas:furnace__lower_intake"]).toBeDefined();
-    expect(game.map.connections["gas:furnace__gallery"]).toBeDefined();
-    expect(game.map.connections["gas:gallery__washlock"]).toBeDefined();
+    expect(game.map.connections["gas:core__lower_intake"]).toBeUndefined();
+    expect(game.map.connections["gas:furnace__lower_intake"]).toBeUndefined();
+    expect(game.map.connections["gas:furnace__gallery"]).toBeUndefined();
+    expect(game.map.connections["gas:gallery__washlock"]).toBeUndefined();
   });
 
   it("round-trips through a save and rebases the hull at the following authored site", () => {

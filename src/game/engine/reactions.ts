@@ -289,14 +289,11 @@ const simulateRoomChemistry = (
   bursts: HazardBurst[],
   definition: GameDefinition
 ): void => {
-  for (const telemetry of Object.values(room.reactions)) {
-    telemetry.lastRate = 0;
-    telemetry.direction = "idle";
-  }
   room.pressurePulse = Math.max(0, room.pressurePulse - PRESSURE_PULSE_DECAY_PER_SECOND * dt);
   for (const reaction of Object.values(definition.reactions)) {
     if (reaction.behavior.kind === "electrolysis" || reaction.behavior.kind === "mass_action")
       continue;
+    if (reaction.regime === "engineered") continue;
     ROOM_REACTION_STRATEGIES[reaction.behavior.kind]({
       state,
       room,
@@ -320,6 +317,12 @@ export const simulateReactions = (
   definition: GameDefinition
 ): HazardBurst[] => {
   const bursts: HazardBurst[] = [];
+  for (const roomId of state.world.rooms) {
+    for (const telemetry of Object.values(roomState(state, roomId).reactions)) {
+      telemetry.lastRate = 0;
+      telemetry.direction = "idle";
+    }
+  }
   simulateEquipmentOperations(state, dt, definition);
   for (const roomId of state.world.rooms)
     simulateRoomChemistry(state, roomState(state, roomId), dt, bursts, definition);

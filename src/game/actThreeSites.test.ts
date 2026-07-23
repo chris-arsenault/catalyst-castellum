@@ -36,18 +36,25 @@ describe("Act III mechanical sites", () => {
       expect(processLineIds(game, "gas_line")).toEqual([]);
       expect(processLineIds(game, "liquid_line")).toEqual([]);
       expect(stationary).toBeGreaterThan(0);
-      expect(game.availability.equipment).toContain("fluorine_cell");
+      const palette = LEVEL_DEFINITIONS[game.campaign.levelId].palette;
+      expect(game.availability.equipment.includes("fluorine_cell")).toBe(
+        palette.includes("uranium_fluorine")
+      );
     }
   });
 
-  it("introduces room-bound uranium at Station 14 and keeps it available through the final act", () => {
+  it("introduces room-bound uranium at Station 14 and keeps it available on uranium-palette sites", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const game = createScenarioGame(levelId);
       const uranium = Object.values(game.rooms).reduce(
         (total, room) => total + room.stationary.uranyl_fluoride,
         0
       );
-      expect(uranium, levelId).toBeGreaterThan(0);
+      if (LEVEL_DEFINITIONS[levelId].palette.includes("uranium_fluorine")) {
+        expect(uranium, levelId).toBeGreaterThan(0);
+      } else {
+        expect(uranium, levelId).toBe(0);
+      }
     }
     expect(LEVEL_DEFINITIONS.station_14.featuredReactionIds).toEqual([
       "uranium_hexafluoride_hydrolysis",
@@ -60,16 +67,22 @@ describe("Act III mechanical sites", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const game = createScenarioGame(levelId);
       expect(game.gasSources.gas_reservoir?.gas.hydrogen_fluoride, levelId).toBe(0);
-      expect(
-        game.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride,
-        levelId
-      ).toBeGreaterThan(0);
       expect(game.map.rooms.core?.taps.gas.sourceIds, levelId).toEqual(["gas_reservoir"]);
-      expect(game.map.rooms.reservoir?.taps.gas.sourceIds, levelId).toEqual([
-        "specialty_gas_reservoir",
-      ]);
       expect(game.map.rooms.furnace?.taps.gas.sourceIds, levelId).toEqual([]);
-      expect(game.map.utilityNodes.specialty_gas_reservoir?.hostRoomId, levelId).toBe("reservoir");
+      if (LEVEL_DEFINITIONS[levelId].palette.includes("uranium_fluorine")) {
+        expect(
+          game.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride,
+          levelId
+        ).toBeGreaterThan(0);
+        expect(game.map.rooms.reservoir?.taps.gas.sourceIds, levelId).toEqual([
+          "specialty_gas_reservoir",
+        ]);
+        expect(game.map.utilityNodes.specialty_gas_reservoir?.hostRoomId, levelId).toBe(
+          "reservoir"
+        );
+      } else {
+        expect(game.gasSources.specialty_gas_reservoir, levelId).toBeUndefined();
+      }
     }
   });
 });
@@ -80,8 +93,11 @@ describe("Act III defense authoring", () => {
       const builds = ACT_THREE_REFERENCE_BUILDS[levelId];
       expect(builds).toHaveLength(5);
       expect(new Set(builds.map(({ archetype }) => archetype)).size).toBe(5);
-      expect(builds.filter(({ id }) => id.includes("uranium"))).toHaveLength(1);
-      expect(builds.filter(({ id }) => !id.includes("uranium"))).toHaveLength(4);
+      const uraniumBuilds = builds.filter(({ id }) => id.includes("uranium"));
+      const expectedUranium = LEVEL_DEFINITIONS[levelId].palette.includes("uranium_fluorine")
+        ? 1
+        : 0;
+      expect(uraniumBuilds, levelId).toHaveLength(expectedUranium);
       expect(
         builds.every(({ rounds }) =>
           rounds.some(({ commands }) => commands.some(({ type }) => type === "build_connection"))

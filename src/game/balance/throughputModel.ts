@@ -77,12 +77,14 @@ const equipmentRatesForReaction = (
   definition: GameDefinition,
   reactionId: ReactionId
 ): [number, number, number] | null => {
-  const equipment = Object.values(definition.equipment).find(
-    (candidate) => candidate.operation?.reactionId === reactionId
+  const equipment = Object.values(definition.equipment).find((candidate) =>
+    candidate.operation?.duties.some((duty) => duty.reactionIds.includes(reactionId))
   );
   if (!equipment) return null;
   return equipment.grades.map((grade) =>
-    grade.behavior.kind === "electrolyzer" ? grade.behavior.processRate : 0
+    grade.behavior.kind === "electrolyzer" || grade.behavior.kind === "vessel"
+      ? grade.behavior.processRate
+      : 0
   ) as [number, number, number];
 };
 

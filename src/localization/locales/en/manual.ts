@@ -48,6 +48,42 @@ export const MANUAL_MESSAGES = {
     "Places both gas products in the host room, where installed ducts establish separation and recovery.",
   "manual.equipment.fluorine_cell.note.3":
     "Draws more power and occupies more room volume than the chlor-alkali membrane cell at every grade.",
+  "manual.equipment.catalytic_reactor.designation": "CR-series catalytic converter",
+  "manual.equipment.catalytic_reactor.flavor":
+    "A jacketed pressure shell built around whichever catalyst charge the crew trusts this week.",
+  "manual.equipment.catalytic_reactor.note.1":
+    "Loads one stationary catalyst charge; the charge selects the duty shown on the spec plate.",
+  "manual.equipment.catalytic_reactor.note.2":
+    "Runs its duty at rated grade while feed gases and the activation window hold.",
+  "manual.equipment.catalytic_reactor.note.3":
+    "Conversion holds at the grade's process rating; the readout names the limiting feed.",
+  "manual.equipment.packed_bed.designation": "PB-series fixed bed shell",
+  "manual.equipment.packed_bed.flavor":
+    "A steel gallery of trays that turns a room-bound solid into a working surface.",
+  "manual.equipment.packed_bed.note.1":
+    "Hosts the room's stationary charge — carbon, iron oxide, nickel, or uranyl fluoride.",
+  "manual.equipment.packed_bed.note.2":
+    "Feed gases react across the loaded bed, and the bed's state persists between rounds.",
+  "manual.equipment.packed_bed.note.3":
+    "Bed inventory rises and falls with duty direction and shows on the room readout.",
+  "manual.equipment.catalytic_burner.designation": "CB-series gauze burner",
+  "manual.equipment.catalytic_burner.flavor":
+    "Platinum gauze glowing at the throat of a refractory cone.",
+  "manual.equipment.catalytic_burner.note.1":
+    "Burns ammonia across platinum gauze inside its authored temperature window.",
+  "manual.equipment.catalytic_burner.note.2":
+    "Runs the reduction duty when ammonia meets nitric oxide in the feed.",
+  "manual.equipment.catalytic_burner.note.3":
+    "Cold operation diverts output to nitrous oxide; hold the plate temperature.",
+  "manual.equipment.absorber_column.designation": "AC-series tray column",
+  "manual.equipment.absorber_column.flavor":
+    "Trays of falling water that turn red fumes into acid.",
+  "manual.equipment.absorber_column.note.1":
+    "Absorbs nitrogen dioxide into pooled water and releases nitric acid to the room.",
+  "manual.equipment.absorber_column.note.2":
+    "Returns one part nitric oxide per absorption pass for recirculation.",
+  "manual.equipment.absorber_column.note.3":
+    "Column throughput follows liquid inventory and the installed grade.",
   "manual.reactions.chlor_alkali_electrolysis.doctrine":
     "Maintain balanced liquid feed and continuous space in all three product outlets.",
   "manual.reactions.chlor_alkali_electrolysis.flavor":

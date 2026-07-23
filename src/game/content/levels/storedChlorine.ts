@@ -16,6 +16,7 @@ import {
 export const STORED_CHLORINE_LEVEL: LevelDefinition = {
   id: "stored_chlorine",
   number: 3,
+  palette: ["chlorine_sodium"],
   enemyLevel: 22,
   focusRoomId: "reservoir",
   featuredReactionIds: ["hypochlorite_formation", "acid_chlorine_release"],

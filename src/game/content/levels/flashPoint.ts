@@ -33,6 +33,7 @@ const corridorExamAvailability = availability({
 export const FLASH_POINT_LEVEL: LevelDefinition = {
   id: "flash_point",
   number: 1,
+  palette: ["chlorine_sodium"],
   enemyLevel: 20,
   focusRoomId: "furnace",
   featuredReactionIds: ["hydrogen_oxygen_combustion"],

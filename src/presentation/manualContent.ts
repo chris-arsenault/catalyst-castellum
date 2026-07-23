@@ -63,7 +63,9 @@ const createEnemyBestiary = (translator: Translator): Record<EnemyType, EnemyBes
 
 const kineticReactionGroups = () => {
   const massAction = REACTION_IDS.filter(
-    (reactionId) => REACTION_DEFINITIONS[reactionId].behavior.kind === "mass_action"
+    (reactionId) =>
+      REACTION_DEFINITIONS[reactionId].behavior.kind === "mass_action" &&
+      REACTION_DEFINITIONS[reactionId].regime === "wild"
   );
   const gas = massAction.filter((reactionId) => {
     const behavior = REACTION_DEFINITIONS[reactionId].behavior;
@@ -81,77 +83,92 @@ const kineticReactionGroups = () => {
 };
 
 export const createManualContent = (translator: Translator) => {
-  const {
-    gas: gasKineticReactionIds,
-    heated: heatedKineticReactionIds,
-    liquid: liquidKineticReactionIds,
-  } = kineticReactionGroups();
   const equipmentCategoryLabels: Record<EquipmentCategory, string> = {
     atmosphere: translator.text("manual.categories.atmosphere"),
     contact: translator.text("manual.categories.contact"),
     thermal: translator.text("manual.categories.thermal"),
     process: translator.text("manual.categories.process"),
   };
-  const equipmentManual: Record<EquipmentId, EquipmentManualEntry> = {
-    gas_agitator: {
-      category: "atmosphere",
-      designation: translator.text("manual.equipment.gas_agitator.designation"),
-      flavor: translator.text("manual.equipment.gas_agitator.flavor"),
-      operationalNotes: [1, 2, 3].map((index) =>
-        text(translator, `manual.equipment.gas_agitator.note.${index}`)
-      ),
-      reactionIds: [
-        "hydrogen_oxygen_combustion",
-        "hydrogen_chlorine_recombination",
-        ...gasKineticReactionIds,
-      ],
-    },
-    wet_contactor: {
-      category: "contact",
-      designation: translator.text("manual.equipment.wet_contactor.designation"),
-      flavor: translator.text("manual.equipment.wet_contactor.flavor"),
-      operationalNotes: [1, 2, 3].map((index) =>
-        text(translator, `manual.equipment.wet_contactor.note.${index}`)
-      ),
-      reactionIds: [
-        "hydrogen_chloride_absorption",
-        "acid_neutralization",
-        "hypochlorite_formation",
-        "acid_chlorine_release",
-        ...liquidKineticReactionIds,
-      ],
-    },
-    thermal_coil: {
-      category: "thermal",
-      designation: translator.text("manual.equipment.thermal_coil.designation"),
-      flavor: translator.text("manual.equipment.thermal_coil.flavor"),
-      operationalNotes: [1, 2, 3].map((index) =>
-        text(translator, `manual.equipment.thermal_coil.note.${index}`)
-      ),
-      reactionIds: ["hydrogen_chlorine_recombination", ...heatedKineticReactionIds],
-    },
-    membrane_cell: {
-      category: "process",
-      designation: translator.text("manual.equipment.membrane_cell.designation"),
-      flavor: translator.text("manual.equipment.membrane_cell.flavor"),
-      operationalNotes: [1, 2, 3].map((index) =>
-        text(translator, `manual.equipment.membrane_cell.note.${index}`)
-      ),
-      reactionIds: ["chlor_alkali_electrolysis"],
-    },
-    fluorine_cell: {
-      category: "process",
-      designation: translator.text("manual.equipment.fluorine_cell.designation"),
-      flavor: translator.text("manual.equipment.fluorine_cell.flavor"),
-      operationalNotes: [1, 2, 3].map((index) =>
-        text(translator, `manual.equipment.fluorine_cell.note.${index}`)
-      ),
-      reactionIds: ["hydrogen_fluoride_electrolysis"],
-    },
-  };
+  const equipmentManual = createEquipmentManual(translator);
   const reactionManual = createReactionManual(translator);
   const enemyBestiary = createEnemyBestiary(translator);
   return { equipmentCategoryLabels, equipmentManual, reactionManual, enemyBestiary };
+};
+
+const manualEntry = (
+  translator: Translator,
+  equipmentId: EquipmentId,
+  category: EquipmentCategory,
+  reactionIds: readonly ReactionId[]
+): EquipmentManualEntry => ({
+  category,
+  designation: text(translator, `manual.equipment.${equipmentId}.designation`),
+  flavor: text(translator, `manual.equipment.${equipmentId}.flavor`),
+  operationalNotes: [1, 2, 3].map((index) =>
+    text(translator, `manual.equipment.${equipmentId}.note.${index}`)
+  ),
+  reactionIds,
+});
+
+const createEquipmentManual = (
+  translator: Translator
+): Record<EquipmentId, EquipmentManualEntry> => {
+  const {
+    gas: gasKineticReactionIds,
+    heated: heatedKineticReactionIds,
+    liquid: liquidKineticReactionIds,
+  } = kineticReactionGroups();
+  return {
+    gas_agitator: manualEntry(translator, "gas_agitator", "atmosphere", [
+      "hydrogen_oxygen_combustion",
+      "hydrogen_chlorine_recombination",
+      ...gasKineticReactionIds,
+    ]),
+    wet_contactor: manualEntry(translator, "wet_contactor", "contact", [
+      "hydrogen_chloride_absorption",
+      "acid_neutralization",
+      "hypochlorite_formation",
+      "acid_chlorine_release",
+      ...liquidKineticReactionIds,
+    ]),
+    thermal_coil: manualEntry(translator, "thermal_coil", "thermal", [
+      "hydrogen_chlorine_recombination",
+      ...heatedKineticReactionIds,
+    ]),
+    membrane_cell: manualEntry(translator, "membrane_cell", "process", [
+      "chlor_alkali_electrolysis",
+    ]),
+    fluorine_cell: manualEntry(translator, "fluorine_cell", "process", [
+      "hydrogen_fluoride_electrolysis",
+    ]),
+    catalytic_reactor: manualEntry(translator, "catalytic_reactor", "process", [
+      "ammonia_synthesis",
+      "water_gas_shift",
+      "nickel_catalyzed_methanation",
+      "methane_steam_reforming",
+    ]),
+    packed_bed: manualEntry(translator, "packed_bed", "process", [
+      "water_gas_reaction",
+      "boudouard_reaction",
+      "carbon_methanation",
+      "hematite_carbon_monoxide_reduction",
+      "hematite_hydrogen_reduction",
+      "magnetite_reoxidation",
+      "nickel_oxide_reduction",
+      "nickel_carbonyl_formation",
+      "nickel_carbonyl_deposition",
+      "nickel_deposit_oxidation",
+      "uranyl_fluoride_recovery",
+    ]),
+    catalytic_burner: manualEntry(translator, "catalytic_burner", "process", [
+      "ammonia_oxidation",
+      "nox_ammonia_reduction",
+      "nitrous_oxide_side_path",
+    ]),
+    absorber_column: manualEntry(translator, "absorber_column", "process", [
+      "nitrogen_dioxide_absorption",
+    ]),
+  };
 };
 
 const DEFAULT_MANUAL_CONTENT = createManualContent(DEFAULT_TRANSLATOR);
@@ -167,7 +184,8 @@ export const equipmentForReaction = (reactionId: ReactionId): EquipmentId[] => {
     entry.reactionIds.includes(reactionId) ? [equipmentId] : []
   );
   const behavior = REACTION_DEFINITIONS[reactionId].behavior;
-  if (behavior.kind !== "mass_action") return linked;
+  if (behavior.kind !== "mass_action" || REACTION_DEFINITIONS[reactionId].regime === "engineered")
+    return linked;
   const kineticEquipment: EquipmentId[] = [
     behavior.contact === "gas" ? "gas_agitator" : "wet_contactor",
   ];

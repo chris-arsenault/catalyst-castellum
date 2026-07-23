@@ -128,7 +128,14 @@ describe("shared conserved mixture transport", () => {
   });
 
   it("allocates a shared junction to branches without starving the later run ID", () => {
-    const state = enter("make_the_reagent");
+    let state = enter("make_the_reagent");
+    state.availability.gasLines.push("gas:furnace__lower_intake");
+    state = command(state, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "lower_intake",
+      toRoomId: "furnace",
+    });
     gasConduitState(state, "gas:furnace__lower_intake").enabled = true;
     gasConduitState(state, "gas:lower_intake__reservoir").enabled = true;
     gasJunctionState(state, "lower_intake").gas.hydrogen = 8;

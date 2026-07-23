@@ -2,6 +2,7 @@ import { EQUIPMENT_DEFINITIONS, equipmentGrade } from "../../presentation/defaul
 import type { GameState } from "../../game/types";
 import type { EquipmentHover } from "./EquipmentLayer";
 import { equipmentCopy } from "../../presentation/entityCopy";
+import { dutyReactionSummaries } from "../../presentation/dutyCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import { roomState } from "../../game/world/instances";
 import { roomDefinition } from "../../presentation/defaultGame";
@@ -50,6 +51,22 @@ export const EquipmentTooltip = ({
           <dd>{equipmentGradeEffect(equipmentGrade(instance.equipmentId, instance.level))}</dd>
         </div>
       </dl>
+      {definition.operation &&
+        (() => {
+          const duty =
+            definition.operation.duties.find((candidate) => candidate.medium === instance.medium) ??
+            definition.operation.duties[0];
+          if (!duty) return null;
+          return (
+            <div className="equipment-tooltip-duties">
+              {dutyReactionSummaries(duty, translator).map((summary) => (
+                <small key={summary.reactionId}>
+                  {summary.name} · {summary.effect}
+                </small>
+              ))}
+            </div>
+          );
+        })()}
       <small>{translator.text("ui.map.room.select", { room: room.code })}</small>
     </aside>
   );
