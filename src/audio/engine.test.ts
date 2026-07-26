@@ -146,7 +146,7 @@ const createFakeContext = (): FakeContextHarness => {
 };
 
 const stemEntry = (overrides: Partial<StemEntry>): StemEntry => ({
-  stem: "pulse1",
+  voice: "pulse1",
   buffer: { duration: 10 } as AudioBuffer,
   entryOffset: 0,
   fadeSeconds: 0,
@@ -212,13 +212,17 @@ describe("audio engine lifecycle", () => {
   });
 });
 
-describe("audio engine stem groups", () => {
-  it("starts all stems sample-aligned with layer and send levels applied", () => {
+const CHIP_MENU = MUSIC_TRACKS.menu.renditions.chip;
+const CHIP_ASSAULT = MUSIC_TRACKS.assault.renditions.chip;
+const MIX_BOSS = MUSIC_TRACKS.boss.renditions.orchestral!;
+
+describe("audio engine voice groups", () => {
+  it("starts all voices sample-aligned with layer and send levels applied", () => {
     const entries = [
-      stemEntry({ stem: "pulse1", layerLevel: 0, delaySend: 0.2 }),
-      stemEntry({ stem: "triangle", layerLevel: 1, delaySend: 0 }),
+      stemEntry({ voice: "pulse1", layerLevel: 0, delaySend: 0.2 }),
+      stemEntry({ voice: "triangle", layerLevel: 1, delaySend: 0 }),
     ];
-    const group = engine.startTrackVoices(MUSIC_TRACKS.menu, 2, entries);
+    const group = engine.startTrackVoices("menu", CHIP_MENU, 2, entries);
     expect(group).not.toBeNull();
     const sources = context.nodes["source"] ?? [];
     expect(sources).toHaveLength(2);
@@ -232,8 +236,8 @@ describe("audio engine stem groups", () => {
   });
 
   it("delays the lead entry with a fade-in curve at its offset", () => {
-    const group = engine.startTrackVoices(MUSIC_TRACKS.menu, 1, [
-      stemEntry({ stem: "pulse1", entryOffset: 3, fadeSeconds: 0.5 }),
+    const group = engine.startTrackVoices("menu", CHIP_MENU, 1, [
+      stemEntry({ voice: "pulse1", entryOffset: 3, fadeSeconds: 0.5 }),
     ]);
     const envelope = asParam(group?.stems[0]?.envelope.gain);
     const curve = envelope.events.find((event) => event.kind === "curveIn");
@@ -242,9 +246,9 @@ describe("audio engine stem groups", () => {
   });
 
   it("releases lead fast and bed slow, washing the bed into the reverb", () => {
-    const group = engine.startTrackVoices(MUSIC_TRACKS.assault, 0, [
-      stemEntry({ stem: "pulse1" }),
-      stemEntry({ stem: "noise" }),
+    const group = engine.startTrackVoices("assault", CHIP_ASSAULT, 0, [
+      stemEntry({ voice: "pulse1" }),
+      stemEntry({ voice: "noise" }),
     ]);
     if (!group) throw new Error("group missing");
     engine.releaseTrackVoices(group, 1, 0.2, 1.5, 0.5);
@@ -265,7 +269,7 @@ describe("audio engine release lifecycle", () => {
   it("revives a released group when the cancel function runs in time", () => {
     vi.useFakeTimers();
     try {
-      const group = engine.startTrackVoices(MUSIC_TRACKS.menu, 0, [stemEntry({})]);
+      const group = engine.startTrackVoices("menu", CHIP_MENU, 0, [stemEntry({})]);
       if (!group) throw new Error("group missing");
       const cancel = engine.releaseTrackVoices(group, 1, 0.2, 0.4, 0);
       cancel();
@@ -281,7 +285,7 @@ describe("audio engine release lifecycle", () => {
   it("stops and disconnects the group after the release completes", () => {
     vi.useFakeTimers();
     try {
-      const group = engine.startTrackVoices(MUSIC_TRACKS.menu, 0, [stemEntry({})]);
+      const group = engine.startTrackVoices("menu", CHIP_MENU, 0, [stemEntry({})]);
       if (!group) throw new Error("group missing");
       engine.releaseTrackVoices(group, 0.5, 0.2, 0.4, 0);
       vi.runAllTimers();
@@ -293,15 +297,15 @@ describe("audio engine release lifecycle", () => {
   });
 
   it("ramps mood levels onto layers and sends, lead-only delay", () => {
-    const group = engine.startTrackVoices(MUSIC_TRACKS.assault, 0, [
-      stemEntry({ stem: "pulse1" }),
-      stemEntry({ stem: "pulse2" }),
+    const group = engine.startTrackVoices("assault", CHIP_ASSAULT, 0, [
+      stemEntry({ voice: "pulse1" }),
+      stemEntry({ voice: "pulse2" }),
     ]);
     if (!group) throw new Error("group missing");
     engine.rampGroupMood(
       group,
       {
-        levels: { pulse1: 1, pulse2: 0.5, triangle: 1, noise: 1 },
+        levels: { pulse1: 1, pulse2: 0.5, triangle: 1, noise: 1, mix: 1 },
         reverb: 0.3,
         leadDelay: 0.15,
       },
@@ -319,6 +323,59 @@ describe("audio engine release lifecycle", () => {
       kind: "target",
       value: 0,
     });
+  });
+});
+
+describe("audio engine pre-rendered renditions", () => {
+  it("grids a single-voice rendition on its own bar count", () => {
+    const group = engine.startTrackVoices("boss", MIX_BOSS, 0, [stemEntry({ voice: "mix" })]);
+    expect(group?.rendition.rendition).toBe("orchestral");
+    expect(group?.grid.secondsPerBeat).toBeCloseTo(10 / (MIX_BOSS.bars * 4), 6);
+  });
+
+  it("treats the mix voice as the lead for delay and release", () => {
+    const group = engine.startTrackVoices("boss", MIX_BOSS, 0, [stemEntry({ voice: "mix" })]);
+    if (!group) throw new Error("group missing");
+    engine.rampGroupMood(
+      group,
+      {
+        levels: { pulse1: 0, pulse2: 0, triangle: 0, noise: 0, mix: 0.8 },
+        reverb: 0.25,
+        leadDelay: 0.16,
+      },
+      1.2
+    );
+    expect(asParam(group.stems[0]?.layer.gain).events.at(-1)).toMatchObject({
+      kind: "target",
+      value: 0.8,
+    });
+    expect(asParam(group.stems[0]?.delaySend.gain).events.at(-1)).toMatchObject({
+      kind: "target",
+      value: 0.16,
+    });
+
+    // The lone voice takes the lead fade, never the slow bed fade: a zero
+    // lead fade cuts it outright instead of scheduling a bed-length curve.
+    engine.releaseTrackVoices(group, 1, 0, 1.5, 0);
+    const events = asParam(group.stems[0]?.envelope.gain).events;
+    expect(events.some((event) => event.kind === "curveOut")).toBe(false);
+    expect(events.at(-1)).toMatchObject({ kind: "set", value: 0, time: 1 });
+  });
+});
+
+describe("audio engine buffer residency", () => {
+  it("reports a url as resident only once its decode has finished", async () => {
+    expect(engine.isBufferResident("late.ogg")).toBe(false);
+    const pending = engine.loadBuffer("late.ogg");
+    expect(engine.isBufferResident("late.ogg")).toBe(false);
+    await pending;
+    expect(engine.isBufferResident("late.ogg")).toBe(true);
+  });
+
+  it("leaves a failed fetch out of residency", async () => {
+    vi.mocked(window.fetch).mockResolvedValueOnce({ ok: false } as Response);
+    expect(await engine.loadBuffer("missing.ogg")).toBeNull();
+    expect(engine.isBufferResident("missing.ogg")).toBe(false);
   });
 });
 

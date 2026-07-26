@@ -27,6 +27,11 @@ All notable user-visible changes are recorded here.
 
 ### Presentation
 
+- The menu, assault, and boss themes now sometimes play as a full-length recorded version instead
+  of the chip stems. Each track rolls once on entry; the recorded version takes over on the same
+  bar boundary and with the same fades the chip stems use, and the mood mix continues to follow the
+  fight. Tracks without a recording, and rolls whose recording is still downloading, play the chip
+  stems.
 - Consolidated the between-level flow into two coherent surfaces: a shared wave report (round
   result, site completion, and campaign outcome now use one stats card and seal) and the captain's
   log for everything between sites.

@@ -11,3 +11,4 @@
 | [0007](0007-engineered-reactions-run-in-vessels.md)          | Engineered reactions run in vessel classes        | Accepted               | 2026-07-22 |
 | [0008](0008-site-chemistry-palettes.md)                      | Sites scope chemistry through fixed palettes      | Accepted               | 2026-07-22 |
 | [0009](0009-damage-at-depth-one.md)                          | Offensive families damage at depth one            | Accepted               | 2026-07-22 |
+| [0010](0010-tracks-carry-renditions.md)                      | A track carries renditions; a bounce is one file  | Accepted               | 2026-07-26 |

@@ -1,8 +1,17 @@
 import { getAudioEngine, type AudioEngine, type MusicVoiceGroup, type StemEntry } from "./engine";
 import { moodSpec, MOOD_RAMP_SECONDS } from "./moods";
 import { nextBoundary } from "./quantize";
-import { MUSIC_TRACKS, SFX_DEFINITIONS, stemUrl } from "./tracks";
-import type { MusicCue, MusicCueState, MusicTrackName, StemMood, TransitionPolicy } from "./types";
+import { createRenditionRandom, pickRendition } from "./renditions";
+import { MUSIC_TRACKS, SFX_DEFINITIONS, voiceUrl } from "./tracks";
+import type { RandomSource } from "../game/world/seededRandom";
+import type {
+  MusicCue,
+  MusicCueState,
+  MusicTrackName,
+  StemMood,
+  TrackRendition,
+  TransitionPolicy,
+} from "./types";
 
 /**
  * Track-to-track handover policies. The switch snaps to a musical boundary
@@ -82,25 +91,26 @@ const sameCue = (left: MusicCue, right: MusicCue): boolean =>
   left?.track === right?.track && left?.mood === right?.mood;
 
 const stemEntriesFor = (
-  cue: MusicCueState,
+  rendition: TrackRendition,
   buffers: Map<string, AudioBuffer>,
   mood: StemMood,
   policy: TransitionPolicy
 ): StemEntry[] => {
-  const track = MUSIC_TRACKS[cue.track];
   const entries: StemEntry[] = [];
-  for (const stem of track.stems) {
-    const buffer = buffers.get(stem);
+  for (const voice of rendition.voices) {
+    const buffer = buffers.get(voice);
     if (!buffer) continue;
-    const barSeconds = (buffer.duration / (track.bars * track.beatsPerBar)) * track.beatsPerBar;
+    const isLead = voice === rendition.leadVoice;
+    const barSeconds =
+      (buffer.duration / (rendition.bars * rendition.beatsPerBar)) * rendition.beatsPerBar;
     entries.push({
-      stem,
+      voice,
       buffer,
-      entryOffset: stem === "pulse1" ? policy.leadEntryBars * barSeconds : 0,
+      entryOffset: isLead ? policy.leadEntryBars * barSeconds : 0,
       fadeSeconds: policy.inFade,
-      layerLevel: mood.levels[stem],
+      layerLevel: mood.levels[voice],
       reverbSend: mood.reverb,
-      delaySend: stem === "pulse1" ? mood.leadDelay : 0,
+      delaySend: isLead ? mood.leadDelay : 0,
     });
   }
   return entries;
@@ -120,7 +130,12 @@ interface VoiceKeeper {
   /** Resolve any in-flight transition so `activeGroup` reports the truth. */
   settle(): void;
   fadeToSilence(): void;
-  begin(cue: MusicCueState, buffers: Map<string, AudioBuffer>, stillWanted: () => boolean): void;
+  begin(
+    cue: MusicCueState,
+    rendition: TrackRendition,
+    buffers: Map<string, AudioBuffer>,
+    stillWanted: () => boolean
+  ): void;
   noteMood(cue: MusicCueState): void;
 }
 
@@ -154,22 +169,24 @@ const createVoiceKeeper = (engine: AudioEngine): VoiceKeeper => {
 
   const begin = (
     cue: MusicCueState,
+    rendition: TrackRendition,
     buffers: Map<string, AudioBuffer>,
     stillWanted: () => boolean
   ): void => {
     const from = active;
-    const policy = transitionPolicyFor(from?.track.name ?? null, cue.track);
+    const policy = transitionPolicyFor(from?.track ?? null, cue.track);
     const now = engine.now();
     const boundary = from ? nextBoundary(from.grid, now, policy.quantize) : now;
     const mood = moodSpec(cue.track, cue.mood);
 
     const incoming = engine.startTrackVoices(
-      MUSIC_TRACKS[cue.track],
+      cue.track,
+      rendition,
       boundary,
-      stemEntriesFor(cue, buffers, mood, policy)
+      stemEntriesFor(rendition, buffers, mood, policy)
     );
     if (!incoming) return;
-    engine.setDelayForBeat(60 / MUSIC_TRACKS[cue.track].bpm);
+    engine.setDelayForBeat(60 / rendition.bpm);
     if (!from) {
       active = incoming;
       activeCue = cue;
@@ -213,38 +230,74 @@ export interface MusicDirector {
   setCue(cue: MusicCue): void;
   /** Called once the AudioContext is unlocked; plays the queued cue. */
   onUnlocked(): void;
-  /** Warm the buffer cache so transitions never wait on the network. */
+  /** Warm the chip stems so track handovers never wait on the network. */
   preloadAll(): void;
   playSfx(name: string): void;
 }
 
-const loadStemBuffers = async (
+const loadVoiceBuffers = async (
   engine: AudioEngine,
-  track: MusicTrackName
+  track: MusicTrackName,
+  rendition: TrackRendition
 ): Promise<Map<string, AudioBuffer> | null> => {
-  const definition = MUSIC_TRACKS[track];
   const loaded = await Promise.all(
-    definition.stems.map(
-      async (stem) => [stem, await engine.loadBuffer(stemUrl(track, stem))] as const
+    rendition.voices.map(
+      async (voice) =>
+        [voice, await engine.loadBuffer(voiceUrl(track, rendition.rendition, voice))] as const
     )
   );
   const buffers = new Map<string, AudioBuffer>();
-  for (const [stem, buffer] of loaded) {
+  for (const [voice, buffer] of loaded) {
     if (buffer === null) return null;
-    buffers.set(stem, buffer);
+    buffers.set(voice, buffer);
   }
   return buffers;
+};
+
+const isResident = (
+  engine: AudioEngine,
+  track: MusicTrackName,
+  rendition: TrackRendition
+): boolean =>
+  rendition.voices.every((voice) =>
+    engine.isBufferResident(voiceUrl(track, rendition.rendition, voice))
+  );
+
+/**
+ * Decide which realization of `track` this entry plays. The roll happens
+ * every time, but a pre-rendered rendition only sounds once its bounce is
+ * decoded and cached - so the first roll that wants one warms it in the
+ * background and plays chip, and a later entry gets the higher-fidelity
+ * version with no wait at the cue. That bounds the fetch to one rendition
+ * per entry rather than pulling every bounce on load.
+ */
+const chooseRendition = (
+  engine: AudioEngine,
+  track: MusicTrackName,
+  random: RandomSource
+): TrackRendition => {
+  const definition = MUSIC_TRACKS[track];
+  const rolled = pickRendition(definition, random);
+  if (rolled.rendition === "chip") return rolled;
+  if (isResident(engine, track, rolled)) return rolled;
+  loadVoiceBuffers(engine, track, rolled).catch(() => {});
+  return definition.renditions.chip;
 };
 
 /**
  * Adaptive music director combining horizontal resequencing (quantized,
  * staggered track handovers) with vertical layering (mood ramps on the
- * playing track's stems). The game states a cue; the director owns how the
- * soundtrack gets there. Cue changes are idempotent, pending transitions
- * are replaced when the game changes its mind before the boundary, and
- * everything queues until the browser lets audio start.
+ * playing track's voices). The game states a cue; the director owns how the
+ * soundtrack gets there - including which rendition of the track it is,
+ * rolled once per entry and held for as long as that track plays. Cue
+ * changes are idempotent, pending transitions are replaced when the game
+ * changes its mind before the boundary, and everything queues until the
+ * browser lets audio start.
  */
-export const createMusicDirector = (engine: AudioEngine = getAudioEngine()): MusicDirector => {
+export const createMusicDirector = (
+  engine: AudioEngine = getAudioEngine(),
+  random: RandomSource = createRenditionRandom()
+): MusicDirector => {
   let targetCue: MusicCue = null;
   let requestSequence = 0;
   const voices = createVoiceKeeper(engine);
@@ -261,17 +314,19 @@ export const createMusicDirector = (engine: AudioEngine = getAudioEngine()): Mus
     }
 
     const activeGroup = voices.activeGroup();
-    if (activeGroup && activeGroup.track.name === cue.track) {
-      // Same track: this is a vertical move. Ramp stems in place.
+    if (activeGroup && activeGroup.track === cue.track) {
+      // Same track: this is a vertical move, and the rendition stays put.
+      // Ramp the playing voices in place.
       engine.rampGroupMood(activeGroup, moodSpec(cue.track, cue.mood), MOOD_RAMP_SECONDS);
       voices.noteMood(cue);
       return;
     }
 
-    const buffers = await loadStemBuffers(engine, cue.track);
+    const rendition = chooseRendition(engine, cue.track, random);
+    const buffers = await loadVoiceBuffers(engine, cue.track, rendition);
     // A newer request superseded this one while the buffers decoded.
     if (buffers === null || sequence !== requestSequence) return;
-    voices.begin(cue, buffers, () => sequence === requestSequence);
+    voices.begin(cue, rendition, buffers, () => sequence === requestSequence);
   };
 
   const requestApply = (): void => {
@@ -291,9 +346,13 @@ export const createMusicDirector = (engine: AudioEngine = getAudioEngine()): Mus
     },
     preloadAll: () => {
       if (!engine.unlocked()) return;
-      for (const track of Object.values(MUSIC_TRACKS)) {
-        for (const stem of track.stems) {
-          engine.loadBuffer(stemUrl(track.name, stem)).catch(() => {});
+      // Chip stems only: they are small, they are what every cue falls back
+      // to, and every track has them. Pre-rendered bounces are minutes of
+      // stereo audio and warm themselves the first time their track comes up.
+      for (const definition of Object.values(MUSIC_TRACKS)) {
+        const { chip } = definition.renditions;
+        for (const voice of chip.voices) {
+          engine.loadBuffer(voiceUrl(definition.name, "chip", voice)).catch(() => {});
         }
       }
     },

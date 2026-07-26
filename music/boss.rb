@@ -15,7 +15,7 @@ production_piece "The Adversary (boss)" do
   roster do
     part :pulse1, "Pulse 1", music21: "Clarinet", family: :woodwind, description: "roller-coaster lead"
     part :pulse2, "Pulse 2", music21: "Oboe", family: :woodwind, description: "invariant riff cell"
-    part :triangle, "Triangle", music21: "Violoncello", family: :string, description: "root-fifth ostinato"
+    part :triangle, "Tri Bass", music21: "Violoncello", family: :string, description: "root-fifth ostinato"
     part :noise, "Noise", music21: "Percussion", family: :percussion, description: "relentless drive"
   end
 

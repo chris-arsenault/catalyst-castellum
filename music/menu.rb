@@ -14,7 +14,7 @@ production_piece "Gate of the Castellum (menu)" do
   roster do
     part :pulse1, "Pulse 1", music21: "Clarinet", family: :woodwind, description: "square lead"
     part :pulse2, "Pulse 2", music21: "Oboe", family: :woodwind, description: "echo and chord tones"
-    part :triangle, "Triangle", music21: "Violoncello", family: :string, description: "triangle bass"
+    part :triangle, "Tri Bass", music21: "Violoncello", family: :string, description: "triangle bass"
   end
 
   section :a1, "Gate theme", bars: 1..8, type: :hybrid_phrase_staff do

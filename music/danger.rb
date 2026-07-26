@@ -15,7 +15,7 @@ production_piece "Breach Imminent (danger)" do
   roster do
     part :pulse1, "Pulse 1", music21: "Clarinet", family: :woodwind, description: "square lead"
     part :pulse2, "Pulse 2", music21: "Oboe", family: :woodwind, description: "stab cell and afterbeats"
-    part :triangle, "Triangle", music21: "Violoncello", family: :string, description: "bass and kick drops"
+    part :triangle, "Tri Bass", music21: "Violoncello", family: :string, description: "bass and kick drops"
     part :noise, "Noise", music21: "Percussion", family: :percussion, description: "noise kit"
   end
 

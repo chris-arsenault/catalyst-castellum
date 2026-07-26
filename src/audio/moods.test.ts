@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { moodSpec } from "./moods";
 import { MUSIC_TRACKS } from "./tracks";
-import type { MoodName, MusicTrackName } from "./types";
+import type { MoodName, MusicTrackName, VoiceName } from "./types";
+
+/** Every voice any rendition of a track can ask a mood for a level. */
+const voicesOf = (track: MusicTrackName): readonly VoiceName[] =>
+  Object.values(MUSIC_TRACKS[track].renditions).flatMap((rendition) => rendition.voices);
 
 /** Every track/mood pair the cue selector can emit. */
 const USED_CUES: [MusicTrackName, MoodName][] = [
@@ -20,10 +24,10 @@ describe("moodSpec", () => {
   it("defines every cue the selector can emit with sane ranges", () => {
     for (const [track, mood] of USED_CUES) {
       const spec = moodSpec(track, mood);
-      for (const stem of MUSIC_TRACKS[track].stems) {
-        const level = spec.levels[stem];
-        expect(level, `${track}/${mood}/${stem}`).toBeGreaterThanOrEqual(0);
-        expect(level, `${track}/${mood}/${stem}`).toBeLessThanOrEqual(1);
+      for (const voice of voicesOf(track)) {
+        const level = spec.levels[voice];
+        expect(level, `${track}/${mood}/${voice}`).toBeGreaterThanOrEqual(0);
+        expect(level, `${track}/${mood}/${voice}`).toBeLessThanOrEqual(1);
       }
       expect(spec.reverb).toBeGreaterThanOrEqual(0);
       expect(spec.reverb).toBeLessThanOrEqual(1);
@@ -32,11 +36,13 @@ describe("moodSpec", () => {
     }
   });
 
-  it("keeps at least one stem audible in every mood", () => {
+  it("keeps every rendition of every mood audible", () => {
     for (const [track, mood] of USED_CUES) {
       const spec = moodSpec(track, mood);
-      const audible = MUSIC_TRACKS[track].stems.some((stem) => spec.levels[stem] > 0.3);
-      expect(audible, `${track}/${mood}`).toBe(true);
+      for (const rendition of Object.values(MUSIC_TRACKS[track].renditions)) {
+        const audible = rendition.voices.some((voice) => spec.levels[voice] > 0.3);
+        expect(audible, `${track}/${mood}/${rendition.rendition}`).toBe(true);
+      }
     }
   });
 

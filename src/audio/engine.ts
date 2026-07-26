@@ -1,17 +1,17 @@
 import { createFxRack, type FxRack } from "./fx";
 import { getAudioSettings, subscribeAudioSettings } from "./settings";
-import type { MusicTrackDefinition, StemMood, StemName } from "./types";
+import type { MusicTrackName, StemMood, TrackRendition, VoiceName } from "./types";
 import type { MusicalGrid } from "./quantize";
 
 /**
- * One playing stem: its single-use source plus three gain stages -
+ * One playing voice: its single-use source plus three gain stages -
  * `envelope` (transition fades in/out), `layer` (vertical mood mix), and
  * the wet-only `reverbSend`/`delaySend` taps into the shared FX rack.
  * Keeping envelope and layer separate means a transition fade never fights
  * a mood ramp on the same param.
  */
 export interface StemVoice {
-  stem: StemName;
+  voice: VoiceName;
   source: AudioBufferSourceNode;
   envelope: GainNode;
   layer: GainNode;
@@ -19,19 +19,25 @@ export interface StemVoice {
   delaySend: GainNode;
 }
 
-/** All stems of one track, started sample-aligned on one musical grid. */
+/**
+ * Every voice of one rendition of one track, started sample-aligned on one
+ * musical grid. A chip group carries three or four voices and a
+ * pre-rendered group carries one; everything downstream reads the group's
+ * rendition rather than counting voices.
+ */
 export interface MusicVoiceGroup {
-  track: MusicTrackDefinition;
+  track: MusicTrackName;
+  rendition: TrackRendition;
   grid: MusicalGrid;
   startsAt: number;
   stems: StemVoice[];
 }
 
-/** How one stem enters when its group starts. */
+/** How one voice enters when its group starts. */
 export interface StemEntry {
-  stem: StemName;
+  voice: VoiceName;
   buffer: AudioBuffer;
-  /** Seconds after the group start before this stem fades in. */
+  /** Seconds after the group start before this voice fades in. */
   entryOffset: number;
   fadeSeconds: number;
   layerLevel: number;
@@ -45,8 +51,14 @@ export interface AudioEngine {
   now(): number;
   unlock(): Promise<boolean>;
   loadBuffer(url: string): Promise<AudioBuffer | null>;
+  /**
+   * True once a URL has decoded and is cached. The director gates
+   * pre-rendered renditions on this so a cue never waits on a download.
+   */
+  isBufferResident(url: string): boolean;
   startTrackVoices(
-    track: MusicTrackDefinition,
+    track: MusicTrackName,
+    rendition: TrackRendition,
     when: number,
     entries: StemEntry[]
   ): MusicVoiceGroup | null;
@@ -85,6 +97,8 @@ interface EngineState {
   nodes: EngineNodes | null;
   unlocked: boolean;
   buffers: Map<string, Promise<AudioBuffer | null>>;
+  /** URLs whose decode has finished, so callers can avoid awaiting one. */
+  resident: Set<string>;
 }
 
 const CURVE_LENGTH = 65;
@@ -153,6 +167,7 @@ const loadBufferWith = (state: EngineState, url: string): Promise<AudioBuffer | 
   if (!state.nodes) return Promise.resolve(null);
   const pending = decode(state.nodes.context, url).then((buffer) => {
     if (buffer === null) state.buffers.delete(url);
+    else state.resident.add(url);
     return buffer;
   });
   state.buffers.set(url, pending);
@@ -187,12 +202,13 @@ const startStemVoice = (nodes: EngineNodes, entry: StemEntry, startsAt: number):
     envelope.gain.setValueAtTime(1, context.currentTime);
   }
   source.start(startsAt);
-  return { stem: entry.stem, source, envelope, layer, reverbSend, delaySend };
+  return { voice: entry.voice, source, envelope, layer, reverbSend, delaySend };
 };
 
 const startTrackVoicesWith = (
   nodes: EngineNodes,
-  track: MusicTrackDefinition,
+  track: MusicTrackName,
+  rendition: TrackRendition,
   when: number,
   entries: StemEntry[]
 ): MusicVoiceGroup | null => {
@@ -200,10 +216,11 @@ const startTrackVoicesWith = (
   if (!first) return null;
   const startsAt = Math.max(when, nodes.context.currentTime + SCHEDULE_PAD);
   const stems = entries.map((entry) => startStemVoice(nodes, entry, startsAt));
-  const secondsPerBeat = first.buffer.duration / (track.bars * track.beatsPerBar);
+  const secondsPerBeat = first.buffer.duration / (rendition.bars * rendition.beatsPerBar);
   return {
     track,
-    grid: { startTime: startsAt, secondsPerBeat, beatsPerBar: track.beatsPerBar },
+    rendition,
+    grid: { startTime: startsAt, secondsPerBeat, beatsPerBar: rendition.beatsPerBar },
     startsAt,
     stems,
   };
@@ -246,8 +263,9 @@ const releaseTrackVoicesWith = (
 ): (() => void) => {
   const { context } = nodes;
   const at = Math.max(when, context.currentTime + SCHEDULE_PAD);
+  const { leadVoice } = group.rendition;
   for (const voice of group.stems) {
-    scheduleStemFade(voice, at, voice.stem === "pulse1" ? leadFade : bedFade);
+    scheduleStemFade(voice, at, voice.voice === leadVoice ? leadFade : bedFade);
     if (washOut > 0) {
       // Push the dying bed into the shared reverb so it washes out
       // instead of just getting quieter.
@@ -278,13 +296,14 @@ const rampGroupMoodWith = (
   rampSeconds: number
 ): void => {
   const now = nodes.context.currentTime;
+  const { leadVoice } = group.rendition;
   // setTargetAtTime reaches ~95% of target after 3 time constants.
   const timeConstant = Math.max(rampSeconds / 3, 0.05);
   for (const voice of group.stems) {
-    voice.layer.gain.setTargetAtTime(mood.levels[voice.stem], now, timeConstant);
+    voice.layer.gain.setTargetAtTime(mood.levels[voice.voice], now, timeConstant);
     voice.reverbSend.gain.setTargetAtTime(mood.reverb, now, timeConstant);
     voice.delaySend.gain.setTargetAtTime(
-      voice.stem === "pulse1" ? mood.leadDelay : 0,
+      voice.voice === leadVoice ? mood.leadDelay : 0,
       now,
       timeConstant
     );
@@ -330,7 +349,12 @@ const playSfxWith = async (
  */
 export const createAudioEngine = (): AudioEngine => {
   const supported = typeof window !== "undefined" && typeof window.AudioContext === "function";
-  const state: EngineState = { nodes: null, unlocked: false, buffers: new Map() };
+  const state: EngineState = {
+    nodes: null,
+    unlocked: false,
+    buffers: new Map(),
+    resident: new Set(),
+  };
 
   const unlock = async (): Promise<boolean> => {
     if (!supported) return false;
@@ -353,8 +377,9 @@ export const createAudioEngine = (): AudioEngine => {
     now: () => state.nodes?.context.currentTime ?? 0,
     unlock,
     loadBuffer: (url) => loadBufferWith(state, url),
-    startTrackVoices: (track, when, entries) =>
-      state.nodes ? startTrackVoicesWith(state.nodes, track, when, entries) : null,
+    isBufferResident: (url) => state.resident.has(url),
+    startTrackVoices: (track, rendition, when, entries) =>
+      state.nodes ? startTrackVoicesWith(state.nodes, track, rendition, when, entries) : null,
     releaseTrackVoices: (group, when, leadFade, bedFade, washOut) =>
       state.nodes
         ? releaseTrackVoicesWith(state.nodes, group, when, leadFade, bedFade, washOut)
