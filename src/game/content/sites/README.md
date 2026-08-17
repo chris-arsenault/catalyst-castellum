@@ -1,12 +1,12 @@
 # src/game/content/sites
 
-Authored exterior content: site chunks (parametric map fragments with rooms, portals,
-route stubs, feedstock taps, annexable structures) and fixed site scripts. The tutorial's
-docking sites are fully authored sites; main-game sites are assembled from these chunks
-by the seeded generator (ADR-0003).
+Authored campaign-site content: vertical room and terrain geometry, ingress routes, construction
+surfaces, graft access, supply taps, five-wave scripts, and local environmental rules.
 
-`chlorAlkali.ts` is the first production vocabulary. `world/siteGenerator.ts` assembles
-its room chunks against the carried hull, adds traversable passages/ladders, routes its
-process lines, and validates the result. Run `pnpm site:candidates` to export a scored
-SVG candidate sheet under `outputs/site-candidates/`; the tutorial binds one selected
-seed so guidance and balance stay reproducible.
+Every campaign site is reproducible so tutorials, narrative staging, reference defenses, balance
+replays, and saves agree about its geometry. Shared chunks may provide reusable room shapes or route
+features, but the campaign specification owns the final cutaway and route graph.
+
+Candidate exporters may produce alternate authored layouts for design review. A selected candidate
+becomes campaign content only after its tower surfaces, enemy routes, graft relationship, and
+reference defenses pass validation.

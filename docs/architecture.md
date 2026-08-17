@@ -1,28 +1,29 @@
 # Architecture
 
-Catalyst Castellum is a static browser application around a deterministic, serializable simulation.
-The engine owns mechanics; authored packs own content; presentation owns localized interpretation;
-React and Pixi render view models and dispatch typed commands.
+Catalyst Castellum is a static browser application around a deterministic, serializable vertical
+tower-defense simulation. The engine owns mechanics; authored packs own campaign content;
+presentation owns localized interpretation; React and Pixi render view models and dispatch typed
+commands.
 
 ## Dependency direction
 
 ```text
 authored content -> compiler -> immutable GameDefinition -> GameRuntime -> application
        |                                |                    |             |
-       +-> playtest portfolios          +-> save codec       +-> queries   v
+       +-> balance portfolios           +-> save codec       +-> queries   v
 locale catalog -> translator -> presentation services ----------------> React/Pixi
 ```
 
-- `src/game/content/**` authors species, reactions, equipment, enemies, levels, sites, supplies,
-  narrative identities, and reference portfolios.
-- `src/game/authoring/compiler.ts` validates identities, references, elemental balance, equipment
-  operations, supplies, maps, waves, and cumulative availability before runtime construction.
+- `src/game/content/**` authors towers, upgrades, enemies, maps, routes, waves, sites, supplies,
+  narrative identities, and reference defenses.
+- `src/game/authoring/compiler.ts` validates identities, references, maps, routes, tower surfaces,
+  graft slots, waves, supplies, and campaign availability before runtime construction.
 - `src/game/definition.ts` compiles and deep-freezes the default pack. `deriveGame` creates explicit
   variants for tests and alternate rulesets.
 - `src/game/runtime.ts` binds creation, command evaluation, command execution, stepping, queries,
   validation, and persistence to one definition.
 - `src/game/queries.ts` is the read-only application facade. Application and presentation modules
-  consume runtime/query contracts rather than internal engine mutators.
+  consume runtime and query contracts rather than internal engine mutators.
 - `src/presentation/**` binds a runtime and translator into localized copy, catalogs, formatters,
   forecasts, and memoized view models.
 - `src/application/**` owns browser initialization, save slots, persistence scheduling, selection,
@@ -31,84 +32,90 @@ locale catalog -> translator -> presentation services ----------------> React/Pi
 
 `pnpm architecture:check` enforces this direction and rejects cross-layer cycles.
 
-## World and run model
+## World and campaign model
 
-The simulation consumes one `WorldMap`. It contains room instances, utility nodes, architectural
-connections, and routed gas/liquid connections in one coordinate system. Geometry drives room
-volume, enemy movement, exposure, conduit length, hold-up, liquid crest, and rendering.
+The simulation consumes one `WorldMap`. It contains the rig hull, grafted rooms, site terrain,
+architectural connections, enemy route graphs, valid tower surfaces, and routed gas or liquid
+connections in one coordinate system. Geometry drives rendering, placement, line of sight, attack
+range, enemy movement, room volume, conduit length, and environmental exposure.
 
-Map producers run before a site starts. Authored and seeded chunk-assembly producers return the same
-validated map shape and embed the player's carried hull fragment. The fixed simulation step remains
-RNG-free. See [ADR-0001](adr/0001-simulation-runs-on-a-map.md),
-[ADR-0002](adr/0002-instance-keyed-world-identity.md), and
-[ADR-0003](adr/0003-random-producer-chunk-assembly.md).
+Every site supplies an authored vertical cutaway and one or more ingress-to-Core routes. Routes may
+split, merge, climb, descend, and pass through rooms. Deterministic path selection uses authored
+edges and movement costs. Remaining route distance gives towers stable first, last, and nearest-to-
+Core targeting without coupling combat to presentation coordinates.
 
-One save contains one run and one hull. Hull rooms, grafted modules, installed equipment, internal
-connections, and all conserved inventories travel between sites. Disposable site rooms remain with
-the cleared claim. See [ADR-0004](adr/0004-save-is-hull-is-one-run.md).
+One save follows one fixed campaign and one persistent claim rig. Hull rooms, grafts, hull-mounted
+towers, upgrades, Matter, Core state, and narrative progress travel between sites. Site terrain and
+temporary site placements belong to the current operation. Failed operations restore the pre-assault
+checkpoint so campaign progression does not depend on a run-permadeath model. See
+[ADR-0013](adr/0013-fixed-campaign-hull-and-checkpoints.md).
 
-Process lines are player-authored map data. Preview and execution call the same deterministic
-shortest-path router, and the stored route drives both physics and rendering. See
-[ADR-0006](adr/0006-process-lines-use-shortest-orthogonal-routes.md).
+## Construction
 
-## Chemistry and equipment
+Ordinary towers use free surface placement. A placement command identifies a grid anchor, floor,
+wall, or ceiling face, footprint, and orientation. The same evaluator checks ownership, Matter,
+clearance, support, route obstruction, range, and line of sight before the command becomes
+available. Preview, execution, save validation, and rendering consume the same resolved placement.
 
-Species definitions own formulas, arbitrary elemental composition, physical properties, and hazard
-contributions. Reaction definitions own stoichiometry and typed behavior data. Compilation rejects
-unbalanced chemical reactions.
+Room grafts use authored hull graft slots. A graft adds persistent geometry, route connections,
+tower surfaces, and any equipment positions defined inside that room. Grafts cost enough Matter to
+compete with several tower upgrades and normally enter the hull between operations. See
+[ADR-0012](adr/0012-vertical-placement-routes-and-grafts.md).
 
-Ordinary multi-stage chemistry uses a simultaneous mass-action pass. Each room is snapshotted once;
-forward and reverse requests compete through proportional allocation; products become eligible on
-the next simulation step. This prevents catalog order from creating hidden process priority.
+## Towers and combat
 
-Powered cells use typed equipment-operation definitions with instance-local inputs, outputs,
-headroom, rates, telemetry, and conserved port inventories. Every installed operation runs
-independently. Presentation derives machine effects and reaction mechanics from the same structured
-definitions.
+Tower definitions own mounting faces, footprint, attack cadence, target cap, arc, range, channels,
+and upgrade branches. Towers query eligible enemies through the runtime, select targets with a
+stable ordering, and emit typed damage, movement, or status packets. The central packet resolver
+updates health, source ledgers, incidents, deaths, Matter rewards, and assault results as one
+transaction.
 
-## Transport and spatial physics
+Placement face changes behavior because the map is vertical. Floor towers command open lanes, wall
+towers cover lateral approaches, and ceiling towers attack from above or interact with airborne
+enemies. Towers may require clear line of sight, fire along a fixed arc, lob over obstructions, or
+affect a bounded area. Attack cadence and target caps keep enemy count relevant to defense capacity.
 
-Gas and liquid lines carry one complete phase mixture through one persistent finite inventory.
-Route length controls hold-up and rated response. Fans and pumps are binary actuators; passive lines
-follow their physical gradients. Shared junction allocation is proportional, so identifier order
-does not determine who receives feed.
+Enemy archetypes own movement traits, route preferences, resistances, armor transitions, protection
+fields, and other behaviors. Level scales their numeric campaign pressure while archetype identity
+continues to determine the defense problem.
 
-Rooms retain separate lower and upper gas layers plus pooled liquid and stationary material.
-Composition, temperature, pressure, density, elevation, port height, liquid surface, and equipment
-volume determine transport and reaction conditions. Architectural openings exchange material
-independently from dedicated process lines.
+Direct towers define the first playable combat vocabulary. Chemistry, pipes, and atmosphere extend
+that vocabulary after the opening sites prove placement, targeting, routing, wave pacing, and tower
+economy. See [ADR-0011](adr/0011-direct-towers-define-campaign-combat.md).
 
-## Combat and campaign health
+## Chemistry, transport, and environment
 
-Enemy level scales health, breach damage, reward, and residue from stable archetype definitions.
-Movement traits, resistance, flying state, armor transitions, protection fields, and reagent
-reservoirs remain archetype behavior rather than level bonuses.
+The chemical simulation remains a deterministic subsystem. Species conserve elemental inventory;
+reactions use typed stoichiometry and behavior data; powered equipment uses finite port inventories;
+gas and liquid lines retain phase mixtures, hold-up, and routed geometry. Rooms retain lower and
+upper gas layers, pooled liquid, stationary material, temperature, and pressure.
 
-All damage enters the central packet resolver with stable channel and source identities. It updates
-health, per-source ledgers, incidents, deaths, Matter rewards, and round results as one transaction.
-Room-wide hazards affect every occupant, while finite fields and reagents make cohort composition
-matter.
+Campaign content connects these systems to tower defense through explicit interfaces:
 
-The runtime samples material inventory, temperature, reaction throughput, and conduit fill to
-measure live process change and convergence toward homeostasis during Prime. This status contains
-no enemy or combat outcome data. Conduit inspection applies one representative source packet at
-the actual target port, advances installed equipment and room chemistry for one response step, and
-compares intrinsic room hazard plus movement control. The resulting green-up, red-down, or steady
-arrow is a first-order target-room response rather than a wave-survival forecast. Hovering an
-installed line on the normal map previews the effect of its available open or close action directly
-in the target room; pipe-drawing mode is not required.
+- a pipe can supply feedstock or coolant to a compatible tower mode;
+- a tower or enemy can release a finite atmospheric byproduct;
+- a room condition can change range, cadence, damage channel, movement, or visibility;
+- process equipment can prepare a resource that a tower consumes.
 
-The homeostasis sample normalizes material deltas by room capacity, thermal deltas by the modeled
-temperature range, reaction-rate deltas by current throughput, and line deltas by conduit fill.
-Their per-second mean is the change rate `c`; the displayed homeostasis is `exp(-35c)`. Low,
-moderate, and high change bands begin at `0`, `0.004`, and `0.015` normalized change per second.
-Room direction comes from signed inventory, hazard, and reaction-rate deltas, while line buildup is
-reported separately as priming.
+The opening sites use self-contained towers and environmentally neutral rooms. This keeps the
+retained process model available without making it a prerequisite for proving the primary defense
+loop.
 
-Every open-defense site has five reference portfolios and an idle-loss control. `pnpm
-campaign:health` executes the exact runtime and fails when a portfolio, diversity, or idle-loss
-contract changes. `pnpm balance:combat` adds controlled first-order and transient second-order
-analysis.
+## Campaign, tutorials, and balance
+
+The campaign contains twelve authored sites across three acts. Each site binds a vertical map,
+route graph, enemy level, five waves, construction resources, narrative sequence, and reference
+defenses. Sites test geometry, resources, enemy composition, timing, and economic pressure. Later
+sites add environmental and process interactions as additional strategies.
+
+Tutorials use the same typed guide framework as the campaign. Predicates observe runtime state and
+command decisions; presentation supplies localized instructions and focus targets. Tutorials first
+teach surface placement, attack coverage, upgrades, multiple routes, and grafting, then introduce
+transport or atmospheric effects when those systems enter the campaign.
+
+Balance analysis evaluates tower service capacity, route coverage, enemy residence in range,
+target-selection pressure, resource curves, Core damage, and exact deterministic replays. Reference
+defenses prove multiple viable layouts; idle controls prove that each operation applies pressure.
 
 ## State and persistence
 
@@ -116,15 +123,16 @@ analysis.
 encoding cover every reference-valued field; deep-independence and round-trip tests guard that
 contract. UI state remains in the application layer.
 
-Save V22 is the only accepted pre-release schema. Each save identifies its pack and content
-version, carries its map/run/domain state, and passes this boundary:
+The current schema is the only accepted pre-release schema. Each save identifies its pack and
+content version, carries its campaign, hull, map, and domain state, and passes this boundary:
 
 ```text
 untrusted JSON -> structural decode -> semantic state validation -> GameState
 ```
 
-The application exposes three named local slots. Browser restoration is explicit initialization;
-the pure codec and scheduler remain separate concerns.
+Durable tower placements, upgrades, grafts, route state, or campaign checkpoints require a schema
+and content-version increment. The application exposes three named local slots. Browser restoration
+is explicit initialization; the pure codec and scheduler remain separate concerns.
 
 ## Localization and copy
 
@@ -136,40 +144,39 @@ placeholder parity.
 
 ## Extension paths
 
-### Level or site
+### Site
 
-1. Add a level module under `src/game/content/levels/` and register it in `content/campaign.ts`.
-2. Add or select a site specification and physical supplies.
-3. Add localized mission, round, and narrative copy.
-4. Add five round-aware reference portfolios and a diversity target.
+1. Author its vertical map, tower surfaces, ingress routes, Core destination, and graft access.
+2. Add waves, enemy levels, construction resources, and any local environmental rules.
+3. Add localized briefing, assault, result, and narrative copy.
+4. Add reference defenses that use materially different placements or tower mixes.
 5. Let compilation and campaign health validate the result.
 
-### Reaction or species
+### Tower or upgrade
 
-1. Add canonical identities and species definitions with formulas, elements, physical properties,
-   and hazard rules.
-2. Add balanced reaction definitions using an existing behavior strategy.
-3. Extend the typed strategy registry only for genuinely new phase or side-effect behavior.
-4. Add exact-delta, conservation, presentation, and campaign-delivery coverage.
-
-### Equipment
-
-1. Add the canonical identity and structured grade behavior.
-2. Attach a typed equipment operation when the machine transforms material.
-3. Extend the generic executor only for a new operation kind.
-4. Add localized catalog/manual copy and command/operation tests.
+1. Add a stable identity and structured targeting, footprint, attack, and upgrade data.
+2. Reuse an existing attack and effect executor when the behavior matches.
+3. Add localized catalog and manual copy.
+4. Add placement, targeting, damage, balance, and save coverage.
 
 ### Enemy
 
-1. Add a mechanical archetype and choose a reusable behavior and appearance.
-2. Add localized entity/manual copy and use it in authored waves.
-3. Add runtime or rendering branches only for a genuinely new behavior or silhouette family.
+1. Add a mechanical archetype and choose reusable movement, defense, and appearance behavior.
+2. Add localized entity and manual copy, then use it in authored waves.
+3. Add runtime or rendering branches only for a new behavior or silhouette family.
+
+### Reaction, species, or process equipment
+
+1. Add canonical identities and balanced chemical definitions.
+2. Connect the process output to a specific environmental or tower-defense rule.
+3. Reuse typed operation and transport strategies where they fit.
+4. Add conservation, exact-delta, presentation, and encounter coverage.
 
 ### Durable state
 
 1. Define construction and transition semantics.
 2. Update explicit cloning and prove deep independence.
-3. Update V22's successor schema and increment the save/content version.
+3. Increment the save schema and content version.
 4. Add semantic invariants and round-trip tests.
 
 ## Verification
@@ -180,4 +187,4 @@ placeholder parity.
 | `make ci`                   | Full coverage, build, performance, campaign health, and Terraform gate |
 | `pnpm test:e2e`             | Complete Chromium browser behavior                                     |
 | `pnpm performance:baseline` | Representative clone, step, codec, query, and render timings           |
-| `pnpm balance:combat`       | First-order and transient combat workbook                              |
+| `pnpm balance:combat`       | Tower, route, economy, and transient combat workbook                   |

@@ -1,7 +1,8 @@
 # Campaign site map and script index
 
 The campaign follows one playable twelve-site route across three acts. Every site binds narrative,
-enemy level, five authored waves, physical supplies, map geometry, and reference defense portfolios.
+enemy level, five authored waves, a vertical map, enemy routes, construction resources, and
+reference defenses.
 
 ```mermaid
 flowchart LR
@@ -26,20 +27,20 @@ flowchart LR
 
 ## Route table
 
-|   # | Site           | Code    | Region                | Enemy level | Mechanical binding | Narrative job                                                                                           |
-| --: | -------------- | ------- | --------------------- | ----------: | ------------------ | ------------------------------------------------------------------------------------------------------- |
-|   1 | Claim 8-Delta  | RAT-08D | Long Rake Verge       |          20 | `flash_point`      | Establish licensed Ratter work, remote cutter operation, and the first unexplained telemetry hush.      |
-|   2 | Harker’s Brace | RAT-HB4 | Long Rake Verge       |          21 | `make_the_reagent` | Recover a brine seam; Surveyor makes first contact after coherent off-boundary timing appears.          |
-|   3 | Twelve-Cask    | RAT-12C | Caskward Drift        |          22 | `stored_chlorine`  | Recover wet oxidizer; Buyer requests the discard fraction while Surveyor requests its phase history.    |
-|   4 | Morrow Pocket  | IND-MP7 | Morrow Spur           |          23 | `morrow_pocket`    | Complete the first independent mixed-grade claim and discover that separated fractions share one grade. |
-|   5 | Kettleblack    | IND-KB2 | Kettleblack Drifts    |          24 | `kettleblack`      | Mark dark grains across a split field; force Surveyor to offer a direct meeting.                        |
-|   6 | Cordon 41      | DC-C41  | Outer Pell Approach   |          25 | `cordon_41`        | Reveal Vela Norr and recover a sensor wall that occupies both sides of its cordon.                      |
-|   7 | Junction L-6   | CM-L06  | Pell Freight Lattice  |          26 | `junction_l6`      | Reveal Daro Venn, qualify industrial feed rates, and schedule the synchronized scale test.              |
-|   8 | Pell Cut       | CM-PC9  | Pell Freight Lattice  |          27 | `pell_cut`         | Run Coremark’s parallel arrays; trigger the Pell emergence and the first voice-like distress signal.    |
-|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          28 | `station_14`       | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
-|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          29 | `vasker_store`     | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
-|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          30 | `lane_six`         | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
-|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          31 | `pell_cordon`      | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
+|   # | Site           | Code    | Region                | Enemy level | Defense binding                             | Narrative job                                                                                           |
+| --: | -------------- | ------- | --------------------- | ----------: | ------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+|   1 | Claim 8-Delta  | RAT-08D | Long Rake Verge       |          20 | Free placement on one readable route        | Establish licensed Ratter work, remote cutter operation, and the first unexplained telemetry hush.      |
+|   2 | Harker’s Brace | RAT-HB4 | Long Rake Verge       |          21 | Wall and ceiling coverage across elevation  | Recover a brine seam; Surveyor makes first contact after coherent off-boundary timing appears.          |
+|   3 | Twelve-Cask    | RAT-12C | Caskward Drift        |          22 | Finite capacity, area fire, and control     | Recover wet oxidizer; Buyer requests the discard fraction while Surveyor requests its phase history.    |
+|   4 | Morrow Pocket  | IND-MP7 | Morrow Spur           |          23 | First open multi-route defense              | Complete the first independent mixed-grade claim and discover that separated fractions share one grade. |
+|   5 | Kettleblack    | IND-KB2 | Kettleblack Drifts    |          24 | Persistent room graft                       | Mark dark grains across a split field; force Surveyor to offer a direct meeting.                        |
+|   6 | Cordon 41      | DC-C41  | Outer Pell Approach   |          25 | Vertical specialists and support fields     | Reveal Vela Norr and recover a sensor wall that occupies both sides of its cordon.                      |
+|   7 | Junction L-6   | CM-L06  | Pell Freight Lattice  |          26 | Separated freight lanes and target priority | Reveal Daro Venn, qualify industrial feed rates, and schedule the synchronized scale test.              |
+|   8 | Pell Cut       | CM-PC9  | Pell Freight Lattice  |          27 | Four-array synchronized assault             | Run Coremark’s parallel arrays; trigger the Pell emergence and the first voice-like distress signal.    |
+|   9 | Station 14     | DC-S14  | Pell Emergency Cordon |          28 | Flyers and split-height ingress             | Introduce Kethra and Soft Wake, recover cordon buoys, and designate the Near Voice.                     |
+|  10 | Vasker Store   | DC-VS3  | Pell Emergency Cordon |          29 | Overlapping rooms and alternating columns   | Recover quiet-glass precursors and closure mass from spatially overlapping storage rooms.               |
+|  11 | Lane Six       | DC-L06  | Pell Inner Cordon     |          30 | Compressed multi-route convoy cadence       | Bring Dern into direct command, secure the final approach, and authorize closure.                       |
+|  12 | Pell Cordon    | DC-PELL | Pell Emergence        |          31 | Full campaign defense vocabulary            | Break the Near Voice’s learned cadence, close the newborn boundary, and recover the cordon.             |
 
 Enemy level belongs to the site rather than the enemy type. Each spawn receives the site's baseline
 unless its wave applies an authored offset. The same creature remains recognizable across the route
@@ -59,7 +60,7 @@ The pre-mission sequence keeps story and mechanics in a fixed order:
 
 1. **Act introduction:** the first site of each act opens with exactly two setting paragraphs. The first establishes the crew’s circumstances; the second explains what has changed and where the act begins.
 2. **Contract conversation:** the site, employer, and practical job appear before the call. The comm then presents one speaker portrait and one complete dialogue turn at a time. The player advances each turn and explicitly opens the mission briefing after the final line.
-3. **Mechanical mission briefing:** the existing localized level name, plant conditions, current round objective, prime duration, tutorial choice, and start control appear together after the conversation. This copy remains under `levels.<level>.*`.
+3. **Operational briefing:** the site name, route forecast, construction resources, current assault objective, field-guidance choice, and build control appear together after the conversation. This copy remains under the site's localized level keys.
 
 The intermission uses the same talking-head treatment for the after-action call. Each turn reports a concrete result or observation, and the last turn advances one reveal while remaining visible beside the travel controls.
 
@@ -93,11 +94,16 @@ The canonical English script is [`src/localization/locales/en/narrative.ts`](../
 
 ## Encounter functions
 
-1. Kettleblack teaches stationary inventory, reversible reactions, and catalyst behavior.
-2. Cordon 41 tests protection fields and ladder-specialist pressure around constrained rooms.
-3. Junction L-6 tests reagent-emitting enemies and mixed feed-rate pressure.
-4. Pell Cut is the Act II boss escalation and introduces synchronized support groups.
-5. Station 14 foregrounds flyers above liquid and uranium recovery.
-6. Vasker Store alternates fast, heavy, upper-layer, and supported control of one irregular route.
-7. Lane Six combines the support vocabulary under compressed convoy cadence.
-8. Pell Cordon uses changing Near Voice formations and makes cadence disruption the final defense.
+1. Claim 8-Delta establishes free surface placement, direct fire, one route, and one upgrade.
+2. Harker’s Brace makes mounting face, elevation, firing arc, and line of sight visible.
+3. Twelve-Cask introduces finite tower capacity, area fire, route control, and mixed cadence.
+4. Morrow Pocket opens the defense across multiple routes and removes click-by-click guidance.
+5. Kettleblack introduces a costly persistent room graft that changes final-approach geometry.
+6. Cordon 41 tests flyers, ladder specialists, armor, and shared protection in a vertical stack.
+7. Junction L-6 separates freight lanes and makes support targeting and sustained capacity matter.
+8. Pell Cut defends four synchronized arrays as the Act II escalation.
+9. Station 14 foregrounds flyers, split-height coverage, and multiple ingress routes.
+10. Vasker Store alternates fast, heavy, upper-lane, and supported columns through overlapping rooms.
+11. Lane Six compresses convoy cadence across a long multi-route approach.
+12. Pell Cordon combines placement, routing, targeting, graft, and support decisions while the
+    foundry breaks the Near Voice’s learned cadence.

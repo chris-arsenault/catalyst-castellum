@@ -1,7 +1,7 @@
 # ADR-0004: A save is one hull is one run
 
 Date: 2026-07-15
-Status: accepted
+Status: superseded by ADR-0013
 
 ## Context
 

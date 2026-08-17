@@ -1,6 +1,11 @@
 # Catalyst Castellum
 
-A browser-based chemical-process tower defense game set in the Glass Frontier universe.
+A browser-based vertical tower-defense campaign set in the Glass Frontier universe.
+
+The player commands a mostly unmanned Deep Shear claim rig. A remote cutter couples recovered
+material into the rig's foundry, and Cthonic intruders cross in the cutter wake. The player mounts
+automated defenses throughout the rig's side-view rooms and holds the Core until each extraction
+finishes.
 
 Play the current build at [catalyst.ahara.io](https://catalyst.ahara.io).
 
@@ -28,7 +33,7 @@ Use `make ci` for the complete repository gate and `pnpm test:e2e` for the brows
 | Documentation index     | [docs/README.md](docs/README.md)                                   |
 | Architecture            | [docs/architecture.md](docs/architecture.md)                       |
 | Campaign defense design | [docs/campaign-defense-design.md](docs/campaign-defense-design.md) |
-| Chemistry               | [docs/chemical-process-design.md](docs/chemical-process-design.md) |
+| Tutorial campaign       | [docs/tutorial-campaign.md](docs/tutorial-campaign.md)             |
 | Combat balance          | [docs/combat-balance-model.md](docs/combat-balance-model.md)       |
 | Narrative canon         | [docs/narrative/lore-bible.md](docs/narrative/lore-bible.md)       |
 | Architecture decisions  | [docs/adr/README.md](docs/adr/README.md)                           |

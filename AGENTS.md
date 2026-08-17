@@ -1,6 +1,6 @@
 # Agent guide
 
-Catalyst Castellum is a deterministic React/Pixi chemical-process tower defense game.
+Catalyst Castellum is a deterministic React/Pixi vertical tower-defense campaign.
 
 ## Read first
 
@@ -20,8 +20,10 @@ Catalyst Castellum is a deterministic React/Pixi chemical-process tower defense 
 - Keep the simulation independent from React, PixiJS, Zustand, browser APIs, and default content.
 - Route player actions through typed command evaluation and execution; derive UI availability from
   the same decisions.
-- Preserve deterministic fixed-step behavior, elemental conservation, finite inventories, and
-  topology validation.
+- Preserve deterministic fixed-step behavior, map validation, route validity, and explicit combat
+  source attribution.
+- Preserve elemental conservation and finite inventories inside the retained chemistry and
+  transport subsystems.
 - Treat the current save schema as the only accepted pre-release format. Increment the schema and
   content version when durable state or authored mechanics change.
 - Keep Ahara resource names under the `catalyst` prefix.
@@ -32,18 +34,25 @@ Catalyst Castellum is a deterministic React/Pixi chemical-process tower defense 
 
 ## Campaign and encounter design
 
-Tutorials demonstrate tools. Sites test defenses. Chemistry creates strategies.
+Tutorials demonstrate tools. Sites test defenses. Geometry creates strategies.
 
-- Introduce controls and simulation rules through tutorials, then let encounters support multiple
-  materially different defenses.
-- Author sites around geometry, resources, enemy composition, timing, and economic pressure rather
-  than a required reaction chain or prescribed room configuration.
-- Treat newly available chemistry as an additional strategic option. Keep established builds viable
-  through soft counters, overlapping combat roles, and compounding process interactions.
-- Give every site a chemistry palette of one to three process families; supplies, seeds, and
-  vessel availability derive from it (ADR-0008). Engineered reactions run in duty vessels
-  (ADR-0007), and every offensive family damages at depth one from supplied feedstock while iron
-  stays the support family (ADR-0009).
+- Preserve the fixed twelve-site, three-act campaign and its narrative reveal schedule.
+- Make direct tower attacks the primary source of combat output. Towers expose range, firing arc,
+  cadence, valid targets, targeting priority, damage, and upgrades through visible behavior.
+- Author encounters around vertical geometry, multiple readable routes, tower coverage, enemy
+  composition, cadence, and Matter pressure.
+- Place ordinary towers freely on compatible grid-snapped floors, walls, and ceilings. Architecture,
+  tower footprint, clearance, and line of sight determine legal placement.
+- Attach room grafts through authored hull graft slots. Grafts add persistent geometry, mounting
+  surfaces, and any purpose-specific internal equipment slots.
+- Price a graft at roughly six to ten ordinary tower upgrades. A complete campaign normally supports
+  two or three graft purchases through the shared Matter economy.
+- Keep hull-owned rooms and installed defenses persistent across sites. Recover site-mounted tower
+  value when the cutter return closes.
+- Use deterministic route graphs with visible ingress, branches, joins, and remaining distance to
+  the Core. Targeting priorities compare enemies across every active route.
+- Introduce chemistry, pipes, and atmospheric state as visible tower and battlefield modifiers after
+  the direct tower-defense loop is established. Basic towers operate effectively in neutral rooms.
 
 ## Player-facing copy
 
@@ -83,7 +92,7 @@ Review every modified player-facing string against these rules before completing
 | `make quick-ci`                  | Run the normal local architecture, copy, format, type, and unit gate |
 | `make ci`                        | Run the complete local CI contract                                   |
 | `pnpm test:e2e`                  | Run all Playwright browser scenarios                                 |
-| `pnpm campaign:health`           | Assert every site portfolio and idle-loss contract                   |
-| `pnpm balance:combat`            | Run the first- and second-order combat workbook                      |
+| `pnpm campaign:health`           | Assert campaign portfolios and idle-loss contracts                   |
+| `pnpm balance:combat`            | Run the combat balance workbook                                      |
 | `pnpm sprites:all`               | Regenerate every checked-in sprite sheet                             |
 | `with-cred -- scripts/deploy.sh` | Build and deploy through the approved credential path                |

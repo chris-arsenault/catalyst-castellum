@@ -1,6 +1,10 @@
 # src/game/content/modules
 
-Authored room-module templates for hull grafting: footprint geometry, socket count,
-junction spec, joint stubs (which hardpoint kinds the module mounts to), and graft cost.
-Templates are instantiated onto hull hardpoints at runtime with deterministic instance
-ids (ADR-0002).
+Authored room-graft templates for the persistent rig hull. A template defines footprint geometry,
+the hull graft slots it can attach to, route and utility connections, tower-placement surfaces, any
+specific internal equipment positions, and Matter cost.
+
+Grafts use deterministic instance identities and become durable campaign state. Their cost competes
+with roughly six to ten ordinary tower upgrades, making hull expansion an occasional campaign-scale
+choice. Ordinary towers do not use graft slots: they use free grid-snapped placement on valid floor,
+wall, and ceiling surfaces.

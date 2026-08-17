@@ -14,7 +14,7 @@ Every string a player reads is written from inside the setting. The game present
 operations record of a licensed Ratter crew working the Deep Shear, and nothing on screen admits to
 being a game.
 
-- Copy addresses the player as the plant operator aboard the rig, never as someone playing software.
+- Copy addresses the player as the rig operator, never as someone playing software.
 - Copy describes work, contracts, sites, and hazards, never difficulty, progression design, or
   teaching intent. A first job is a small licensed claim, never "an easy level to learn the basics."
 - Characters know their world and their jobs. They never explain a mechanic as a mechanic, reference
@@ -27,14 +27,14 @@ being a game.
 
 Curriculum language breaks the fiction. Use the in-world term everywhere a player can read it:
 
-| Write                        | Instead of                                |
-| ---------------------------- | ----------------------------------------- |
-| site, claim, operation       | level, checkpoint, mission (as chrome)    |
-| contract, work order         | lesson, assignment, quest                 |
-| field drill                  | tutorial (the guided Flash Point opening) |
-| trial, commissioning run     | exam, test (of the player)                |
-| assault, wave, column        | round (when narrating), encounter         |
-| the crew, the rig, the plant | you the player, the game                  |
+| Write                        | Instead of                                  |
+| ---------------------------- | ------------------------------------------- |
+| site, claim, operation       | level, checkpoint, mission (as chrome)      |
+| contract, work order         | lesson, assignment, quest                   |
+| field drill                  | tutorial (the guided Claim 8-Delta opening) |
+| trial, commissioning run     | exam, test (of the player)                  |
+| assault, wave, column        | round (when narrating), encounter           |
+| the crew, the rig, the plant | you the player, the game                    |
 
 Mechanical identifiers stay stable regardless of display copy: level IDs, dialogue line IDs, and
 speaker IDs in `src/game/content/narrativeCampaign.ts` never rename for tone reasons.
@@ -55,11 +55,11 @@ bible's rules:
 - Voices use ordinary contractions, varied sentence length, and each character's professional
   vocabulary from the lore bible's cast guide.
 
-**Mission copy** — level kickers, briefings, lessons, round details and objectives. Work-order
-voice: terse, concrete, in-world, and mechanically exact. Every chemical fact the player needs
-survives the tone ("The Core starter header holds H₂ and O₂ near their combustion ratio, and its
-gas duct reaches R-02"). Objectives are direct orders to the operator: "Install a Gas Agitator in
-R-02 and switch on the Core–R-02 gas duct."
+**Mission copy** — site kickers, briefings, field guidance, assault details, and objectives.
+Work-order voice: terse, concrete, in-world, and mechanically exact. Every spatial fact the player
+needs survives the tone ("The cutter wake enters below R-02 and climbs the east ladder toward the
+Core"). Objectives are direct orders to the operator: "Mount a sentry on the east wall and cover
+the ladder mouth."
 
 **Interface copy** — labels, readouts, buttons, manual entries. Instrument voice: short, factual,
 present tense, governed by the AGENTS.md copy rules. The facility manual is an in-world works

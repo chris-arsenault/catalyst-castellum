@@ -1,7 +1,7 @@
 # ADR-0009: Offensive families damage at depth one; iron is the support family
 
 Date: 2026-07-22
-Status: accepted
+Status: superseded by ADR-0011
 
 ## Context
 

@@ -1,7 +1,7 @@
 # ADR-0007: Engineered reactions run in vessel classes
 
 Date: 2026-07-22
-Status: accepted
+Status: superseded by ADR-0011
 
 ## Context
 

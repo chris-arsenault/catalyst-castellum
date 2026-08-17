@@ -1,7 +1,7 @@
 # ADR-0003: The random-layout producer assembles authored chunks by seed
 
 Date: 2026-07-15
-Status: accepted
+Status: superseded by ADR-0013
 
 ## Context
 

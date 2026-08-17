@@ -1,130 +1,87 @@
-# Tutorial campaign and headless evaluation
+# Tutorial campaign
 
-This document defines the campaign's teaching curve, phase lifecycle, authored scenario boundary,
-and headless evaluation contract.
+This document defines the campaign's teaching curve and authored scenario contract.
 
 ## Learning contract
 
-Early levels follow the tower-defense teaching curve:
+Early sites follow one causal relationship at a time:
 
-- Doing nothing must lose the checkpoint.
-- Performing the newly taught action must clear its first round.
-- Incomplete, mistimed, or misplaced actions may clear with core damage.
-- A strong first-round configuration should often carry the following round without another build.
-- New mechanics begin inert. Unlocking a component must not silently activate a complete background
-  factory.
+- Doing nothing loses the wave.
+- Performing the taught action creates immediate, visible combat output.
+- A legal but weak placement may clear with Core damage.
+- A strong first-wave defense often carries the following wave.
+- Later waves ask the player to recall and combine earlier actions with less guidance.
+- Every lesson runs inside the same vertical map, tower controls, combat simulation, and campaign
+  fiction used by the rest of the game.
 
-The current authored sequence is:
+## Campaign teaching curve
 
-1. **Flash Point** — install gas agitation in R-02 and switch on the one Core–R-02 gas fan. Core's
-   visible starter header contains the complete finite H₂/O₂ mixture; the initially dry routed duct
-   must sweep its physical hold-up before accumulation produces repeating OX-1 attacks.
-2. **Make the Reagent** — install the membrane cell, feed water and brine, manage all three
-   co-products, then place heat and agitation to convert balanced H₂/Cl₂ into an HCl corridor on
-   the same generated site.
-3. **Stored Chlorine** — store Cl₂ as NaOCl in R-03, preserve that inventory across the round gate,
-   then move it into acid at R-06 for a delayed second-order release.
-4. **Morrow Pocket** — build a complete defense in an open plant using the Act I vocabulary. Five
-   independently constructed portfolios establish burst, continuous, control, storage, and hybrid
-   solutions against the same mixed waves.
-5. **Kettleblack** — complete the final guided process lesson during Prime by feeding a stationary
-   carbon/catalyst bed and reading a reversible reaction. Its assault remains an open defense.
-6. **Cordon 41** — use a vertical sensor stack and optional nitrogen chemistry against climbers,
-   flyers, armor, and shared protection.
-7. **Junction L-6** — manage a long freight route, industrial feed cadence, reagent emitters, and
-   optional nickel transport chemistry.
-8. **Pell Cut** — add one concise Fluorine Cell description, then defend four synchronized arrays
-   with established or fluorine-assisted strategies.
-9. **Station 14** — add one concise uranium description, then recover room-bound uranyl fluoride
-   through established fluorine, heat, gas, and liquid controls while defending a split-height post.
-10. **Vasker Store** — adapt established defenses as fast, heavy, upper-layer, and supported
-    compositions take turns controlling the same irregular store route.
-11. **Lane Six** — scale overlapping coverage and feed replenishment across a long approach under
-    compressed convoy cadence.
-12. **Pell Cordon** — synthesize the complete campaign vocabulary against the Near Voice's changing
-    formations while the closure device maintains its load.
+1. **Claim 8-Delta** teaches free surface placement, firing arcs, range, assault start, direct damage,
+   Matter income, and one tower upgrade on a readable route.
+2. **Harker's Brace** teaches wall and ceiling relationships, vertical line of sight, route progress
+   targeting, and coverage across two elevations.
+3. **Twelve-Cask** teaches finite firing capacity, area damage, route control, and mixed enemy
+   cadence.
+4. **Morrow Pocket** is the first open defense. It combines tower classes, upgrades, target
+   priorities, and multiple routes without click-by-click guidance.
+5. **Kettleblack** introduces the first permanent room-graft decision and tests how new hull geometry
+   changes final-approach coverage.
+6. **Cordon 41** tests ladder specialists, flyers, armor, and shared protection across a vertical
+   sensor stack.
+7. **Junction L-6** tests long freight routes, separated lanes, support targeting, and sustained
+   tower capacity.
+8. **Pell Cut** defends four synchronized arrays and forms the Act II boss escalation.
+9. **Station 14** foregrounds flyers, split-height coverage, and multiple ingress under Council
+   command.
+10. **Vasker Store** alternates fast, heavy, upper-layer, and supported columns through spatially
+    overlapping rooms.
+11. **Lane Six** compresses convoy cadence across a long multi-route approach.
+12. **Pell Cordon** combines the campaign's route, placement, targeting, graft, and support
+    vocabulary while the foundry breaks the Near Voice's learned cadence.
 
-Every campaign site contains at least five waves.
-
-Ordinary rooms remain blank shells with generic sockets. A tutorial level may preinstall ordinary
-player-owned equipment as scaffolding, but it may not create hidden room types.
+Every site contains five waves. Field guidance concentrates on the first three sites and becomes
+observation and recall support afterward. The player can disable guidance while retaining every
+site, dialogue, wave, and campaign result.
 
 ## State machine
 
-The authoritative lifecycle is:
+The authoritative campaign lifecycle is:
 
 ```text
 level_briefing
   -> build
-  -> prime (bounded; automatic lock)
   -> assault
   -> round_result
-       -> build (next round, exact facility state preserved)
-       -> level_complete (final round)
+       -> build (next wave)
+       -> level_complete (final wave)
             -> travel
-                 -> level_briefing (next clean checkpoint loadout)
+                 -> level_briefing (next site)
 ```
 
-The initial Flash Point briefing has one additional authoritative edge:
+Core loss enters `defeat`; retry reconstructs the current site's authored checkpoint. Completing
+Pell Cordon enters `victory`.
 
-```text
-flash_point level_briefing
-  -> skip_tutorial
-  -> make_the_reagent build
-```
-
-That transition records Flash Point in `completedLevelIds` and makes Make the Reagent the retry
-checkpoint. It does not simulate or silently award any Flash Point round.
-
-Core loss enters `defeat`; retry reconstructs the current checkpoint's authored starting state.
-Completing the final Pell Cordon checkpoint enters `victory`.
-
-`GameState.campaign` stores level, round, completed levels, and retry checkpoint.
-`GameState.availability` stores active equipment, gas/liquid conduit, and feedstock unlocks. Commands
-and network simulation enforce availability; React filtering is only presentation. Save format V22
-persists campaign state, physical routes, junctions, whole-mixture conduit inventories, installed
-equipment operations, exact chemical-source damage ledgers, Anchor absorption attribution, and
-structured incidents. The pre-release decoder accepts the current format only.
+Construction freezes movement. Assault advances the simulation at the selected speed and permits
+construction while running or paused. The round result settles rewards and records the condition of
+the persistent hull.
 
 ## Scenario boundary
 
-`src/game/content/levels/` owns mechanical level modules: prime limits, waves, starting Matter,
-facility loadouts, supplies, availability snapshots, and optional generated-site specifications.
-`src/game/content/campaign.ts` registers those modules in explicit order. Localized briefings and
-objectives live in `src/localization/locales/en/levels.ts`; reference actions live separately in
-`src/game/content/playtestPortfolios.ts` and its focused modules.
+`src/game/content/levels/` owns site modules: waves, starting Matter, tower availability, route and
+map selection, hull state, and later process conditions. `src/game/content/campaign.ts` registers
+those modules in campaign order. Localized briefings and objectives live in the locale catalog;
+reference builds live separately under playtest content.
 
-`src/game/engine/scenarioState.ts` is the materializer. It creates geometry-scaled rooms, finite
-sources and buffers, local junctions, empty or explicitly precharged whole-mixture conduits,
-equipment instances, and campaign state. Conduit precharge is ordinary conserved inventory, not
-instant transport or an infinite source. Neither file imports React, Pixi, Zustand, or browser APIs.
+The scenario materializer creates the exact map, route graph, tower instances, campaign state, Core
+integrity, and retained subsystem state. The browser and headless evaluator both act through typed
+commands and advance time through the deterministic simulation.
 
-The UI and evaluator both act only through `executeCommand` and advance time only through `stepGame`.
-Browser presentation and headless automation therefore exercise one ruleset.
+## Evaluation
 
-## Standalone playtester
+Campaign evaluation runs an idle baseline and several authored reference defenses. A reference
+records tower placement, orientation, upgrades, targeting policies, construction timing, and later
+graft or process actions. Evaluation reports Core integrity, Matter, leaks, tower contribution,
+route coverage, target service, and termination stability.
 
-Run it explicitly:
-
-```bash
-pnpm playtest -- --runs 200 --seed 13371
-pnpm playtest -- --level stored_chlorine --runs 500 --seed 42
-pnpm playtest -- --level flash_point --runs 50 --json
-```
-
-For each level it runs a do-nothing baseline, every authored reference build, and seeded mutations
-of the primary reference. Reference builds own commands and prime timing per round, so they can
-extend, refill, upgrade, or change operation between waves. The report evaluates the site's required
-passing-build, archetype, and actual build-signature diversity, then groups mutation results by
-planned action count with pass rate, average remaining Core, accepted/rejected actions, cleared
-rounds, and termination stability.
-
-Mutation testing measures robustness around a known build; it is not solution discovery. Open
-campaign sites require several independently authored reference builds, while a future grammar-based
-search should explore valid equipment, topology, and feed combinations beyond those portfolios. See
-[`campaign-defense-design.md`](./campaign-defense-design.md) for the campaign-wide diversity
-contract.
-
-`pnpm campaign:health` runs one bounded deterministic assertion in `make ci`: every idle policy
-loses and every required portfolio/diversity contract passes. Exploratory `pnpm playtest` mutation
-search remains outside the normal CI gate because its run count is designer-controlled.
+Reference defenses prove balance envelopes. Human playtesting determines whether the available
+placements and failure causes are understandable.

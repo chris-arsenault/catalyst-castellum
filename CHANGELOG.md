@@ -4,6 +4,19 @@ All notable user-visible changes are recorded here.
 
 ## Unreleased
 
+### Campaign defense direction
+
+- Set the fixed twelve-site campaign around traditional vertical tower defense: direct towers use
+  free grid-snapped floor, wall, and ceiling placement against authored multi-route assaults.
+  Persistent room grafts attach at specific hull slots and cost several ordinary upgrades, while
+  the retained chemistry, pipe, and atmosphere systems enter later sites through explicit tower and
+  environmental interactions.
+- Recast early field guidance around placement, firing arcs, coverage, upgrades, capacity, route
+  control, and the first graft decision. Campaign narrative, the Deep Shear claim-rig setting, the
+  three-act route, five-wave sites, and deterministic simulation remain the authored foundation.
+
+## pre-tower-defense-rework - 2026-08-17
+
 ### Chemistry and construction
 
 - Reworked chemistry legibility around duty vessels, site palettes, and depth-one hazards.

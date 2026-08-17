@@ -77,7 +77,7 @@ The method changes locality and reaction access, not the amount of matter in the
 
 ### Cthonic intruders and the cutter wake
 
-The cutter’s coherent return couples selected seam material into the foundry’s outer receiving breach. Small Cthonic beasts clinging to that material can cross intact. Once aboard, they follow the strongest active resonance tone through the process rooms toward the Core. Ordinary Ratter practice closes the return at the first sign of a beast; this crew keeps working because the rig is mostly unmanned and its rooms can clear intruders with ordinary process chemistry.
+The cutter’s coherent return couples selected seam material into the foundry’s outer receiving breach. Small Cthonic beasts clinging to that material can cross intact. Once aboard, they follow the strongest active resonance tone through the foundry toward the Core. Ordinary Ratter practice closes the return at the first sign of a beast; this crew keeps working because the rig is mostly unmanned and carries automated breach-defense towers across its floors, walls, and ceilings.
 
 The game’s eight enemy names are Ratter field terms rather than claims about biological lineage. Crews sort Cthonic beasts by the behavior that matters during a live job, while academics continue to treat many of the forms as unclassified. The Encyclopedia carries the player-facing bestiary, and level and simulation authoring use these exact names.
 
@@ -182,7 +182,7 @@ Daro remains a person with Ratter experience rather than a faction-shaped carica
 
 ### Act I — Good Standing
 
-Four jobs establish the crew as licensed Ratters and teach the chemical foundry. Surveyor requests raw phase history. Buyer pays for fractions the public assay calls discard. Their interest overlaps at Morrow Pocket, where T’kesh concludes that the separated outputs resolve to one underlying grade.
+Four jobs establish the crew as licensed Ratters and teach remote foundry work under Cthonic pressure. Surveyor requests raw phase history. Buyer pays for fractions the public assay calls discard. Their interest overlaps at Morrow Pocket, where T’kesh concludes that the separated outputs resolve to one underlying grade.
 
 Act turn: Surveyor offers coordinates for Kettleblack and asks whether the cutter crosses a boundary or moves one.
 

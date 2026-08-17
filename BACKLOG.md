@@ -1,46 +1,47 @@
 # Backlog
 
-Planned-but-not-built work. Each item describes a future repository or game state; ordering remains
-a product decision.
+Planned future game states. Ordering remains a product decision.
 
-## Campaign and roguelite
+## Campaign combat
 
-- Define and implement the main-game run shape, including the fixed-length or endless completion
-  model.
-- Add a branching run map that lets the crew choose the next docking site.
-- Add module drafting after site clearance, with several viable room-module offers.
-- Add cross-run progression as a separate ledger for module templates, recipes, and starting-hull
-  variants while each save remains one hull and one run.
-- Expand the generated-site vocabulary into biome-specific chunk families with distinct feedstock
-  taps, terrain profiles, and enemy ecologies.
-- Draw seeded chemistry palettes per generated dock through the palette system, including
-  palette-derived supply and tap synthesis ([ADR-0008](docs/adr/0008-site-chemistry-palettes.md)).
-- Give Twelve-Cask and Morrow Pocket distinct exterior maps while preserving their authored lessons
-  and balance contracts.
+- Complete the direct tower roster, projectile and effect vocabulary, targeting policies, and
+  authored upgrade families.
+- Give every campaign site a validated multi-route vertical map and five direct-combat waves.
+- Re-author campaign health around tower placement, target service, route coverage, Matter, and Core
+  integrity.
+- Add campaign checkpoint retry and remove run-ending assumptions from save presentation.
+- Add hull damage and repair as a persistent campaign consequence.
 
-## Onboarding and information
+## Construction and grafting
 
-- Add a guided first-dock graft lesson that explains hull ownership, disposable site rooms, and the
-  first permanent module choice.
-- Expose each round's construction availability and the reason a machine, line, or supply remains
-  locked.
-- Add connected-run campaign health coverage that plays site transitions with the carried hull,
-  grafts, inventories, and equipment intact.
-
-## Process and combat systems
-
-- Add capacity upgrades and conserved admission filters to process lines, including explicit
-  backpressure, hold-up, and Matter costs.
-- Add aerosol suspension, settling, filtration, and resuspension for uranium-bearing stationary
-  material.
-- Extend the enemy behavior vocabulary with conserved liquid/steam emitters, regenerating
-  carapaces, and lower-to-upper-layer stage changes.
-- Add further reagent chains and enemy counters through the existing mass-action, stationary
-  inventory, and catalyst systems.
-- Add hull damage and repair as a site-defense consequence.
-
-## Construction and interface
-
-- Add free-form edge-snapped graft placement if authored hardpoints constrain useful hull layouts.
+- Add free grid-snapped tower placement on compatible floor, wall, and ceiling surfaces.
+- Add tower footprints, structural support, clearance, orientation, line of sight, and firing-arc
+  previews.
+- Convert room templates to persistent graft geometry with purpose-specific internal slots and a
+  campaign-scale Matter cost.
+- Balance campaign income around two ordinary graft purchases and an optional third through saving.
 - Move map hover and selection updates out of render so React never reports a cross-component state
   update during `GameMap` rendering.
+
+## Routing and enemies
+
+- Author route graphs with multiple ingress points, branches, joins, and vertical transitions.
+- Add deterministic movement costs per enemy archetype and route-distance targeting across lanes.
+- Expose every wave's ingress, expected route, movement traits, and support relationships.
+- Extend the enemy behavior vocabulary with additional visible movement, support, and phase states.
+
+## Field guidance and information
+
+- Replace chemical field lessons with tower placement, targeting, upgrades, vertical coverage, and
+  route-capacity lessons.
+- Rebuild tower and enemy inspection around immediate combat contribution and route state.
+- Add a guided graft lesson tied to the first permanent hull expansion.
+
+## Chemistry and transport
+
+- Integrate pipes as visible tower-supply and battlefield-control relationships after the first
+  direct-combat sites are complete.
+- Integrate atmospheric fields, floor films, heat, pressure, and bounded byproducts as authored
+  tower and enemy interactions.
+- Add process-oriented grafts that combine tower surfaces with storage, transport, or atmosphere
+  capacity.

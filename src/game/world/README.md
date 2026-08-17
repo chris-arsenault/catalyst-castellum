@@ -1,18 +1,19 @@
 # src/game/world
 
-The Map contract and map producers.
+The deterministic world contract and map producers.
 
-- **Map**: the single world object the simulation runs on — a 2D grid of rooms
-  (rectangles with area, environmental properties, sockets, and taps) and connections
-  (portals, doors, ladders, gas/liquid lines) between any two rooms, each connection
-  carrying its route geometry. Everything the engine needs derives from the Map
-  (ADR-0001).
-- **Producers**: pre-level processes that return a validated Map — authored,
-  random-layout, and hybrid — each accepting the player's persistent hull fragment as
-  input (ADR-0003).
-- **Map validation**: the shared invariant checks run by every producer and by in-play
-  map edits (ADR-0005).
-- **Hull fragment**: extraction of the player-owned rooms, contents, and
-  interconnections from an ending Map, for embedding in the next one (ADR-0004).
+- **Map**: the vertical 2D world consumed by the simulation. It contains the rig hull, site rooms,
+  terrain, architectural connections, enemy route graphs, valid construction surfaces, graft slots,
+  process lines, and their shared route geometry.
+- **Enemy routes**: authored ingress-to-Core graphs with splits, merges, elevation changes, and
+  movement costs. Stable route progress supports deterministic movement and tower targeting.
+- **Tower placement**: grid anchor, floor, wall, or ceiling face, footprint, and orientation.
+  Placement validation owns support, clearance, route obstruction, range, and line-of-sight rules.
+- **Producers**: pre-operation processes that return a validated map and embed the persistent rig
+  hull. Campaign sites use reproducible authored geometry.
+- **Map validation**: shared invariant checks run when a map is created, restored, or changed during
+  play.
+- **Hull extraction**: the player-owned rooms, grafts, towers, upgrades, inventories, and internal
+  connections carried to the next campaign site.
 
-This directory is part of the simulation layer: no React, Pixi, or browser imports.
+This directory belongs to the simulation layer and imports no React, Pixi, or browser APIs.

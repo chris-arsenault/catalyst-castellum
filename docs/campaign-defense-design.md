@@ -1,192 +1,193 @@
-# Campaign defense and process progression
+# Campaign defense design
 
-This document is the durable campaign-design contract for preserving Catalyst Castellum as a tower
-defense game while its chemistry grows more expressive.
+This document defines the campaign's durable game-design contract.
 
-> Tutorials demonstrate tools. Sites test defenses. Chemistry creates strategies.
+> Tutorials demonstrate tools. Sites test defenses. Geometry creates strategies.
 
-## Design boundary
+## Premise
 
-A tutorial may require one concrete operation so the player can establish a control or simulation
-rule. An encounter presents geometry, resources, enemies, timing, and economic pressure; it does not
-prescribe a reaction chain or room configuration. Newly available chemistry expands the player's
-strategic vocabulary while established defenses remain viable through soft counters and overlapping
-combat roles.
+A licensed Deep Shear Ratter crew operates a mostly unmanned claim rig at stand-off range. Its
+remote cutter couples recovered material into the rig's foundry. Cthonic beasts caught in the
+cutter wake cross through the outer receiving breach and follow the strongest resonance tone toward
+the Core.
 
-The construction vocabulary remains deliberately small:
+The player installs automated defenses throughout the rig and coupled site rooms. The foundry
+continues the extraction while each hostile column crosses. Holding the Core through the operation
+completes the claim and advances the campaign.
 
-- gas agitator, wet contactor, and thermal coil (process-general accelerators);
-- membrane cell and fluorine cell;
-- catalytic reactor, packed bed, catalytic burner, and absorber column (duty vessels);
-- gas and liquid transport;
-- stationary deposits, bed charges, and catalytic surfaces.
+## Campaign structure
 
-Build variety comes from placement, topology, upgrades, loaded media, feed allocation, storage,
-recirculation, temperature, pressure, and timing. Accelerators remain process-general — an
-agitator accelerates every eligible wild reaction in its room. Vessels are process-specific by
-design ([ADR-0007](adr/0007-engineered-reactions-run-in-vessels.md)): the loaded medium selects
-the duty, and the spec plate names the chemistry it runs.
+The campaign follows twelve authored sites across three acts:
 
-## Defense archetypes
+- **Good Standing** establishes licensed Ratter work, the crew's competence, and the first measured
+  disagreement in the cutter return.
+- **The Same Grade** places the foundry between Displacement Council caution and Coremark scale,
+  ending with the Pell emergence.
+- **A New Boundary** turns the rig into a Council containment asset and closes the Near Voice's
+  newborn boundary.
 
-The campaign supports overlapping archetypes rather than assigning one process solution to each
-site.
+Each site contains five waves, an authored map and route graph, a visible forecast, a starting
+construction state, and one or more viable defensive arrangements. Campaign saves retain the hull,
+grafts, hull-mounted towers, upgrades, Matter, Core integrity, narrative progress, and field-guidance
+choice. A failed operation retries from that site's authored checkpoint.
 
-| Archetype         | Primary strength                                                            | Typical chemistry                    |
-| ----------------- | --------------------------------------------------------------------------- | ------------------------------------ |
-| Flash battery     | Large room-wide bursts                                                      | Hydrogen and oxygen                  |
-| Toxic corridor    | Continuous atmospheric exposure                                             | Chlorine, HCl, CO, and NOx           |
-| Corrosive floor   | Damage combined with ground slowdown                                        | NaOH, hypochlorite, and nitric acid  |
-| Stored release    | Accumulate inventory during quiet periods and trigger it into dense cohorts | Hypochlorite and acid                |
-| Catalytic engine  | High sustained throughput                                                   | Carbon, iron, nitrogen, and nickel   |
-| Carrier loop      | Recycle feedstock and move chemical potential between rooms                 | Iron and nickel                      |
-| Pressure trap     | Extend residence and amplify other hazards                                  | Gas compression and combustion       |
-| Hybrid conversion | Convert one hazard into another as wave composition changes                 | CO/H2, NO/NO2/HNO3, and UF6 fixation |
+## Encounter loop
 
-The systems should compound. Pressure and liquid drag extend exposure. A Glowbag can contribute
-hydrogen to a prepared oxygen room. Catalysis can sustain damage through an Anchor field. Stored
-chlorine can remove a dense cohort while a continuous line catches stragglers.
+1. **Briefing** presents the contract, coupled geometry, known enemy columns, and extraction goal.
+2. **Construction** freezes movement while the player places, upgrades, reorients, or dismantles
+   towers and inspects route coverage.
+3. **Assault** advances the deterministic simulation. Construction and upgrades remain available
+   while running or paused, and neutralized enemies yield Matter immediately.
+4. **Report** records kills, breaches, Core integrity, Matter, tower contribution, and the work
+   completed during the wave.
+5. **Intermission** opens construction for the next wave or returns the crew to the captain's log
+   after the site is secured.
+
+The first assault begins from a readable defensive commitment. Tower acquisition, aim, attacks,
+hits, enemy state changes, and breaches appear directly on the cutaway map.
+
+## Vertical world
+
+Combat uses a side-view grid of rooms, passages, platforms, doors, ladders, shafts, and open air.
+Architecture determines enemy movement, tower placement, line of sight, projectile travel, and the
+time available before an enemy reaches the Core.
+
+Maps expose one or more ingress points and an authored route graph. Routes may branch, cross
+different elevations, and rejoin. Grounded enemies walk supported surfaces, climb compatible
+ladders, fall through open drops, and pass through open portals. Flyers traverse open room volume.
+Enemy archetypes apply deterministic movement costs to those edges.
+
+The forecast shows each column's ingress, expected path, movement traits, composition, and cadence.
+When topology changes, route selection recomputes from the same authored graph and movement rules.
+
+## Tower placement
+
+Ordinary towers mount freely on compatible architectural surfaces and snap to the world grid. A
+placement consists of an anchor cell, a surface face, an occupied footprint, and an orientation.
+Floors, ceilings, left walls, and right walls provide distinct firing positions.
+
+Placement validity derives from:
+
+- compatible surface and tower class;
+- contiguous structural support across the tower's footprint;
+- clearance from portals, ladder mouths, graft joints, other towers, and occupied cells;
+- an orientation allowed by the tower and mounting face.
+
+The placement preview shows the rendered tower, firing arc, range, line-of-sight obstructions, valid
+target layers, and covered route segments. Architecture remains visible beneath the preview.
+
+Mounting direction changes tower use. A wall burner projects along a corridor; the same chassis on
+a ceiling covers the deck below with a shorter downward fan. Direct-fire towers respect solid
+architecture. Authored exceptions such as ballistic arcs, drops, or penetrating attacks state their
+geometry explicitly.
+
+## Tower contract
+
+Every tower definition owns:
+
+- build cost and upgrade costs;
+- footprint and compatible mounting faces;
+- range, firing arc, cadence, and target capacity;
+- valid target layers and line-of-sight policy;
+- damage packets and visible projectile or effect behavior;
+- targeting priorities available to the player;
+- grade or branch upgrades and their exact consequences.
+
+Direct tower attacks provide the campaign's primary combat output. Common targeting policies include
+first, last, strongest, weakest, armored, flying, and support. First and last compare remaining
+route distance or travel time to the Core across every active lane.
+
+The initial vocabulary covers reliable single-target damage, rapid target service, area damage,
+route control, upper-space coverage, and support. Each later chassis changes a placement or target
+question rather than duplicating an existing tower with a new coefficient.
+
+## Enemies and waves
+
+The eight Cthonic field names retain stable, readable identities:
+
+| Enemy       | Defensive question                                                            |
+| ----------- | ----------------------------------------------------------------------------- |
+| Deckmouth   | Does ordinary coverage supply enough damage before the Core?                  |
+| Flintjack   | Can towers acquire and service fast targets across route transitions?         |
+| Shear-jelly | Which mounts and arcs cover upper room volume?                                |
+| Splitback   | Where does the shell break, and which tower catches the exposed runner?       |
+| Redlung     | Can sustained focused fire defeat a durable column anchor?                    |
+| Clatter     | Which placements retain coverage when ladder travel accelerates?              |
+| Anchor      | Can targeting expose or remove the field-bearer protecting its cohort?        |
+| Glowbag     | Can upper coverage remove a gas-bearing support target before it reaches aft? |
+
+Enemy count consumes finite tower cadence and target capacity. Wave composition combines route,
+speed, elevation, armor, support relationships, and spawn timing. Resistance and special states
+remain visible properties of an archetype rather than hidden level bonuses.
+
+## Matter and upgrades
+
+Neutralized enemies and completed extraction work yield Matter. The same campaign economy funds
+tower installation, tower upgrades, and room grafts. Immediate tower decisions consume modest
+amounts; permanent hull geometry consumes the equivalent of many upgrades.
+
+Tower upgrades improve explicit attributes or add authored behavior. Upgrade presentation shows the
+before and after range, cadence, damage, target capacity, arc, or special rule. Dismantling returns
+the authored recovery value.
+
+At departure, tower value installed on disposable site geometry returns to the campaign economy.
+Hull-mounted towers and their upgrades remain installed.
+
+## Room grafts
+
+Hull rooms expose authored graft joints. A room-module template defines its footprint, connecting
+joint, interior architecture, tower-compatible surfaces, any purpose-specific equipment slots, and
+Matter cost. Grafting occurs from the hangar between operations.
+
+A graft provides persistent geometry and coverage opportunities. Narrow pods create firing lanes
+through their joint; tall bays provide new ceiling and wall relationships; reinforced decks support
+larger footprints. Process-oriented grafts may later provide storage, transport, or atmosphere
+capacity alongside their tower surfaces.
+
+A graft costs roughly six to ten ordinary upgrade steps. Campaign income supports two grafts under
+ordinary spending and a third through deliberate saving. Price supplies the campaign constraint;
+the system imposes no separate graft count.
+
+## Chemistry and transport
+
+The foundry's chemistry, finite inventories, gas and liquid transport, temperature, pressure, and
+atmospheric state remain deterministic world systems. The first tower-defense sites use neutral
+rooms and self-contained towers so placement, targeting, routing, and upgrade decisions establish
+the combat foundation.
+
+Later sites connect the process systems to visible tower and battlefield effects. A pipe can supply
+an alternate firing mode or improved operation, a vent can move a visible cloud through an opening,
+a spill can alter a ground route, and a tower or enemy can produce a bounded atmospheric byproduct.
+Each effect states its source, destination, capacity, and combat consequence.
 
 ## Site authoring contract
 
-A site declares a chemistry palette of one to three process families
-([ADR-0008](adr/0008-site-chemistry-palettes.md)). Its supplies, seeded deposits, and per-round
-equipment availability derive from the palette and are compiler-validated against it; common
-precursors ship everywhere. Every offensive family in the palette reaches damage within one
-reaction of a supplied feedstock ([ADR-0009](adr/0009-damage-at-depth-one.md)); iron is the
-support family, and its palette promise is carriage and economy.
-
 A site authors:
 
-- its chemistry palette;
-- geometry and defensive room opportunities;
-- starting feedstocks, deposits, and supply offers, including hull hazard-packet pricing;
-- Matter budget and installed infrastructure;
-- visible wave composition, timing, and approach;
-- environmental complications;
-- several useful but incomplete strategic opportunities.
+- the narrative job and extraction objective;
+- vertical room geometry and the attached hull position;
+- ingress points, route branches, joins, and movement surfaces;
+- compatible tower-placement surfaces and sight lines;
+- starting Matter, hull state, and campaign availability;
+- five visible waves with enemy paths, composition, and cadence;
+- any site-owned towers, doors, hazards, or later process connections;
+- several useful but incomplete defensive opportunities.
 
-A site objective describes the defensive state: hold the Core, contain an approach, or maintain a
-boundary. It does not require a named reaction, species, room, or ordinary machine after that
-machine's tutorial demonstration.
+Open-defense sites support materially different arrangements of tower classes, placements, upgrades,
+targeting priorities, and route coverage. A reference portfolio records physical builds and exact
+runtime outcomes, while human playtesting remains authoritative for discoverability and combat feel.
 
-Every open-defense site must support:
+## Campaign acceptance
 
-1. an efficient direct counter;
-2. a higher-throughput version of another established defense;
-3. a hybrid solution combining control and damage.
+Every site satisfies these contracts:
 
-Enemy resistance changes efficiency rather than creating a key-and-lock immunity. Site supplies
-must support at least three credible offensive directions. Exotic transmutation may provide an
-expensive recovery route, but it must not be the site's primary answer.
-
-## Process introduction curve
-
-| Site           | Capability introduced                              | Encounter relationship                                                  |
-| -------------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
-| Claim 8-Delta  | OX-1 and basic gas defense                         | Required once to establish the game                                     |
-| Harker's Brace | Membrane chemistry and continuous hazards          | Guided demonstration followed by free construction                      |
-| Twelve-Cask    | Storage and delayed release                        | Adds a new cadence rather than prescribing the defense                  |
-| Morrow Pocket  | None                                               | First site supporting several complete builds                           |
-| Kettleblack    | Packed bed vessels, bed charges, and reversibility | Final guided mechanical demonstration; established builds remain viable |
-| Cordon 41      | Nitrogen palette: reactor, burner, and column      | Optional sustained-damage family with direct ammonia supply             |
-| Junction L-6   | Nickel bed duties and carbonyl migration           | Optional carrier and catalyst family                                    |
-| Pell Cut       | Fluorine cell                                      | One equipment description and an optional high-risk generator           |
-| Station 14     | Uranium-bearing material                           | One element description and an optional containment/radiation family    |
-| Vasker Store   | None                                               | Existing systems prepare the required boundary state                    |
-| Lane Six       | None                                               | Existing defenses answer geometry and enemy composition                 |
-| Pell Cordon    | None                                               | Campaign-wide synthesis with multiple valid portfolios                  |
-
-After Kettleblack, process information belongs in concise equipment, element, reaction, and mission
-entries. Later sites teach by exposing one leg of a process in a readable starting state and adding
-branches across rounds. They do not use modal or click-through process tutorials.
-
-## Encounter diversity requirements
-
-Every site from Morrow Pocket onward must pass the following automated and authored checks:
-
-- at least four materially distinct reference builds clear the site;
-- at least two clearing builds omit the chemistry introduced at that site;
-- at least one clearing build combines two process families;
 - doing nothing loses;
-- ordinary machines, reactions, species, and rooms are absent from victory conditions;
-- useful placements exist in more than one combat room;
-- an established build can be extended rather than discarded;
-- enemy mixtures reward several roles while retaining soft counters;
-- solution diversity is measured from actual equipment, topology, room use, and damage contribution,
-  not merely from an authored strategy label.
-
-Efficient counters may finish healthier or cheaper than general solutions. The goal is a viable
-envelope, not identical performance.
-
-## Player information requirements
-
-Build decisions require an actionable wave forecast during the build phase:
-
-- enemy types and levels;
-- cohort sizes and approximate cadence;
-- support-enemy combinations;
-- flying, climbing, armored, and reagent-emitting traits;
-- expected approach or route where topology offers more than one.
-
-The Encyclopedia explains behavior. The forecast identifies which behavior matters in the next
-round. Reaction presentation exposes equation, current direction, rate, limiting input, catalyst,
-inhibitor, temperature window, and pressure window so later chemistry can be understood without a
-tutorial.
-
-## Implemented campaign systems
-
-### Diversity-aware evaluation
-
-Each open site owns a portfolio of named, round-aware reference builds. A portfolio can extend,
-upgrade, refill, and change operating state between waves. Evaluation records success, Core
-integrity, Matter economy, footprint, combat rooms, damage sources, pulse and continuous
-contribution, and slowdown-created residence. Derived signatures enforce actual physical diversity
-rather than authored strategy labels.
-
-Seeded mutations measure robustness around a valid build. The reference portfolio remains the
-acceptance authority for materially distinct strategies.
-
-### Wave forecast
-
-The build-phase forecast presents enemy types and levels, approximate formations, cadence, physical
-approach, and localized movement/support/emission traits. Tooling retains exact spawn times for
-replay and balance analysis.
-
-### Site-authored supply economy
-
-Each supply binds to a same-phase tap and physical utility node. Initial inventory and refill
-packets list explicit species quantities, capacity, Matter price, availability round, and
-replenishment behavior. Compilation validates phase, host room, tap, node geometry, packet content,
-capacity, and price.
-
-### Open-defense progression
-
-Morrow Pocket is the first complete open-defense acceptance site. It begins with blank sockets and
-unbuilt routes, exposes the established Act I vocabulary, supports five independently constructed
-defenses, and loses under idle play.
-
-Act II runs from Kettleblack through Pell Cut on distinct generated geometry, site economy, five
-mixed waves, and five reference portfolios. Kettleblack contains the final guided process lesson;
-Cordon 41 onward uses concise process descriptions and open assaults.
-
-Act III runs from Station 14 through Pell Cordon with cumulative equipment access and the same
-five-portfolio contract. Station 14 contains the campaign's uranium description. Vasker Store, Lane
-Six, and Pell Cordon introduce no controls and test composition, adaptation, scale, feed economy,
-and campaign-wide synthesis.
-
-### Mathematical balance
-
-The source-of-truth workbook runs first-order and transient second-order balance against every
-reference build. It covers 30 reaction capacities, site reservoir feed and depletion, conduit
-hold-up, 13 exact damage families, enemy route residence, slowdown, level scaling, resistance,
-behavior durability, Matter efficiency, and per-round wave coverage. Efficient counters, general
-defenses, hybrids, and specialized builds occupy distinct but overlapping cost and survival bands.
-Campaign health fails when only one strategy consistently clears an open site, even when that
-strategy is numerically balanced.
-
-HF uses a dedicated physical G-2 reservoir at Pell Cut and throughout Act III. Established gas
-defenses draw ordinary feed from the Core G-1 header, while fluorine and uranium strategies route
-the Reservoir service supply through a Gallery Fluorine Cell. Exact damage attribution and Anchor
-absorption ledgers keep the transient matrix separated by chemistry rather than broad hazard
-channel.
+- the forecast identifies the movement and support traits that matter in the next wave;
+- a valid defense deals visible damage shortly after the first target enters range;
+- enemy count strains target service and firing cadence;
+- useful placements exist on more than one surface or route segment;
+- more than one defensive arrangement clears each open site;
+- leaks can be attributed to coverage, capacity, targeting, damage, or economy from the map and
+  report;
+- established tower investments remain useful as the campaign adds new geometry and enemies;
+- the site's narrative work and mechanical objective describe the same operation.
