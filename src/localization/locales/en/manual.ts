@@ -89,13 +89,13 @@ export const MANUAL_MESSAGES = {
   "manual.reactions.chlor_alkali_electrolysis.flavor":
     "CL-1 was the process that made the buried works self-sufficient. Every later defense line begins at its bus bars.",
   "manual.reactions.hydrogen_oxygen_combustion.doctrine":
-    "Build the combustible ratio in a mixed gas layer and time the flash around room occupancy.",
+    "Control the combustible ratio, capture the steam byproduct, and account for the transient pressure change in route timing.",
   "manual.reactions.hydrogen_oxygen_combustion.flavor":
     "The first watch crews called an OX-1 cycle ‘knocking on the gate.’ The gate usually answered with a pressure wave.",
   "manual.reactions.hydrogen_chlorine_recombination.doctrine":
     "Hold equal hydrogen and chlorine in a heated, actively mixed gas layer.",
   "manual.reactions.hydrogen_chlorine_recombination.flavor":
-    "CL-2 turned the old return duct into a weapon. The stone around R-02 still carries its sour iron stain.",
+    "CL-2 turned the old return duct into a hydrogen chloride supply line. The stone around R-02 still carries its sour iron stain.",
   "manual.reactions.hydrogen_chloride_absorption.doctrine":
     "Bring hydrogen chloride into contact with a liquid inventory and preserve product headroom.",
   "manual.reactions.hydrogen_chloride_absorption.flavor":
@@ -107,11 +107,11 @@ export const MANUAL_MESSAGES = {
   "manual.reactions.hypochlorite_formation.doctrine":
     "Contact chlorine with a strong caustic pool to bank oxidizer for later transfer.",
   "manual.reactions.hypochlorite_formation.flavor":
-    "CL-4 gave the Castellum a way to bottle a gas front in a room that enemies had yet to reach.",
+    "CL-4 gave the Castellum a way to bank reactive chlorine inventory in a liquid store.",
   "manual.reactions.acid_chlorine_release.doctrine":
     "Deliver stored hypochlorite into an acid-rich contact room with available gas volume.",
   "manual.reactions.acid_chlorine_release.flavor":
-    "CL-5 carries a red margin line in every surviving workbook. The line marks where the delayed weapon becomes immediate.",
+    "CL-5 carries a red margin line in every surviving workbook. The line marks where stored liquid inventory returns to the gas network.",
   "manual.reactions.water_gas_reaction.doctrine":
     "Pass hot steam across a carbon bed to produce equal carbon monoxide and hydrogen; cooling favors their return to carbon and steam.",
   "manual.reactions.water_gas_reaction.flavor":
@@ -213,7 +213,7 @@ export const MANUAL_MESSAGES = {
   "manual.enemies.flintjack.classification": "Cut-wake pursuit scavenger",
   "manual.enemies.flintjack.habitat": "Live decks, power runs, and active seams",
   "manual.enemies.flintjack.blurb":
-    "Flintjacks hunt current and sprint along decks with mouths opening in sequence down one flank. Their name comes from the pale sparks around their feet when they cross a live seam. The remote cutter gives them a bright trail from claim to foundry, so a slow chemical front gives them room to run.",
+    "Flintjacks hunt current and sprint along decks with mouths opening in sequence down one flank. Their name comes from the pale sparks around their feet when they cross a live seam. The remote cutter gives them a bright trail from claim to foundry, so a slow-tracking tower gives them room to run.",
   "manual.enemies.flintjack.fieldNote":
     "Once a flintjack chooses a live tone, it runs straight at it. Put the trap in front. — T’kesh",
   "manual.enemies.shear_jelly.classification": "Small Shear-jelly",
@@ -225,13 +225,13 @@ export const MANUAL_MESSAGES = {
   "manual.enemies.splitback.classification": "Shellback-form Cthonic grazer",
   "manual.enemies.splitback.habitat": "Ringglass rubble and mineral seams",
   "manual.enemies.splitback.blurb":
-    "Splitbacks resemble the quiet shellbacks that graze wreck fields, right up to the moment a cutter tone wakes them. Their mineral coat seals the eyes and mouths beneath it against heat and bad air. Corrosion opens the coat; the pale body inside sheds it and bolts for the strongest resonance source.",
+    "Splitbacks resemble the quiet shellbacks that graze wreck fields, right up to the moment a cutter tone wakes them. Their mineral coat absorbs the first tower impacts. Once the coat fractures, the pale body sheds it and bolts for the strongest resonance source.",
   "manual.enemies.splitback.fieldNote":
     "The shell is the slow part. Plan for what comes out of it. — Malk Tern",
   "manual.enemies.redlung.classification": "Deep-wreck redlung form",
   "manual.enemies.redlung.habitat": "Hot holds and sealed industrial cavities",
   "manual.enemies.redlung.blurb":
-    "Redlungs carry chambers of folded breath inside bodies built for hot, thin wreck air. That reserve carries them through poison fronts that stop smaller forms. A pressure wave reaches every fold at once, while corrosive chemistry bites into the soft seams around their breathing mouths.",
+    "Redlungs carry chambers of folded breath inside bodies built for hot, thin wreck air. The layered body disperses heat-coded attacks, while pressure and corrosive tower channels reach the soft seams around its breathing mouths.",
   "manual.enemies.redlung.fieldNote":
     "A redlung takes a long breath before it moves. Make that breath expensive. — Ratter field note",
   "manual.enemies.clatter.classification": "Cthonic structural clinger",

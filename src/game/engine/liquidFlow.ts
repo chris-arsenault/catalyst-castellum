@@ -109,7 +109,7 @@ const deliverLiquid = (
   state: GameState,
   runId: ConnectionId,
   packet: LiquidAmounts,
-  gameDefinition: GameDefinition
+  _gameDefinition: GameDefinition
 ): void => {
   const definition = liquidLineDefinition(state, runId);
   if (!definition) return;

@@ -1,6 +1,7 @@
+/* eslint-disable max-lines-per-function -- Pixi scene order stays explicit for stable z-order. */
 import { Application, extend } from "@pixi/react";
 import { AnimatedSprite, Container, Graphics, Sprite, Text } from "pixi.js";
-import type { GameState, RoomId, SpeciesId, ConnectionId } from "../../game/types";
+import type { GameState, RoomId, SpeciesId, ConnectionId, TowerInstanceId } from "../../game/types";
 import type { PipePreview, RoomEffectPreview } from "../../application/storeTypes";
 import { GhostRouteLayer } from "./MapLayers";
 import { EnemyNode } from "./EnemyNode";
@@ -27,6 +28,8 @@ import { MapLabelLayer } from "./MapLabelLayer";
 import { RoomNode } from "./RoomNode";
 import { enemyRoomId } from "../../game/queries";
 import { RoomBackgroundLayer } from "./RoomSectionLayer";
+import { TowerLayer } from "./TowerLayer";
+import type { TowerPlacementPreview } from "../../presentation/towerPlanning";
 
 extend({ AnimatedSprite, Container, Graphics, Sprite, Text });
 
@@ -48,6 +51,9 @@ export interface MapSceneProps {
   selectedRoomId: RoomId;
   selectedSpecies: SpeciesId | null;
   roomEffectPreview: RoomEffectPreview | null;
+  placementPreview: TowerPlacementPreview | null;
+  selectedTowerId: TowerInstanceId | null;
+  onSelectTower: (towerId: TowerInstanceId) => void;
 }
 
 const enemyHasFieldProtection = (game: GameState, enemy: GameState["enemies"][number]): boolean => {
@@ -98,6 +104,9 @@ export const MapScene = ({
   selectedRoomId,
   selectedSpecies,
   roomEffectPreview,
+  placementPreview,
+  selectedTowerId,
+  onSelectTower,
 }: MapSceneProps) => (
   <Application
     width={VIEWPORT_WIDTH}
@@ -148,6 +157,12 @@ export const MapScene = ({
         <EquipmentLayer game={game} onHover={onHoverEquipment} onSelectRoom={onSelectRoom} />
         <MapLabelLayer game={game} selectedRoomId={selectedRoomId} />
         <IncidentLayer game={game} />
+        <TowerLayer
+          game={game}
+          placementPreview={placementPreview}
+          selectedTowerId={selectedTowerId}
+          onSelectTower={onSelectTower}
+        />
         <EnemyLayer game={game} onHoverEnemy={onHoverEnemy} />
         <DamageNumberLayer game={game} />
       </pixiContainer>

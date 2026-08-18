@@ -1,5 +1,5 @@
 import { Pause } from "lucide-react";
-import { lazy, Suspense, useCallback } from "react";
+import { lazy, Suspense, useCallback, useState } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
 import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/Modals";
@@ -8,6 +8,7 @@ import { PhaseBanner } from "./components/PhaseBanner";
 import { PipeBoard } from "./components/PipeBoard";
 import { Logbook } from "./components/logbook/Logbook";
 import { RoomInspector } from "./components/RoomInspector";
+import { TowerPanel } from "./components/TowerPanel";
 import { TopBar } from "./components/TopBar";
 import { SaveSlotScreen } from "./components/SaveSlotScreen";
 import { GameMap } from "./components/GameMap";
@@ -76,9 +77,35 @@ const MapStage = () => {
 };
 
 const SidePanel = () => {
+  const { translator } = useGamePresentation();
   const pipeMode = useGameStore((state) => state.pipeMode);
+  const [panel, setPanel] = useState<"towers" | "room">("towers");
   if (pipeMode) return <PipeBoard />;
-  return <RoomInspector />;
+  return (
+    <div className="side-panel-shell">
+      <nav className="side-panel-tabs" aria-label={translator.text("ui.sidePanel.title")}>
+        <button
+          type="button"
+          className={panel === "towers" ? "selected" : ""}
+          data-testid="side-panel-towers"
+          aria-pressed={panel === "towers"}
+          onClick={() => setPanel("towers")}
+        >
+          {translator.text("ui.sidePanel.towers")}
+        </button>
+        <button
+          type="button"
+          className={panel === "room" ? "selected" : ""}
+          data-testid="side-panel-room"
+          aria-pressed={panel === "room"}
+          onClick={() => setPanel("room")}
+        >
+          {translator.text("ui.sidePanel.room")}
+        </button>
+      </nav>
+      {panel === "towers" ? <TowerPanel /> : <RoomInspector />}
+    </div>
+  );
 };
 
 /** Between sites the captain's log owns the screen; play surfaces stay put away. */

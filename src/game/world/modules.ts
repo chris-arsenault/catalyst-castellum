@@ -3,7 +3,7 @@ import { cell } from "../spatial";
 import type {
   ArchitecturalConnection,
   GasTapDefinition,
-  Hardpoint,
+  GraftSlot,
   LiquidTapDefinition,
   MapRoom,
   WorldMap,
@@ -12,7 +12,7 @@ import type {
 /**
  * Room modules are an open data catalog (M5 decision: launch with the archetype trio,
  * support arbitrary types). A template is everything a grafted room is born with;
- * grafting instantiates it at a hardpoint as a validated map edit.
+ * grafting instantiates it at a graft slot as a validated map edit.
  */
 // eslint-disable-next-line sonarjs/redundant-type-aliases
 export type ModuleId = string;
@@ -34,13 +34,13 @@ export interface ModuleTemplate {
   /** Relative to the module's bottom-left origin. */
   socketCells: Partial<Record<EquipmentSocketId, GridCell>>;
   taps: { gas: GasTapDefinition; liquid: LiquidTapDefinition };
-  /** Hardpoints the grafted room itself offers, relative to its origin. */
-  hardpoints: readonly { id: string; cell: GridCell; facing: Hardpoint["facing"] }[];
+  /** Graft slots the new room itself offers, relative to its origin. */
+  graftSlots: readonly { id: string; cell: GridCell; facing: GraftSlot["facing"] }[];
   joint: JointSpec;
   graftCost: number;
 }
 
-const FACING_DELTAS: Record<Hardpoint["facing"], GridCell> = {
+const FACING_DELTAS: Record<GraftSlot["facing"], GridCell> = {
   left: cell(-1, 0),
   right: cell(1, 0),
   up: cell(0, 1),
@@ -55,15 +55,15 @@ export interface GraftPlacement {
 }
 
 /**
- * Deterministic placement: the joint connector sits one cell beyond the hardpoint in
+ * Deterministic placement: the joint connector sits one cell beyond the graft slot in
  * its facing; the module's near edge sits one cell beyond that, centered on the
- * hardpoint's row or column.
+ * graft slot's row or column.
  */
-export const graftPlacement = (hardpoint: Hardpoint, template: ModuleTemplate): GraftPlacement => {
-  const delta = FACING_DELTAS[hardpoint.facing];
+export const graftPlacement = (graftSlot: GraftSlot, template: ModuleTemplate): GraftPlacement => {
+  const delta = FACING_DELTAS[graftSlot.facing];
   const connectorCell = cell(
-    hardpoint.cell.column + delta.column,
-    hardpoint.cell.elevation + delta.elevation
+    graftSlot.cell.column + delta.column,
+    graftSlot.cell.elevation + delta.elevation
   );
   const moduleAttachCell = cell(
     connectorCell.column + delta.column,
@@ -71,7 +71,7 @@ export const graftPlacement = (hardpoint: Hardpoint, template: ModuleTemplate): 
   );
   const { width, height } = template.footprint;
   let origin: GridCell;
-  switch (hardpoint.facing) {
+  switch (graftSlot.facing) {
     case "right":
       origin = cell(moduleAttachCell.column, moduleAttachCell.elevation);
       break;
@@ -89,15 +89,15 @@ export const graftPlacement = (hardpoint: Hardpoint, template: ModuleTemplate): 
       break;
   }
   const orientation =
-    hardpoint.facing === "left" || hardpoint.facing === "right" ? "horizontal" : "vertical";
+    graftSlot.facing === "left" || graftSlot.facing === "right" ? "horizontal" : "vertical";
   return { origin, connectorCell, moduleAttachCell, orientation };
 };
 
-export const graftedRoomId = (hostRoomId: RoomId, hardpointId: string): RoomId =>
-  `graft:${hostRoomId}:${hardpointId}`;
+export const graftedRoomId = (hostRoomId: RoomId, graftSlotId: string): RoomId =>
+  `graft:${hostRoomId}:${graftSlotId}`;
 
-export const graftedJointId = (hostRoomId: RoomId, hardpointId: string): string =>
-  `joint:${hostRoomId}:${hardpointId}`;
+export const graftedJointId = (hostRoomId: RoomId, graftSlotId: string): string =>
+  `joint:${hostRoomId}:${graftSlotId}`;
 
 const shift = (relative: GridCell, origin: GridCell): GridCell =>
   cell(relative.column + origin.column, relative.elevation + origin.elevation);
@@ -106,13 +106,13 @@ const shift = (relative: GridCell, origin: GridCell): GridCell =>
 export const instantiateModuleRoom = (
   template: ModuleTemplate,
   hostRoomId: RoomId,
-  hardpoint: Hardpoint,
+  graftSlot: GraftSlot,
   code: string
 ): MapRoom => {
-  const { origin } = graftPlacement(hardpoint, template);
+  const { origin } = graftPlacement(graftSlot, template);
   const ladderColumn = origin.column + Math.floor(template.footprint.width / 2);
   return {
-    id: graftedRoomId(hostRoomId, hardpoint.id),
+    id: graftedRoomId(hostRoomId, graftSlot.id),
     code,
     structure: "room",
     ambientTemperature: template.ambientTemperature,
@@ -133,10 +133,10 @@ export const instantiateModuleRoom = (
       cell(ladderColumn, origin.elevation + index)
     ),
     taps: structuredClone(template.taps),
-    hardpoints: template.hardpoints.map((hardpointSpec) => ({
-      id: hardpointSpec.id,
-      cell: shift(hardpointSpec.cell, origin),
-      facing: hardpointSpec.facing,
+    graftSlots: template.graftSlots.map((graftSlotSpec) => ({
+      id: graftSlotSpec.id,
+      cell: shift(graftSlotSpec.cell, origin),
+      facing: graftSlotSpec.facing,
     })),
     provenance: "hull",
   };
@@ -146,18 +146,18 @@ export const instantiateModuleRoom = (
 export const instantiateJoint = (
   template: ModuleTemplate,
   hostRoomId: RoomId,
-  hardpoint: Hardpoint,
+  graftSlot: GraftSlot,
   moduleRoomId: RoomId
 ): ArchitecturalConnection => {
-  const placement = graftPlacement(hardpoint, template);
+  const placement = graftPlacement(graftSlot, template);
   return {
-    id: graftedJointId(hostRoomId, hardpoint.id),
+    id: graftedJointId(hostRoomId, graftSlot.id),
     kind: placement.orientation === "vertical" ? "ladder_shaft" : template.joint.kind,
     rooms: [hostRoomId, moduleRoomId],
     connectorCells: [placement.connectorCell],
-    endpoints: [hardpoint.cell, placement.moduleAttachCell],
+    endpoints: [graftSlot.cell, placement.moduleAttachCell],
     orientation: placement.orientation,
-    sillElevation: Math.min(hardpoint.cell.elevation, placement.moduleAttachCell.elevation),
+    sillElevation: Math.min(graftSlot.cell.elevation, placement.moduleAttachCell.elevation),
     aperture: template.joint.aperture,
     gasConductance: template.joint.gasConductance,
     liquidConductance: template.joint.liquidConductance,
@@ -169,9 +169,9 @@ export const instantiateJoint = (
   };
 };
 
-/** A hardpoint is occupied when its joint exists on the map. */
-export const hardpointOccupied = (
+/** A graft slot is occupied when its joint exists on the map. */
+export const graftSlotOccupied = (
   map: WorldMap,
   hostRoomId: RoomId,
-  hardpointId: string
-): boolean => graftedJointId(hostRoomId, hardpointId) in map.connections;
+  graftSlotId: string
+): boolean => graftedJointId(hostRoomId, graftSlotId) in map.connections;

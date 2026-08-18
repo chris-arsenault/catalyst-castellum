@@ -8,14 +8,13 @@ import type {
   GasSourceId,
   LiquidSourceId,
 } from "../types";
-import { addEvent, makeStats } from "./events";
+import { addEvent } from "./events";
 import { dismantleModuleCommand, graftModuleCommand } from "./graftCommands";
-import { roundDefinitionFor, supplyDefinitionFor } from "./campaign";
+import { supplyDefinitionFor } from "./campaign";
 import { cloneGame } from "./roomState";
 import { beginAssault } from "./phases";
 import { evaluateCommand } from "./commandPolicy";
 import { acceptCommand, rejectCommand } from "./commandResult";
-import { transitionPhase } from "./phaseModel";
 import {
   beginLevelCommand,
   dockAtSiteCommand,
@@ -39,25 +38,20 @@ import {
   removeHullConnectionCommand,
   setPortalCommand,
 } from "./hullCommands";
+import {
+  dismantleTowerCommand,
+  moveTowerCommand,
+  placeTowerCommand,
+  rotateTowerCommand,
+  setTowerTargetingCommand,
+  upgradeTowerCommand,
+} from "./towerCommands";
+import { captureOperationCheckpoint } from "../persistence/operationCheckpoint";
 
-const startPrime = (source: GameState, definition: GameDefinition): CommandResult => {
+const startAssault = (source: GameState, definition: GameDefinition): CommandResult => {
   const state = cloneGame(source);
-  transitionPhase(state, "prime");
-  Object.assign(state, {
-    stats: makeStats(),
-    pendingMatter: 0,
-    spawnCursor: 0,
-    enemies: [],
-  });
-  addEvent(state, "info", "prime_started", {
-    primeSeconds: roundDefinitionFor(state, definition).primeSeconds,
-  });
-  return acceptCommand(state);
-};
-
-const startAssault = (source: GameState): CommandResult => {
-  const state = cloneGame(source);
-  beginAssault(state, false);
+  captureOperationCheckpoint(state, definition);
+  beginAssault(state);
   return acceptCommand(state);
 };
 
@@ -229,6 +223,30 @@ const setSpeed = (source: GameState, speed: 1 | 2): CommandResult => {
   return acceptCommand(state);
 };
 
+const executeTowerAction = (
+  source: GameState,
+  command: GameCommand,
+  decision: CommandDecision,
+  definition: GameDefinition
+): CommandResult | null => {
+  switch (command.type) {
+    case "place_tower":
+      return placeTowerCommand(source, command, decision, definition);
+    case "move_tower":
+      return moveTowerCommand(source, command, definition);
+    case "rotate_tower":
+      return rotateTowerCommand(source, command, definition);
+    case "set_tower_targeting":
+      return setTowerTargetingCommand(source, command);
+    case "upgrade_tower":
+      return upgradeTowerCommand(source, command, decision);
+    case "dismantle_tower":
+      return dismantleTowerCommand(source, command, decision);
+    default:
+      return null;
+  }
+};
+
 /* eslint-disable complexity -- Exhaustive dispatch over the public command union is intentional. */
 export const executeCommand = (
   source: GameState,
@@ -243,6 +261,8 @@ export const executeCommand = (
   if (!decision.allowed) {
     return rejectCommand(source, decision.code ?? "invalid_phase", decision.parameters);
   }
+  const towerResult = executeTowerAction(source, command, decision, activeDefinition);
+  if (towerResult) return towerResult;
   switch (command.type) {
     case "set_conduit":
       return setConduitCommand(source, command);
@@ -280,10 +300,8 @@ export const executeCommand = (
       return gasCharge(source, command.sourceId, decision, activeDefinition);
     case "charge_liquid_source":
       return liquidCharge(source, command.sourceId, decision, activeDefinition);
-    case "start_prime":
-      return startPrime(source, activeDefinition);
     case "start_assault":
-      return startAssault(source);
+      return startAssault(source, activeDefinition);
     case "begin_level":
       return beginLevelCommand(source);
     case "continue_round":
@@ -301,5 +319,6 @@ export const executeCommand = (
     case "set_speed":
       return setSpeed(source, command.speed);
   }
+  return rejectCommand(source, "invalid_phase", {});
 };
 /* eslint-enable complexity */

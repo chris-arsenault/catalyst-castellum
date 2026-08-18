@@ -10,7 +10,7 @@ import type { EnemyType } from "../../game/types";
 
 describe("enemy render projection", () => {
   it("projects actual engine movement along the cell path, including ladder motion", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const path = findEnemyPath({ flying: false, portalStates: game.portalStates });
     const climbIndex = path.findIndex((step) => step.mode === "climbing");
     const enemy: EnemyState = {
@@ -30,6 +30,7 @@ describe("enemy render projection", () => {
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
       behavior: { kind: "standard" },
+      effects: [],
     };
     game.enemies = [enemy];
     const before = enemyRenderModel(enemy, WORLD_MAP);
@@ -56,7 +57,7 @@ describe("enemy render projection", () => {
         },
       },
     });
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const path = findEnemyPath({ flying: false, portalStates: game.portalStates });
     const enemy: EnemyState = {
       id: 72,
@@ -75,6 +76,7 @@ describe("enemy render projection", () => {
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
       behavior: { kind: "standard" },
+      effects: [],
     };
 
     const model = createEnemyRenderModel(definition)(enemy, WORLD_MAP);

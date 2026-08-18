@@ -46,7 +46,7 @@ const gasThermalLedger = (state: GameState): number =>
 
 describe("architectural gas exchange", () => {
   it("moves a buoyant/pressurized whole mixture upward through the authored ladder shaft", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "switchyard").gas.upper.hydrogen += 18;
     roomState(state, "switchyard").gas.upper.oxygen += 9;
     roomState(state, "switchyard").gasTemperature.upper = 118;
@@ -67,7 +67,7 @@ describe("architectural gas exchange", () => {
   });
 
   it("transfers nothing through the same shaft when its seal is active", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "switchyard").gas.upper.hydrogen += 18;
     state.portalStates.switchyard_to_furnace_shaft!.sealed = true;
     const before = roomState(state, "furnace").gas.lower.hydrogen;
@@ -79,7 +79,7 @@ describe("architectural gas exchange", () => {
   });
 
   it("never exchanges atmosphere through the closed, sealed Core boundary", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "washlock").gas.lower.hydrogen += 30;
     const coreHydrogenBefore =
       roomState(state, "core").gas.lower.hydrogen + roomState(state, "core").gas.upper.hydrogen;
@@ -112,7 +112,7 @@ describe("architectural liquid exchange", () => {
   });
 
   it("drains a conserved whole liquid mixture through an open trapdoor", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "reservoir").liquid.water = 22;
     roomState(state, "reservoir").liquid.sodium_chloride = 5;
     const before = liquidLedger(state);
@@ -127,7 +127,7 @@ describe("architectural liquid exchange", () => {
   });
 
   it("blocks trapdoor drainage when closed", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "reservoir").liquid.water = 22;
     state.portalStates.reservoir_to_gallery_trapdoor!.open = false;
 
@@ -138,12 +138,12 @@ describe("architectural liquid exchange", () => {
   });
 
   it("requires a side-passage liquid surface to rise above its sill", () => {
-    const belowSill = createScenarioGame("flash_point");
+    const belowSill = createScenarioGame("claim_8_delta");
     roomState(belowSill, "furnace").liquid.water = 20;
     simulateArchitecturalLiquid(belowSill, 1);
     expect(roomState(belowSill, "reservoir").liquid.water).toBe(0);
 
-    const aboveSill = createScenarioGame("flash_point");
+    const aboveSill = createScenarioGame("claim_8_delta");
     roomState(aboveSill, "furnace").liquid.water = 190;
     simulateArchitecturalLiquid(aboveSill, 1);
     expect(roomState(aboveSill, "reservoir").liquid.water).toBeGreaterThan(0);

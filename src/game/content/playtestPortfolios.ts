@@ -1,3 +1,5 @@
+/* eslint-disable max-lines -- Opening-site reference portfolios stay together for progression review. */
+
 import type { GameCommand, LevelId } from "../types";
 import type {
   BuildArchetypeId,
@@ -21,10 +23,7 @@ export interface LevelPlaytestPortfolio {
   referenceBuilds: readonly ReferenceBuildDefinition[];
 }
 
-const round = (commands: readonly GameCommand[] = [], primeFraction = 1): PlaytestRoundPlan => ({
-  commands,
-  primeFraction,
-});
+const round = (commands: readonly GameCommand[] = []): PlaytestRoundPlan => ({ commands });
 
 const guidedRequirements: DiversityRequirement = {
   minimumPassingBuilds: 1,
@@ -38,116 +37,317 @@ const openRequirements: DiversityRequirement = {
   minimumDistinctSignatures: 5,
 };
 
-const FLASH_CORRIDOR_COMMANDS: readonly GameCommand[] = [
-  {
-    type: "install_equipment",
-    roomId: "furnace",
-    socketId: "socket_a",
-    equipmentId: "gas_agitator",
-  },
-  { type: "set_conduit", connectionId: "gas:core__furnace", enabled: true },
-  { type: "build_connection", kind: "gas_line", fromRoomId: "core", toRoomId: "gallery" },
-  { type: "set_conduit", connectionId: "gas:core__gallery", enabled: true },
-  {
-    type: "install_equipment",
-    roomId: "gallery",
-    socketId: "socket_a",
-    equipmentId: "gas_agitator",
-  },
-  { type: "upgrade_equipment", roomId: "furnace", socketId: "socket_a" },
-  { type: "upgrade_equipment", roomId: "gallery", socketId: "socket_a" },
+const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
+  round([
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 6, elevation: 8 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 6, elevation: 7 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:1",
+      upgradeId: "bolt_calibration",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 15, elevation: 11 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 27, elevation: 8 },
+      mountFace: "right_wall",
+      orientation: "left",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:2",
+      upgradeId: "repeater_feed",
+    },
+    {
+      type: "set_tower_targeting",
+      towerId: "tower:claim_8_delta:4",
+      policy: "strongest",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:1",
+      upgradeId: "bolt_piercing",
+    },
+  ]),
 ];
 
-const ACID_LINE_COMMANDS: readonly GameCommand[] = [
-  {
-    type: "install_equipment",
-    roomId: "lower_intake",
-    socketId: "socket_a",
-    equipmentId: "membrane_cell",
-  },
-  { type: "set_conduit", connectionId: "liquid:core__lower_intake", enabled: true },
-  { type: "set_conduit", connectionId: "gas:lower_intake__reservoir", enabled: true },
-  {
-    type: "install_equipment",
-    roomId: "furnace",
-    socketId: "socket_a",
-    equipmentId: "thermal_coil",
-  },
-  {
-    type: "install_equipment",
-    roomId: "furnace",
-    socketId: "socket_b",
-    equipmentId: "gas_agitator",
-  },
-  { type: "build_connection", kind: "gas_line", fromRoomId: "furnace", toRoomId: "lower_intake" },
-  { type: "set_conduit", connectionId: "gas:furnace__lower_intake", enabled: true },
-  { type: "build_connection", kind: "gas_line", fromRoomId: "furnace", toRoomId: "gallery" },
-  { type: "set_conduit", connectionId: "gas:furnace__gallery", enabled: true },
-  { type: "build_connection", kind: "gas_line", fromRoomId: "gallery", toRoomId: "washlock" },
-  { type: "set_conduit", connectionId: "gas:gallery__washlock", enabled: true },
+const CLAIM_RAPID_CROSSING: readonly PlaytestRoundPlan[] = [
+  round([
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 6, elevation: 8 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 27, elevation: 8 },
+      mountFace: "right_wall",
+      orientation: "left",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:1",
+      upgradeId: "repeater_feed",
+    },
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:2",
+      upgradeId: "repeater_feed",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 15, elevation: 11 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+  ]),
+  round(),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:claim_8_delta:3",
+      upgradeId: "bolt_calibration",
+    },
+  ]),
 ];
 
-const STORED_RELEASE_COMMANDS: readonly GameCommand[] = [
-  { type: "set_conduit", connectionId: "gas:lower_intake__reservoir", enabled: true },
-  { type: "set_conduit", connectionId: "liquid:core__lower_intake", enabled: true },
-  {
-    type: "install_equipment",
-    roomId: "reservoir",
-    socketId: "socket_a",
-    equipmentId: "wet_contactor",
-  },
-  {
-    type: "install_equipment",
-    roomId: "washlock",
-    socketId: "socket_a",
-    equipmentId: "wet_contactor",
-  },
-  { type: "set_conduit", connectionId: "liquid:reservoir__washlock", enabled: true },
+const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
+  round([
+    {
+      type: "place_tower",
+      chassisId: "line_projector",
+      anchor: { column: 39, elevation: 6 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+    {
+      type: "place_tower",
+      chassisId: "line_projector",
+      anchor: { column: 45, elevation: 9 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+    {
+      type: "set_tower_targeting",
+      towerId: "tower:harkers_brace:2",
+      policy: "last",
+    },
+    {
+      type: "upgrade_tower",
+      towerId: "tower:harkers_brace:1",
+      upgradeId: "projector_focus",
+    },
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 58, elevation: 6 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "line_projector",
+      anchor: { column: 73, elevation: 14 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 81, elevation: 10 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 88, elevation: 6 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:harkers_brace:5",
+      upgradeId: "repeater_feed",
+    },
+  ]),
 ];
 
-export const LEVEL_PLAYTEST_PORTFOLIOS: Record<LevelId, LevelPlaytestPortfolio> = {
-  flash_point: {
-    levelId: "flash_point",
+const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
+  round([
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 6, elevation: 8 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 27, elevation: 8 },
+      mountFace: "right_wall",
+      orientation: "left",
+    },
+    {
+      type: "place_tower",
+      chassisId: "mortar",
+      anchor: { column: 9, elevation: 13 },
+      mountFace: "floor",
+      orientation: "right",
+    },
+    {
+      type: "place_tower",
+      chassisId: "snare_emitter",
+      anchor: { column: 10, elevation: 11 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+    {
+      type: "upgrade_tower",
+      towerId: "tower:twelve_cask:3",
+      upgradeId: "mortar_payload",
+    },
+    {
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 15, elevation: 11 },
+      mountFace: "ceiling",
+      orientation: "down",
+    },
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 6, elevation: 20 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "place_tower",
+      chassisId: "mortar",
+      anchor: { column: 9, elevation: 23 },
+      mountFace: "floor",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:twelve_cask:4",
+      upgradeId: "snare_duration",
+    },
+    {
+      type: "place_tower",
+      chassisId: "line_projector",
+      anchor: { column: 36, elevation: 18 },
+      mountFace: "left_wall",
+      orientation: "right",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:twelve_cask:7",
+      upgradeId: "mortar_payload",
+    },
+    {
+      type: "place_tower",
+      chassisId: "repeater",
+      anchor: { column: 48, elevation: 8 },
+      mountFace: "right_wall",
+      orientation: "left",
+    },
+  ]),
+  round([
+    {
+      type: "upgrade_tower",
+      towerId: "tower:twelve_cask:9",
+      upgradeId: "repeater_feed",
+    },
+  ]),
+];
+
+export const LEVEL_PLAYTEST_PORTFOLIOS = {
+  claim_8_delta: {
+    levelId: "claim_8_delta",
     requirements: guidedRequirements,
     referenceBuilds: [
       {
-        id: "flash_corridor",
-        archetype: "burst",
-        rounds: [
-          round(FLASH_CORRIDOR_COMMANDS.slice(0, 2)),
-          round([
-            FLASH_CORRIDOR_COMMANDS[4]!,
-            FLASH_CORRIDOR_COMMANDS[5]!,
-            FLASH_CORRIDOR_COMMANDS[6]!,
-          ]),
-          round([FLASH_CORRIDOR_COMMANDS[2]!, FLASH_CORRIDOR_COMMANDS[3]!]),
-        ],
+        id: "claim_long_line",
+        archetype: "precise",
+        rounds: CLAIM_LONG_LINE,
+      },
+      {
+        id: "claim_rapid_crossing",
+        archetype: "rapid",
+        rounds: CLAIM_RAPID_CROSSING,
       },
     ],
   },
-  make_the_reagent: {
-    levelId: "make_the_reagent",
+  harkers_brace: {
+    levelId: "harkers_brace",
     requirements: guidedRequirements,
     referenceBuilds: [
       {
-        id: "acid_line",
-        archetype: "continuous",
-        rounds: [
-          round(ACID_LINE_COMMANDS.slice(0, 3)),
-          round(),
-          round(ACID_LINE_COMMANDS.slice(3)),
-        ],
+        id: "vertical_fields",
+        archetype: "area",
+        rounds: HARKER_VERTICAL_FIELDS,
       },
     ],
   },
-  stored_chlorine: {
-    levelId: "stored_chlorine",
+  twelve_cask: {
+    levelId: "twelve_cask",
     requirements: guidedRequirements,
     referenceBuilds: [
       {
-        id: "stored_release",
-        archetype: "storage",
-        rounds: [round(STORED_RELEASE_COMMANDS)],
+        id: "mixed_service",
+        archetype: "hybrid",
+        rounds: TWELVE_CASK_MIXED,
       },
     ],
   },
@@ -196,25 +396,25 @@ export const LEVEL_PLAYTEST_PORTFOLIOS: Record<LevelId, LevelPlaytestPortfolio> 
     requirements: openRequirements,
     referenceBuilds: ACT_THREE_REFERENCE_BUILDS.pell_cordon,
   },
-};
+} as Record<LevelId, LevelPlaytestPortfolio>;
 
 /** Authored partial builds that must lose once a later lesson or defense stage begins. */
-export const LEVEL_FAILURE_CONTROL_BUILDS: Record<LevelId, readonly ReferenceBuildDefinition[]> = {
-  flash_point: [
+export const LEVEL_FAILURE_CONTROL_BUILDS = {
+  claim_8_delta: [
     {
-      id: "single_flash_chamber",
-      archetype: "burst",
-      rounds: [round(FLASH_CORRIDOR_COMMANDS.slice(0, 2))],
+      id: "single_wall_caster",
+      archetype: "precise",
+      rounds: [round(CLAIM_LONG_LINE[0]!.commands.slice(0, 1))],
     },
   ],
-  make_the_reagent: [
+  harkers_brace: [
     {
-      id: "membrane_only",
-      archetype: "continuous",
-      rounds: [round(ACID_LINE_COMMANDS.slice(0, 3))],
+      id: "single_wall_projector",
+      archetype: "area",
+      rounds: [round(HARKER_VERTICAL_FIELDS[0]!.commands.slice(0, 1))],
     },
   ],
-  stored_chlorine: [],
+  twelve_cask: [],
   morrow_pocket: [],
   kettleblack: [],
   cordon_41: [],
@@ -224,7 +424,7 @@ export const LEVEL_FAILURE_CONTROL_BUILDS: Record<LevelId, readonly ReferenceBui
   vasker_store: [],
   lane_six: [],
   pell_cordon: [],
-};
+} as Record<LevelId, readonly ReferenceBuildDefinition[]>;
 
 export const playtestPortfolioFor = (levelId: LevelId): LevelPlaytestPortfolio =>
   LEVEL_PLAYTEST_PORTFOLIOS[levelId];

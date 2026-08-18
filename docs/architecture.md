@@ -46,8 +46,8 @@ Core targeting without coupling combat to presentation coordinates.
 
 One save follows one fixed campaign and one persistent claim rig. Hull rooms, grafts, hull-mounted
 towers, upgrades, Matter, Core state, and narrative progress travel between sites. Site terrain and
-temporary site placements belong to the current operation. Failed operations restore the pre-assault
-checkpoint so campaign progression does not depend on a run-permadeath model. See
+temporary site placements belong to the current operation. Failed operations restore the same
+campaign state from the pre-assault checkpoint. See
 [ADR-0013](adr/0013-fixed-campaign-hull-and-checkpoints.md).
 
 ## Construction

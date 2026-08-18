@@ -19,10 +19,7 @@ describe("damage presentation", () => {
 
     expect(channel).toBe("heat");
     expect(damageChannelStyle[channel]).toEqual({ color: "#ff755c", label: "THERMAL" });
-    expect(damageSourceLabel.hydrogen_oxygen_combustion).toBe("OX-1 flash");
-    expect(damageSourceLabel.thermal_exposure).toBe("hot gas exposure");
-    expect(damageSourceLabel.hydrogen_fluoride).toBe("hydrogen fluoride");
-    expect(damageSourceLabel.uranium_chemistry).toBe("uranium chemistry");
+    expect(damageSourceLabel.tower_projector).toBe("line projector");
   });
 
   it("gives every damage channel a distinct color", () => {
@@ -30,12 +27,10 @@ describe("damage presentation", () => {
     expect(new Set(colors).size).toBe(colors.length);
   });
 
-  it("keeps fractional damage exact and separates continuous exposure from impacts", () => {
+  it("keeps fractional direct damage exact", () => {
     expect(formatDamageAmount(0.36)).toBe("0.36");
     expect(formatDamageAmount(1.04)).toBe("1");
     expect(formatDamageAmount(18.8)).toBe("19");
-    expect(damageSourceDisplay.thermal_exposure).toBe("continuous");
-    expect(damageSourceDisplay.fluorine).toBe("continuous");
-    expect(damageSourceDisplay.hydrogen_oxygen_combustion).toBe("impact");
+    expect(damageSourceDisplay.tower_bolt).toBe("impact");
   });
 });

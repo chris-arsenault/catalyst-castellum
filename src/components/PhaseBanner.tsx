@@ -1,4 +1,4 @@
-import { ArrowRight, Info, LockKeyhole, Radio, Timer, X } from "lucide-react";
+import { Info, LockKeyhole, Radio, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
@@ -9,18 +9,11 @@ import { guidedPhaseActionReason, type TutorialCopyKey } from "../tutorial/guide
 import type { LocaleFormatters } from "../localization/formatters";
 import type { Translator } from "../localization/translator";
 import { WaveForecastDetails, WaveForecastStrip } from "./WaveForecast";
-import { PrimeProcessStatus } from "./PrimeProcessStatus";
-
-const formatTime = (seconds: number): string => {
-  const safe = Math.max(0, seconds);
-  const minutes = Math.floor(safe / 60);
-  return `${minutes}:${String(Math.ceil(safe % 60)).padStart(2, "0")}`;
-};
 
 interface PhaseHudModel {
   detail: string;
   label: string;
-  tone: "plan" | "prime" | "assault" | "frozen";
+  tone: "plan" | "assault" | "frozen";
   value: string;
 }
 
@@ -54,14 +47,6 @@ const phaseHudModel = (
       value: translator.text("ui.phaseHud.build.value", { count: round.wave.length }),
       detail: translator.text("ui.phaseHud.build.detail"),
       tone: "plan",
-    };
-  }
-  if (game.phase === "prime") {
-    return {
-      label: translator.text("ui.phaseHud.prime.label"),
-      value: formatTime(round.primeSeconds - game.phaseTime),
-      detail: translator.text("ui.phaseHud.prime.detail"),
-      tone: "prime",
     };
   }
   if (game.phase === "assault") {
@@ -109,16 +94,12 @@ const phaseHudModel = (
 };
 
 const PhaseIcon = ({ phase }: { phase: GamePhase }) => {
-  if (phase === "prime") return <Timer size={18} />;
   if (phase === "assault") return <Radio size={18} />;
   return <LockKeyhole size={18} />;
 };
 
 /** Guidance holds the phase action until its step lands; without it, nothing does. */
-const useGuideReason = (
-  game: GameState,
-  action: "start_prime" | "start_assault"
-): TutorialCopyKey | null => {
+const useGuideReason = (game: GameState, action: "start_assault"): TutorialCopyKey | null => {
   const dismissedGuideIds = useGameStore((state) => state.dismissedGuideIds);
   const guidanceEnabled = useGameStore((state) => state.guidanceEnabled);
   return guidanceEnabled ? guidedPhaseActionReason(game, action, dismissedGuideIds) : null;
@@ -127,27 +108,8 @@ const useGuideReason = (
 const PhaseAction = ({ game }: { game: GameState }) => {
   const { commandCopy, selectors, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
-  const primeReason = useGuideReason(game, "start_prime");
   const assaultReason = useGuideReason(game, "start_assault");
-  if (game.phase === "build") {
-    const command = { type: "start_prime" } as const;
-    const decision = selectors.commandDecision(game, command);
-    const guideReason = primeReason;
-    return (
-      <button
-        className="primary-action"
-        type="button"
-        data-testid="begin-prime"
-        data-tutorial-anchor={TUTORIAL_ANCHORS.beginPrime}
-        disabled={!decision.allowed || Boolean(guideReason)}
-        title={guideReason ? translator.text(guideReason) : (commandCopy(decision) ?? undefined)}
-        onClick={() => dispatch(command)}
-      >
-        {translator.text("ui.phaseHud.startPrime")} <ArrowRight size={16} />
-      </button>
-    );
-  }
-  if (game.phase !== "prime") return null;
+  if (game.phase !== "build") return null;
   const command = { type: "start_assault" } as const;
   const decision = selectors.commandDecision(game, command);
   const guideReason = assaultReason;
@@ -202,8 +164,8 @@ const RoundBriefModal = ({ game, onClose }: { game: GameState; onClose: () => vo
             <dd>{translator.text("ui.phaseHud.hostiles", { count: round.wave.length })}</dd>
           </div>
           <div>
-            <dt>{translator.text("ui.phaseHud.primeWindow")}</dt>
-            <dd>{formatters.duration(round.primeSeconds)}</dd>
+            <dt>{translator.text("ui.phaseHud.routeCount")}</dt>
+            <dd>{formatters.number(level.routes.length)}</dd>
           </div>
           <div>
             <dt>{translator.text("ui.phaseHud.currentPhase")}</dt>
@@ -244,11 +206,7 @@ export const PhaseBanner = () => {
         <div className="phase-hud-copy">
           <span>{model.label}</span>
           <strong>{model.value}</strong>
-          {game.phase === "prime" ? (
-            <PrimeProcessStatus game={game} />
-          ) : (
-            <small>{model.detail}</small>
-          )}
+          <small>{model.detail}</small>
         </div>
         <button className="round-info-button" type="button" onClick={openBrief}>
           <Info size={15} />{" "}
@@ -257,7 +215,7 @@ export const PhaseBanner = () => {
           )}
         </button>
         <PhaseAction game={game} />
-        {(game.phase === "build" || game.phase === "prime") && <WaveForecastStrip game={game} />}
+        {game.phase === "build" && <WaveForecastStrip game={game} />}
       </section>
       {showBrief && <RoundBriefModal game={game} onClose={closeBrief} />}
     </>

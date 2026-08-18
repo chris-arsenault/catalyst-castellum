@@ -5,9 +5,25 @@ import { useGameStore } from "../../application/store";
 import { DEFAULT_GAME_RUNTIME } from "../../game/runtime";
 import { usePipeRoomEffectHover } from "./usePipeRoomEffectHover";
 
-const flashPointWithAgitator = () => {
-  let game = DEFAULT_GAME_RUNTIME.execute(DEFAULT_GAME_RUNTIME.createScenario("flash_point"), {
+const processSiteWithAgitator = () => {
+  let game = DEFAULT_GAME_RUNTIME.execute(DEFAULT_GAME_RUNTIME.createScenario("cordon_41"), {
     type: "begin_level",
+  }).state;
+  const rounds = DEFAULT_GAME_RUNTIME.definition.levels.cordon_41.rounds;
+  const round = rounds.at(-1)!;
+  game.campaign.roundIndex = rounds.length - 1;
+  game.availability = {
+    towers: [...round.availability.towers],
+    equipment: [...round.availability.equipment],
+    gasLines: [...round.availability.gasLines],
+    liquidLines: [...round.availability.liquidLines],
+  };
+  game.matter = 999;
+  game = DEFAULT_GAME_RUNTIME.execute(game, {
+    type: "build_connection",
+    kind: "gas_line",
+    fromRoomId: "core",
+    toRoomId: "furnace",
   }).state;
   game = DEFAULT_GAME_RUNTIME.execute(game, {
     type: "install_equipment",
@@ -25,7 +41,7 @@ afterEach(() => {
 
 describe("map pipe room-effect hover", () => {
   it("marks the target room immediately for the pipe's available toggle action", () => {
-    const game = flashPointWithAgitator();
+    const game = processSiteWithAgitator();
     const onHoverRun = vi.fn();
     const { result } = renderHook(() => usePipeRoomEffectHover(game, onHoverRun));
 
@@ -42,7 +58,7 @@ describe("map pipe room-effect hover", () => {
   });
 
   it("flips to the closing effect when the hovered pipe opens", () => {
-    const initialGame = flashPointWithAgitator();
+    const initialGame = processSiteWithAgitator();
     const onHoverRun = vi.fn();
     const { result, rerender } = renderHook(
       ({ game }) => usePipeRoomEffectHover(game, onHoverRun),
@@ -69,7 +85,7 @@ describe("map pipe room-effect hover", () => {
   });
 
   it("clears the marker on unmount", () => {
-    const game = flashPointWithAgitator();
+    const game = processSiteWithAgitator();
     const { result, unmount } = renderHook(() => usePipeRoomEffectHover(game, vi.fn()));
 
     act(() => result.current("gas:core__furnace"));
@@ -78,7 +94,7 @@ describe("map pipe room-effect hover", () => {
   });
 
   it("keeps room markers clear when the pipe action is unavailable", () => {
-    const game = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
+    const game = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
     const onHoverRun = vi.fn();
     const { result } = renderHook(() => usePipeRoomEffectHover(game, onHoverRun));
 

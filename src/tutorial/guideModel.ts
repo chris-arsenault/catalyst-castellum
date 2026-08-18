@@ -1,35 +1,29 @@
 import type { GameState, RoomId } from "../game/types";
-import { acidLineGuideFor, acidLinePhaseActionReason } from "./acidLineGuide";
 import type { TutorialAnchorId } from "./anchors";
-import type { GuideConceptModel } from "./flashPointConcept";
-import {
-  flashPointGuideFor,
-  flashPointPhaseActionReason,
-  primeFlashIncident,
-} from "./flashPointGuide";
-import { makeReagentGuideFor, makeReagentPhaseActionReason } from "./makeReagentGuide";
 import { kettleblackGuideFor, kettleblackPhaseActionReason } from "./kettleblackGuide";
-import { storedChlorineGuideFor, storedChlorinePhaseActionReason } from "./storedChlorineGuide";
 import type { TutorialCopyKey } from "./copyTypes";
+import {
+  claimDefenseGuideFor,
+  harkerDefenseGuideFor,
+  towerDefensePhaseActionReason,
+} from "./towerDefenseGuides";
 
 export type { TutorialCopyKey } from "./copyTypes";
-
-export type { GuideConceptKind } from "./flashPointConcept";
-
-export {
-  assaultFlashIncident,
-  furnaceAgitatorRunning,
-  primeFlashIncident,
-} from "./flashPointGuide";
 
 export type GuideStepKind = "action" | "observe" | "complete";
 
 /** UI-owned state a guided step may read; steps never mutate it. */
 export interface GuideUiState {
   pipeMode: boolean;
+  towerBuildChassisId: GameState["availability"]["towers"][number] | null;
+  selectedTowerId: string | null;
 }
 
-export const IDLE_GUIDE_UI: GuideUiState = { pipeMode: false };
+export const IDLE_GUIDE_UI: GuideUiState = {
+  pipeMode: false,
+  towerBuildChassisId: null,
+  selectedTowerId: null,
+};
 
 export interface GuideStepDefinition {
   id: string;
@@ -47,7 +41,6 @@ export interface GuideStoryDefinition {
   kicker: TutorialCopyKey;
   title: TutorialCopyKey;
   paragraphs: readonly TutorialCopyKey[];
-  model: GuideConceptModel | null;
 }
 
 export interface GuideTaskDefinition {
@@ -64,7 +57,6 @@ export interface GuideDefinition {
   };
   id: string;
   dismissalId: string;
-  firstFlashTeachingBreak: boolean;
   label: TutorialCopyKey;
   showStageIntro: boolean;
   gatesPhaseActions: boolean;
@@ -87,27 +79,20 @@ export const guideDefinitionFor = (
 
 export interface GuideRegistration {
   guideFor: (game: GameState) => GuideDefinition | null;
-  phaseActionReason?: (
-    game: GameState,
-    action: "start_prime" | "start_assault"
-  ) => TutorialCopyKey | null;
+  phaseActionReason?: (game: GameState, action: "start_assault") => TutorialCopyKey | null;
 }
 
 export type GuideRegistry = Partial<Record<GameState["campaign"]["levelId"], GuideRegistration>>;
 
 /** Adding a guided level registers one provider; renderer and dispatch remain generic. */
 export const GUIDE_REGISTRATIONS: GuideRegistry = {
-  flash_point: { guideFor: flashPointGuideFor, phaseActionReason: flashPointPhaseActionReason },
-  make_the_reagent: {
-    guideFor: (game) => makeReagentGuideFor(game) ?? acidLineGuideFor(game),
-    phaseActionReason: (game, action) =>
-      game.campaign.roundIndex < 2
-        ? makeReagentPhaseActionReason(game, action)
-        : acidLinePhaseActionReason(game, action),
+  claim_8_delta: {
+    guideFor: claimDefenseGuideFor,
+    phaseActionReason: towerDefensePhaseActionReason,
   },
-  stored_chlorine: {
-    guideFor: storedChlorineGuideFor,
-    phaseActionReason: storedChlorinePhaseActionReason,
+  harkers_brace: {
+    guideFor: harkerDefenseGuideFor,
+    phaseActionReason: towerDefensePhaseActionReason,
   },
   kettleblack: {
     guideFor: kettleblackGuideFor,
@@ -120,17 +105,13 @@ export const guideStepIndexFor = (
   guide: GuideDefinition,
   ui: GuideUiState = IDLE_GUIDE_UI
 ): number => {
-  if (game.phase === "assault" && !primeFlashIncident(game)) {
-    const coldAssaultIndex = guide.steps.findIndex((step) => step.id === "cold-assault");
-    if (coldAssaultIndex >= 0) return coldAssaultIndex;
-  }
   const index = guide.steps.findIndex((step) => !step.completed(game, ui));
   return index < 0 ? guide.steps.length : index;
 };
 
 export const guidedPhaseActionReason = (
   game: GameState,
-  action: "start_prime" | "start_assault",
+  action: "start_assault",
   dismissedGuideIds: string[]
 ): TutorialCopyKey | null => {
   const guide = guideDefinitionFor(game);
@@ -140,4 +121,4 @@ export const guidedPhaseActionReason = (
 };
 
 export const guideCanRun = (game: GameState): boolean =>
-  game.phase === "build" || game.phase === "prime" || game.phase === "assault";
+  game.phase === "build" || game.phase === "assault";

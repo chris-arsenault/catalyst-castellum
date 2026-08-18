@@ -1,14 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { roomAtmosphericCells } from "../../game/config";
-import { createScenarioGame } from "../../game/simulation";
+import { DEFAULT_GAME_DEFINITION } from "../../game/definition";
+import { createScenarioGame, executeCommand } from "../../game/simulation";
 import { roomHitArea } from "./roomHitArea";
 import { roomRenderModel } from "./roomRenderModel";
 import { gasConduitState, roomState } from "../../game/world/instances";
 import { DEFAULT_GAME_PRESENTATION } from "../../presentation/services";
 
+// eslint-disable-next-line max-lines-per-function -- One suite covers the shared room render projection.
 describe("canonical room rendering projection", () => {
   it("projects the same owned cells used by room physics, including portal connectors", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const model = roomRenderModel(game, "washlock", false, 0);
 
     expect(model.cells).toHaveLength(roomAtmosphericCells("washlock").length);
@@ -22,7 +24,7 @@ describe("canonical room rendering projection", () => {
   });
 
   it("keeps the chamber shell and its owned portal connectors selectable", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const model = roomRenderModel(game, "washlock", false, 0);
     const hitArea = roomHitArea(model);
     const connector = model.cells.find(({ cell }) => cell.column === 42 && cell.elevation === 13);
@@ -36,7 +38,7 @@ describe("canonical room rendering projection", () => {
   });
 
   it("excludes authored platform solids from atmosphere and liquid rendering cells", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     roomState(game, "furnace").liquid.water = 140;
     const model = roomRenderModel(game, "furnace", false, 0);
 
@@ -47,7 +49,7 @@ describe("canonical room rendering projection", () => {
   });
 
   it("renders empty atmosphere as empty instead of a decorative tint", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const gallery = roomState(game, "gallery");
     for (const gas of Object.keys(gallery.gas.upper)) {
       gallery.gas.upper[gas as keyof typeof gallery.gas.upper] = 0;
@@ -59,7 +61,19 @@ describe("canonical room rendering projection", () => {
   });
 
   it("exposes delivered conduit flow to the room animation instead of relying on gas labels", () => {
-    const game = createScenarioGame("flash_point");
+    const initial = createScenarioGame("cordon_41");
+    initial.phase = "build";
+    initial.matter = 999;
+    const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1)!;
+    initial.availability.gasLines = [...round.availability.gasLines];
+    const built = executeCommand(initial, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "core",
+      toRoomId: "furnace",
+    });
+    expect(built.accepted, built.code ?? undefined).toBe(true);
+    const game = built.state;
     gasConduitState(game, "gas:core__furnace").lastFlow = 1.4;
     gasConduitState(game, "gas:core__furnace").flowCause = "fan";
     gasConduitState(game, "gas:core__furnace").lastSpeciesFlow.hydrogen = 0.9;
@@ -74,12 +88,12 @@ describe("canonical room rendering projection", () => {
   });
 
   it("projects the Core's authored supply reservoirs into its cutaway", () => {
-    const game = createScenarioGame("morrow_pocket");
+    const game = createScenarioGame("cordon_41");
     game.liquidSources.liquid_reservoir_a!.liquid.water = 90;
     const model = roomRenderModel(game, "core", false, 0, DEFAULT_GAME_PRESENTATION.supplies(game));
 
     expect(model.coreReservoirs.map(({ id }) => id)).toEqual(["gas_header", "water", "brine"]);
-    expect(model.coreReservoirs.find(({ id }) => id === "water")?.fill).toBeCloseTo(0.5);
+    expect(model.coreReservoirs.find(({ id }) => id === "water")?.fill).toBeCloseTo(90 / 220);
     expect(model.coreReservoirs.every(({ fill }) => fill >= 0 && fill <= 1)).toBe(true);
     expect(roomHitArea(model).contains(model.width / 2 + 18, 0)).toBe(true);
   });

@@ -1,7 +1,7 @@
 # ADR-0001: The simulation runs on a Map; producers make Maps
 
 Date: 2026-07-15
-Status: accepted
+Status: superseded by ADR-0014
 
 ## Context
 

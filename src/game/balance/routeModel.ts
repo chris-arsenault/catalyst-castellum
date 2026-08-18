@@ -65,6 +65,7 @@ const syntheticEnemy = (
     damageBySource: emptyDamageLedger(),
     lastDamage: null,
     behavior: initialEnemyBehaviorState(enemyDefinition, REFERENCE_ENEMY_LEVEL),
+    effects: [],
   };
 };
 
@@ -254,7 +255,7 @@ export interface ConduitFeedProfile {
   routeLength: number;
   capacity: number;
   maximumFlow: number;
-  idealPrimeSeconds: number;
+  idealFillSeconds: number;
 }
 
 export const conduitProfiles = (
@@ -275,7 +276,7 @@ export const conduitProfiles = (
         routeLength: conduitLength(state, connection.id, phase),
         capacity,
         maximumFlow,
-        idealPrimeSeconds: maximumFlow > 0 ? capacity / maximumFlow : Number.POSITIVE_INFINITY,
+        idealFillSeconds: maximumFlow > 0 ? capacity / maximumFlow : Number.POSITIVE_INFINITY,
       },
     ];
   });

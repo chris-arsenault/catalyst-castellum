@@ -1,22 +1,22 @@
 export const LEVEL_MESSAGES = {
-  "levels.flash_point.name": "Flash Point",
-  "levels.flash_point.kicker": "Licensed recovery · Remote work only",
-  "levels.flash_point.briefing":
-    "Eight-Delta’s residents will follow the cutter back to the hull. The Core starter header holds H₂ and O₂ near their combustion ratio, and its gas duct reaches R-02, the first chamber on the intrusion route. The duct’s fan begins offline.",
-  "levels.flash_point.lesson":
-    "Charge R-02 from the Core, keep an agitator working the mixture, and let the duct’s transport delay set the rhythm of a repeating combustion trap.",
-  "levels.make_the_reagent.name": "Make the Reagent",
-  "levels.make_the_reagent.kicker": "Brine contract · Chlor-alkali train",
-  "levels.make_the_reagent.briefing":
-    "The Brace’s intake still reaches its brine pocket. A Core–CL-02 feed pipe carries the mixed water and salt to a socket-mounted Membrane Cell, and the intrusion route runs on through CL-04’s heated reactor and CL-05’s acid return.",
-  "levels.make_the_reagent.lesson":
-    "Split the brine into Cl₂, H₂, and NaOH, then heat and mix the gas co-products into an HCl front that holds across five assaults.",
-  "levels.stored_chlorine.name": "Stored Chlorine",
-  "levels.stored_chlorine.kicker": "Salvage contract · Stored oxidizer",
-  "levels.stored_chlorine.briefing":
-    "The acid line is commissioned and Twelve-Cask’s chlorine stock is coming aboard. R-03 can bind that chlorine into NaOCl and hold it as liquid inventory — a weapon that waits until it is pumped somewhere acidic.",
-  "levels.stored_chlorine.lesson":
-    "Form NaOCl in R-03’s wet contactor, then pump the stored liquid into acidic R-06: the mixture releases Cl₂ and leaves its byproducts in the chamber.",
+  "levels.claim_8_delta.name": "Claim 8-Delta",
+  "levels.claim_8_delta.kicker": "Licensed recovery · Remote cutter approach",
+  "levels.claim_8_delta.briefing":
+    "Eight-Delta’s residents are following the remote cutter back toward the hull. The cutaway exposes a single Cthonic approach to the Catalyst Core and enough sound wall to establish the first mounted defense.",
+  "levels.claim_8_delta.lesson":
+    "Read route coverage, mount direct defenses on the claim structure, and improve finite target service as each formation grows.",
+  "levels.harkers_brace.name": "Harker's Brace",
+  "levels.harkers_brace.kicker": "Claim recovery · Stacked cuttings",
+  "levels.harkers_brace.briefing":
+    "Harker's Brace climbs through two elevations of broken claim structure. The intrusion route crosses walls, ceilings, ladders, and occluding partitions before it reaches the Core.",
+  "levels.harkers_brace.lesson":
+    "Compare corridor and downward projector geometry, then use route-distance priority to hold formations across elevation changes.",
+  "levels.twelve_cask.name": "Twelve-Cask",
+  "levels.twelve_cask.kicker": "Salvage contract · Cask galleries",
+  "levels.twelve_cask.briefing":
+    "Twelve-Cask opens into broad salvage galleries where simultaneous arrivals exceed the service of one firing line. Stable structure supports precise, rapid, area, and control defenses.",
+  "levels.twelve_cask.lesson":
+    "Combine finite firing capacity, bounded area damage, and route control while keeping each Matter purchase useful across five formations.",
   "levels.morrow_pocket.name": "Morrow Pocket",
   "levels.morrow_pocket.kicker": "Independent claim · Open defense",
   "levels.morrow_pocket.briefing":
@@ -26,9 +26,9 @@ export const LEVEL_MESSAGES = {
   "levels.kettleblack.name": "Kettleblack",
   "levels.kettleblack.kicker": "Independent survey · Ringglass wreck",
   "levels.kettleblack.briefing":
-    "Kettleblack is a long sealed wreck with carbon beds, iron-bearing deposits, and marked catalyst trays distributed across its chambers. The claim provides steam-rich reactant gas, water, brine, open sockets, and a full route survey.",
+    "Kettleblack is a long sealed wreck whose return crosses every coupled chamber before reaching the rig. The room graft bought after Morrow Pocket now lies on that final approach.",
   "levels.kettleblack.lesson":
-    "Read stationary inventory, reaction direction, and catalyst response during Prime, then build the defense that best uses the wreck’s geometry and supplies.",
+    "Mount and upgrade a permanent hull tower, then combine it with recoverable site coverage across the wreck.",
   "levels.cordon_41.name": "Cordon 41",
   "levels.cordon_41.kicker": "Council recovery · Sensor wall",
   "levels.cordon_41.briefing":
@@ -153,7 +153,7 @@ export const LEVEL_MESSAGES = {
     "Establish the defense and preserve Matter for the closure sequence.",
   "levels.pell_cordon.rounds.copied_cadence.title": "Copied cadence",
   "levels.pell_cordon.rounds.copied_cadence.detail":
-    "Fast walkers and flyers repeat the timing of the foundry’s previous Prime cycle.",
+    "Fast walkers and flyers repeat the timing of the foundry’s previous assault cadence.",
   "levels.pell_cordon.rounds.copied_cadence.objective":
     "Change damage timing or add persistent coverage across the copied gaps.",
   "levels.pell_cordon.rounds.closure_load.title": "Closure load",
@@ -171,81 +171,81 @@ export const LEVEL_MESSAGES = {
     "A veteran Anchor carries the Near Voice pattern inside the campaign’s largest mixed return.",
   "levels.pell_cordon.rounds.near_voice.objective":
     "Sustain the final defense until the closure load completes and the Pell boundary holds.",
-  "levels.flash_point.rounds.first_spark.title": "First spark",
-  "levels.flash_point.rounds.first_spark.detail":
-    "Ten deckmouths are approaching Core. Time R-02’s OX-1 cycle to catch them inside the chamber.",
-  "levels.flash_point.rounds.first_spark.objective":
-    "Install a Gas Agitator in R-02 and switch on the Core–R-02 gas duct.",
-  "levels.flash_point.rounds.stored_momentum.title": "Stored momentum",
-  "levels.flash_point.rounds.stored_momentum.detail":
-    "A faster follow-up tests the chamber inventory and the timing of its discrete flash cycle.",
-  "levels.flash_point.rounds.stored_momentum.objective":
-    "Run the established R-02 cycle and inspect each incident before adjusting it.",
-  "levels.flash_point.rounds.second_chamber.title": "Second chamber",
-  "levels.flash_point.rounds.second_chamber.detail":
-    "An armored column shrugs off single detonations. The Core can feed a second OX-1 trap in R-01, R-03, or R-04.",
-  "levels.flash_point.rounds.second_chamber.objective":
-    "Feed a second chamber of your choice from the Core and commission an agitator inside it.",
-  "levels.flash_point.rounds.higher_cadence.title": "Higher cadence",
-  "levels.flash_point.rounds.higher_cadence.detail":
-    "Flintjacks slip through the gaps between flashes. A finer agitator grade ignites smaller batches sooner.",
-  "levels.flash_point.rounds.higher_cadence.objective":
-    "Upgrade the R-02 Gas Agitator so smaller batches detonate sooner.",
-  "levels.flash_point.rounds.corridor_exam.title": "Corridor trial",
-  "levels.flash_point.rounds.corridor_exam.detail":
-    "A mixed veteran column tests everything: two chambers, open feeds, and flash cadence.",
-  "levels.flash_point.rounds.corridor_exam.objective":
-    "Run both OX-1 chambers at full cadence through the entire assault.",
-  "levels.make_the_reagent.rounds.co_products.title": "Co-products",
-  "levels.make_the_reagent.rounds.co_products.detail":
-    "A deckmouth column crosses CL-02 and CL-03 as the chlorine stream arrives.",
-  "levels.make_the_reagent.rounds.co_products.objective":
-    "Install the Membrane Cell and observe all three conserved outputs.",
-  "levels.make_the_reagent.rounds.shared_relief.title": "Shared relief",
-  "levels.make_the_reagent.rounds.shared_relief.detail":
-    "The CL-02 recovery duct draws the gas-junction stream into Core recovery, relieving outlet pressure while consuming both H₂ and Cl₂.",
-  "levels.make_the_reagent.rounds.shared_relief.objective":
-    "Use the CL-02 recovery fan when shared outlet pressure stalls the cell.",
-  "levels.make_the_reagent.rounds.hot_mix.title": "Hot mix",
-  "levels.make_the_reagent.rounds.hot_mix.detail":
-    "Splitbacks enter the expanded process train as CL-02 feeds its gas co-products into heated CL-04.",
-  "levels.make_the_reagent.rounds.hot_mix.objective":
-    "Equip CL-04, start the mixed-gas feed, and open the downstream acid return.",
-  "levels.make_the_reagent.rounds.residence_time.title": "Residence time",
-  "levels.make_the_reagent.rounds.residence_time.detail":
-    "Flintjacks race the HCl inventory retained inside CL-04, CL-05, and the hull return.",
-  "levels.make_the_reagent.rounds.residence_time.objective":
-    "Read conduit fill and chamber conditions, then adjust the limiting run.",
-  "levels.make_the_reagent.rounds.full_chain.title": "Full-chain defense",
-  "levels.make_the_reagent.rounds.full_chain.detail":
-    "A mixed formation tests continuous electrolysis, CL-2 conversion, and downstream acid exposure together.",
-  "levels.make_the_reagent.rounds.full_chain.objective":
-    "Run the complete chlor-alkali and acid train through the fifth assault.",
-  "levels.stored_chlorine.rounds.store.title": "Store the oxidizer",
-  "levels.stored_chlorine.rounds.store.detail":
-    "A slow armored wave crosses R-03 while its first NaOCl inventory forms.",
-  "levels.stored_chlorine.rounds.store.objective":
-    "Install a Wet Contactor in R-03 and monitor the forming liquid inventory.",
-  "levels.stored_chlorine.rounds.release.title": "Move, then release",
-  "levels.stored_chlorine.rounds.release.detail":
-    "The R-03–R-06 pipe now carries the persisted stored mixture into acid.",
-  "levels.stored_chlorine.rounds.release.objective":
-    "Build and enable the transfer, then inspect delayed Cl₂ release in R-06.",
-  "levels.stored_chlorine.rounds.recirculate.title": "Recirculation",
-  "levels.stored_chlorine.rounds.recirculate.detail":
-    "A fast mixed-height wave tests whether stored liquid and released chlorine remain available between arrivals.",
-  "levels.stored_chlorine.rounds.recirculate.objective":
-    "Sustain the contactor feed and the delayed release path through the full wave.",
-  "levels.stored_chlorine.rounds.armored_storage.title": "Armored storage",
-  "levels.stored_chlorine.rounds.armored_storage.detail":
-    "Splitbacks and redlungs demand sustained corrosive inventory across the storage and release chambers.",
-  "levels.stored_chlorine.rounds.armored_storage.objective":
-    "Build NaOCl inventory during prime and meter its release across the armored column.",
-  "levels.stored_chlorine.rounds.release_exam.title": "Release trial",
-  "levels.stored_chlorine.rounds.release_exam.detail":
-    "A mixed final formation tests production, storage, transfer, and acid-triggered chlorine release together.",
-  "levels.stored_chlorine.rounds.release_exam.objective":
-    "Run the complete stored-chlorine defense through the fifth assault.",
+  "levels.claim_8_delta.rounds.first_coverage.title": "First coverage",
+  "levels.claim_8_delta.rounds.first_coverage.detail":
+    "Five deckmouths establish the fixed approach from the cutter breach to the Catalyst Core.",
+  "levels.claim_8_delta.rounds.first_coverage.objective":
+    "Mount a direct-fire tower where its range covers several route cells.",
+  "levels.claim_8_delta.rounds.rapid_service.title": "Rapid service",
+  "levels.claim_8_delta.rounds.rapid_service.detail":
+    "Eight flintjacks shorten the time available to acquire, fire, and reacquire.",
+  "levels.claim_8_delta.rounds.rapid_service.objective":
+    "Add cadence or a second firing line before the faster formation arrives.",
+  "levels.claim_8_delta.rounds.mixed_column.title": "Mixed column",
+  "levels.claim_8_delta.rounds.mixed_column.detail":
+    "Deckmouths and flintjacks share the route at different speeds.",
+  "levels.claim_8_delta.rounds.mixed_column.objective":
+    "Use coverage and target priority to keep both movement rates under fire.",
+  "levels.claim_8_delta.rounds.upgrade_pressure.title": "Upgrade pressure",
+  "levels.claim_8_delta.rounds.upgrade_pressure.detail":
+    "A dense column tests the visible damage and service gains from early upgrades.",
+  "levels.claim_8_delta.rounds.upgrade_pressure.objective":
+    "Improve the established defense while preserving enough Matter for useful coverage.",
+  "levels.claim_8_delta.rounds.claim_exam.title": "Claim defense",
+  "levels.claim_8_delta.rounds.claim_exam.detail":
+    "A veteran mixed return fills the complete Claim 8-Delta approach.",
+  "levels.claim_8_delta.rounds.claim_exam.objective":
+    "Hold the claim with overlapping direct towers and route-based priorities.",
+  "levels.harkers_brace.rounds.brace_wall.title": "Brace wall",
+  "levels.harkers_brace.rounds.brace_wall.detail":
+    "Deckmouths climb into a long corridor exposed to the claim wall.",
+  "levels.harkers_brace.rounds.brace_wall.objective":
+    "Project along the corridor and compare its useful route coverage.",
+  "levels.harkers_brace.rounds.brace_ceiling.title": "Brace ceiling",
+  "levels.harkers_brace.rounds.brace_ceiling.detail":
+    "A faster formation passes beneath short overhead mounting surfaces.",
+  "levels.harkers_brace.rounds.brace_ceiling.objective":
+    "Use a wider downward field to service clustered movement below the brace.",
+  "levels.harkers_brace.rounds.split_height.title": "Split height",
+  "levels.harkers_brace.rounds.split_height.detail":
+    "Ground movement and upper-space shear jellies occupy separate elevations.",
+  "levels.harkers_brace.rounds.split_height.objective":
+    "Cover both movement layers with mount-aware orientations.",
+  "levels.harkers_brace.rounds.climbing_column.title": "Climbing column",
+  "levels.harkers_brace.rounds.climbing_column.detail":
+    "Clatters compress the ladder ascent while deckmouths hold the lower route.",
+  "levels.harkers_brace.rounds.climbing_column.objective":
+    "Resolve targets by remaining route distance through climbs and falls.",
+  "levels.harkers_brace.rounds.brace_exam.title": "Brace defense",
+  "levels.harkers_brace.rounds.brace_exam.detail":
+    "A mixed formation occupies the walls, ladders, corridors, and upper volume together.",
+  "levels.harkers_brace.rounds.brace_exam.objective":
+    "Hold both elevations with complementary wall and ceiling coverage.",
+  "levels.twelve_cask.rounds.finite_service.title": "Finite service",
+  "levels.twelve_cask.rounds.finite_service.detail":
+    "A measured opening formation establishes how many targets one tower can service.",
+  "levels.twelve_cask.rounds.finite_service.objective":
+    "Place complementary firing lines before simultaneous arrivals exceed one tower.",
+  "levels.twelve_cask.rounds.bounded_area.title": "Bounded area",
+  "levels.twelve_cask.rounds.bounded_area.detail":
+    "A dense deckmouth group creates a useful but temporary area-damage window.",
+  "levels.twelve_cask.rounds.bounded_area.objective":
+    "Place a mortar where its minimum range and burst radius fit the route.",
+  "levels.twelve_cask.rounds.route_control.title": "Route control",
+  "levels.twelve_cask.rounds.route_control.detail":
+    "Fast movement tests whether bounded slows extend useful coverage time.",
+  "levels.twelve_cask.rounds.route_control.objective":
+    "Pair a snare field with damage that benefits from the longer engagement.",
+  "levels.twelve_cask.rounds.armored_casks.title": "Armored casks",
+  "levels.twelve_cask.rounds.armored_casks.detail":
+    "Splitback shells and redlung resistance demand sustained mixed damage.",
+  "levels.twelve_cask.rounds.armored_casks.objective":
+    "Use priority and upgrades to keep finite service on the heavy column.",
+  "levels.twelve_cask.rounds.cask_exam.title": "Cask defense",
+  "levels.twelve_cask.rounds.cask_exam.detail":
+    "A full mixed formation tests direct fire, area damage, and route control together.",
+  "levels.twelve_cask.rounds.cask_exam.objective":
+    "Hold Twelve-Cask with a balanced ordinary tower defense.",
   "levels.morrow_pocket.rounds.claim_entry.title": "Claim entry",
   "levels.morrow_pocket.rounds.claim_entry.detail":
     "A measured deckmouth return crosses every chamber and establishes the pocket’s full approach time.",
@@ -273,29 +273,29 @@ export const LEVEL_MESSAGES = {
     "Sustain your chosen defense, replenish its feeds, and hold the Core through the final return.",
   "levels.kettleblack.rounds.grain_markers.title": "Grain markers",
   "levels.kettleblack.rounds.grain_markers.detail":
-    "A single deckmouth crosses the marked carbon and iron beds while the wreck’s full residence time becomes visible.",
+    "A measured deckmouth column crosses the complete wreck and the rig’s permanent final approach.",
   "levels.kettleblack.rounds.grain_markers.objective":
-    "Commission one useful room around the mapped media, then hold the first return.",
+    "Commission one hull-mounted tower and hold the first return.",
   "levels.kettleblack.rounds.paired_edges.title": "Paired edges",
   "levels.kettleblack.rounds.paired_edges.detail":
-    "An armored walker leads two deckmouths through the wreck’s paired crossings.",
+    "Fast targets weave through a slower deckmouth column across the long approach.",
   "levels.kettleblack.rounds.paired_edges.objective":
-    "Extend useful coverage across both heights and retain the first defense’s throughput.",
+    "Extend target service across consecutive rooms without abandoning the hull defense.",
   "levels.kettleblack.rounds.carrier_return.title": "Carrier return",
   "levels.kettleblack.rounds.carrier_return.detail":
-    "A redlung, flintjack, and deckmouth cross several chambers as one spaced return.",
+    "Splitbacks, redlungs, and flintjacks cross several chambers as one spaced return.",
   "levels.kettleblack.rounds.carrier_return.objective":
     "Maintain damage across the separated members of the formation.",
   "levels.kettleblack.rounds.split_signal.title": "Split signal",
   "levels.kettleblack.rounds.split_signal.detail":
-    "A clatter and deckmouth hold the deck while a hydrogen-emitting glowbag occupies the upper volume.",
+    "Clatters and deckmouths hold the deck while shear-jellies occupy the upper volume.",
   "levels.kettleblack.rounds.split_signal.objective":
-    "Combine room-wide damage and residence-time control across the split formation.",
+    "Combine deck coverage with a clear answer to the upper return.",
   "levels.kettleblack.rounds.edge_condition.title": "Edge condition",
   "levels.kettleblack.rounds.edge_condition.detail":
-    "Kettleblack’s full mixed return joins speed, armor, emitted reagent, flight, and field support.",
+    "Kettleblack’s full mixed return joins speed, armor, flight, and sustained heavy targets.",
   "levels.kettleblack.rounds.edge_condition.objective":
-    "Sustain the chosen network, replenish its feeds, and secure the wreck’s marked boundary.",
+    "Sustain the chosen tower line and secure the wreck’s marked boundary.",
   "levels.cordon_41.rounds.sensor_wall.title": "Sensor wall",
   "levels.cordon_41.rounds.sensor_wall.detail":
     "A clatter climbs the instrument stack and exposes the direct deck crossing.",

@@ -102,10 +102,7 @@ const liquidEffects = (
 
 const movementEffects = (
   room: RoomState,
-  queries: Pick<
-    GameQueries,
-    "liquidMovementMultiplier" | "pressureMovementMultiplier" | "roomHazards"
-  >,
+  queries: Pick<GameQueries, "liquidMovementMultiplier" | "pressureMovementMultiplier">,
   translator: Translator,
   carrier: MapCarrier
 ): string[] => {
@@ -123,11 +120,6 @@ const movementEffects = (
       translator.text("presentation.room.pressure_drag", {
         percent: Math.round((1 - pressureMovement) * 100),
       })
-    );
-  const pressureHazard = queries.roomHazards(room, true, true, "lower", carrier).pressure;
-  if (pressureHazard > 0.01)
-    effects.push(
-      translator.text("presentation.room.pressure_hazard", { rate: pressureHazard.toFixed(1) })
     );
   if (room.pressurePulse > 1)
     effects.push(

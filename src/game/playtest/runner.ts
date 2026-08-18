@@ -124,6 +124,12 @@ const buildProfileFor = (
   state: GameState,
   damageBySource: Record<DamageSourceId, number>
 ): BuildProfile => ({
+  towers: Object.values(state.towers)
+    .map(
+      (tower) =>
+        `${tower.chassisId}:${tower.placement.mountFace}:${tower.placement.anchor.column}:${tower.placement.anchor.elevation}:${tower.placement.orientation}:${tower.targetPolicy}:${tower.upgrades.join(",")}`
+    )
+    .sort(),
   equipment: Object.values(state.rooms)
     .flatMap((room) =>
       Object.entries(room.equipment).flatMap(([socketId, instance]) =>
@@ -146,6 +152,7 @@ const buildProfileFor = (
 
 const buildSignatureFor = (profile: BuildProfile): string =>
   [
+    ...profile.towers.map((entry) => `tower:${entry}`),
     ...profile.equipment.map((entry) => `equipment:${entry}`),
     ...profile.enabledGasLines.map((id) => `gas-line:${id}`),
     ...profile.enabledLiquidLines.map((id) => `liquid-line:${id}`),
@@ -169,10 +176,6 @@ const finishResult = (
   const damageByChannel = damageChannels(counters.reports);
   const buildProfile = buildProfileFor(state, damageBySource);
   const buildSignature = buildSignatureFor(buildProfile);
-  const pulseDamage = damageBySource.hydrogen_oxygen_combustion;
-  const continuousDamage = DAMAGE_SOURCE_IDS.filter(
-    (sourceId) => sourceId !== "hydrogen_oxygen_combustion"
-  ).reduce((total, sourceId) => total + damageBySource[sourceId], 0);
   const matterHarvested = counters.reports.reduce(
     (total, report) => total + report.matterHarvested,
     0
@@ -199,8 +202,6 @@ const finishResult = (
     damageBySource,
     killsBySource,
     damageByChannel,
-    pulseDamage,
-    continuousDamage,
     matterSpent: startingMatter + matterHarvested - state.matter,
     buildProfile,
     buildSignature,
@@ -224,7 +225,6 @@ const terminal = (state: GameState): boolean =>
 
 const plannedTransition = (
   state: GameState,
-  plan: PlaytestPlan,
   commandsByRound: PlannedCommand[][],
   counters: TrialCounters,
   runtime: GameRuntime
@@ -236,18 +236,13 @@ const plannedTransition = (
       counters,
       runtime
     );
-    return runtime.execute(configured, { type: "start_prime" }).state;
+    return runtime.execute(configured, { type: "start_assault" }).state;
   }
   if (state.phase === "round_result") {
     recordReport(state.lastReport, counters);
     return runtime.execute(state, { type: "continue_round" }).state;
   }
-  if (state.phase !== "prime") return null;
-  const primeFraction = plan.rounds[state.campaign.roundIndex]?.primeFraction ?? 1;
-  const earlyLockAt = runtime.round(state).primeSeconds * primeFraction;
-  return state.phaseTime >= earlyLockAt
-    ? runtime.execute(state, { type: "start_assault" }).state
-    : null;
+  return null;
 };
 
 export const runPlan = (
@@ -265,7 +260,7 @@ export const runPlan = (
     if (terminal(state)) {
       return finishResult(state, plan, counters, simulatedSeconds, true, runtime);
     }
-    const transitioned = plannedTransition(state, plan, commandsByRound, counters, runtime);
+    const transitioned = plannedTransition(state, commandsByRound, counters, runtime);
     if (transitioned) {
       state = transitioned;
       continue;

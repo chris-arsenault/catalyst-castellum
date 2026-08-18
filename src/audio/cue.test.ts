@@ -23,14 +23,10 @@ describe("selectMusicCue", () => {
     });
   });
 
-  it("keeps the planning bed sparse and brings the lead in for priming", () => {
+  it("keeps the planning bed sparse", () => {
     for (const phase of ["level_briefing", "build", "round_result"] as const) {
       expect(selectMusicCue(inputs({ phase }))).toEqual({ track: "interlude", mood: "planning" });
     }
-    expect(selectMusicCue(inputs({ phase: "prime" }))).toEqual({
-      track: "interlude",
-      mood: "priming",
-    });
   });
 
   it("escalates vertically to strained before switching tracks to danger", () => {

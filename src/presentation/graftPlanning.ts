@@ -5,27 +5,28 @@ import type { WorldMap } from "../game/world/map";
 import { DEFAULT_GAME_DEFINITION as PACK } from "./defaultGame";
 
 /**
- * The graft proposal a hardpoint opens (M5 decision: preview then confirm, like pipes).
+ * The graft proposal a graft slot opens; preview and execution share one plan.
  * Nothing is grafted here — Build dispatches `graft_module`, which re-derives the same
  * deterministic placement from the same frozen map.
  */
 const graftOption = (
   game: GameState,
   hostRoomId: RoomId,
-  hardpointId: string,
+  graftSlotId: string,
   moduleId: string
 ): GraftPreviewOption => {
   const template = PACK.modules[moduleId]!;
   const decision = evaluateCommand(game, {
     type: "graft_module",
     hostRoomId,
-    hardpointId,
+    graftSlotId,
     moduleId,
   });
   return {
     moduleId,
     label: template.codePrefix,
     footprint: template.footprint,
+    equipmentSlots: template.socketCount,
     cost: template.graftCost,
     buildable: decision.allowed,
     reason: decision.allowed ? null : (decision.code ?? null),
@@ -35,34 +36,34 @@ const graftOption = (
 export const planGraftPreview = (
   game: GameState,
   hostRoomId: RoomId,
-  hardpointId: string
+  graftSlotId: string
 ): GraftPreview => ({
   hostRoomId,
-  hardpointId,
+  graftSlotId,
   options: Object.keys(PACK.modules).map((moduleId) =>
-    graftOption(game, hostRoomId, hardpointId, moduleId)
+    graftOption(game, hostRoomId, graftSlotId, moduleId)
   ),
 });
 
-/** Every hardpoint on a hull room, with whether a graft already occupies it. */
-export interface HardpointRef {
+/** Every graft slot on a hull room, with whether a graft already occupies it. */
+export interface GraftSlotRef {
   hostRoomId: RoomId;
-  hardpointId: string;
+  graftSlotId: string;
   hostCode: string;
   occupiedByRoomId: RoomId | null;
 }
 
-export const hullHardpoints = (game: GameState): HardpointRef[] => {
-  const refs: HardpointRef[] = [];
+export const hullGraftSlots = (game: GameState): GraftSlotRef[] => {
+  const refs: GraftSlotRef[] = [];
   for (const room of Object.values(game.map.rooms)) {
     if (room.provenance !== "hull") continue;
-    for (const hardpoint of room.hardpoints) {
-      const jointId = `joint:${room.id}:${hardpoint.id}`;
+    for (const graftSlot of room.graftSlots) {
+      const jointId = `joint:${room.id}:${graftSlot.id}`;
       const joint = game.map.connections[jointId];
       const occupied = joint?.rooms.find((roomId) => roomId !== room.id) ?? null;
       refs.push({
         hostRoomId: room.id,
-        hardpointId: hardpoint.id,
+        graftSlotId: graftSlot.id,
         hostCode: room.code,
         occupiedByRoomId: occupied,
       });

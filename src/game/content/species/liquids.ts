@@ -11,7 +11,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 18.015,
     referenceDensity: 1,
     color: LIQUID_COLORS.water,
-    damageSourceId: null,
     hazards: [],
   },
   sodium_chloride: {
@@ -23,7 +22,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 58.44,
     referenceDensity: 1.15,
     color: LIQUID_COLORS.sodium_chloride,
-    damageSourceId: null,
     hazards: [],
   },
   sodium_hydroxide: {
@@ -35,7 +33,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 40,
     referenceDensity: 1.2,
     color: LIQUID_COLORS.sodium_hydroxide,
-    damageSourceId: "liquid_corrosion",
     hazards: [
       {
         basis: "liquid_strength",
@@ -57,7 +54,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 74.44,
     referenceDensity: 1.1,
     color: LIQUID_COLORS.sodium_hypochlorite,
-    damageSourceId: "liquid_corrosion",
     hazards: [
       {
         basis: "liquid_strength",
@@ -79,7 +75,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 36.46,
     referenceDensity: 1.12,
     color: LIQUID_COLORS.hydrochloric_acid,
-    damageSourceId: "liquid_corrosion",
     hazards: [
       {
         basis: "liquid_strength",
@@ -101,7 +96,6 @@ export const LIQUID_DEFINITIONS = {
     molarMass: 63.012,
     referenceDensity: 1.35,
     color: LIQUID_COLORS.nitric_acid,
-    damageSourceId: "nitrogen_chemistry",
     hazards: [
       {
         basis: "liquid_strength",

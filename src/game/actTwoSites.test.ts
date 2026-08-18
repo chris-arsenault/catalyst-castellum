@@ -19,9 +19,9 @@ describe("Act II mechanical sites", () => {
     }
   });
 
-  it("produces four distinct open plants with stationary process opportunities", () => {
+  it("produces four distinct open sites with empty authored construction layers", () => {
     const games = ACT_TWO_LEVEL_IDS.map((levelId) => createScenarioGame(levelId));
-    expect(new Set(games.map(({ run }) => run.seed)).size).toBe(4);
+    expect(new Set(games.map(({ map }) => JSON.stringify(map.rooms))).size).toBe(4);
     for (const game of games) {
       const siteCodes = Object.values(game.map.rooms)
         .filter(({ provenance }) => provenance === "site")
@@ -29,17 +29,10 @@ describe("Act II mechanical sites", () => {
       const equipment = Object.values(game.rooms).flatMap((room) =>
         Object.values(room.equipment).filter((instance) => instance !== null)
       );
-      const stationary = Object.values(game.rooms).reduce(
-        (total, room) =>
-          total +
-          Object.values(room.stationary).reduce((roomTotal, amount) => roomTotal + amount, 0),
-        0
-      );
       expect(new Set(siteCodes).size).toBe(siteCodes.length);
       expect(equipment).toEqual([]);
       expect(processLineIds(game, "gas_line")).toEqual([]);
       expect(processLineIds(game, "liquid_line")).toEqual([]);
-      expect(stationary).toBeGreaterThan(0);
     }
   });
 
@@ -59,36 +52,36 @@ describe("Act II mechanical sites", () => {
 });
 
 describe("Act II defense authoring", () => {
-  it("authors five physical strategy portfolios for every open site", () => {
+  it("authors five tower-defense portfolios and introduces process assistance after Cordon 41", () => {
     for (const levelId of ACT_TWO_LEVEL_IDS) {
       const builds = ACT_TWO_REFERENCE_BUILDS[levelId];
       expect(builds).toHaveLength(5);
       expect(new Set(builds.map(({ archetype }) => archetype)).size).toBe(5);
       expect(
         builds.filter(({ rounds }) =>
-          rounds.some(({ commands }) => commands.some(({ type }) => type === "install_equipment"))
+          rounds.some(({ commands }) => commands.some(({ type }) => type === "place_tower"))
         )
       ).toHaveLength(5);
-      expect(
-        builds.filter(({ rounds }) =>
-          rounds.some(({ commands }) => commands.some(({ type }) => type === "build_connection"))
-        )
-      ).toHaveLength(5);
+      const processBuilds = builds.filter(({ rounds }) =>
+        rounds.some(({ commands }) => commands.some(({ type }) => type === "build_connection"))
+      );
+      expect(processBuilds, levelId).toHaveLength(
+        levelId === "junction_l6" || levelId === "pell_cut" ? 1 : 0
+      );
     }
   });
 
-  it("makes each final wave a supported mixed-trait formation", () => {
+  it("keeps five-wave escalation and adds multi-route supported formations after Kettleblack", () => {
     for (const levelId of ACT_TWO_LEVEL_IDS) {
+      expect(LEVEL_DEFINITIONS[levelId].rounds).toHaveLength(5);
       const finalWave = LEVEL_DEFINITIONS[levelId].rounds.at(-1)?.wave ?? [];
+      expect(new Set(finalWave.map(({ type }) => type)).size, levelId).toBeGreaterThanOrEqual(4);
+      if (levelId === "kettleblack") continue;
       expect(
         finalWave.some(({ type }) => type === "anchor"),
         levelId
       ).toBe(true);
-      expect(new Set(finalWave.map(({ type }) => type)).size, levelId).toBeGreaterThanOrEqual(5);
-      expect(
-        finalWave.some(({ levelOffset }) => levelOffset > 0),
-        levelId
-      ).toBe(true);
+      expect(new Set(finalWave.map(({ routeId }) => routeId)).size, levelId).toBeGreaterThan(1);
     }
   });
 });

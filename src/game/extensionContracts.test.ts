@@ -25,7 +25,7 @@ describe("definition extension contracts", () => {
         },
       },
     });
-    const state = createScenarioGameForDefinition("flash_point", [], definition);
+    const state = createScenarioGameForDefinition("claim_8_delta", [], definition);
     roomState(state, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 1,
@@ -39,7 +39,7 @@ describe("definition extension contracts", () => {
   });
 
   it("adds or removes species hazard policy without a physics branch", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     roomState(state, "furnace").gas.lower.chlorine = 20;
     const hazardous = roomHazards(
       roomState(state, "furnace"),
@@ -62,9 +62,9 @@ describe("definition extension contracts", () => {
   });
 
   it("saturates species damage at its authored effective-excess bound", () => {
-    const moderate = createScenarioGame("flash_point");
+    const moderate = createScenarioGame("claim_8_delta");
     roomState(moderate, "furnace").gas.lower.chlorine = 20;
-    const concentrated = createScenarioGame("flash_point");
+    const concentrated = createScenarioGame("claim_8_delta");
     roomState(concentrated, "furnace").gas.lower.chlorine = 60;
 
     const moderateHazard = roomHazards(

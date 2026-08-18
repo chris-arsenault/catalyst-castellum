@@ -4,16 +4,45 @@ All notable user-visible changes are recorded here.
 
 ## Unreleased
 
-### Campaign defense direction
+### Tower defense
 
-- Set the fixed twelve-site campaign around traditional vertical tower defense: direct towers use
-  free grid-snapped floor, wall, and ceiling placement against authored multi-route assaults.
-  Persistent room grafts attach at specific hull slots and cost several ordinary upgrades, while
-  the retained chemistry, pipe, and atmosphere systems enter later sites through explicit tower and
-  environmental interactions.
-- Recast early field guidance around placement, firing arcs, coverage, upgrades, capacity, route
-  control, and the first graft decision. Campaign narrative, the Deep Shear claim-rig setting, the
-  three-act route, five-wave sites, and deterministic simulation remain the authored foundation.
+- Rebuilt ordinary combat around seven direct tower chassis with free grid-snapped floor, wall,
+  and ceiling placement. Towers expose mount-specific arcs, range, cadence, target capacity,
+  targeting policy, upgrades, attack state, damage contribution, and recovery value.
+- Added authored ingress and route graphs to the side-view maps. Enemies traverse multiple vertical
+  paths while first and last targeting compare route progress across lanes.
+- Added placement previews, route coverage, tower rendering, projectiles, damage feedback, target
+  controls, movement, rotation, upgrades, and dismantling to the map and defense panel.
+
+### Campaign and construction
+
+- Replaced the campaign's combat sites with twelve fixed five-wave tower-defense operations while
+  preserving the Deep Shear claim rig, three-act route, dialogue, reports, travel, and Pell ending.
+- Added save-backed operation checkpoints and retries. Hull-mounted towers and upgrades travel with
+  the rig; site-mounted defenses return their authored recovery value at departure.
+- Reworked room grafts as rare persistent hull purchases attached through authored graft slots.
+  Grafted rooms add vertical tower surfaces and retain their purpose-specific process-equipment
+  sockets.
+
+### Chemistry and environment
+
+- Kept conserved chemistry, finite inventories, process equipment, gas and liquid routing,
+  temperature, pressure, and room atmospheres as deterministic world systems while direct towers
+  supply the campaign's ordinary damage.
+- Added explicit tower-supply and environmental-field contracts. Later operations can route a
+  prepared gas to a compatible tower mode or apply a bounded atmospheric movement field without
+  making chemical synthesis a prerequisite for defense.
+
+### Guidance and verification
+
+- Replaced reaction-combat lessons with tower placement, route coverage, wall and ceiling geometry,
+  targeting, upgrades, and graft guidance. The facility manual now includes the complete tower
+  catalog, and the control panel switches between defenses and room systems.
+- Added deterministic tower, route, campaign carryover, checkpoint, graft, chemistry-bridge,
+  portfolio, and browser coverage plus a continuous save-backed reference run through all twelve
+  sites.
+- Advanced saves to schema 27 and authored content to version 19. Current pre-release saves accept
+  this format only.
 
 ## pre-tower-defense-rework - 2026-08-17
 

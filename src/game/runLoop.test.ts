@@ -11,15 +11,15 @@ const definition = DEFAULT_GAME_DEFINITION;
 const graftedId = graftedRoomId("washlock", "forward");
 
 const buildWithGraft = (): GameState => {
-  const state = createScenarioGame("flash_point", [], definition);
+  const state = createScenarioGame("claim_8_delta", [], definition);
   state.phase = "level_complete";
-  state.matter = 100;
+  state.matter = 200;
   const grafted = executeCommand(
     state,
     {
       type: "graft_module",
       hostRoomId: "washlock",
-      hardpointId: "forward",
+      graftSlotId: "forward",
       moduleId: "process_chamber",
     },
     definition
@@ -40,7 +40,7 @@ describe("the run loop carries a graft across a dock", () => {
     expect(docked.accepted).toBe(true);
     const next = docked.state;
 
-    expect(next.campaign.levelId).toBe("make_the_reagent");
+    expect(next.campaign.levelId).toBe("harkers_brace");
     expect(next.map.rooms[graftedId]?.provenance).toBe("hull");
     expect(next.map.connections["joint:washlock:forward"]).toBeDefined();
     expect(next.world.rooms).toContain(graftedId);

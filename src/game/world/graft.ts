@@ -1,13 +1,13 @@
 import type { GameDefinition } from "../definitionTypes";
 import type { RoomId } from "../types";
-import type { ArchitecturalConnection, Hardpoint, MapRoom, WorldMap } from "./map";
+import type { ArchitecturalConnection, GraftSlot, MapRoom, WorldMap } from "./map";
 import { isArchitectural } from "./map";
 import { hullPlanningMap } from "./hullFragment";
 import { withGraft } from "./mapEdits";
 import {
   graftedJointId,
   graftedRoomId,
-  hardpointOccupied,
+  graftSlotOccupied,
   instantiateJoint,
   instantiateModuleRoom,
   type ModuleId,
@@ -21,8 +21,8 @@ export interface GraftPlan {
   map: WorldMap;
 }
 
-const hardpointOn = (map: WorldMap, roomId: RoomId, hardpointId: string): Hardpoint | null =>
-  map.rooms[roomId]?.hardpoints.find((hardpoint) => hardpoint.id === hardpointId) ?? null;
+const graftSlotOn = (map: WorldMap, roomId: RoomId, graftSlotId: string): GraftSlot | null =>
+  map.rooms[roomId]?.graftSlots.find((graftSlot) => graftSlot.id === graftSlotId) ?? null;
 
 /** Deterministic display code: next index for the module's prefix on this map. */
 const graftedCode = (map: WorldMap, prefix: string): string => {
@@ -33,15 +33,15 @@ const graftedCode = (map: WorldMap, prefix: string): string => {
 const planCache = new WeakMap<WorldMap, Map<string, GraftPlan | null>>();
 
 /**
- * Plan a graft: instantiate the template at the hardpoint and validate the edited map.
- * Null when the hardpoint is missing/occupied, the module is unknown, the host is not
+ * Plan a graft: instantiate the template at the graft slot and validate the edited map.
+ * Null when the graft slot is missing or occupied, the module is unknown, the host is not
  * hull provenance, or the placement violates a map invariant (overlap, bounds).
  */
 export const plannedGraft = (
   definition: GameDefinition,
   map: WorldMap,
   hostRoomId: RoomId,
-  hardpointId: string,
+  graftSlotId: string,
   moduleId: ModuleId
 ): GraftPlan | null => {
   let plans = planCache.get(map);
@@ -49,9 +49,9 @@ export const plannedGraft = (
     plans = new Map();
     planCache.set(map, plans);
   }
-  const key = `${hostRoomId}\u0000${hardpointId}\u0000${moduleId}`;
+  const key = `${hostRoomId}\u0000${graftSlotId}\u0000${moduleId}`;
   if (plans.has(key)) return plans.get(key) ?? null;
-  const plan = computeGraftPlan(definition, map, hostRoomId, hardpointId, moduleId);
+  const plan = computeGraftPlan(definition, map, hostRoomId, graftSlotId, moduleId);
   plans.set(key, plan);
   return plan;
 };
@@ -60,23 +60,23 @@ const computeGraftPlan = (
   definition: GameDefinition,
   map: WorldMap,
   hostRoomId: RoomId,
-  hardpointId: string,
+  graftSlotId: string,
   moduleId: ModuleId
 ): GraftPlan | null => {
   const planningMap = hullPlanningMap(map);
   const host = planningMap.rooms[hostRoomId];
   const template = definition.modules[moduleId];
-  const hardpoint = hardpointOn(planningMap, hostRoomId, hardpointId);
-  if (!host || host.provenance !== "hull" || !template || !hardpoint) return null;
-  if (hardpointOccupied(planningMap, hostRoomId, hardpointId)) return null;
-  if (graftedRoomId(hostRoomId, hardpointId) in planningMap.rooms) return null;
+  const graftSlot = graftSlotOn(planningMap, hostRoomId, graftSlotId);
+  if (!host || host.provenance !== "hull" || !template || !graftSlot) return null;
+  if (graftSlotOccupied(planningMap, hostRoomId, graftSlotId)) return null;
+  if (graftedRoomId(hostRoomId, graftSlotId) in planningMap.rooms) return null;
   const room = instantiateModuleRoom(
     template,
     hostRoomId,
-    hardpoint,
+    graftSlot,
     graftedCode(planningMap, template.codePrefix)
   );
-  const joint = instantiateJoint(template, hostRoomId, hardpoint, room.id);
+  const joint = instantiateJoint(template, hostRoomId, graftSlot, room.id);
   const expandedMap: WorldMap = {
     ...planningMap,
     width: Math.max(planningMap.width, room.bounds.column + room.bounds.width),

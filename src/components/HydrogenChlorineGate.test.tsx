@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 describe("hydrogen-chlorine reaction gate", () => {
   it("presents the live CL-2 temperature and reactant conditions", () => {
-    const entered = executeCommand(createScenarioGame("make_the_reagent"), {
+    const entered = executeCommand(createScenarioGame("harkers_brace"), {
       type: "begin_level",
     });
     if (!entered.accepted) throw new Error(entered.code ?? "Chlor-alkali site entry failed");

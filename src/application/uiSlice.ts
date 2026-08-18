@@ -13,6 +13,48 @@ const graftModeUi = (graftMode: boolean) => ({
   roomEffectPreview: null,
 });
 
+const createTowerActions = (
+  set: StoreSet,
+  get: StoreGet
+): Pick<UiSlice, "setTowerBuildSelection" | "selectTower" | "setMovingTower"> => ({
+  setTowerBuildSelection: (towerBuildSelection) =>
+    set((state) => ({
+      towerBuildSelection,
+      selectedTowerId: null,
+      pipeMode: false,
+      pipePreview: null,
+      graftMode: false,
+      graftPreview: null,
+      roomEffectPreview: null,
+      movingTowerId:
+        towerBuildSelection &&
+        state.movingTowerId &&
+        state.game.towers[state.movingTowerId]?.chassisId === towerBuildSelection.chassisId
+          ? state.movingTowerId
+          : null,
+    })),
+  selectTower: (selectedTowerId) =>
+    set({ selectedTowerId, towerBuildSelection: null, movingTowerId: null, notice: null }),
+  setMovingTower: (movingTowerId) => {
+    const tower = movingTowerId ? get().game.towers[movingTowerId] : null;
+    set({
+      movingTowerId: tower?.id ?? null,
+      selectedTowerId: tower?.id ?? null,
+      towerBuildSelection: tower
+        ? {
+            chassisId: tower.chassisId,
+            mountFace: tower.placement.mountFace,
+            orientation: tower.placement.orientation,
+          }
+        : null,
+      pipeMode: false,
+      pipePreview: null,
+      graftMode: false,
+      graftPreview: null,
+    });
+  },
+});
+
 /** Per-guide dismissal and replay, which persist alongside the run's guidance choice. */
 const createGuidanceActions = (
   set: StoreSet,
@@ -75,6 +117,9 @@ export const createUiActions = (
   | "setGraftMode"
   | "setGraftPreview"
   | "setRoomEffectPreview"
+  | "setTowerBuildSelection"
+  | "selectTower"
+  | "setMovingTower"
   | "showNotice"
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
@@ -84,6 +129,7 @@ export const createUiActions = (
   setGraftMode: (graftMode) => set(graftModeUi(graftMode)),
   setGraftPreview: (graftPreview) => set({ graftPreview }),
   setRoomEffectPreview: (roomEffectPreview) => set({ roomEffectPreview }),
+  ...createTowerActions(set, get),
   showNotice: (notice) => set({ notice }),
   setShowHelp: (showHelp) =>
     set({ showHelp, equipmentBuildTarget: showHelp ? get().equipmentBuildTarget : null }),

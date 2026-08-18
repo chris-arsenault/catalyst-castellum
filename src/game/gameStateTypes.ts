@@ -26,17 +26,28 @@ import type {
   LevelId,
   WorldPoint,
   FacilityPortalState,
+  TowerAttackEvent,
+  TowerChassisId,
+  TowerInstance,
+  TowerInstanceId,
+  TowerMountFace,
+  TowerOrientation,
+  TowerTargetPolicy,
+  TowerUpgradeId,
+  EnvironmentalField,
+  TowerSupplyStatus,
+  TowerRoundReport,
 } from "./types";
 import { EVENT_TONES, GAME_EVENT_CODES, GAME_PHASES } from "./identifiers";
 
 export type GamePhase = (typeof GAME_PHASES)[number];
-export type RunOutcome = "active" | "defeated" | "victorious";
 
 export interface RoundStats {
   spawned: number;
   killed: number;
   breached: number;
   coreDamage: number;
+  breachesByRoute: Record<string, number>;
   damageDealt: number;
   reactions: number;
   combustionFlashes: number;
@@ -55,17 +66,21 @@ export interface RoundStats {
 export interface RoundReport extends RoundStats {
   levelId: LevelId;
   round: number;
+  towers: Record<TowerInstanceId, TowerRoundReport>;
 }
 
 export interface CampaignProgress {
   levelId: LevelId;
   levelIndex: number;
   roundIndex: number;
-  checkpointLevelId: LevelId;
   completedLevelIds: LevelId[];
+  /** Normal encoded save captured immediately before the current assault. */
+  operationCheckpoint: string | null;
+  retryCount: number;
 }
 
 export interface ScenarioAvailability {
+  towers: TowerChassisId[];
   equipment: EquipmentId[];
   gasLines: ConnectionId[];
   liquidLines: ConnectionId[];
@@ -76,7 +91,7 @@ export type GameEventCode = (typeof GAME_EVENT_CODES)[number];
 export type GameEventParameter = boolean | number | string;
 
 export interface GameEventParameterMap {
-  assault_started: { automatic: boolean };
+  assault_started: Record<never, never>;
   campaign_completed: { completedLevels: number; coreIntegrity: number };
   chlorine_evolution_started: Record<never, never>;
   core_breached: { enemyType: EnemyType; coreDamage: number };
@@ -91,19 +106,19 @@ export interface GameEventParameterMap {
   enemy_molted: { enemyType: EnemyType; remainingHealth: number };
   equipment_installed: { equipmentId: EquipmentId; cost: number };
   equipment_upgraded: { equipmentId: EquipmentId; level: number };
+  tower_placed: { towerId: TowerInstanceId; chassisId: TowerChassisId; cost: number };
+  tower_upgraded: { towerId: TowerInstanceId; upgradeId: TowerUpgradeId; cost: number };
+  tower_dismantled: { towerId: TowerInstanceId; refund: number };
   flash_cycle_started: { zone: GasZone };
   flash_incident: {
-    hitCount: number;
-    killed: number;
-    damage: number;
     pressureImpulse: number;
     reactionExtent: number;
+    heatDelta: number;
   };
   gas_source_charged: { sourceId: GasSourceId; cost: number; amount: number };
   hcl_production_started: Record<never, never>;
   level_planning_started: Record<never, never>;
   liquid_source_charged: { sourceId: LiquidSourceId; cost: number; amount: number };
-  prime_started: { primeSeconds: number };
   equipment_operation_started: { equipmentId: EquipmentId };
   vessel_medium_loaded: { equipmentId: EquipmentId; medium: StationaryType };
   round_advanced: Record<never, never>;
@@ -155,7 +170,7 @@ export interface CombatIncident {
   phase: GamePhase;
   roomId: RoomId;
   zone: GasZone | null;
-  sourceId: DamageSourceId;
+  sourceId: DamageSourceId | "hydrogen_oxygen_combustion";
   reactionExtent: number;
   pressureImpulse: number;
   heatDelta: number;
@@ -170,7 +185,7 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 23;
+  version: 27;
   pack: {
     id: string;
     contentVersion: number;
@@ -181,8 +196,6 @@ export interface GameState {
    */
   map: WorldMap;
   mapRevision: number;
-  /** One save is one run (ADR-0004); the seed is consumed strictly pre-level (ADR-0003). */
-  run: { seed: string; position: number; outcome: RunOutcome };
   world: WorldCatalogs;
   phase: GamePhase;
   campaign: CampaignProgress;
@@ -200,8 +213,14 @@ export interface GameState {
   gasVent: GasAmounts;
   liquidDrain: LiquidAmounts;
   enemies: EnemyState[];
+  towers: Record<TowerInstanceId, TowerInstance>;
+  towerAttacks: TowerAttackEvent[];
+  environmentalFields: EnvironmentalField[];
+  towerSupply: Record<TowerInstanceId, TowerSupplyStatus>;
   spawnCursor: number;
   nextEnemyId: number;
+  nextTowerSequence: number;
+  nextTowerAttackId: number;
   nextEventId: number;
   nextIncidentId: number;
   coreIntegrity: number;
@@ -269,8 +288,30 @@ export type GameCommand =
     }
   | { type: "build_connection"; kind: ProcessLineKind; fromRoomId: RoomId; toRoomId: RoomId }
   | { type: "dismantle_connection"; connectionId: ConnectionId }
-  | { type: "graft_module"; hostRoomId: RoomId; hardpointId: string; moduleId: string }
+  | { type: "graft_module"; hostRoomId: RoomId; graftSlotId: string; moduleId: string }
   | { type: "dismantle_module"; roomId: RoomId }
+  | {
+      type: "place_tower";
+      chassisId: TowerChassisId;
+      anchor: GridCell;
+      mountFace: TowerMountFace;
+      orientation: TowerOrientation;
+    }
+  | {
+      type: "move_tower";
+      towerId: TowerInstanceId;
+      anchor: GridCell;
+      mountFace: TowerMountFace;
+      orientation: TowerOrientation;
+    }
+  | { type: "rotate_tower"; towerId: TowerInstanceId; orientation: TowerOrientation }
+  | {
+      type: "set_tower_targeting";
+      towerId: TowerInstanceId;
+      policy: TowerTargetPolicy;
+    }
+  | { type: "upgrade_tower"; towerId: TowerInstanceId; upgradeId: TowerUpgradeId }
+  | { type: "dismantle_tower"; towerId: TowerInstanceId }
   | {
       type: "edit_hull_cell";
       roomId: RoomId;
@@ -295,7 +336,6 @@ export type GameCommand =
   | { type: "set_portal"; connectionId: ConnectionId; open: boolean }
   | { type: "charge_gas_source"; sourceId: GasSourceId }
   | { type: "charge_liquid_source"; sourceId: LiquidSourceId }
-  | { type: "start_prime" }
   | { type: "start_assault" }
   | { type: "begin_level" }
   | { type: "continue_round" }

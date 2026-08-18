@@ -1,6 +1,5 @@
 import { facilityModelForMap } from "../../game/world/derivedModel";
-import { DEFAULT_GAME_DEFINITION, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
-import { roomHazards, STANDARD_PRESSURE } from "../../game/queries";
+import { SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -8,12 +7,10 @@ import {
   type GasAmounts,
   type GasZone,
   type GameState,
-  type HazardChannels,
   type LiquidAmounts,
   type RoomId,
   type RoomState,
 } from "../../game/types";
-import { DAMAGE_CHANNELS, type DamageChannel } from "../../presentation/damageCopy";
 import {
   activeRoomGasPortals,
   roomGasInflow,
@@ -88,29 +85,6 @@ const GasComposition = ({
         )}
       </div>
     </section>
-  );
-};
-
-const hazardEntries = (hazards: HazardChannels): [DamageChannel, number][] =>
-  DAMAGE_CHANNELS.flatMap((channel) =>
-    hazards[channel] > 0.01 ? [[channel, hazards[channel]]] : []
-  );
-
-const Exposure = ({ hazards, label }: { hazards: HazardChannels; label: string }) => {
-  const { damage, formatters } = useGamePresentation();
-  const entries = hazardEntries(hazards);
-  if (entries.length === 0) return null;
-  return (
-    <div className="room-exposure-row">
-      <strong>{label}</strong>
-      <span>
-        {entries.map(([channel, rate]) => (
-          <em key={channel} style={{ color: damage.channelStyle[channel].color }}>
-            {damage.channelStyle[channel].label} {formatters.number(rate, 1)}/s
-          </em>
-        ))}
-      </span>
-    </div>
   );
 };
 
@@ -209,34 +183,6 @@ const RoomCombatRow = ({ game, roomId }: { game: GameState; roomId: RoomId }) =>
   );
 };
 
-const RoomExposure = ({
-  lowerHazards,
-  upperHazards,
-}: {
-  lowerHazards: HazardChannels;
-  upperHazards: HazardChannels;
-}) => {
-  const { formatters, translator } = useGamePresentation();
-  const pressureThreshold =
-    STANDARD_PRESSURE * DEFAULT_GAME_DEFINITION.environmentHazards.staticPressure.ratioThreshold;
-  return (
-    <div className="room-exposure-detail">
-      <Exposure label={translator.text("ui.map.room.upperExposure")} hazards={upperHazards} />
-      <Exposure label={translator.text("ui.map.room.lowerExposure")} hazards={lowerHazards} />
-      <small>
-        {translator.text("ui.map.room.thresholds", {
-          temperature: formatters.measurement(
-            DEFAULT_GAME_DEFINITION.environmentHazards.gasTemperature.threshold,
-            "°C",
-            0
-          ),
-          pressure: formatters.measurement(pressureThreshold, "kPa", 0),
-        })}
-      </small>
-    </div>
-  );
-};
-
 export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId | null }) => {
   const { selectors, translator } = useGamePresentation();
   if (!roomId) return null;
@@ -245,8 +191,6 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
   const analysis = selectors.roomAnalysis(room, game);
   const gasInflow = roomGasInflow(game, roomId);
   const openGasPortals = activeRoomGasPortals(game, roomId);
-  const lowerHazards = roomHazards(room, true, true, "lower", game);
-  const upperHazards = roomHazards(room, false, true, "upper", game);
   const passageLabel = translator.text(
     openGasPortals.length === 1 ? "ui.map.room.passage.one" : "ui.map.room.passage.other"
   );
@@ -275,7 +219,12 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
         volume={facilityModelForMap(game.map).roomVolume(roomId)}
       />
       <div className="room-pressure-explanation">{pressureExplanation}</div>
-      <RoomExposure lowerHazards={lowerHazards} upperHazards={upperHazards} />
+      <div className="room-exposure-detail">
+        <strong>{translator.text("ui.map.room.environment")}</strong>
+        {analysis.effects.map((effect) => (
+          <small key={effect}>{effect}</small>
+        ))}
+      </div>
       <RoomCombatRow game={game} roomId={roomId} />
       <small>{translator.text("ui.map.room.select", { room: definition.code })}</small>
     </aside>

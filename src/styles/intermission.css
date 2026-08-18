@@ -527,19 +527,19 @@
   min-height: 0;
 }
 
-.graft-hardpoints,
+.graft-slots,
 .graft-selection {
   min-height: 0;
   padding: 24px;
   overflow-y: auto;
 }
 
-.graft-hardpoints {
+.graft-slots {
   border-right: 1px solid #294f42;
   background: rgba(11, 28, 23, 0.64);
 }
 
-.graft-hardpoints > p {
+.graft-slots > p {
   margin: 0 0 18px;
   color: #86a598;
   font-size: 11px;
@@ -644,7 +644,7 @@
   .graft-workspace {
     grid-template-columns: 1fr;
   }
-  .graft-hardpoints {
+  .graft-slots {
     border-right: 0;
     border-bottom: 1px solid #294f42;
   }
@@ -848,6 +848,30 @@
   fill: #ffd879;
 }
 
+.hull-tower-surface {
+  fill: rgba(121, 215, 255, 0.12);
+  stroke: #79d7ff;
+  stroke-width: 1;
+  stroke-dasharray: 2 2;
+}
+
+.hull-equipment-position rect {
+  fill: rgba(131, 232, 184, 0.1);
+  stroke: #83e8b8;
+  stroke-width: 1;
+}
+
+.hull-equipment-position path {
+  stroke: #83e8b8;
+  stroke-width: 1;
+}
+
+.hull-persistent-tower path {
+  fill: #f0c96a;
+  stroke: #fff1b6;
+  stroke-width: 1.5;
+}
+
 .hull-ladder-cell path {
   fill: none;
   stroke: #ffd272;
@@ -890,32 +914,32 @@
   stroke: #ffb0b5;
 }
 
-.hull-hardpoint {
+.hull-graft-slot {
   outline: none;
 }
 
-.hull-hardpoint circle {
+.hull-graft-slot circle {
   fill: #0b2740;
   stroke: #81d7ff;
   stroke-width: 2;
 }
 
-.hull-hardpoint.available {
+.hull-graft-slot.available {
   cursor: pointer;
 }
 
-.hull-hardpoint.available:hover circle,
-.hull-hardpoint.available:focus circle {
+.hull-graft-slot.available:hover circle,
+.hull-graft-slot.available:focus circle {
   fill: #218dc4;
   stroke: #e3f8ff;
 }
 
-.hull-hardpoint path {
+.hull-graft-slot path {
   stroke: #d8f4ff;
   stroke-width: 2;
 }
 
-.hull-hardpoint.occupied circle {
+.hull-graft-slot.occupied circle {
   fill: #4f91ac;
 }
 
@@ -929,7 +953,7 @@
   cursor: crosshair;
 }
 
-.hull-builder-canvas.tool-connection .hull-hardpoint {
+.hull-builder-canvas.tool-connection .hull-graft-slot {
   pointer-events: none;
 }
 

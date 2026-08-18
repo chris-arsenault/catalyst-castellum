@@ -6,7 +6,6 @@ import { emptyDamageLedger, emptyHazardChannels } from "../../game/engine/damage
 import { createScenarioGame, findEnemyPath } from "../../game/simulation";
 import type { EnemyState } from "../../game/types";
 import { EnemyTooltip } from "./EnemyTooltip";
-import { roomState } from "../../game/world/instances";
 
 afterEach(cleanup);
 
@@ -35,21 +34,21 @@ const furnaceDeckmouth = (): EnemyState => {
     damageTaken: 12.4,
     damageBySource: emptyDamageLedger(),
     lastDamage: {
-      sourceId: "thermal_exposure",
+      sourceId: "tower_projector",
       channels: { ...emptyHazardChannels(), heat: 0.41 },
       amount: 0.41,
       elapsed: 8,
     },
     behavior: { kind: "standard" },
+    effects: [],
   };
 };
 
 describe("enemy map detail", () => {
-  it("explains current damage rate and preserves the fractional last tick", () => {
-    const game = createScenarioGame("flash_point");
+  it("shows the last direct tower hit at fractional precision", () => {
+    const game = createScenarioGame("claim_8_delta");
     const enemy = furnaceDeckmouth();
     game.elapsed = 8;
-    roomState(game, "furnace").gasTemperature.lower = 72;
     game.enemies = [enemy];
 
     render(<EnemyTooltip game={game} enemyId={enemy.id} />);
@@ -57,14 +56,12 @@ describe("enemy map detail", () => {
     const tooltip = screen.getByTestId("enemy-map-tooltip");
     expect(tooltip.textContent).toContain("Level20");
     expect(tooltip.textContent).toContain("R-02 · lower gas");
-    expect(tooltip.textContent).toContain("THERMAL");
-    expect(tooltip.textContent).toContain("0.2 HP/s");
     expect(tooltip.textContent).toContain("Last tick · −0.41 THERMAL");
-    expect(tooltip.textContent).toContain("hot gas exposure");
+    expect(tooltip.textContent).toContain("line projector");
   });
 
   it("shows the Anchor's live shared-field budget", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const enemy: EnemyState = {
       ...furnaceDeckmouth(),
       type: "anchor",

@@ -70,7 +70,6 @@ export const mutatedReferencePlan = (
         .map((command) => maybeMisplace(command, quality, random));
       return {
         commands: shuffle(selected, random),
-        primeFraction: Math.min(round.primeFraction, 0.32 + quality * 0.68),
       };
     }),
   };

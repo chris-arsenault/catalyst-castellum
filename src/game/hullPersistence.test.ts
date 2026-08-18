@@ -13,7 +13,7 @@ import type { GameState } from "./types";
  * is what you grow (by grafting) and keep.
  */
 const dockedAtSite2 = (prepareSite1: (state: GameState) => void): GameState => {
-  const site1 = createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
+  const site1 = createScenarioGame("claim_8_delta", [], DEFAULT_GAME_DEFINITION);
   site1.phase = "build";
   prepareSite1(site1);
   site1.phase = "level_complete";
@@ -32,8 +32,8 @@ describe("only the owned hull travels between sites", () => {
         medium: null,
       };
     });
-    expect(site2.campaign.levelId).toBe("make_the_reagent");
-    expect(site2.map.rooms.furnace?.code).toBe("CL-04");
+    expect(site2.campaign.levelId).toBe("harkers_brace");
+    expect(site2.map.rooms.furnace?.code).toBe("HB-04");
     expect(site2.map.rooms.furnace?.provenance).toBe("site");
     expect(roomState(site2, "furnace").equipment.socket_a).toBeNull();
   });

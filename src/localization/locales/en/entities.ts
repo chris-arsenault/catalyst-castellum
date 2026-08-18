@@ -64,19 +64,19 @@ export const ENTITY_MESSAGES = {
 
   "entities.enemies.deckmouth.name": "Deckmouth",
   "entities.enemies.deckmouth.description":
-    "A steady oxygen-breathing wreck-feeder with little protection from room atmospheres.",
+    "A steady wreck-feeder that tests whether ordinary route coverage supplies enough direct damage.",
   "entities.enemies.flintjack.name": "Flintjack",
   "entities.enemies.flintjack.description":
     "A fast deck runner that crosses long lines before a slow chemical front arrives.",
   "entities.enemies.shear_jelly.name": "Shear-jelly",
   "entities.enemies.shear_jelly.description":
-    "An airborne drifter that stays above liquid while its bell remains exposed to room gases and pressure.",
+    "An airborne drifter that stays above ground control and enters the firing arcs of upper-layer defenses.",
   "entities.enemies.splitback.name": "Splitback",
   "entities.enemies.splitback.description":
     "A mineral coat absorbs the first exposure, then breaks away and releases a faster climbing body.",
   "entities.enemies.redlung.name": "Redlung",
   "entities.enemies.redlung.description":
-    "Folded breathing chambers resist atmosphere and heat, while corrosion and pressure reach its soft seams.",
+    "Folded breathing chambers resist heat-coded attacks, while corrosion and pressure reach its soft seams.",
   "entities.enemies.clatter.name": "Clatter",
   "entities.enemies.clatter.description":
     "Hooked limbs turn ladders into fast lanes; its ground gait remains deliberate.",

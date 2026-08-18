@@ -1,290 +1,299 @@
-import type { BuildArchetypeId } from "../../playtest/types";
+/* eslint-disable max-lines-per-function -- Each factory is declarative authored strategy data. */
+
+import type { CanonicalLevelId } from "../../types";
 import type { ReferenceBuildDefinition } from "../playtestPortfolios";
 import {
   buildLine as line,
-  GAS_CHARGE,
   install,
   LIQUID_CHARGES,
-  loadMedium,
+  placeTower as place,
   portfolioRound as round,
-  SPECIALTY_GAS_CHARGE,
-  upgrade,
+  targetTower as target,
+  upgradeTower as upgrade,
 } from "./buildCommands";
-import { MORROW_POCKET_REFERENCE_BUILDS } from "./morrowPocket";
+import { KETTLEBLACK_REFERENCE_BUILDS } from "./kettleblack";
 
-const established = (archetype: BuildArchetypeId): ReferenceBuildDefinition => {
-  const build = MORROW_POCKET_REFERENCE_BUILDS.find(
-    (candidate) => candidate.archetype === archetype
-  );
-  if (!build) throw new Error(`Morrow Pocket has no ${archetype} reference build.`);
-  return build;
+type WallPlacement = readonly [column: number, elevation: number];
+type SnarePlacement = readonly [column: number, elevation: number, face: "floor" | "ceiling"];
+
+export interface SiteDefenseGeometry {
+  levelId: CanonicalLevelId;
+  walls: readonly WallPlacement[];
+  snares: readonly SnarePlacement[];
+}
+
+const towerId = (levelId: CanonicalLevelId, sequence: number): string =>
+  `tower:${levelId}:${sequence}`;
+
+const wallTower = (
+  chassisId: "bolt_caster" | "repeater" | "line_projector" | "relay",
+  [column, elevation]: WallPlacement
+) => place(chassisId, { column, elevation }, "right_wall", "left");
+
+const snareTower = ([column, elevation, face]: SnarePlacement) =>
+  place("snare_emitter", { column, elevation }, face, face === "ceiling" ? "down" : "right");
+
+const surfaceBolt = ([column, elevation, face]: SnarePlacement) =>
+  place("bolt_caster", { column, elevation }, face, face === "ceiling" ? "down" : "right");
+
+export const directTowerBuilds = ({
+  levelId,
+  walls,
+  snares,
+}: SiteDefenseGeometry): ReferenceBuildDefinition[] => {
+  const precise: ReferenceBuildDefinition = {
+    id: `${levelId}_precise_line`,
+    archetype: "precise",
+    rounds: [
+      round([
+        ...walls.slice(0, 14).map((placement) => wallTower("repeater", placement)),
+        ...snares.slice(0, 4).map(surfaceBolt),
+      ]),
+      round([
+        ...walls.slice(14, 16).map((placement) => wallTower("repeater", placement)),
+        upgrade(towerId(levelId, 4), "repeater_feed"),
+        upgrade(towerId(levelId, 8), "repeater_feed"),
+      ]),
+      round([
+        upgrade(towerId(levelId, 11), "repeater_feed"),
+        upgrade(towerId(levelId, 14), "repeater_feed"),
+      ]),
+      round([upgrade(towerId(levelId, 8), "repeater_tracking")]),
+      round([
+        upgrade(towerId(levelId, 15), "bolt_calibration"),
+        upgrade(towerId(levelId, 16), "bolt_calibration"),
+        upgrade(towerId(levelId, 17), "bolt_calibration"),
+        upgrade(towerId(levelId, 18), "bolt_calibration"),
+      ]),
+    ],
+  };
+  const rapid: ReferenceBuildDefinition = {
+    id: `${levelId}_rapid_service`,
+    archetype: "rapid",
+    rounds: [
+      round(walls.slice(0, 14).map((placement) => wallTower("repeater", placement))),
+      round([
+        ...walls.slice(14, 16).map((placement) => wallTower("repeater", placement)),
+        upgrade(towerId(levelId, 4), "repeater_feed"),
+        upgrade(towerId(levelId, 8), "repeater_feed"),
+      ]),
+      round([
+        upgrade(towerId(levelId, 11), "repeater_feed"),
+        upgrade(towerId(levelId, 15), "repeater_feed"),
+      ]),
+      round([
+        upgrade(towerId(levelId, 8), "repeater_tracking"),
+        ...(walls[15] ? [upgrade(towerId(levelId, 16), "repeater_tracking")] : []),
+      ]),
+      round(),
+    ],
+  };
+  const projectorCount = 6;
+  const area: ReferenceBuildDefinition = {
+    id: `${levelId}_projector_screen`,
+    archetype: "area",
+    rounds: [
+      round([
+        ...walls
+          .slice(0, projectorCount)
+          .map((placement) => wallTower("line_projector", placement)),
+        ...walls
+          .slice(projectorCount, projectorCount + 9)
+          .map((placement) => wallTower("repeater", placement)),
+      ]),
+      round([
+        upgrade(towerId(levelId, 2), "projector_focus"),
+        upgrade(towerId(levelId, 5), "projector_focus"),
+      ]),
+      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
+      round([upgrade(towerId(levelId, 5), "projector_fan")]),
+      round(),
+    ],
+  };
+  const controlCount = 4;
+  const control: ReferenceBuildDefinition = {
+    id: `${levelId}_controlled_routes`,
+    archetype: "control",
+    rounds: [
+      round([
+        ...snares.slice(0, controlCount).map(snareTower),
+        ...walls.slice(0, 14).map((placement) => wallTower("repeater", placement)),
+      ]),
+      round([
+        upgrade(towerId(levelId, 2), "snare_duration"),
+        upgrade(towerId(levelId, 4), "snare_duration"),
+      ]),
+      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
+      round([upgrade(towerId(levelId, 4), "snare_field")]),
+      round(),
+    ],
+  };
+  const support: ReferenceBuildDefinition = {
+    id: `${levelId}_support_priority`,
+    archetype: "support",
+    rounds: [
+      round([
+        ...walls.slice(0, 2).map((placement) => wallTower("relay", placement)),
+        ...walls.slice(2, 10).map((placement) => wallTower("repeater", placement)),
+        ...walls
+          .slice(10, 14)
+          .map((placement) =>
+            place(
+              "flak_nest",
+              { column: placement[0], elevation: placement[1] },
+              "right_wall",
+              "left"
+            )
+          ),
+      ]),
+      round([target(towerId(levelId, 1), "support"), target(towerId(levelId, 2), "support")]),
+      round([
+        upgrade(towerId(levelId, 4), "repeater_feed"),
+        upgrade(towerId(levelId, 7), "repeater_feed"),
+      ]),
+      round([upgrade(towerId(levelId, 2), "relay_range")]),
+      round(),
+    ],
+  };
+  return [precise, rapid, area, control, support];
 };
 
-const establishedOpenBuilds = [
-  established("burst"),
-  established("continuous"),
-  established("control"),
-  established("hybrid"),
-] as const;
-
-const addCommands = (
-  build: ReferenceBuildDefinition,
-  roundIndex: number,
-  commands: readonly ReturnType<typeof install>[]
-): ReferenceBuildDefinition => ({
-  ...build,
-  rounds: build.rounds.map((buildRound, index) =>
-    index === roundIndex
-      ? { commands: [...buildRound.commands, ...commands], primeFraction: buildRound.primeFraction }
-      : buildRound
-  ),
-});
-
-const actTwoEstablished = (build: ReferenceBuildDefinition): ReferenceBuildDefinition => {
-  if (build.archetype === "continuous") {
-    return addCommands(build, 2, [
-      install("washlock", "socket_b", "wet_contactor"),
-      upgrade("washlock", "socket_b"),
-    ]);
-  }
-  if (build.archetype === "control") {
-    const furnace = addCommands(build, 2, [
-      ...line("liquid_line", "lower_intake", "furnace"),
-      install("furnace", "socket_a", "wet_contactor"),
-    ]);
-    const gallery = addCommands(furnace, 3, [
-      ...line("liquid_line", "furnace", "gallery"),
-      install("gallery", "socket_a", "wet_contactor"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_a"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_a"),
-    ]);
-    return addCommands(gallery, 4, [upgrade("gallery", "socket_a")]);
-  }
-  return build;
-};
-
-const cordonEstablished = (build: ReferenceBuildDefinition): ReferenceBuildDefinition => {
-  const deployed = actTwoEstablished(build);
-  return deployed.archetype === "control"
-    ? addCommands(deployed, 2, [...line("gas_line", "lower_intake", "furnace")])
-    : deployed;
-};
-
-const frontload = (build: ReferenceBuildDefinition): ReferenceBuildDefinition => ({
-  ...build,
-  rounds: [
-    round([...(build.rounds[0]?.commands ?? []), ...(build.rounds[1]?.commands ?? [])]),
-    round(),
-    ...build.rounds.slice(2),
+const CORDON_GEOMETRY: SiteDefenseGeometry = {
+  levelId: "cordon_41",
+  walls: [
+    [55, 7],
+    [68, 7],
+    [82, 7],
+    [82, 21],
+    [98, 21],
+    [98, 5],
+    [118, 5],
+    [138, 5],
+    [68, 11],
+    [82, 11],
+    [82, 25],
+    [98, 25],
+    [98, 9],
+    [118, 9],
+    [138, 9],
   ],
-});
-
-const carbonCarrier: ReferenceBuildDefinition = {
-  id: "carbon_carrier_beds",
-  archetype: "carrier",
-  rounds: [
-    round([
-      ...line("gas_line", "core", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      upgrade("furnace", "socket_b"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "furnace", "gallery"),
-      install("gallery", "socket_a", "thermal_coil"),
-      install("gallery", "socket_b", "gas_agitator"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_b"),
-      ...line("gas_line", "gallery", "washlock"),
-      install("washlock", "socket_a", "gas_agitator"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "core", "reservoir"),
-      install("reservoir", "socket_a", "thermal_coil"),
-      install("reservoir", "socket_b", "gas_agitator"),
-    ]),
-    round([
-      GAS_CHARGE,
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_b"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("reservoir", "socket_b"),
-      upgrade("reservoir", "socket_b"),
-      upgrade("washlock", "socket_a"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round([GAS_CHARGE]),
-  ],
-};
-
-const nitrogenTrain: ReferenceBuildDefinition = {
-  id: "nitrogen_oxide_train",
-  archetype: "catalytic",
-  rounds: [
-    round([
-      ...line("gas_line", "core", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      upgrade("furnace", "socket_b"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "furnace", "gallery"),
-      install("gallery", "socket_a", "thermal_coil"),
-      install("gallery", "socket_b", "gas_agitator"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_b"),
-      upgrade("gallery", "socket_b"),
-    ]),
-    round([
-      GAS_CHARGE,
-      LIQUID_CHARGES[0]!,
-      ...line("gas_line", "gallery", "washlock"),
-      ...line("liquid_line", "core", "washlock"),
-      install("washlock", "socket_a", "wet_contactor"),
-    ]),
-    round([
-      GAS_CHARGE,
-      upgrade("furnace", "socket_b"),
-      upgrade("gallery", "socket_b"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round([GAS_CHARGE]),
-  ],
-};
-
-const nickelShuttle: ReferenceBuildDefinition = {
-  id: "nickel_carbonyl_shuttle",
-  archetype: "carrier",
-  rounds: [
-    round([
-      ...line("gas_line", "core", "lower_intake"),
-      install("lower_intake", "socket_a", "packed_bed"),
-      loadMedium("lower_intake", "socket_a", "nickel_oxide"),
-      install("lower_intake", "socket_b", "gas_agitator"),
-      upgrade("lower_intake", "socket_a"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "lower_intake", "gallery"),
-      install("gallery", "socket_a", "gas_agitator"),
-      upgrade("lower_intake", "socket_a"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "gallery", "washlock"),
-      ...line("gas_line", "washlock", "furnace"),
-      install("furnace", "socket_a", "packed_bed"),
-      loadMedium("furnace", "socket_a", "nickel_oxide"),
-      install("furnace", "socket_b", "thermal_coil"),
-    ]),
-    round([
-      GAS_CHARGE,
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      upgrade("lower_intake", "socket_b"),
-    ]),
-    round([GAS_CHARGE, upgrade("gallery", "socket_a")]),
+  snares: [
+    [52, 13, "ceiling"],
+    [57, 17, "ceiling"],
+    [77, 6, "floor"],
+    [69, 34, "ceiling"],
+    [95, 20, "floor"],
+    [88, 4, "floor"],
+    [100, 12, "ceiling"],
+    [121, 4, "floor"],
   ],
 };
 
-const junctionControl: ReferenceBuildDefinition = {
-  id: "caustic_drag_floor",
-  archetype: "control",
-  rounds: [
-    round([
-      install("washlock", "socket_a", "membrane_cell"),
-      ...line("liquid_line", "core", "washlock"),
-      ...line("liquid_line", "washlock", "reservoir"),
-      install("reservoir", "socket_a", "wet_contactor"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      ...line("liquid_line", "reservoir", "lower_intake"),
-      install("lower_intake", "socket_a", "wet_contactor"),
-      upgrade("washlock", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("lower_intake", "socket_a"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      ...line("liquid_line", "lower_intake", "furnace"),
-      install("furnace", "socket_a", "wet_contactor"),
-      upgrade("washlock", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("lower_intake", "socket_a"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      ...line("liquid_line", "furnace", "gallery"),
-      install("gallery", "socket_a", "wet_contactor"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_a"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_a"),
-    ]),
-    round([...LIQUID_CHARGES, upgrade("gallery", "socket_a")]),
+const JUNCTION_GEOMETRY: SiteDefenseGeometry = {
+  levelId: "junction_l6",
+  walls: [
+    [43, 5],
+    [66, 5],
+    [87, 5],
+    [87, 15],
+    [106, 15],
+    [106, 5],
+    [126, 5],
+    [146, 5],
+    [66, 9],
+    [87, 9],
+    [87, 19],
+    [106, 19],
+    [106, 9],
+    [126, 9],
+    [146, 9],
+  ],
+  snares: [
+    [39, 12, "ceiling"],
+    [45, 13, "ceiling"],
+    [79, 4, "floor"],
+    [69, 23, "ceiling"],
+    [98, 14, "floor"],
+    [89, 4, "floor"],
+    [108, 12, "ceiling"],
+    [129, 4, "floor"],
   ],
 };
 
-const fluorineRelease: ReferenceBuildDefinition = {
-  id: "fluorine_release_train",
-  archetype: "pressure",
-  rounds: [
-    round([
-      ...line("gas_line", "reservoir", "gallery"),
-      install("gallery", "socket_a", "fluorine_cell"),
-      install("gallery", "socket_b", "gas_agitator"),
-      upgrade("gallery", "socket_a"),
-      upgrade("gallery", "socket_b"),
-    ]),
-    round([
-      SPECIALTY_GAS_CHARGE,
-      ...line("gas_line", "gallery", "washlock"),
-      install("washlock", "socket_a", "thermal_coil"),
-      install("washlock", "socket_b", "gas_agitator"),
-    ]),
-    round([SPECIALTY_GAS_CHARGE, upgrade("gallery", "socket_a"), upgrade("washlock", "socket_b")]),
-    round([
-      SPECIALTY_GAS_CHARGE,
-      upgrade("washlock", "socket_a"),
-      upgrade("washlock", "socket_a"),
-      upgrade("washlock", "socket_b"),
-    ]),
-    round([SPECIALTY_GAS_CHARGE]),
+const PELL_GEOMETRY: SiteDefenseGeometry = {
+  levelId: "pell_cut",
+  walls: [
+    [48, 5],
+    [66, 5],
+    [84, 5],
+    [84, 18],
+    [102, 18],
+    [102, 5],
+    [122, 5],
+    [142, 5],
+    [66, 9],
+    [84, 9],
+    [84, 22],
+    [102, 22],
+    [102, 9],
+    [122, 9],
+    [142, 9],
+  ],
+  snares: [
+    [45, 12, "ceiling"],
+    [50, 15, "ceiling"],
+    [77, 4, "floor"],
+    [68, 28, "ceiling"],
+    [95, 17, "floor"],
+    [86, 4, "floor"],
+    [104, 12, "ceiling"],
+    [125, 4, "floor"],
   ],
 };
+
+export const processAssistedTowerBuild = (
+  geometry: SiteDefenseGeometry,
+  outputRoomId: "gallery" | "furnace"
+): ReferenceBuildDefinition => {
+  const { levelId, walls } = geometry;
+  const processCommands = [
+    ...LIQUID_CHARGES,
+    install("lower_intake", "socket_a", "membrane_cell"),
+    ...line("liquid_line", "core", "lower_intake"),
+    ...line("gas_line", "lower_intake", outputRoomId),
+  ];
+  return {
+    id: `${levelId}_prepared_projectors`,
+    archetype: "hybrid",
+    rounds: [
+      round([
+        ...walls.slice(0, 6).map((placement) => wallTower("line_projector", placement)),
+        ...walls.slice(6, 12).map((placement) => wallTower("repeater", placement)),
+        ...processCommands,
+      ]),
+      round([
+        ...LIQUID_CHARGES,
+        upgrade(towerId(levelId, 5), "projector_focus"),
+        ...walls.slice(12, 15).map((placement) => wallTower("repeater", placement)),
+      ]),
+      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
+      round([upgrade(towerId(levelId, 5), "projector_fan")]),
+      round([...LIQUID_CHARGES]),
+    ],
+  };
+};
+
+export const towerPortfolioWithProcessAlternative = (
+  geometry: SiteDefenseGeometry,
+  outputRoomId: "gallery" | "furnace"
+): readonly ReferenceBuildDefinition[] => [
+  ...directTowerBuilds(geometry).slice(0, 4),
+  processAssistedTowerBuild(geometry, outputRoomId),
+];
 
 export const ACT_TWO_REFERENCE_BUILDS = {
-  kettleblack: [
-    ...establishedOpenBuilds.map(actTwoEstablished).map(frontload),
-    frontload(carbonCarrier),
-  ],
-  cordon_41: [
-    ...establishedOpenBuilds.map(cordonEstablished).map(frontload),
-    frontload(nitrogenTrain),
-  ],
-  junction_l6: [
-    ...establishedOpenBuilds
-      .map((build) => (build.archetype === "control" ? junctionControl : actTwoEstablished(build)))
-      .map(frontload),
-    frontload(nickelShuttle),
-  ],
-  pell_cut: [
-    ...establishedOpenBuilds.map(actTwoEstablished).map(frontload),
-    frontload(fluorineRelease),
-  ],
+  kettleblack: KETTLEBLACK_REFERENCE_BUILDS,
+  cordon_41: directTowerBuilds(CORDON_GEOMETRY),
+  junction_l6: towerPortfolioWithProcessAlternative(JUNCTION_GEOMETRY, "gallery"),
+  pell_cut: towerPortfolioWithProcessAlternative(PELL_GEOMETRY, "furnace"),
 } as const satisfies Record<string, readonly ReferenceBuildDefinition[]>;

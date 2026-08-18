@@ -1,12 +1,13 @@
 /* global console, process */
 import { LEVEL_DEFINITIONS } from "../src/game/config";
 import { evaluateLevel } from "../src/game/playtest/runner";
+import { runReferenceCampaign } from "../src/game/playtest/campaignRunner";
 import { LEVEL_IDS, type LevelId } from "../src/game/types";
 import type { LevelEvaluation, PlaytestResult } from "../src/game/playtest/types";
 import { levelCopy } from "../src/presentation/levelCopy";
 
 /** Stage 1 is the tuned tutorial and must play perfectly. */
-const STRICT_HEALTH_LEVELS: LevelId[] = ["flash_point"];
+const STRICT_HEALTH_LEVELS: LevelId[] = ["claim_8_delta"];
 
 interface CliOptions {
   levelIds: LevelId[];
@@ -31,7 +32,7 @@ const parsePositiveInteger = (value: string | null, fallback: number): number =>
 
 const parseOptions = (args: string[]): CliOptions => {
   const level = valueAfter(args, "--level");
-  if (level && !LEVEL_IDS.includes(level as LevelId)) throw new Error(`Unknown level: ${level}`);
+  if (level && !LEVEL_IDS.includes(level as never)) throw new Error(`Unknown level: ${level}`);
   return {
     levelIds: level ? [level as LevelId] : [...LEVEL_IDS],
     runs: parsePositiveInteger(valueAfter(args, "--runs"), 200),
@@ -42,7 +43,11 @@ const parseOptions = (args: string[]): CliOptions => {
 };
 
 const resultLine = (label: string, result: PlaytestResult): string =>
-  `${label.padEnd(24)} ${result.success ? "PASS" : "FAIL"} · core ${result.coreIntegrity.toFixed(0).padStart(3)}% · Matter ${result.matterSpent.toFixed(0).padStart(3)} · ${result.buildProfile.equipment.length} machines / ${result.buildProfile.enabledGasLines.length + result.buildProfile.enabledLiquidLines.length} lines · pulse ${result.pulseDamage.toFixed(0)} / continuous ${result.continuousDamage.toFixed(0)} · ${result.roundsCleared} rounds`;
+  `${label.padEnd(24)} ${result.success ? "PASS" : "FAIL"} · core ${result.coreIntegrity.toFixed(0).padStart(3)}% · Matter ${result.matterSpent.toFixed(0).padStart(3)} · ${result.buildProfile.towers.length} towers · damage ${Object.values(
+    result.damageBySource
+  )
+    .reduce((total, amount) => total + amount, 0)
+    .toFixed(0)} · ${result.roundsCleared} rounds`;
 
 const printEvaluation = (evaluation: LevelEvaluation): void => {
   const level = LEVEL_DEFINITIONS[evaluation.levelId];
@@ -98,24 +103,69 @@ const evaluationFailure = (evaluation: LevelEvaluation): string | null => {
   return reasons.length > 0 ? `${evaluation.levelId}: ${reasons.join(", ")}` : null;
 };
 
+const campaignFailure = (campaign: ReturnType<typeof runReferenceCampaign>): string | null => {
+  const reasons: string[] = [];
+  if (!campaign.success) reasons.push(campaign.failure ?? "continuous campaign failed");
+  if (!campaign.stable) reasons.push("continuous campaign was unstable");
+  if (campaign.rejectedActions > 0)
+    reasons.push(`${campaign.rejectedActions} campaign actions were rejected`);
+  if (campaign.retryCount > 0)
+    reasons.push(`${campaign.retryCount} campaign retries were required`);
+  if (campaign.minimumMatter < 0) reasons.push("campaign Matter fell below zero");
+  if (campaign.finalCoreIntegrity < 40)
+    reasons.push("continuous campaign finished dangerously low on Core integrity");
+  if (campaign.completedLevelIds.length !== LEVEL_IDS.length)
+    reasons.push(
+      `continuous campaign completed ${campaign.completedLevelIds.length}/${LEVEL_IDS.length} sites`
+    );
+  return reasons.length > 0 ? reasons.join(", ") : null;
+};
+
+type CampaignResult = ReturnType<typeof runReferenceCampaign>;
+
+const selectsWholeCampaign = (levelIds: readonly LevelId[]): boolean =>
+  levelIds.length === LEVEL_IDS.length &&
+  levelIds.every((levelId, index) => levelId === LEVEL_IDS[index]);
+
+const printResults = (
+  evaluations: readonly LevelEvaluation[],
+  campaign: CampaignResult | null,
+  runs: number
+): void => {
+  console.log(
+    `Catalyst Castellum headless playtest · reference portfolios + ${runs} mutations per level`
+  );
+  for (const evaluation of evaluations) printEvaluation(evaluation);
+  if (!campaign) return;
+  console.log("\nContinuous campaign");
+  console.log(
+    `primary references       ${campaign.success ? "PASS" : "FAIL"} · ${campaign.completedLevelIds.length}/${LEVEL_IDS.length} sites · core ${campaign.finalCoreIntegrity.toFixed(0)}% · Matter ${campaign.finalMatter.toFixed(0)} · ${campaign.reusedTowerPlacements} hull mounts reused · ${campaign.rejectedActions} rejected actions`
+  );
+};
+
+const assertHealthy = (
+  evaluations: readonly LevelEvaluation[],
+  campaign: CampaignResult | null
+): void => {
+  const failures = evaluations
+    .map(evaluationFailure)
+    .filter((failure): failure is string => failure !== null);
+  if (campaign) {
+    const failure = campaignFailure(campaign);
+    if (failure) failures.push(`continuous campaign: ${failure}`);
+  }
+  if (failures.length > 0) throw new Error(`Campaign health failed: ${failures.join("; ")}`);
+};
+
 const main = (): void => {
   const options = parseOptions(process.argv.slice(2));
   const evaluations = options.levelIds.map((levelId, index) =>
     evaluateLevel({ levelId, runs: options.runs, seed: options.seed + index * 10_007 })
   );
-  if (options.json) console.log(JSON.stringify(evaluations, null, 2));
-  else {
-    console.log(
-      `Catalyst Castellum headless playtest · reference portfolios + ${options.runs} mutations per level`
-    );
-    for (const evaluation of evaluations) printEvaluation(evaluation);
-  }
-  if (options.assertPortfolio) {
-    const failures = evaluations
-      .map(evaluationFailure)
-      .filter((failure): failure is string => failure !== null);
-    if (failures.length > 0) throw new Error(`Campaign health failed: ${failures.join("; ")}`);
-  }
+  const campaign = selectsWholeCampaign(options.levelIds) ? runReferenceCampaign() : null;
+  if (options.json) console.log(JSON.stringify({ evaluations, campaign }, null, 2));
+  else printResults(evaluations, campaign, options.runs);
+  if (options.assertPortfolio) assertHealthy(evaluations, campaign);
 };
 
 try {

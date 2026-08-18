@@ -17,6 +17,7 @@ import { createWaveForecastPresentation } from "./waveForecast";
 import { createSupplyPresentation } from "./supplyCopy";
 import { createRoomEffectPresentation } from "./roomEffect";
 import { createReactionEnginePresentation } from "./reactionEngine";
+import { createTowerPlanning } from "./towerPlanning";
 
 export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundle) => {
   const translator = createTranslator(locale);
@@ -39,6 +40,7 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     roomEffect: createRoomEffectPresentation(runtime, translator),
     reactionEngine: createReactionEnginePresentation(runtime, translator, formatters),
     supplies: createSupplyPresentation(runtime.definition, runtime.queries, translator, formatters),
+    towerPlanning: createTowerPlanning(runtime),
   });
 };
 

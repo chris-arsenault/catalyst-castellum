@@ -9,6 +9,43 @@
   overflow: hidden;
 }
 
+.side-panel-shell {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 0;
+  gap: 6px;
+}
+
+.side-panel-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+}
+
+.side-panel-tabs button {
+  min-height: 30px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: #78998b;
+  font: 700 9px/1 var(--mono);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.side-panel-tabs button:hover,
+.side-panel-tabs button.selected {
+  border-color: #477565;
+  background: #12251e;
+  color: #d9e9dc;
+}
+
 .defense-board {
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
@@ -39,9 +76,6 @@
 
 .phase-hud.phase-assault {
   border-left-color: var(--red);
-}
-.phase-hud.phase-prime {
-  border-left-color: #6dd2dc;
 }
 
 .phase-hud-icon {
@@ -85,47 +119,6 @@
   font-size: 10px;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.prime-process-status {
-  display: grid;
-  grid-column: 1 / -1;
-  grid-template-columns: auto minmax(0, 1fr) 64px;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.prime-process-status > span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #8dc8c5;
-  font: 700 8px/1 var(--mono);
-  text-transform: uppercase;
-}
-
-.prime-process-status > small {
-  grid-column: auto;
-}
-
-.prime-process-status progress {
-  width: 64px;
-  height: 4px;
-  overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  background: #18322c;
-  appearance: none;
-}
-
-.prime-process-status progress::-webkit-progress-bar {
-  background: #18322c;
-}
-
-.prime-process-status progress::-webkit-progress-value,
-.prime-process-status progress::-moz-progress-bar {
-  background: linear-gradient(90deg, #6dd2dc, #e0a652);
 }
 
 .round-info-button,

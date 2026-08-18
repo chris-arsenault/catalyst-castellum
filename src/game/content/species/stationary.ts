@@ -11,7 +11,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 12.011,
     referenceDensity: 2.1,
     color: STATIONARY_COLORS.solid_carbon,
-    damageSourceId: null,
     hazards: [],
   },
   hematite: {
@@ -23,7 +22,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 159.687,
     referenceDensity: 5.26,
     color: STATIONARY_COLORS.hematite,
-    damageSourceId: null,
     hazards: [],
   },
   magnetite: {
@@ -35,7 +33,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 231.531,
     referenceDensity: 5.18,
     color: STATIONARY_COLORS.magnetite,
-    damageSourceId: null,
     hazards: [],
   },
   nickel_oxide: {
@@ -47,7 +44,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 74.692,
     referenceDensity: 6.67,
     color: STATIONARY_COLORS.nickel_oxide,
-    damageSourceId: null,
     hazards: [],
   },
   surface_nickel: {
@@ -59,7 +55,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 58.693,
     referenceDensity: 8.91,
     color: STATIONARY_COLORS.surface_nickel,
-    damageSourceId: null,
     hazards: [],
   },
   uranyl_fluoride: {
@@ -71,7 +66,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 308.02,
     referenceDensity: 6.4,
     color: STATIONARY_COLORS.uranyl_fluoride,
-    damageSourceId: "uranium_chemistry",
     hazards: [
       {
         basis: "stationary_inventory",
@@ -93,7 +87,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 55.845,
     referenceDensity: 7.87,
     color: STATIONARY_COLORS.iron_catalyst,
-    damageSourceId: null,
     hazards: [],
   },
   platinum_catalyst: {
@@ -105,7 +98,6 @@ export const STATIONARY_DEFINITIONS = {
     molarMass: 195.084,
     referenceDensity: 21.45,
     color: STATIONARY_COLORS.platinum_catalyst,
-    damageSourceId: null,
     hazards: [],
   },
 } satisfies Partial<Record<SpeciesId, SpeciesDefinition>>;

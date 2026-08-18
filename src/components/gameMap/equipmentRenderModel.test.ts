@@ -9,7 +9,7 @@ import { instance } from "../../game/world/instances";
 
 describe("equipment map projection", () => {
   it("mounts installed equipment on the authored socket cell with state and grade", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     roomState(game, "furnace").equipment.socket_b = {
       equipmentId: "thermal_coil",
       enabled: false,

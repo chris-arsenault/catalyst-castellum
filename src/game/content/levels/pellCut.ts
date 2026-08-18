@@ -1,38 +1,62 @@
-import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { ProcessFamilyId, WaveEntry } from "../../types";
 import { enemySequence } from "../enemies";
-import { ACT_TWO_SITE_SEEDS, PELL_CUT_SITE } from "../sites/actTwo";
-import { paletteAvailability } from "./fullPlant";
-import type { ProcessFamilyId } from "../../types";
-
-const PELL_CUT_PALETTE: readonly ProcessFamilyId[] = [
-  "uranium_fluorine",
-  "chlorine_sodium",
-  "nickel",
-];
-const PELL_CUT_AVAILABILITY = paletteAvailability(PELL_CUT_PALETTE);
+import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { actTwoSupplies } from "./actTwoShared";
+import { paletteAvailability } from "./fullPlant";
 import { emptyLoadout } from "./helpers";
 
-const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
-  entries.flat().sort((left, right) => left.at - right.at);
+const PALETTE: readonly ProcessFamilyId[] = ["uranium_fluorine", "chlorine_sodium", "nickel"];
+const AVAILABLE = paletteAvailability(PALETTE);
+const ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "array_one",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "array_two",
+    roomId: "switchyard",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.04,
+    eligibility: "all",
+  },
+  {
+    id: "array_three",
+    roomId: "furnace",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.08,
+    eligibility: "all",
+  },
+  {
+    id: "array_four",
+    roomId: "reservoir",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.12,
+    eligibility: "all",
+  },
+];
+const on = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+const wave = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
 
+/** Pell Cut synchronizes four array ingresses; process preparation remains an efficiency option. */
 export const PELL_CUT_LEVEL: LevelDefinition = {
   id: "pell_cut",
   number: 8,
-  palette: PELL_CUT_PALETTE,
+  palette: PALETTE,
   enemyLevel: 27,
   focusRoomId: "furnace",
-  featuredReactionIds: ["hydrogen_fluoride_electrolysis"],
-  startingMatter: 400,
+  featuredReactionIds: ["hydrogen_fluoride_electrolysis", "chlor_alkali_electrolysis"],
+  startingMatter: 420,
   startingCoreIntegrity: 100,
   assaultTheme: "boss",
   supplies: actTwoSupplies(
     "array_one",
-    {
-      capacity: 700,
-      contents: { hydrogen: 220, oxygen: 110, hydrogen_fluoride: 300 },
-      cost: 36,
-    },
+    { capacity: 700, contents: { hydrogen: 220, oxygen: 110, hydrogen_fluoride: 300 }, cost: 36 },
     {
       gas: {
         contents: { chlorine: 30 },
@@ -42,7 +66,11 @@ export const PELL_CUT_LEVEL: LevelDefinition = {
       },
     }
   ),
-  site: { kind: "generated", seed: ACT_TWO_SITE_SEEDS.pell_cut, spec: PELL_CUT_SITE },
+  site: {
+    kind: "fixed",
+    map: FIXED_CAMPAIGN_MAPS.pell_cut,
+    hullAnchor: { columns: 74, elevations: 0 },
+  },
   loadout: {
     ...emptyLoadout(),
     stationary: {
@@ -50,57 +78,52 @@ export const PELL_CUT_LEVEL: LevelDefinition = {
       lower_intake: { surface_nickel: 18, nickel_oxide: 12 },
     },
   },
+  routes: ROUTES,
   rounds: [
     {
       id: "array_one",
-      primeSeconds: 72,
-      wave: enemySequence(1, "deckmouth", 1, 1, -8),
-      availability: PELL_CUT_AVAILABILITY,
+      wave: on("array_one", enemySequence(12, "deckmouth", 0.5, 2.3, -7)),
+      availability: AVAILABLE,
     },
     {
       id: "array_two",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(2, "clatter", 0.5, 1.7, -2),
-        enemySequence(1, "shear_jelly", 2, 1, -8),
-        enemySequence(1, "glowbag", 3, 1, -8)
+        on("array_one", enemySequence(8, "flintjack", 0.5, 1.8, -6)),
+        on("array_two", enemySequence(7, "clatter", 1, 2, -6)),
+        on("array_two", enemySequence(4, "glowbag", 2, 3, -7))
       ),
-      availability: PELL_CUT_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "array_three",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(1, "splitback", 1, 1, -8),
-        enemySequence(1, "redlung", 2, 1, -6),
-        enemySequence(1, "anchor", 4, 1, -5)
+        on("array_one", enemySequence(6, "splitback", 0.5, 2.8, -5)),
+        on("array_two", enemySequence(6, "redlung", 1, 2.9, -5)),
+        on("array_three", enemySequence(6, "shear_jelly", 1.5, 2.5, -5))
       ),
-      availability: PELL_CUT_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "array_four",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(7, "flintjack", 0.5, 1.4, -6),
-        enemySequence(5, "deckmouth", 2, 2.4, -7),
-        enemySequence(1, "glowbag", 3, 1, -5)
+        on("array_one", enemySequence(8, "flintjack", 0.5, 1.6, -4)),
+        on("array_two", enemySequence(7, "clatter", 1, 1.8, -4)),
+        on("array_three", enemySequence(6, "splitback", 1.5, 2.4, -5)),
+        on("array_four", enemySequence(5, "glowbag", 2, 2.6, -5))
       ),
-      availability: PELL_CUT_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "synchronized_cut",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(1, "flintjack", 0.5, 1, 1),
-        enemySequence(4, "flintjack", 2, 1.35, -4),
-        enemySequence(5, "clatter", 1, 1.6, -4),
-        enemySequence(1, "splitback", 2.5, 1, -12),
-        enemySequence(4, "redlung", 3.5, 2.4, -5),
-        enemySequence(1, "glowbag", 4.5, 1, -8),
-        enemySequence(1, "shear_jelly", 5.5, 1, -8),
-        enemySequence(1, "anchor", 8, 1, -3)
+        on("array_one", enemySequence(9, "splitback", 0.5, 2, -4)),
+        on("array_two", enemySequence(8, "clatter", 1, 1.7, -4)),
+        on("array_three", enemySequence(7, "redlung", 1.5, 2.3, -4)),
+        on("array_four", enemySequence(7, "shear_jelly", 2, 2.1, -4)),
+        on("array_four", enemySequence(5, "glowbag", 2.5, 2.5, -4)),
+        on("array_three", enemySequence(1, "anchor", 4, 5, -5))
       ),
-      availability: PELL_CUT_AVAILABILITY,
+      availability: AVAILABLE,
     },
   ],
 };

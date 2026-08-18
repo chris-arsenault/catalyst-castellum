@@ -7,15 +7,35 @@ import { WORLD_MAP } from "./config";
 const ROOM_ORDER = Object.keys(WORLD_MAP.rooms);
 import { gasConduitState, roomState } from "./world/instances";
 
+const processState = () => {
+  const state = executeCommand(createScenarioGame("cordon_41"), { type: "begin_level" }).state;
+  const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1);
+  if (!round) throw new Error("Cordon 41 has no rounds.");
+  state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.length - 1;
+  state.availability = {
+    towers: [...round.availability.towers],
+    equipment: [...round.availability.equipment],
+    gasLines: [...round.availability.gasLines],
+    liquidLines: [...round.availability.liquidLines],
+  };
+  state.matter = 999;
+  return state;
+};
+
 describe("simple conduit controls", () => {
   it("keeps the actuator adjustable during assault", () => {
-    let state = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
+    let state = processState();
+    state = executeCommand(state, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "core",
+      toRoomId: "furnace",
+    }).state;
     state = executeCommand(state, {
       type: "set_conduit",
       connectionId: "gas:core__furnace",
       enabled: true,
     }).state;
-    state = executeCommand(state, { type: "start_prime" }).state;
     state = executeCommand(state, { type: "start_assault" }).state;
     const result = executeCommand(state, {
       type: "set_conduit",
@@ -27,7 +47,7 @@ describe("simple conduit controls", () => {
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
-    const state = executeCommand(createScenarioGame("flash_point"), {
+    const state = executeCommand(createScenarioGame("claim_8_delta"), {
       type: "begin_level",
     }).state;
     state.availability.gasLines.push("gas:core__gallery");
@@ -48,10 +68,7 @@ describe("simple conduit controls", () => {
   });
 
   it("rejects dismantling conserved retained material", () => {
-    let state = executeCommand(createScenarioGame("make_the_reagent"), {
-      type: "begin_level",
-    }).state;
-    state.availability.gasLines.push("gas:furnace__lower_intake");
+    let state = processState();
     state = executeCommand(state, {
       type: "build_connection",
       kind: "gas_line",
@@ -70,9 +87,7 @@ describe("simple conduit controls", () => {
 
 describe("equipment dismantling", () => {
   it("drains an installed machine's output ports before dismantling it", () => {
-    let state = executeCommand(createScenarioGame("make_the_reagent"), {
-      type: "begin_level",
-    }).state;
+    let state = processState();
     state = executeCommand(state, {
       type: "install_equipment",
       roomId: "lower_intake",
@@ -112,9 +127,7 @@ describe("derived rings and mixed exotic stock", () => {
   });
 
   it("charges the site's conserved gas packet in its authored ratio", () => {
-    const state = executeCommand(createScenarioGame("morrow_pocket"), {
-      type: "begin_level",
-    }).state;
+    const state = processState();
     const source = state.gasSources.gas_reservoir;
     if (!source) throw new Error("Morrow Pocket gas reservoir is missing.");
     source.gas.hydrogen = 0;
@@ -125,30 +138,29 @@ describe("derived rings and mixed exotic stock", () => {
     });
     expect(result.accepted).toBe(true);
     const gas = result.state.gasSources.gas_reservoir!.gas;
-    const supply = DEFAULT_GAME_DEFINITION.levels.morrow_pocket.supplies.find(
+    const supply = DEFAULT_GAME_DEFINITION.levels.cordon_41.supplies.find(
       (candidate) => candidate.id === "gas_reservoir"
     );
     if (!supply || supply.phase !== "gas") throw new Error("Gas supply definition is missing.");
-    expect(gas.hydrogen / gas.oxygen).toBeCloseTo(2, 5);
-    expect(gas.hydrogen + gas.oxygen).toBeCloseTo(
-      Object.values(supply.replenishment.contents).reduce(
-        (total, value) => total + (value ?? 0),
-        0
-      ),
+    const replenishment = supply.replenishment.contents;
+    expect(gas.hydrogen / gas.oxygen).toBeCloseTo(
+      (replenishment.hydrogen ?? 0) / (replenishment.oxygen ?? 1),
+      5
+    );
+    expect(Object.values(gas).reduce((total, amount) => total + amount, 0)).toBeCloseTo(
+      supply.capacity,
       5
     );
   });
 
   it("prorates a conserved liquid charge and its Matter cost at reservoir capacity", () => {
-    const state = executeCommand(createScenarioGame("morrow_pocket"), {
-      type: "begin_level",
-    }).state;
+    const state = processState();
     const source = state.liquidSources.liquid_reservoir_a;
     if (!source) throw new Error("Morrow Pocket liquid reservoir is missing.");
     for (const species of Object.keys(source.liquid)) {
       source.liquid[species as keyof typeof source.liquid] = 0;
     }
-    source.liquid.water = 175;
+    source.liquid.water = 215;
     const matterBefore = state.matter;
 
     const result = executeCommand(state, {
@@ -157,7 +169,7 @@ describe("derived rings and mixed exotic stock", () => {
     });
 
     expect(result.accepted).toBe(true);
-    expect(result.state.liquidSources.liquid_reservoir_a?.liquid.water).toBeCloseTo(180);
+    expect(result.state.liquidSources.liquid_reservoir_a?.liquid.water).toBeCloseTo(220);
     expect(result.state.matter).toBe(matterBefore - 2);
     expect(result.state.events[0]).toMatchObject({
       code: "liquid_source_charged",
@@ -172,9 +184,7 @@ describe("universal equipment sockets", () => {
       (candidate) => !["west_intake", "core"].includes(candidate)
     )) {
       for (const equipmentId of EQUIPMENT_IDS) {
-        const entered = executeCommand(createScenarioGame("morrow_pocket"), {
-          type: "begin_level",
-        }).state;
+        const entered = processState();
         for (const room of Object.values(entered.rooms)) {
           room.equipment.socket_a = null;
           room.equipment.socket_b = null;

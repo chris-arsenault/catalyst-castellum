@@ -18,6 +18,7 @@ import "./styles/logbook.css";
 import "./styles/manual.css";
 import "./styles/tutorial.css";
 import "./styles/responsive.css";
+import "./styles/towers.css";
 
 const root = document.getElementById("root");
 

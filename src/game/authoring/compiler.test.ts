@@ -9,16 +9,16 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(15);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(19);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
-    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    const level = DEFAULT_GAME_DEFINITION.levels.claim_8_delta;
     expect(() =>
       deriveGame(DEFAULT_GAME_DEFINITION, {
         levels: {
           ...DEFAULT_GAME_DEFINITION.levels,
-          flash_point: {
+          claim_8_delta: {
             ...level,
             rounds: [
               {
@@ -60,18 +60,6 @@ describe("game pack compiler", () => {
 });
 
 describe("species hazard authoring", () => {
-  it("requires exact combat attribution for every hazardous species", () => {
-    const chlorine = DEFAULT_GAME_DEFINITION.species.chlorine;
-    expect(() =>
-      deriveGame(DEFAULT_GAME_DEFINITION, {
-        species: {
-          ...DEFAULT_GAME_DEFINITION.species,
-          chlorine: { ...chlorine, damageSourceId: null },
-        },
-      })
-    ).toThrow(/requires a combat damage source/);
-  });
-
   it("rejects invalid saturating hazard bounds", () => {
     const chlorine = DEFAULT_GAME_DEFINITION.species.chlorine;
     expect(() =>
@@ -101,7 +89,7 @@ describe("game pack extension", () => {
         [fixtureId]: { ...source, id: fixtureId },
       },
     });
-    const game = createGameRuntime(definition).createScenario("flash_point");
+    const game = createGameRuntime(definition).createScenario("claim_8_delta");
 
     expect(definition.reactions[fixtureId].behavior.kind).toBe("mixed_contact");
     expect(roomState(game, "furnace").reactions[fixtureId as RoomReactionId]).toMatchObject({
@@ -184,24 +172,24 @@ describe("equipment operation authoring", () => {
 
 describe("enemy level authoring", () => {
   it("rejects a site baseline outside the enemy level domain", () => {
-    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    const level = DEFAULT_GAME_DEFINITION.levels.claim_8_delta;
     expect(() =>
       deriveGame(DEFAULT_GAME_DEFINITION, {
         levels: {
           ...DEFAULT_GAME_DEFINITION.levels,
-          flash_point: { ...level, enemyLevel: 100 },
+          claim_8_delta: { ...level, enemyLevel: 100 },
         },
       })
     ).toThrow(/Site enemy level must be an integer between 1 and 99/);
   });
 
   it("rejects a wave offset that resolves outside the enemy level domain", () => {
-    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    const level = DEFAULT_GAME_DEFINITION.levels.claim_8_delta;
     expect(() =>
       deriveGame(DEFAULT_GAME_DEFINITION, {
         levels: {
           ...DEFAULT_GAME_DEFINITION.levels,
-          flash_point: {
+          claim_8_delta: {
             ...level,
             rounds: level.rounds.map((round, index) =>
               index === 0
@@ -234,12 +222,12 @@ describe("enemy behavior authoring", () => {
   });
 
   it("caps a wave at one shared-field enemy", () => {
-    const level = DEFAULT_GAME_DEFINITION.levels.flash_point;
+    const level = DEFAULT_GAME_DEFINITION.levels.claim_8_delta;
     expect(() =>
       deriveGame(DEFAULT_GAME_DEFINITION, {
         levels: {
           ...DEFAULT_GAME_DEFINITION.levels,
-          flash_point: {
+          claim_8_delta: {
             ...level,
             rounds: level.rounds.map((round, index) =>
               index === 0 ? { ...round, wave: enemySequenceForFieldTest() } : round

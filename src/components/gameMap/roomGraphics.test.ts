@@ -6,7 +6,7 @@ import { roomRenderModel } from "./roomRenderModel";
 
 describe("room status presentation", () => {
   it("keeps selection, hazard, reaction, and pressure indicators inside the room", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const model = roomRenderModel(game, "furnace", true, 0);
     model.analysis = { ...model.analysis, hazard: 90, liquidTotal: 0 };
     model.cells = [];

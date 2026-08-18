@@ -1,46 +1,70 @@
-import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { ProcessFamilyId, WaveEntry } from "../../types";
 import { enemySequence } from "../enemies";
-import { ACT_THREE_SITE_SEEDS, PELL_CORDON_SITE } from "../sites/actThree";
+import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { actThreeSupplies } from "./actThreeShared";
 import { paletteAvailability } from "./fullPlant";
-import type { ProcessFamilyId } from "../../types";
+import { emptyLoadout } from "./helpers";
 
-const PELL_CORDON_PALETTE: readonly ProcessFamilyId[] = [
+const PALETTE: readonly ProcessFamilyId[] = [
   "chlorine_sodium",
   "nitrogen_oxide",
   "uranium_fluorine",
 ];
-const PELL_CORDON_AVAILABILITY = paletteAvailability(PELL_CORDON_PALETTE);
-import { emptyLoadout } from "./helpers";
+const AVAILABLE = paletteAvailability(PALETTE);
+const ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "outer_boundary",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "copied_cadence",
+    roomId: "furnace",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.04,
+    eligibility: "all",
+  },
+  {
+    id: "closure_load",
+    roomId: "reservoir",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.08,
+    eligibility: "all",
+  },
+  {
+    id: "near_voice",
+    roomId: "gallery",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.12,
+    eligibility: "all",
+  },
+];
+const on = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+const wave = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
 
-const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
-  entries.flat().sort((left, right) => left.at - right.at);
-
+/** Pell Cordon changes Near Voice formations across four routes and rewards steam-wake cadence breaks. */
 export const PELL_CORDON_LEVEL: LevelDefinition = {
   id: "pell_cordon",
   number: 12,
-  palette: PELL_CORDON_PALETTE,
+  palette: PALETTE,
   enemyLevel: 31,
   focusRoomId: "furnace",
   featuredReactionIds: [
-    "hydrogen_oxygen_combustion",
-    "acid_chlorine_release",
+    "chlor_alkali_electrolysis",
+    "hydrogen_fluoride_electrolysis",
     "ammonia_oxidation",
-    "nickel_carbonyl_deposition",
-    "uranium_hexafluoride_hydrolysis",
-    "uranyl_fluoride_recovery",
   ],
-  startingMatter: 520,
+  startingMatter: 540,
   startingCoreIntegrity: 100,
   assaultTheme: "boss",
   supplies: actThreeSupplies("outer_boundary", {
     gasCapacity: 1_500,
-    gasContents: {
-      hydrogen: 420,
-      oxygen: 210,
-      nitrogen: 260,
-      hydrogen_fluoride: 260,
-    },
+    gasContents: { hydrogen: 420, oxygen: 210, nitrogen: 260, hydrogen_fluoride: 260 },
     gasCost: 52,
     water: 260,
     brine: 260,
@@ -62,7 +86,11 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
     waterCost: 15,
     brineCost: 19,
   }),
-  site: { kind: "generated", seed: ACT_THREE_SITE_SEEDS.pell_cordon, spec: PELL_CORDON_SITE },
+  site: {
+    kind: "fixed",
+    map: FIXED_CAMPAIGN_MAPS.pell_cordon,
+    hullAnchor: { columns: 82, elevations: 0 },
+  },
   loadout: {
     ...emptyLoadout(),
     stationary: {
@@ -70,65 +98,60 @@ export const PELL_CORDON_LEVEL: LevelDefinition = {
       gallery: { platinum_catalyst: 5, uranyl_fluoride: 48 },
     },
   },
+  routes: ROUTES,
   rounds: [
     {
       id: "outer_boundary",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(3, "deckmouth", 0.5, 1.8, -11),
-        enemySequence(2, "clatter", 2, 2, -11)
+        on("outer_boundary", enemySequence(7, "deckmouth", 0.5, 1.8, -12)),
+        on("copied_cadence", enemySequence(6, "clatter", 1, 1.6, -12))
       ),
-      availability: PELL_CORDON_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "copied_cadence",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(8, "flintjack", 0.5, 1.2, -10),
-        enemySequence(4, "glowbag", 2, 2.5, -10),
-        enemySequence(3, "shear_jelly", 3, 2.8, -10)
+        on("outer_boundary", enemySequence(9, "flintjack", 0.5, 1.05, -11)),
+        on("copied_cadence", enemySequence(5, "glowbag", 1, 2, -12)),
+        on("closure_load", enemySequence(5, "shear_jelly", 1.5, 2, -11))
       ),
-      availability: PELL_CORDON_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "closure_load",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(5, "splitback", 1, 2.5, -10),
-        enemySequence(4, "redlung", 2, 2.6, -9),
-        enemySequence(3, "clatter", 3, 2.1, -9),
-        enemySequence(1, "anchor", 5, 1, -10)
+        on("outer_boundary", enemySequence(6, "splitback", 0.5, 2, -11)),
+        on("copied_cadence", enemySequence(5, "redlung", 1, 2.1, -11)),
+        on("closure_load", enemySequence(6, "clatter", 1.5, 1.6, -11)),
+        on("closure_load", enemySequence(1, "anchor", 3, 1, -12))
       ),
-      availability: PELL_CORDON_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "counter_pattern",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(10, "flintjack", 0.5, 1.05, -9),
-        enemySequence(7, "deckmouth", 1, 1.45, -9),
-        enemySequence(4, "splitback", 2, 2.3, -9),
-        enemySequence(4, "redlung", 3, 2.4, -8),
-        enemySequence(3, "glowbag", 4, 2.5, -9),
-        enemySequence(3, "shear_jelly", 5, 2.6, -8)
+        on("outer_boundary", enemySequence(9, "flintjack", 0.5, 0.95, -10)),
+        on("copied_cadence", enemySequence(7, "deckmouth", 1, 1.3, -10)),
+        on("closure_load", enemySequence(6, "splitback", 1.5, 1.9, -10)),
+        on("near_voice", enemySequence(5, "redlung", 2, 2, -10)),
+        on("near_voice", enemySequence(5, "glowbag", 2.5, 2, -10)),
+        on("near_voice", enemySequence(4, "shear_jelly", 3, 2, -10))
       ),
-      availability: PELL_CORDON_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "near_voice",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(9, "flintjack", 0.5, 1.05, -7),
-        enemySequence(1, "deckmouth", 1, 1, 1),
-        enemySequence(6, "deckmouth", 2.4, 1.4, -7),
-        enemySequence(6, "splitback", 2, 2.1, -8),
-        enemySequence(5, "redlung", 2.5, 2.2, -7),
-        enemySequence(5, "clatter", 3, 1.8, -6),
-        enemySequence(4, "glowbag", 4, 2.3, -7),
-        enemySequence(3, "shear_jelly", 5, 2.5, -6),
-        enemySequence(1, "anchor", 7, 1, -4)
+        on("outer_boundary", enemySequence(9, "flintjack", 0.5, 0.9, -9)),
+        on("copied_cadence", enemySequence(7, "deckmouth", 1, 1.25, -9)),
+        on("closure_load", enemySequence(6, "splitback", 1.5, 1.8, -9)),
+        on("near_voice", enemySequence(5, "redlung", 2, 1.9, -9)),
+        on("copied_cadence", enemySequence(7, "clatter", 2.5, 1.3, -9)),
+        on("near_voice", enemySequence(5, "glowbag", 3, 1.9, -9)),
+        on("near_voice", enemySequence(5, "shear_jelly", 3.5, 1.9, -9)),
+        on("closure_load", enemySequence(1, "anchor", 5, 1, -10))
       ),
-      availability: PELL_CORDON_AVAILABILITY,
+      availability: AVAILABLE,
     },
   ],
 };

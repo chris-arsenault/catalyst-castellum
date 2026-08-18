@@ -8,6 +8,7 @@ export interface IncidentAggregate {
   age: number;
   count: number;
   height: number;
+  heatDelta: number;
   kills: number;
   pressureDamage: number;
   heatDamage: number;
@@ -23,7 +24,7 @@ type IncidentTimeline = Pick<GameState, "elapsed" | "incidents" | "phase"> & {
 };
 
 export const transientCombatIndicatorsVisible = (game: Pick<GameState, "phase">): boolean =>
-  game.phase === "prime" || game.phase === "assault";
+  game.phase === "assault";
 
 export const transientIncidentVisible = (
   game: IncidentTimeline,
@@ -64,6 +65,7 @@ export const incidentMapAggregates = (
       age: game.elapsed - latestElapsed,
       count: incidents.length,
       height: room.height,
+      heatDelta: incidents.reduce((total, incident) => total + incident.heatDelta, 0),
       kills: incidents.reduce(
         (total, incident) => total + incident.targets.filter((target) => target.killed).length,
         0

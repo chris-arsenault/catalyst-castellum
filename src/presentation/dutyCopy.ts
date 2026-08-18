@@ -36,24 +36,22 @@ const productRoles = (reactionId: ReactionId, translator: Translator): string[] 
   const roles = new Set<string>();
   for (const product of REACTION_DEFINITIONS[reactionId].products) {
     const species = SPECIES_DEFINITIONS[product.species];
-    if (species.damageSourceId === null) continue;
     for (const hazard of species.hazards) roles.add(translator.text(ROLE_KEYS[hazard.channel]));
   }
   return [...roles];
 };
 
-/** The strongest sustained damage rate any damaging product reaches at saturation. */
-const productDamageRating = (reactionId: ReactionId): number => {
+/** The strongest authored environmental rate among the reaction products. */
+const productEnvironmentRating = (reactionId: ReactionId): number => {
   let rating = 0;
   for (const product of REACTION_DEFINITIONS[reactionId].products) {
     const species = SPECIES_DEFINITIONS[product.species];
-    if (species.damageSourceId === null) continue;
     for (const hazard of species.hazards) rating = Math.max(rating, hazard.rate);
   }
   return rating;
 };
 
-/** One line per duty reaction: what it eats, what it makes, and what the product does to enemies. */
+/** One line per duty reaction: what it consumes, what it makes, and each product's field role. */
 export const dutyReactionSummaries = (
   duty: EquipmentDutyDefinition,
   translator: Translator = DEFAULT_TRANSLATOR
@@ -63,7 +61,7 @@ export const dutyReactionSummaries = (
     const consumes = participantNames(reaction.reactants, translator);
     const produces = participantNames(reaction.products, translator);
     const roles = productRoles(reactionId, translator);
-    const rating = productDamageRating(reactionId);
+    const rating = productEnvironmentRating(reactionId);
     const base =
       roles.length > 0
         ? translator.text("presentation.duty.line", {

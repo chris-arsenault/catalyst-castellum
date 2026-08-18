@@ -25,12 +25,12 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 14, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 14, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [
+    graftSlots: [
       { id: "forward", cell: cell(0, 0), facing: "left" },
       { id: "upper", cell: cell(2, 5), facing: "up" },
     ],
     joint: standardJoint,
-    graftCost: 14,
+    graftCost: 88,
   },
   process_chamber: {
     id: "process_chamber",
@@ -43,12 +43,12 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [
+    graftSlots: [
       { id: "forward", cell: cell(0, 0), facing: "left" },
       { id: "upper", cell: cell(6, 7), facing: "up" },
     ],
     joint: standardJoint,
-    graftCost: 26,
+    graftCost: 104,
   },
   reservoir_stack: {
     id: "reservoir_stack",
@@ -61,11 +61,11 @@ export const MODULE_TEMPLATES: Record<string, ModuleTemplate> = {
       gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
       liquid: { capacity: 26, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
     },
-    hardpoints: [
+    graftSlots: [
       { id: "forward", cell: cell(0, 0), facing: "left" },
       { id: "upper", cell: cell(5, 11), facing: "up" },
     ],
     joint: { ...standardJoint, liquidMode: "drain", liquidConductance: 0.35 },
-    graftCost: 30,
+    graftCost: 120,
   },
 };

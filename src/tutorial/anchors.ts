@@ -1,5 +1,4 @@
 export const TUTORIAL_ANCHORS = {
-  beginPrime: "begin-prime",
   conduitCoreFurnaceGas: "conduit-core-furnace-gas",
   conduitCoreGalleryGas: "conduit-core-gallery-gas",
   conduitCoreCellGas: "conduit-core-cell-gas",
@@ -24,6 +23,9 @@ export const TUTORIAL_ANCHORS = {
   lowerIntakeOutlets: "lower-intake-outlets",
   simulationSpeed: "simulation-speed",
   startAssault: "start-assault",
+  towerPalette: "tower-palette",
+  towerPlacement: "tower-placement",
+  towerInspector: "tower-inspector",
 } as const;
 
 export type TutorialAnchorId = (typeof TUTORIAL_ANCHORS)[keyof typeof TUTORIAL_ANCHORS];

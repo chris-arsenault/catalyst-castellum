@@ -5,6 +5,7 @@ import { enemyBehaviorDurabilityScale } from "./enemyLevel";
 import { roomGasHeadroom } from "./roomState";
 import { roomState } from "../world/instances";
 import { addEvent } from "./events";
+import { upsertEnvironmentalField } from "./environmentalFields";
 
 export const initialEnemyBehaviorState = (
   definition: EnemyDefinition,
@@ -77,6 +78,18 @@ const emitEnemyGas = (
   room.gas[zone][definition.behavior.species] += emitted;
   enemy.behavior.reservoir -= emitted;
   state.stats.reagentEmitted += emitted;
+  upsertEnvironmentalField(state, {
+    id: `enemy:${enemy.id}:emission`,
+    sourceId: `enemy:${enemy.id}`,
+    effect: "visibility",
+    roomId,
+    zone,
+    intensity: Math.min(0.3, 0.12 + definition.behavior.emissionRate * 0.2),
+    duration: 1.4,
+    decayPerSecond: 0.05,
+    stacking: "strongest",
+    species: definition.behavior.species,
+  });
 };
 
 const recordProtectedPresence = (state: GameState, enemy: EnemyState, dt: number): void => {

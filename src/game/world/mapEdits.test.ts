@@ -23,11 +23,19 @@ describe("in-play map edits", () => {
     expect(line.route.length).toBeGreaterThan(1);
   });
 
-  it("refuses to mint a pair the map already carries", () => {
+  it("refuses to mint a pair the edited map already carries", () => {
+    const line = mintLineConnection(
+      DEFAULT_GAME_DEFINITION,
+      createScenarioGame("claim_8_delta").map,
+      "gas_line",
+      "core",
+      "furnace"
+    );
+    if (!line) throw new Error("expected an initial routed line");
     expect(
       mintLineConnection(
         DEFAULT_GAME_DEFINITION,
-        createScenarioGame("flash_point").map,
+        withConnection(createScenarioGame("claim_8_delta").map, line),
         "gas_line",
         "core",
         "furnace"

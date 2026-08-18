@@ -1,34 +1,50 @@
-import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { ProcessFamilyId, WaveEntry } from "../../types";
 import { enemySequence } from "../enemies";
-import { ACT_TWO_SITE_SEEDS, JUNCTION_L6_SITE } from "../sites/actTwo";
-import { paletteAvailability } from "./fullPlant";
-import type { ProcessFamilyId } from "../../types";
-
-const JUNCTION_L6_PALETTE: readonly ProcessFamilyId[] = [
-  "nickel",
-  "carbon_steam",
-  "chlorine_sodium",
-];
-const JUNCTION_L6_AVAILABILITY = paletteAvailability(JUNCTION_L6_PALETTE);
+import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { actTwoSupplies } from "./actTwoShared";
+import { paletteAvailability } from "./fullPlant";
 import { emptyLoadout } from "./helpers";
 
-const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
-  entries.flat().sort((left, right) => left.at - right.at);
+const PALETTE: readonly ProcessFamilyId[] = ["nickel", "carbon_steam", "chlorine_sodium"];
+const AVAILABLE = paletteAvailability(PALETTE);
+const ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "west_freight",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "upper_freight",
+    roomId: "reservoir",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.08,
+    eligibility: "all",
+  },
+  {
+    id: "lower_freight",
+    roomId: "lower_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.12,
+    eligibility: "all",
+  },
+];
+const on = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+const wave = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
 
+/** Junction L-6 separates three freight lanes and introduces sustained pipe-assisted projection. */
 export const JUNCTION_L6_LEVEL: LevelDefinition = {
   id: "junction_l6",
   number: 7,
-  palette: JUNCTION_L6_PALETTE,
+  palette: PALETTE,
   enemyLevel: 26,
   focusRoomId: "lower_intake",
-  featuredReactionIds: [
-    "nickel_oxide_reduction",
-    "nickel_carbonyl_formation",
-    "nickel_carbonyl_deposition",
-    "nickel_catalyzed_methanation",
-  ],
-  startingMatter: 360,
+  featuredReactionIds: ["chlor_alkali_electrolysis"],
+  startingMatter: 370,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
   supplies: actTwoSupplies("freight_intake", {
@@ -36,7 +52,11 @@ export const JUNCTION_L6_LEVEL: LevelDefinition = {
     contents: { hydrogen: 300, oxygen: 120, carbon_monoxide: 260 },
     cost: 31,
   }),
-  site: { kind: "generated", seed: ACT_TWO_SITE_SEEDS.junction_l6, spec: JUNCTION_L6_SITE },
+  site: {
+    kind: "fixed",
+    map: FIXED_CAMPAIGN_MAPS.junction_l6,
+    hullAnchor: { columns: 78, elevations: 0 },
+  },
   loadout: {
     ...emptyLoadout(),
     stationary: {
@@ -45,50 +65,54 @@ export const JUNCTION_L6_LEVEL: LevelDefinition = {
       reservoir: { iron_catalyst: 4, solid_carbon: 20 },
     },
   },
+  routes: ROUTES,
   rounds: [
     {
       id: "freight_intake",
-      primeSeconds: 72,
-      wave: enemySequence(1, "flintjack", 0.5, 1, -4),
-      availability: JUNCTION_L6_AVAILABILITY,
+      wave: wave(
+        on("west_freight", enemySequence(7, "deckmouth", 0.5, 2.5, -6)),
+        on("upper_freight", enemySequence(6, "flintjack", 1, 2.2, -6))
+      ),
+      availability: AVAILABLE,
     },
     {
       id: "emitter_manifest",
-      primeSeconds: 72,
-      wave: wave(enemySequence(1, "glowbag", 1, 1, -8), enemySequence(1, "clatter", 2, 1, -8)),
-      availability: JUNCTION_L6_AVAILABILITY,
+      wave: wave(
+        on("west_freight", enemySequence(8, "flintjack", 0.5, 1.8, -5)),
+        on("upper_freight", enemySequence(5, "clatter", 1, 2.1, -5)),
+        on("lower_freight", enemySequence(4, "glowbag", 2, 3, -6))
+      ),
+      availability: AVAILABLE,
     },
     {
       id: "carrier_transfer",
-      primeSeconds: 72,
-      wave: enemySequence(1, "splitback", 1, 1, -6),
-      availability: JUNCTION_L6_AVAILABILITY,
+      wave: wave(
+        on("west_freight", enemySequence(6, "splitback", 0.5, 2.7, -5)),
+        on("upper_freight", enemySequence(6, "redlung", 1, 2.8, -5)),
+        on("lower_freight", enemySequence(5, "shear_jelly", 1.5, 2.6, -5))
+      ),
+      availability: AVAILABLE,
     },
     {
       id: "industrial_feed",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(5, "flintjack", 0.5, 1.5, -3),
-        enemySequence(3, "clatter", 1, 1.8, -3),
-        enemySequence(1, "glowbag", 2, 1, -2),
-        enemySequence(1, "splitback", 4, 1, -8),
-        enemySequence(1, "shear_jelly", 5, 1, -2)
+        on("west_freight", enemySequence(9, "flintjack", 0.5, 1.55, -4)),
+        on("upper_freight", enemySequence(7, "clatter", 1, 1.8, -4)),
+        on("lower_freight", enemySequence(6, "glowbag", 1.5, 2.5, -5)),
+        on("upper_freight", enemySequence(1, "anchor", 3, 1, -6))
       ),
-      availability: JUNCTION_L6_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "qualification_run",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(1, "flintjack", 0.5, 1, 1),
-        enemySequence(4, "flintjack", 2, 1.5, -3),
-        enemySequence(4, "clatter", 1, 1.8, -3),
-        enemySequence(4, "splitback", 2.5, 2.5, -4),
-        enemySequence(3, "redlung", 4, 2.7, -3),
-        enemySequence(3, "glowbag", 5, 2.8, -3),
-        enemySequence(1, "anchor", 7, 1, -2)
+        on("west_freight", enemySequence(9, "splitback", 0.5, 2, -4)),
+        on("upper_freight", enemySequence(8, "redlung", 1, 2.3, -4)),
+        on("lower_freight", enemySequence(8, "shear_jelly", 1.25, 2, -4)),
+        on("lower_freight", enemySequence(6, "glowbag", 2, 2.4, -4)),
+        on("upper_freight", enemySequence(1, "anchor", 3.5, 5, -5))
       ),
-      availability: JUNCTION_L6_AVAILABILITY,
+      availability: AVAILABLE,
     },
   ],
 };

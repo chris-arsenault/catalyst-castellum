@@ -7,6 +7,7 @@ import type {
   EnemyType,
   GasType,
   GridCell,
+  EnemyControlEffect,
 } from "./types";
 
 export interface EnemyDefinition {
@@ -98,6 +99,7 @@ export interface EnemyState {
   damageBySource: DamageLedger;
   lastDamage: DamageReceipt | null;
   behavior: EnemyBehaviorState;
+  effects: EnemyControlEffect[];
 }
 
 export type EnemyLocomotionMode = (typeof ENEMY_LOCOMOTION_MODES)[number];

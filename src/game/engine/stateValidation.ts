@@ -17,6 +17,7 @@ import { definitionForMap } from "../world/activeDefinition";
 import type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 import { validateEquipmentStates } from "./equipmentStateValidation";
 import { validateSupplyStates } from "./supplyStateValidation";
+import { validateTowerStates } from "./towerStateValidation";
 
 export type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 
@@ -45,7 +46,7 @@ const validateAvailability = (
   expected: ScenarioAvailability,
   issues: StateValidationIssue[]
 ): void => {
-  const fields = ["equipment", "gasLines", "liquidLines"] as const;
+  const fields = ["towers", "equipment", "gasLines", "liquidLines"] as const;
   for (const field of fields) {
     if (!sameIdentifiers(state.availability[field], expected[field])) {
       issue(
@@ -73,14 +74,8 @@ const validateCampaign = (
       "Campaign level index does not identify the selected level."
     );
   }
-  if (campaign.checkpointLevelId !== campaign.levelId) {
-    issue(
-      issues,
-      "campaign_mismatch",
-      "campaign.checkpointLevelId",
-      "Checkpoint and active level must identify the same scenario."
-    );
-  }
+  if (campaign.retryCount < 0)
+    issue(issues, "campaign_mismatch", "campaign.retryCount", "Retry count cannot be negative.");
   if (campaign.roundIndex >= level.rounds.length) {
     issue(
       issues,
@@ -210,21 +205,8 @@ const validateTopology = (
 };
 
 const validatePhaseOwnership = (state: GameState, issues: StateValidationIssue[]): void => {
-  if (state.paused && state.phase !== "prime" && state.phase !== "assault") {
-    issue(
-      issues,
-      "phase_invariant_invalid",
-      "paused",
-      "Only a live prime or assault may be paused."
-    );
-  }
-  if (state.phase === "prime" && (state.spawnCursor !== 0 || state.enemies.length > 0)) {
-    issue(
-      issues,
-      "phase_invariant_invalid",
-      "phase",
-      "Prime cannot contain spawned enemies or an advanced wave cursor."
-    );
+  if (state.paused && state.phase !== "assault") {
+    issue(issues, "phase_invariant_invalid", "paused", "Only a live assault may be paused.");
   }
   if (
     ["level_briefing", "build", "round_result", "level_complete", "victory"].includes(
@@ -383,9 +365,20 @@ export const validateGameState = (
   issues.push(...validateSupplyStates(state, activeDefinition));
   validateTopology(state, issues, activeDefinition);
   validateEnemyNavigation(state, issues, activeDefinition);
+  for (const [index, enemy] of state.enemies.entries()) {
+    if (!(enemy.routeId in state.map.routeGraph.routes)) {
+      issue(
+        issues,
+        "route_state_invalid",
+        `enemies.${index}.routeId`,
+        "Enemy route is absent from the active route graph."
+      );
+    }
+  }
   validateEnemyLevels(state, issues);
   validateEnemyBehaviors(state, issues, activeDefinition);
   issues.push(...validateEquipmentStates(state, activeDefinition));
+  issues.push(...validateTowerStates(state, activeDefinition));
   validatePhase(state, issues, activeDefinition);
   return issues;
 };

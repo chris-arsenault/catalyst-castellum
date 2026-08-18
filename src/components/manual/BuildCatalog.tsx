@@ -16,6 +16,7 @@ import { EquipmentImage } from "./EquipmentImage";
 import { equipmentCopy, speciesCopy } from "../../presentation/entityCopy";
 import { roomDefinition, SPECIES_DEFINITIONS } from "../../presentation/defaultGame";
 import { dutyReactionSummaries } from "../../presentation/dutyCopy";
+import { TowerBuildCatalog } from "./TowerBuildCatalog";
 
 type CategoryFilter = "all" | EquipmentCategory;
 
@@ -282,6 +283,8 @@ export const BuildCatalog = ({
     if (!target) return;
     if (dispatch(installCommand(target, selectedEquipmentId))) closeManual();
   }, [closeManual, dispatch, selectedEquipmentId, target]);
+
+  if (!target) return <TowerBuildCatalog />;
 
   return (
     <section className="manual-page manual-build-page" data-testid="manual-build-page">

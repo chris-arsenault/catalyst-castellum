@@ -6,7 +6,6 @@ export const UI_MESSAGES = {
   "ui.common.eventLogReady": "Event log ready.",
   "ui.phase.level_briefing": "Briefing",
   "ui.phase.build": "Build",
-  "ui.phase.prime": "Prime",
   "ui.phase.assault": "Assault",
   "ui.phase.round_result": "Round result",
   "ui.phase.level_complete": "Level complete",
@@ -15,6 +14,9 @@ export const UI_MESSAGES = {
   "ui.app.loading": "Reading local operations archive…",
   "ui.app.paused.title": "Simulation paused",
   "ui.app.paused.detail": "Continuous process state is frozen",
+  "ui.sidePanel.title": "Control panel",
+  "ui.sidePanel.towers": "Defenses",
+  "ui.sidePanel.room": "Room systems",
   "ui.architecture.kind.passage": "Open passage",
   "ui.architecture.kind.ladder": "Open ladder shaft",
   "ui.architecture.kind.floor": "Floor opening",
@@ -126,7 +128,6 @@ export const UI_MESSAGES = {
   "ui.topbar.round": "Round {current} / {total}",
   "ui.topbar.phase.briefing": "Briefing",
   "ui.topbar.phase.planning": "Planning",
-  "ui.topbar.phase.prime": "Prime live",
   "ui.topbar.phase.assault": "Assault",
   "ui.topbar.phase.roundResult": "Round result",
   "ui.topbar.phase.levelComplete": "Level complete",
@@ -199,7 +200,6 @@ export const UI_MESSAGES = {
   "ui.notice.dismiss": "{notice}. Dismiss",
   "ui.save.phase.briefing": "Briefing",
   "ui.save.phase.planning": "Planning",
-  "ui.save.phase.prime": "Priming",
   "ui.save.phase.assault": "Assault",
   "ui.save.phase.roundComplete": "Round complete",
   "ui.save.phase.checkpointComplete": "Site secured",
@@ -270,11 +270,12 @@ export const UI_MESSAGES = {
   "ui.room.limiting": "limiting: {factor}",
   "ui.room.flashCount": "OX-1 batch flashes recorded {count}",
   "ui.room.incidents": "Recent damage",
-  "ui.room.incidentsClear": "Damage log ready for this chamber.",
+  "ui.room.incidentsClear": "Incident log ready for this chamber.",
+  "ui.room.incident.reaction": "OX-1 atmospheric reaction",
+  "ui.room.incident.reactionEffect": "+{pressure} kPa transient impulse · +{heat} °C",
   "ui.room.incident.title": "{source} · {damage} damage",
   "ui.room.incident.targets": "{targets} affected · {killed} killed",
   "ui.room.incident.recorded": "{phase} · recorded at {time}",
-  "ui.room.incident.phase.prime": "PRIME",
   "ui.room.incident.phase.assault": "ASSAULT",
   "ui.room.details.kicker": "{code} · Room details",
   "ui.room.details.close": "Close room details",
@@ -301,31 +302,28 @@ export const UI_MESSAGES = {
   "ui.manual.operations.kicker": "Control cycle",
   "ui.manual.operations.title": "Run the defense machine",
   "ui.manual.operations.summary":
-    "Each round is one continuous process record. Build a chemical state, expose the formation, then carry useful inventory into the next plan.",
+    "Read the routes, mount a defense on the vertical section, then use the combat record to revise coverage.",
   "ui.manual.operations.phase.plan.title": "Plan",
   "ui.manual.operations.phase.plan.detail":
-    "Configure equipment, conduits, and feedstocks while simulation time is frozen.",
-  "ui.manual.operations.phase.prime.title": "Prime",
-  "ui.manual.operations.phase.prime.detail":
-    "Advance the plant before the wave arrives and establish useful process inventory.",
+    "Inspect every approach, place towers on compatible surfaces, and spend Matter on the upgrades that answer the next formation.",
   "ui.manual.operations.phase.assault.title": "Assault",
   "ui.manual.operations.phase.assault.detail":
-    "The commissioned plant runs autonomously while the hostile formation crosses it.",
-  "ui.manual.operations.phase.analyze.title": "Analyze",
-  "ui.manual.operations.phase.analyze.detail":
-    "Read the frozen end state, bank harvested matter, and prepare the next round.",
-  "ui.manual.operations.note.process.title": "Process rooms build weapons over time.",
-  "ui.manual.operations.note.process.detail":
-    "Flow, retained inventory, mixing, temperature, and outlet headroom share one clock.",
-  "ui.manual.operations.note.equipment.title": "Equipment changes the room’s possible chemistry.",
-  "ui.manual.operations.note.equipment.detail":
-    "The Encyclopedia links every machine to the reactions it enables or accelerates.",
-  "ui.manual.operations.note.liquid.title": "Liquid inventory stores delayed effects.",
-  "ui.manual.operations.note.liquid.detail":
-    "Contact equipment turns routed gases and liquids into material that moves between rooms.",
-  "ui.manual.operations.note.enemy.title": "Enemy profiles reward different exposure plans.",
-  "ui.manual.operations.note.enemy.detail":
-    "The Threats section records movement, health, and every damage-channel multiplier.",
+    "Towers acquire targets and fire on the fixed simulation clock while formations follow their authored routes.",
+  "ui.manual.operations.phase.report.title": "Report",
+  "ui.manual.operations.phase.report.detail":
+    "Bank recovered Matter, inspect leaks and tower downtime, then alter coverage for the next wave.",
+  "ui.manual.operations.note.towers.title": "Towers provide direct combat output.",
+  "ui.manual.operations.note.towers.detail":
+    "Range, firing arc, line of sight, cadence, and target priority determine which route segments each mount can hold.",
+  "ui.manual.operations.note.routes.title": "Every approach needs service capacity.",
+  "ui.manual.operations.note.routes.detail":
+    "Branches divide coverage, ladders change travel time, and merge points let one defense service several approaches.",
+  "ui.manual.operations.note.grafts.title": "Room grafts change the campaign hull.",
+  "ui.manual.operations.note.grafts.detail":
+    "A graft costs several upgrades, adds permanent geometry, and carries its tower surfaces into later sites.",
+  "ui.manual.operations.note.chemistry.title": "Chemistry modifies the battlefield.",
+  "ui.manual.operations.note.chemistry.detail":
+    "Later sites route finite feedstock, create atmospheric byproducts, and apply bounded movement or tower effects.",
   "ui.manual.build.order": "Construction order",
   "ui.manual.build.socketA": "Socket A",
   "ui.manual.build.socketB": "Socket B",

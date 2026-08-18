@@ -40,8 +40,8 @@ export interface LiquidTapDefinition {
   sourceIds: readonly LiquidSourceId[];
 }
 
-/** A designated graft attachment on a player-owned room (confirmed hardpoint model). */
-export interface Hardpoint {
+/** A designated room-graft attachment on a player-owned hull room. */
+export interface GraftSlot {
   id: string;
   /** Boundary cell inside the room the joint connects through. */
   cell: GridCell;
@@ -62,7 +62,7 @@ export interface MapRoom {
   /** Atmospheric cells inside the room that support climbing. */
   ladderCells: readonly GridCell[];
   taps: { gas: GasTapDefinition; liquid: LiquidTapDefinition };
-  hardpoints: readonly Hardpoint[];
+  graftSlots: readonly GraftSlot[];
   provenance: RoomProvenance;
 }
 
@@ -114,6 +114,39 @@ export interface MapUtilityNode {
   hostRoomId: RoomId;
 }
 
+export type EnemyRouteNodeKind = "ingress" | "junction" | "core";
+
+export interface EnemyRouteNode {
+  id: string;
+  kind: EnemyRouteNodeKind;
+  cell: GridCell;
+}
+
+export interface EnemyRouteEdge {
+  id: string;
+  from: string;
+  to: string;
+  cells: readonly GridCell[];
+  traversal: "authored_path";
+  length: number;
+  movementCost: number;
+  eligibility: "ground" | "flying" | "all";
+}
+
+export interface EnemyRouteDefinition {
+  id: string;
+  ingressNodeId: string;
+  edgeIds: readonly string[];
+  authoredOrder: number;
+}
+
+export interface EnemyRouteGraph {
+  coreNodeId: string;
+  nodes: Readonly<Record<string, EnemyRouteNode>>;
+  edges: Readonly<Record<string, EnemyRouteEdge>>;
+  routes: Readonly<Record<string, EnemyRouteDefinition>>;
+}
+
 export interface WorldMap {
   width: number;
   height: number;
@@ -122,6 +155,7 @@ export interface WorldMap {
   ringRadii: { inner: number; middle: number };
   entryCell: GridCell;
   coreBreachCell: GridCell;
+  routeGraph: EnemyRouteGraph;
   rooms: Record<RoomId, MapRoom>;
   connections: Record<ConnectionId, MapConnection>;
   /** Feedstock, vent, and drain ports present on this map, hosted by their rooms. */

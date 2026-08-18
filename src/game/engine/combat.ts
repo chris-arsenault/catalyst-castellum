@@ -1,39 +1,19 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
-import type {
-  CombatIncidentTarget,
-  EnemyState,
-  GameState,
-  HazardChannels,
-  RoomId,
-  RoomState,
-} from "../types";
+import type { EnemyState, GameState, RoomId, RoomState } from "../types";
 import { levelDefinitionFor, roundDefinitionFor } from "./campaign";
 import {
-  addChannels,
-  applyDamagePacketsWithScale,
-  channelTotal,
-  dominantAppliedDamagePacket,
   dominantLedgerSource,
   emptyDamageLedger,
   emptyHazardChannels,
-  type AppliedDamagePacket,
   type DamageApplication,
-  type DamagePacket,
   type HazardBurst,
 } from "./damage";
 import { addCombatIncident, addEvent } from "./events";
-import {
-  collectExposureIncidents,
-  environmentalDamagePackets,
-  recordExposureIncidents,
-  type ExposureIncidentBuilders,
-} from "./exposureIncidents";
 import { clamp } from "./math";
-import { findEnemyPath, findEnemyPathBetween } from "./navigation";
+import { findEnemyPathBetween } from "./navigation";
 import { roomMovementMultiplier } from "./roomState";
-import { enemyGasZone, enemyRoomId, enemyWorldPosition } from "./enemyPosition";
-import type { WorldMap } from "../world/map";
+import { enemyRoomId } from "./enemyPosition";
 import {
   enemyBehaviorSpeedMultiplier,
   ENEMY_WORLD_SPEED_SCALE,
@@ -41,24 +21,11 @@ import {
 } from "./enemyMovementRules";
 import { enemyStatsAtLevel, resolveEnemyLevel } from "./enemyLevel";
 import { roomState } from "../world/instances";
-import { initialEnemyBehaviorState, transitionArmoredMolt } from "./enemyBehaviors";
-import { sharedFieldDamageScales } from "./enemyField";
+import { initialEnemyBehaviorState } from "./enemyBehaviors";
+import { routePathForEnemy } from "../world/routes";
+import { environmentalEnemyMovementMultiplier } from "./environmentalFields";
 
 export { enemyRoomId, enemyWorldPosition } from "./enemyPosition";
-
-const burstPacket = (
-  burst: HazardBurst,
-  index: number,
-  enemy: EnemyState,
-  map: WorldMap
-): DamagePacket => ({
-  key: `burst:${index}`,
-  sourceId: burst.sourceId,
-  channels: {
-    ...burst.channels,
-    heat: burst.zone === null || burst.zone === enemyGasZone(enemy, map) ? burst.channels.heat : 0,
-  },
-});
 
 export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): void => {
   const level = levelDefinitionFor(state, gameDefinition);
@@ -67,10 +34,7 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
     const entry = wave[state.spawnCursor];
     if (!entry || entry.at > state.phaseTime) break;
     const definition = gameDefinition.enemies[entry.type];
-    const path = findEnemyPath(
-      { flying: definition.flying, portalStates: state.portalStates },
-      state.map
-    );
+    const path = routePathForEnemy(entry, state.map, state.portalStates, gameDefinition);
     if (path.length === 0) throw new Error(`No cell route reaches Core for ${entry.type}.`);
     const enemyLevel = resolveEnemyLevel(level.enemyLevel, entry.levelOffset);
     const health = enemyStatsAtLevel(definition, enemyLevel).health;
@@ -91,6 +55,7 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
       damageBySource: emptyDamageLedger(),
       lastDamage: null,
       behavior: initialEnemyBehaviorState(definition, enemyLevel),
+      effects: [],
     });
     state.nextEnemyId += 1;
     state.spawnCursor += 1;
@@ -98,12 +63,7 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
   }
 };
 
-const appliedPacketFor = (
-  application: DamageApplication,
-  key: string
-): AppliedDamagePacket | null => application.packets.find((packet) => packet.key === key) ?? null;
-
-const neutralizeEnemy = (
+export const neutralizeEnemy = (
   state: GameState,
   enemy: EnemyState,
   roomId: RoomId,
@@ -141,155 +101,46 @@ const neutralizeEnemy = (
   );
 };
 
-interface IncidentBuilder {
-  burst: HazardBurst;
-  targets: CombatIncidentTarget[];
-  damageByChannel: HazardChannels;
-}
-
-const incidentTone = (hitCount: number, killed: number): "good" | "warning" | "reaction" => {
-  if (killed > 0) return "good";
-  return hitCount > 0 ? "warning" : "reaction";
-};
-
-const recordBurstIncidents = (state: GameState, builders: IncidentBuilder[]): void => {
-  for (const builder of builders) {
+const recordBurstIncidents = (state: GameState, bursts: HazardBurst[]): void => {
+  for (const burst of bursts) {
     const incident = addCombatIncident(state, {
       elapsed: state.elapsed,
       levelId: state.campaign.levelId,
       round: state.campaign.roundIndex + 1,
       phase: state.phase,
-      roomId: builder.burst.roomId,
-      zone: builder.burst.zone,
-      sourceId: builder.burst.sourceId,
-      reactionExtent: builder.burst.reactionExtent,
-      pressureImpulse: builder.burst.pressureImpulse,
-      heatDelta: builder.burst.heatDelta,
-      damageByChannel: builder.damageByChannel,
-      targets: builder.targets,
+      roomId: burst.roomId,
+      zone: burst.zone,
+      sourceId: burst.sourceId,
+      reactionExtent: burst.reactionExtent,
+      pressureImpulse: burst.pressureImpulse,
+      heatDelta: burst.heatDelta,
+      damageByChannel: emptyHazardChannels(),
+      targets: [],
     });
-    const killed = builder.targets.filter((target) => target.killed).length;
-    const damage = channelTotal(builder.damageByChannel);
     addEvent(
       state,
-      incidentTone(builder.targets.length, killed),
+      "reaction",
       "flash_incident",
       {
-        hitCount: builder.targets.length,
-        killed,
-        damage: Math.round(damage),
-        pressureImpulse: Math.round(builder.burst.pressureImpulse),
-        reactionExtent: builder.burst.reactionExtent,
+        pressureImpulse: Math.round(burst.pressureImpulse),
+        reactionExtent: burst.reactionExtent,
+        heatDelta: burst.heatDelta,
       },
-      builder.burst.roomId,
+      burst.roomId,
       incident.id
     );
   }
 };
 
-const recordEnemyIncidents = (
-  enemy: EnemyState,
-  roomId: RoomId | null,
-  position: ReturnType<typeof enemyWorldPosition>,
-  application: DamageApplication,
-  lethalPacket: AppliedDamagePacket | null,
-  matchingBurstIndices: number[],
-  builders: IncidentBuilder[],
-  exposureBuilders: ExposureIncidentBuilders
-): void => {
-  if (roomId) {
-    collectExposureIncidents(exposureBuilders, roomId, enemy, position, application, lethalPacket);
-  }
-  for (const index of matchingBurstIndices) {
-    const packet = appliedPacketFor(application, `burst:${index}`);
-    if (!packet || packet.amount <= 0) continue;
-    const builder = builders[index] as IncidentBuilder;
-    addChannels(builder.damageByChannel, packet.channels);
-    builder.targets.push({
-      enemyId: enemy.id,
-      enemyType: enemy.type,
-      worldPosition: position,
-      healthBefore: application.healthBefore,
-      healthAfter: application.healthAfter,
-      damageByChannel: { ...packet.channels },
-      killed: application.killed && lethalPacket?.key === packet.key,
-    });
-  }
-};
-
-const resolveCombatForEnemy = (
-  state: GameState,
-  enemy: EnemyState,
-  dt: number,
-  bursts: HazardBurst[],
-  builders: IncidentBuilder[],
-  exposureBuilders: ExposureIncidentBuilders,
-  definition: GameDefinition,
-  incomingScale: number
-): boolean => {
-  const position = enemyWorldPosition(enemy);
-  const roomId = enemyRoomId(enemy, state.map);
-  enemy.spawnAge += dt;
-  const matchingBurstIndices = bursts.flatMap((burst, index) =>
-    roomId !== null && burst.roomId === roomId ? [index] : []
-  );
-  const packets = [
-    ...(roomId
-      ? environmentalDamagePackets(roomState(state, roomId), enemy, dt, state.map, definition)
-      : []),
-    ...matchingBurstIndices.map((index) =>
-      burstPacket(bursts[index] as HazardBurst, index, enemy, state.map)
-    ),
-  ];
-  const application = applyDamagePacketsWithScale(state, enemy, packets, incomingScale, definition);
-  const lethalPacket = dominantAppliedDamagePacket(application.packets);
-  recordEnemyIncidents(
-    enemy,
-    roomId,
-    position,
-    application,
-    lethalPacket,
-    matchingBurstIndices,
-    builders,
-    exposureBuilders
-  );
-  transitionArmoredMolt(state, enemy, roomId, application.killed);
-  if (!application.killed || !roomId) return true;
-  neutralizeEnemy(state, enemy, roomId, application, definition);
-  return false;
-};
-
-/**
- * Resolves all continuous exposure and instantaneous reaction bursts before movement.
- * Bursts are recorded even when they occur during prime or find an empty room.
- */
+/** Records process bursts as environmental telemetry. */
 export const resolveEnemyCombat = (
   state: GameState,
   dt: number,
   bursts: HazardBurst[],
-  definition: GameDefinition
+  _definition: GameDefinition
 ): void => {
-  const builders = bursts.map<IncidentBuilder>((burst) => ({
-    burst,
-    targets: [],
-    damageByChannel: emptyHazardChannels(),
-  }));
-  const exposureBuilders: ExposureIncidentBuilders = new Map();
-  const incomingScales = sharedFieldDamageScales(state, dt, bursts, definition);
-  state.enemies = state.enemies.filter((enemy) =>
-    resolveCombatForEnemy(
-      state,
-      enemy,
-      dt,
-      bursts,
-      builders,
-      exposureBuilders,
-      definition,
-      incomingScales.get(enemy.id) ?? 1
-    )
-  );
-  recordExposureIncidents(state, exposureBuilders);
-  recordBurstIncidents(state, builders);
+  for (const enemy of state.enemies) enemy.spawnAge += dt;
+  recordBurstIncidents(state, bursts);
 };
 
 const repathEnemy = (state: GameState, enemy: EnemyState, definition: GameDefinition): boolean => {
@@ -367,11 +218,18 @@ const moveEnemy = (
   gameDefinition: GameDefinition
 ): boolean => {
   const definition = gameDefinition.enemies[enemy.type];
+  const slow = enemy.effects
+    .filter((effect) => effect.kind === "slow")
+    .reduce((strongest, effect) => Math.max(strongest, effect.magnitude), 0);
+  const stunned = enemy.effects.some((effect) => effect.kind === "stun");
+  const controlMultiplier = stunned ? 0 : Math.max(0.1, 1 - slow);
   let travel =
     definition.speed *
     enemyBehaviorSpeedMultiplier(enemy, definition) *
     ENEMY_WORLD_SPEED_SCALE *
+    controlMultiplier *
     (room ? roomMovementMultiplier(room, definition.flying, gameDefinition) : 1) *
+    environmentalEnemyMovementMultiplier(state, enemy) *
     dt;
   while (travel > 0 && enemy.pathIndex < enemy.path.length - 1) {
     const segment = nextEnemySegment(state, enemy, gameDefinition);
@@ -396,6 +254,8 @@ const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDef
   state.coreIntegrity = Math.max(0, state.coreIntegrity - coreDamage);
   state.stats.breached += 1;
   state.stats.coreDamage += coreDamage;
+  state.stats.breachesByRoute[enemy.routeId] =
+    (state.stats.breachesByRoute[enemy.routeId] ?? 0) + 1;
   addEvent(state, "danger", "core_breached", { enemyType: enemy.type, coreDamage }, "core");
 };
 

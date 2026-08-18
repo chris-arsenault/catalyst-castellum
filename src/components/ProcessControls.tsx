@@ -11,7 +11,7 @@ import { connectionRoomPair } from "../presentation/defaultGame";
 
 const localizedPhaseLabel = (phase: string, translator: Translator): string => {
   if (phase === "build") return translator.text("ui.process.phase.planning");
-  if (phase === "prime") return translator.text("ui.process.phase.live");
+  if (phase === "assault") return translator.text("ui.process.phase.live");
   return translator.text("ui.process.phase.locked");
 };
 
@@ -28,7 +28,7 @@ export const ProcessControls = () => {
       (transportPhaseAvailable(game, runId, "gas") ||
         transportPhaseAvailable(game, runId, "liquid"))
   );
-  const locked = !["build", "prime"].includes(game.phase);
+  const locked = !["build", "assault"].includes(game.phase);
   const operationSockets = socketIds.filter((socketId) => room.equipment[socketId]?.operation);
   const phaseLabel = localizedPhaseLabel(game.phase, translator);
   return (

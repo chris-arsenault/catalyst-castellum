@@ -15,7 +15,7 @@ import { NarrativeDialogue } from "../NarrativeDialogue";
 import { ReportStats, roundReportStats } from "../WaveReport";
 
 const RoundObjective = ({ game }: { game: GameState }) => {
-  const { formatters, levelCopy, translator } = useGamePresentation();
+  const { levelCopy, translator } = useGamePresentation();
   const round = roundDefinitionFor(game);
   const level = levelDefinitionFor(game);
   return (
@@ -27,7 +27,6 @@ const RoundObjective = ({ game }: { game: GameState }) => {
       <p>
         {translator.text("ui.briefing.objective", {
           objective: levelCopy.round(level, round).objective,
-          duration: formatters.duration(round.primeSeconds),
         })}
       </p>
     </div>

@@ -18,12 +18,14 @@ import { kelvin, STANDARD_TEMPERATURE } from "./physics";
 import { assertValidGameState } from "./stateValidation";
 import { worldCatalogsForMap } from "../world/catalogs";
 import type { HullFragment } from "../world/hullFragment";
-import { produceLevelSite, type ProducedSite } from "../world/producer";
+import { materializeLevelSite, type MaterializedSite } from "../world/siteMaterialization";
 import type { RoundDefinition } from "../definitionTypes";
 import { isProcessLine, type WorldMap } from "../world/map";
 import { maybeLineDefinition, processLineIds } from "../world/instances";
 import { definitionRoom } from "../world/instances";
 import { validateWorldMap } from "../world/mapValidation";
+import { materializeRouteGraph } from "../world/routes";
+import type { RouteIngressDefinition } from "../definitionTypes";
 
 const emptyTelemetry = (): ReactionTelemetry => ({
   lastRate: 0,
@@ -188,6 +190,7 @@ const makeLiquidConduits = (loadout: FacilityLoadout, map: WorldMap): GameState[
 const copyAvailability = (
   availability: RoundDefinition["availability"]
 ): GameState["availability"] => ({
+  towers: [...availability.towers],
   equipment: [...availability.equipment],
   gasLines: [...availability.gasLines],
   liquidLines: [...availability.liquidLines],
@@ -246,30 +249,34 @@ const assertPhysicalTopology = (map: WorldMap): void => {
   throw new Error(`Physical scenario topology is invalid: ${detail}`);
 };
 
-const sharesConnectionRecords = (source: WorldMap, connections: WorldMap["connections"]): boolean =>
-  Object.keys(connections).length === Object.keys(source.connections).length &&
-  Object.keys(connections).every((id) => connections[id] === source.connections[id]);
-
 /** A live map contains physical topology only; absent loadout entries never exist. */
 const activeScenarioMap = (
   source: WorldMap,
   loadout: FacilityLoadout,
   hull: HullFragment | null,
+  routes: readonly RouteIngressDefinition[],
   definition: GameDefinition
 ): WorldMap => {
   const installedIds = initialLineIds(loadout, hull);
   const connections = physicalConnections(source, installedIds);
   seedMissingLines(connections, installedIds, definition);
-  const map = { ...source, connections };
+  const topologicalMap = { ...source, connections };
+  const map = {
+    ...topologicalMap,
+    routeGraph: materializeRouteGraph(
+      topologicalMap,
+      routes,
+      facilityModelForMap(topologicalMap).initialPortalStates()
+    ),
+  };
   assertPhysicalTopology(map);
-  if (Object.isFrozen(source) && sharesConnectionRecords(source, connections)) return source;
   return Object.freeze(map);
 };
 
 /**
- * Carry durable hull installations into a fresh site. Atmosphere, liquids, heat,
- * gases, liquids, heat, reaction residue, conduit contents, and damage telemetry reset during
- * travel. Installed equipment and stationary material remain aboard the hull.
+ * Carry durable hull installations into a fresh site. Gas, liquid, heat, reaction residue,
+ * conduit contents, and damage telemetry reset during travel. Installed equipment and stationary
+ * material remain aboard the hull.
  */
 const seedHullContents = (state: GameState, hull: HullFragment | null): void => {
   if (!hull) return;
@@ -288,39 +295,53 @@ const seedHullContents = (state: GameState, hull: HullFragment | null): void => 
     const destination = state.liquidConduits[id];
     if (destination) destination.enabled = conduit.enabled;
   }
+  state.towers = structuredClone(hull.towers);
 };
+
+export interface CampaignCarryover {
+  matter: number;
+  coreIntegrity: number;
+  retryCount: number;
+}
 
 export const createScenarioGame = (
   levelId: LevelId,
   completedLevelIds: LevelId[] = [],
   definition: GameDefinition,
-  site: ProducedSite = produceLevelSite(definition, levelId, null)
+  site: MaterializedSite = materializeLevelSite(definition, levelId, null),
+  carryover: CampaignCarryover | null = null
 ): GameState => {
   const level = definition.levels[levelId];
+  const canonicalLevelId = level.id;
   const round = site.rounds[0];
   if (!round) throw new Error(`Level ${levelId} has no rounds`);
-  const map = activeScenarioMap(site.map, level.loadout, site.hull, definition);
+  const map = activeScenarioMap(site.map, level.loadout, site.hull, level.routes, definition);
+  const campaignCarryover = carryover ?? {
+    coreIntegrity: level.startingCoreIntegrity,
+    matter: level.startingMatter,
+    retryCount: 0,
+  };
   const state: GameState = {
-    version: 23,
+    version: 27,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {
-      levelId,
-      levelIndex: definition.levelOrder.indexOf(levelId),
+      levelId: canonicalLevelId,
+      levelIndex: definition.levelOrder.indexOf(canonicalLevelId),
       roundIndex: 0,
-      checkpointLevelId: levelId,
-      completedLevelIds: [...completedLevelIds],
+      completedLevelIds: completedLevelIds.map((completed) => definition.levels[completed].id),
+      operationCheckpoint: null,
+      retryCount: campaignCarryover.retryCount,
     },
     map,
     mapRevision: 0,
     world: worldCatalogsForMap(map),
-    run: { seed: site.seed, position: definition.levelOrder.indexOf(levelId), outcome: "active" },
     availability: copyAvailability(round.availability),
     phaseTime: 0,
     elapsed: 0,
     rooms: makeRooms(level.loadout, definition, map),
-    gasSources: makeGasSources(levelId, definition),
-    liquidSources: makeLiquidSources(levelId, definition),
+    gasSources: makeGasSources(canonicalLevelId, definition),
+    liquidSources: makeLiquidSources(canonicalLevelId, definition),
     gasJunctions: makeGasJunctions(map),
     liquidJunctions: makeLiquidJunctions(map),
     gasConduits: makeGasConduits(level.loadout, map),
@@ -329,18 +350,24 @@ export const createScenarioGame = (
     gasVent: emptyGas(),
     liquidDrain: emptyLiquid(),
     enemies: [],
+    towers: {},
+    towerAttacks: [],
+    environmentalFields: [],
+    towerSupply: {},
     spawnCursor: 0,
     nextEnemyId: 1,
+    nextTowerSequence: 1,
+    nextTowerAttackId: 1,
     nextEventId: 2,
     nextIncidentId: 1,
-    coreIntegrity: level.startingCoreIntegrity,
-    matter: level.startingMatter,
+    coreIntegrity: campaignCarryover.coreIntegrity,
+    matter: campaignCarryover.matter,
     pendingMatter: 0,
     paused: false,
     speed: 1,
     stats: makeStats(),
     lastReport: null,
-    events: [scenarioStartedEvent(levelId)],
+    events: [scenarioStartedEvent(canonicalLevelId)],
     incidents: [],
   };
   seedHullContents(state, site.hull);
@@ -349,4 +376,4 @@ export const createScenarioGame = (
 };
 
 export const createInitialGame = (definition: GameDefinition): GameState =>
-  createScenarioGame("flash_point", [], definition);
+  createScenarioGame("claim_8_delta", [], definition);

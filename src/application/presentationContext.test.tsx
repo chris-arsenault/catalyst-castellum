@@ -21,7 +21,7 @@ describe("game presentation context", () => {
     expect(screen.getByRole("heading", { name: "⟦Run the defense machine⟧" })).toBeTruthy();
     expect(
       screen.getByText(
-        "⟦Configure equipment, conduits, and feedstocks while simulation time is frozen.⟧"
+        "⟦Inspect every approach, place towers on compatible surfaces, and spend Matter on the upgrades that answer the next formation.⟧"
       )
     ).toBeTruthy();
   });

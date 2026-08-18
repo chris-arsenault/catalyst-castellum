@@ -1,15 +1,15 @@
+/* eslint-disable max-lines -- Pack validation entry points stay together for schema review. */
+
 import type {
   GameDefinition,
   GamePackSource,
   LevelDefinition,
   RoundDefinition,
 } from "../definitionTypes";
-import type { ScenarioAvailability, SpeciesId } from "../types";
+import type { ScenarioAvailability, SpeciesId, TowerDefinition } from "../types";
 import { parseProcessLineId } from "../world/map";
 import type { WorldMap } from "../world/map";
-import { hullLayoutFromMap } from "../world/hullFragment";
 import { validateWorldMap } from "../world/mapValidation";
-import { generateSiteLayoutCandidate } from "../world/siteGenerator";
 import { MAX_ENEMY_LEVEL, MIN_ENEMY_LEVEL, resolveEnemyLevel } from "../engine/enemyLevel";
 import { validateEnemyDefinitions, type EnemyAuthoringIssue } from "./enemyValidation";
 import { validateCatalogStructure } from "./catalogValidation";
@@ -62,7 +62,10 @@ const validateAvailability = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  const checks = [["equipment", availability.equipment, source.equipment]] as const;
+  const checks = [
+    ["towers", availability.towers, source.towers],
+    ["equipment", availability.equipment, source.equipment],
+  ] as const;
   for (const [field, ids, catalog] of checks) {
     validateAvailableIds(ids, catalog, `${path}.${field}`, issues);
   }
@@ -145,8 +148,6 @@ const validateRound = (
   path: string,
   issues: AuthoringIssue[]
 ): void => {
-  if (round.primeSeconds < 0)
-    push(issues, `${path}.primeSeconds`, "Prime time must be nonnegative.");
   if (round.wave.length === 0)
     push(issues, `${path}.wave`, "A round must contain at least one wave entry.");
   for (const [index, entry] of round.wave.entries()) {
@@ -205,23 +206,13 @@ const mapForLevel = (
   issues: AuthoringIssue[]
 ): WorldMap => {
   if (!level.site) return source.map;
-  try {
-    return generateSiteLayoutCandidate(
-      level.site.spec,
-      hullLayoutFromMap(source.map),
-      level.site.seed
-    ).map;
-  } catch (error) {
-    push(
-      issues,
-      `${path}.site`,
-      error instanceof Error ? error.message : "Generated site production failed."
-    );
-    return source.map;
+  for (const { path: issuePath, message } of validateWorldMap(level.site.map)) {
+    push(issues, `${path}.site.${issuePath}`, message);
   }
+  return level.site.map;
 };
 
-const validateLevelDefinition = (
+const validateLevelIdentity = (
   source: GamePackSource,
   map: WorldMap,
   level: LevelDefinition,
@@ -245,6 +236,15 @@ const validateLevelDefinition = (
     if (!(reactionId in source.reactions))
       push(issues, `${path}.featuredReactionIds`, `Unknown reaction ${reactionId}.`);
   }
+};
+
+const validateLevelRounds = (
+  source: GamePackSource,
+  map: WorldMap,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
   if (level.rounds.length === 0)
     push(issues, `${path}.rounds`, "A level must contain at least one round.");
   if (level.rounds.length < 5)
@@ -263,6 +263,134 @@ const validateLevelDefinition = (
       issues
     )
   );
+};
+
+const validateLevelRoutes = (
+  map: WorldMap,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): string[] => {
+  if (level.routes.length === 0)
+    push(issues, `${path}.routes`, "A site requires an ingress route.");
+  const routeIds = level.routes.map(({ id }) => id);
+  if (new Set(routeIds).size !== routeIds.length)
+    push(issues, `${path}.routes`, "Route identifiers must be unique within a site.");
+  for (const [index, route] of level.routes.entries()) {
+    validateLevelRoute(map, route, `${path}.routes.${index}`, issues);
+  }
+  return routeIds;
+};
+
+const validateLevelRoute = (
+  map: WorldMap,
+  route: LevelDefinition["routes"][number],
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const room = map.rooms[route.roomId];
+  if (!room) {
+    push(issues, `${path}.roomId`, `Unknown room ${route.roomId}.`);
+    return;
+  }
+  const offsetOutsideRoom =
+    route.offset.column < 0 ||
+    route.offset.column >= room.bounds.width ||
+    route.offset.elevation < 0 ||
+    route.offset.elevation >= room.bounds.height;
+  if (offsetOutsideRoom) push(issues, `${path}.offset`, "Ingress offset lies outside its room.");
+  if (!Number.isFinite(route.movementCost) || route.movementCost <= 0)
+    push(issues, `${path}.movementCost`, "Movement cost must be positive.");
+};
+
+const validateRoundRoutes = (
+  level: LevelDefinition,
+  routeIds: readonly string[],
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  for (const [roundIndex, round] of level.rounds.entries()) {
+    for (const [entryIndex, entry] of round.wave.entries()) {
+      if (!routeIds.includes(entry.routeId))
+        push(
+          issues,
+          `${path}.rounds.${roundIndex}.wave.${entryIndex}.routeId`,
+          `Unknown route ${entry.routeId}.`
+        );
+    }
+  }
+};
+
+const validateLevelDefinition = (
+  source: GamePackSource,
+  map: WorldMap,
+  level: LevelDefinition,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  validateLevelIdentity(source, map, level, path, issues);
+  validateLevelRounds(source, map, level, path, issues);
+  validateRoundRoutes(level, validateLevelRoutes(map, level, path, issues), path, issues);
+};
+
+type TowerSource = TowerDefinition;
+
+const validateTowerUpgrade = (
+  towerId: string,
+  tower: TowerSource,
+  upgradeIndex: number,
+  upgradeOwners: Map<string, string>,
+  path: string,
+  issues: AuthoringIssue[]
+): void => {
+  const upgrade = tower.upgrades[upgradeIndex];
+  if (!upgrade) return;
+  const owner = upgradeOwners.get(upgrade.id);
+  if (owner && owner !== towerId)
+    push(issues, `${path}.upgrades.${upgradeIndex}.id`, `Upgrade is already owned by ${owner}.`);
+  upgradeOwners.set(upgrade.id, towerId);
+  const upgradeIds = tower.upgrades.map(({ id }) => id);
+  if (upgrade.requires.some((required) => !upgradeIds.includes(required)))
+    push(
+      issues,
+      `${path}.upgrades.${upgradeIndex}.requires`,
+      "Upgrade prerequisite is not in this tree."
+    );
+  if (upgrade.requires.includes(upgrade.id))
+    push(issues, `${path}.upgrades.${upgradeIndex}.requires`, "Upgrade cannot require itself.");
+};
+
+const validateTower = (
+  towerId: string,
+  tower: TowerSource,
+  upgradeOwners: Map<string, string>,
+  issues: AuthoringIssue[]
+): void => {
+  const path = `towers.${towerId}`;
+  validateIdentity(issues, `${path}.id`, towerId, tower.id);
+  if (!Number.isFinite(tower.buildCost) || tower.buildCost <= 0)
+    push(issues, `${path}.buildCost`, "Tower build cost must be positive.");
+  if (tower.footprint.width < 1 || tower.footprint.height < 1)
+    push(issues, `${path}.footprint`, "Tower footprint dimensions must be positive.");
+  if (tower.mountFaces.length === 0)
+    push(issues, `${path}.mountFaces`, "Tower requires at least one mounting face.");
+  if (tower.targetPolicies.length === 0)
+    push(issues, `${path}.targetPolicies`, "Tower requires at least one targeting policy.");
+  if (tower.attack.packets.length === 0)
+    push(issues, `${path}.attack.packets`, "Tower requires at least one damage packet.");
+  const upgradeIds = tower.upgrades.map(({ id }) => id);
+  if (new Set(upgradeIds).size !== upgradeIds.length)
+    push(issues, `${path}.upgrades`, "Tower upgrade identifiers must be unique.");
+  for (const index of tower.upgrades.keys()) {
+    validateTowerUpgrade(towerId, tower, index, upgradeOwners, path, issues);
+  }
+};
+
+const validateTowers = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+  const upgradeOwners = new Map<string, string>();
+  for (const [towerId, tower] of Object.entries(source.towers)) {
+    validateTower(towerId, tower, upgradeOwners, issues);
+  }
 };
 
 const validateEquipmentLoadout = (
@@ -355,15 +483,8 @@ const validateLevelOrder = (source: GamePackSource, issues: AuthoringIssue[]): v
   }
 };
 
-const validateSpeciesHazardSources = (source: GamePackSource, issues: AuthoringIssue[]): void => {
+const validateSpeciesHazards = (source: GamePackSource, issues: AuthoringIssue[]): void => {
   for (const [speciesId, species] of Object.entries(source.species)) {
-    if (species.hazards.length > 0 && species.damageSourceId === null) {
-      push(
-        issues,
-        `species.${speciesId}.damageSourceId`,
-        "A hazardous species requires a combat damage source."
-      );
-    }
     for (const [index, hazard] of species.hazards.entries()) {
       if (
         hazard.maximumExcess !== null &&
@@ -386,7 +507,8 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
   if (!Number.isInteger(source.contentVersion) || source.contentVersion < 1)
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);
-  validateSpeciesHazardSources(source, issues);
+  validateSpeciesHazards(source, issues);
+  validateTowers(source, issues);
   validateReactions(source, issues);
   validateEquipmentOperations(source, issues);
   validateMap(source, issues);

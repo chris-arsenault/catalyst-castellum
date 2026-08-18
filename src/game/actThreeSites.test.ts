@@ -19,9 +19,9 @@ describe("Act III mechanical sites", () => {
     }
   });
 
-  it("produces four distinct blank plants with cumulative process inventories", () => {
+  it("produces four distinct blank sites with optional process inventories", () => {
     const games = ACT_THREE_LEVEL_IDS.map((levelId) => createScenarioGame(levelId));
-    expect(new Set(games.map(({ run }) => run.seed)).size).toBe(4);
+    expect(new Set(games.map(({ map }) => JSON.stringify(map.rooms))).size).toBe(4);
     for (const game of games) {
       const equipment = Object.values(game.rooms).flatMap((room) =>
         Object.values(room.equipment).filter((instance) => instance !== null)
@@ -56,11 +56,9 @@ describe("Act III mechanical sites", () => {
         expect(uranium, levelId).toBe(0);
       }
     }
-    expect(LEVEL_DEFINITIONS.station_14.featuredReactionIds).toEqual([
-      "uranium_hexafluoride_hydrolysis",
-      "uranyl_fluoride_recovery",
-      "hydrogen_fluoride_electrolysis",
-    ]);
+    expect(LEVEL_DEFINITIONS.station_14.featuredReactionIds).toContain(
+      "hydrogen_fluoride_electrolysis"
+    );
   });
 
   it("keeps specialist HF feed out of the common gas header", () => {
@@ -88,25 +86,25 @@ describe("Act III mechanical sites", () => {
 });
 
 describe("Act III defense authoring", () => {
-  it("authors five physical strategies and preserves established non-uranium defenses", () => {
+  it("authors five tower strategies with one process-assisted alternative", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const builds = ACT_THREE_REFERENCE_BUILDS[levelId];
       expect(builds).toHaveLength(5);
       expect(new Set(builds.map(({ archetype }) => archetype)).size).toBe(5);
-      const uraniumBuilds = builds.filter(({ id }) => id.includes("uranium"));
-      const expectedUranium = LEVEL_DEFINITIONS[levelId].palette.includes("uranium_fluorine")
-        ? 1
-        : 0;
-      expect(uraniumBuilds, levelId).toHaveLength(expectedUranium);
+      expect(
+        builds.filter(({ rounds }) =>
+          rounds.some(({ commands }) => commands.some(({ type }) => type === "build_connection"))
+        )
+      ).toHaveLength(1);
       expect(
         builds.every(({ rounds }) =>
-          rounds.some(({ commands }) => commands.some(({ type }) => type === "build_connection"))
+          rounds.some(({ commands }) => commands.some(({ type }) => type === "place_tower"))
         )
       ).toBe(true);
     }
   });
 
-  it("ends every site with a supported all-archetype formation", () => {
+  it("ends every site with a supported all-archetype multi-route formation", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const finalWave = LEVEL_DEFINITIONS[levelId].rounds.at(-1)?.wave ?? [];
       expect(
@@ -114,10 +112,7 @@ describe("Act III defense authoring", () => {
         levelId
       ).toBe(true);
       expect(new Set(finalWave.map(({ type }) => type)).size, levelId).toBe(8);
-      expect(
-        finalWave.some(({ levelOffset }) => levelOffset > 0),
-        levelId
-      ).toBe(true);
+      expect(new Set(finalWave.map(({ routeId }) => routeId)).size, levelId).toBeGreaterThan(1);
     }
   });
 });

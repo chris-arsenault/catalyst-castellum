@@ -52,10 +52,9 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
         }}
       />
       <pixiText
-        text={translator.text("ui.map.incident.damage", {
-          pressure: formatters.number(incident.pressureDamage, 0),
-          heat: formatters.number(incident.heatDamage, 0),
-          kills: incident.kills,
+        text={translator.text("ui.map.incident.effect", {
+          pressure: formatters.number(incident.pressureImpulse, 0),
+          heat: formatters.number(incident.heatDelta, 0),
         })}
         y={-incident.height / 2 - 43}
         anchor={{ x: 0.5, y: 0 }}
@@ -64,7 +63,7 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
           fontFamily: "IBM Plex Mono, ui-monospace, monospace",
           fontSize: 17,
           fontWeight: "700",
-          fill: incident.kills > 0 ? "#e8f87f" : "#fad299",
+          fill: "#fad299",
           letterSpacing: 0.4,
         }}
       />

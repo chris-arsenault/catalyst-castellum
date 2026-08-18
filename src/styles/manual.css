@@ -318,6 +318,16 @@
 .manual-build-list > button > em.available {
   color: var(--lime);
 }
+.manual-tower-swatch {
+  display: grid;
+  width: 74px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid var(--tower-color);
+  border-radius: 4px;
+  background: #0a1512;
+  color: var(--tower-color);
+}
 .manual-equipment-image {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -383,6 +393,19 @@
 }
 .manual-build-detail > .manual-equipment-image {
   align-self: start;
+}
+.manual-tower-mark {
+  display: grid;
+  min-height: 240px;
+  place-items: center;
+  align-self: start;
+  border: 1px solid var(--tower-color);
+  border-radius: 5px;
+  background:
+    linear-gradient(rgba(10, 21, 17, 0.82), rgba(10, 21, 17, 0.82)),
+    repeating-linear-gradient(0deg, transparent 0 23px, currentColor 24px),
+    repeating-linear-gradient(90deg, transparent 0 23px, currentColor 24px);
+  color: var(--tower-color);
 }
 .manual-build-copy {
   min-width: 0;

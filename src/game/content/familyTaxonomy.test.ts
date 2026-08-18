@@ -49,7 +49,7 @@ describe("process family taxonomy", () => {
   it("gives every offensive family a damaging species and keeps iron support-only", () => {
     const damagingFamilies = new Set(
       Object.values(SPECIES_DEFINITIONS)
-        .filter((species) => species.damageSourceId !== null && species.hazards.length > 0)
+        .filter((species) => species.hazards.length > 0)
         .map((species) => species.family)
     );
     for (const family of PROCESS_FAMILY_IDS) {

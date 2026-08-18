@@ -11,7 +11,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 31.998,
     referenceDensity: 1.105,
     color: GAS_COLORS.oxygen,
-    damageSourceId: "asphyxiation",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -33,7 +32,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 28.014,
     referenceDensity: 0.967,
     color: GAS_COLORS.nitrogen,
-    damageSourceId: null,
     hazards: [],
   },
   carbon_dioxide: {
@@ -45,7 +43,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 44.01,
     referenceDensity: 1.519,
     color: GAS_COLORS.carbon_dioxide,
-    damageSourceId: "asphyxiation",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -67,7 +64,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 28.01,
     referenceDensity: 0.967,
     color: GAS_COLORS.carbon_monoxide,
-    damageSourceId: "carbon_monoxide",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -89,7 +85,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 70.9,
     referenceDensity: 2.447,
     color: GAS_COLORS.chlorine,
-    damageSourceId: "chlorine_gas",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -120,7 +115,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 2.016,
     referenceDensity: 0.07,
     color: GAS_COLORS.hydrogen,
-    damageSourceId: null,
     hazards: [],
   },
   hydrogen_chloride: {
@@ -132,7 +126,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 36.46,
     referenceDensity: 1.259,
     color: GAS_COLORS.hydrogen_chloride,
-    damageSourceId: "hydrogen_chloride_gas",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -163,7 +156,6 @@ export const BASE_GAS_DEFINITIONS = {
     molarMass: 18.015,
     referenceDensity: 0.622,
     color: GAS_COLORS.steam,
-    damageSourceId: "thermal_exposure",
     hazards: [
       {
         basis: "gas_partial_ratio",

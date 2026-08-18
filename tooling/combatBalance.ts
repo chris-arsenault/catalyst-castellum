@@ -1,367 +1,382 @@
 /* global console, process */
 import { DEFAULT_GAME_DEFINITION } from "../src/game/definition";
+import { enemyStatsAtLevel, resolveEnemyLevel } from "../src/game/engine/enemyLevel";
+import { effectiveTowerStats } from "../src/game/engine/towerStats";
 import {
-  DAMAGE_FAMILIES,
-  FAMILY_REFERENCE_EXPOSURES,
-  PRIMARY_DAMAGE_FAMILIES,
-  conduitProfiles,
-  deriveBalancedDefinition,
-  enemyBehaviorProfiles,
-  idealThroughputProfile,
-  referenceDamageProfiles,
-  routeProfile,
-  solveEnemyHealth,
-  solveEnemySpeeds,
-  solveFirstOrderDamage,
-  solveSecondOrderDamage,
-  stoichiometryModel,
-  verifyLiveBalance,
-  type DamageFamily,
-  type EnemyBalanceOverride,
-  type PrimaryDamageFamily,
-  type SecondOrderDamageSolve,
-} from "../src/game/balance/combatModel";
-import {
-  ENEMY_HEALTH_GROWTH_PER_LEVEL,
-  REFERENCE_ENEMY_LEVEL,
-  enemyHealthScale,
-  enemyStatsAtLevel,
-  resolveEnemyLevel,
-} from "../src/game/engine/enemyLevel";
-import { ENEMY_TYPES, LEVEL_IDS, type EnemyType } from "../src/game/types";
-import { printEnemies, printVerification } from "./combatBalanceEnemyPrint";
+  LEVEL_IDS,
+  type LevelId,
+  type TowerInstance,
+  type TowerRoundReport,
+  type WaveEntry,
+} from "../src/game/types";
+import type { RoundDefinition } from "../src/game/definitionTypes";
+import { referenceBuildsFor } from "../src/game/content/playtestPortfolios";
+import { runPlan } from "../src/game/playtest/runner";
+import type { PlaytestResult } from "../src/game/playtest/types";
 import { number, table } from "./tableFormat";
 
-const siteLevelProgression = () =>
-  LEVEL_IDS.map((levelId) => {
-    const level = DEFAULT_GAME_DEFINITION.levels[levelId];
-    const waveLevels = level.rounds.flatMap((round) =>
-      round.wave.map((entry) => resolveEnemyLevel(level.enemyLevel, entry.levelOffset))
-    );
-    const deckmouth = enemyStatsAtLevel(
-      DEFAULT_GAME_DEFINITION.enemies.deckmouth,
-      level.enemyLevel
-    );
+const definition = DEFAULT_GAME_DEFINITION;
+
+const damagePerShot = (chassisId: TowerInstance["chassisId"]): number =>
+  definition.towers[chassisId].attack.packets.reduce(
+    (total, packet) =>
+      total + Object.values(packet.channels).reduce((sum, value) => sum + value, 0),
+    0
+  );
+
+const probe = (
+  chassisId: TowerInstance["chassisId"],
+  upgrades: TowerInstance["upgrades"] = []
+): TowerInstance => ({
+  id: `balance:${chassisId}`,
+  chassisId,
+  placement: {
+    anchor: { column: 0, elevation: 0 },
+    mountFace: "floor",
+    orientation: "right",
+    occupiedCells: [{ column: 0, elevation: 0 }],
+    supportCells: [{ column: 0, elevation: -1 }],
+    firingOrigin: { x: 0.5, elevation: 0.95 },
+  },
+  provenance: "site",
+  upgrades: [...upgrades],
+  targetPolicy: definition.towers[chassisId].targetPolicies[0] ?? "first",
+  cooldown: 0,
+  localResources: { gas: {}, liquid: {} },
+  currentTargetIds: [],
+  damageDealt: 0,
+  kills: 0,
+  shots: 0,
+  totalMatterSpent: 0,
+  downtimeReason: "no_target",
+  telemetry: {
+    engagedSeconds: 0,
+    targetsServiced: 0,
+    overkillDamage: 0,
+    controlApplications: 0,
+    downtime: { noTarget: 0, cooldown: 0, supply: 0 },
+  },
+});
+
+const towerProfiles = () =>
+  Object.values(definition.towers).map((tower) => {
+    const stats = effectiveTowerStats(probe(tower.id), definition);
+    const shotDamage = damagePerShot(tower.id) * stats.damageMultiplier;
     return {
-      levelId,
-      enemyLevel: level.enemyLevel,
-      healthScale: enemyHealthScale(level.enemyLevel),
-      deckmouthHealth: deckmouth.health,
-      deckmouthCoreDamage: deckmouth.coreDamage,
-      deckmouthMatterYield: deckmouth.matterYield,
-      minimumWaveLevel: Math.min(...waveLevels),
-      maximumWaveLevel: Math.max(...waveLevels),
+      chassisId: tower.id,
+      role: tower.role,
+      cost: tower.buildCost,
+      damage: shotDamage,
+      cadence: stats.cadence,
+      dps: shotDamage * stats.cadence,
+      service: stats.cadence * stats.targetCap,
+      range: stats.range,
+      targetCap: stats.targetCap,
+      matterEfficiency: (shotDamage * stats.cadence) / tower.buildCost,
     };
   });
 
-export interface CombatBalanceReport {
-  assumptions: {
-    familyReferenceExposures: typeof FAMILY_REFERENCE_EXPOSURES;
-    temperatureExcessCelsius: number;
-    staticPressureRatioExcess: number;
-    statement: string;
-  };
-  routes: ReturnType<typeof routeProfile>[];
-  conduits: ReturnType<typeof conduitProfiles>;
-  throughput: ReturnType<typeof idealThroughputProfile>[];
-  stoichiometry: ReturnType<typeof stoichiometryModel>;
-  levelProgression: ReturnType<typeof siteLevelProgression>;
-  referenceDamage: ReturnType<typeof referenceDamageProfiles>;
-  firstOrder: ReturnType<typeof solveFirstOrderDamage>;
-  secondOrder: SecondOrderDamageSolve | null;
-  finalFamilyScales: Record<DamageFamily, number>;
-  health: ReturnType<typeof solveEnemyHealth>;
-  speed: ReturnType<typeof solveEnemySpeeds>;
-  behaviors: ReturnType<typeof enemyBehaviorProfiles>;
-  verification: ReturnType<typeof verifyLiveBalance>;
-}
-
-const combinedScales = (
-  first: Record<PrimaryDamageFamily, number>,
-  second: SecondOrderDamageSolve | null
-): Record<DamageFamily, number> =>
-  Object.fromEntries(
-    DAMAGE_FAMILIES.map((family) => [
-      family,
-      (PRIMARY_DAMAGE_FAMILIES.includes(family as PrimaryDamageFamily)
-        ? (first[family as PrimaryDamageFamily] ?? 1)
-        : 1) * (second?.scales[family] ?? 1),
-    ])
-  ) as Record<DamageFamily, number>;
-
-const overridesFrom = (
-  health: ReturnType<typeof solveEnemyHealth>,
-  speed: ReturnType<typeof solveEnemySpeeds>
-): Partial<Record<EnemyType, EnemyBalanceOverride>> =>
-  Object.fromEntries(
-    ENEMY_TYPES.map((enemyType) => [
-      enemyType,
-      {
-        health: health.find((entry) => entry.enemyType === enemyType)?.solvedHealth,
-        speed: speed.find((entry) => entry.enemyType === enemyType)?.solvedSpeed,
-      },
-    ])
+const upgradeProfiles = () =>
+  Object.values(definition.towers).flatMap((tower) =>
+    tower.upgrades.map((upgrade) => {
+      const before = effectiveTowerStats(probe(tower.id, [...upgrade.requires]), definition);
+      const after = effectiveTowerStats(
+        probe(tower.id, [...upgrade.requires, upgrade.id]),
+        definition
+      );
+      return {
+        chassisId: tower.id,
+        upgradeId: upgrade.id,
+        cost: upgrade.cost,
+        damageBefore: damagePerShot(tower.id) * before.damageMultiplier,
+        damageAfter: damagePerShot(tower.id) * after.damageMultiplier,
+        cadenceBefore: before.cadence,
+        cadenceAfter: after.cadence,
+        rangeBefore: before.range,
+        rangeAfter: after.range,
+        capBefore: before.targetCap,
+        capAfter: after.targetCap,
+        arcBefore: before.firingArc,
+        arcAfter: after.firingArc,
+      };
+    })
   );
 
-const buildReport = (firstOrderOnly: boolean): CombatBalanceReport => {
-  const base = DEFAULT_GAME_DEFINITION;
-  const routes = LEVEL_IDS.flatMap((levelId) =>
-    ENEMY_TYPES.map((enemyType) => routeProfile(levelId, enemyType, base))
+const entriesByRoute = (wave: readonly WaveEntry[]): Record<string, WaveEntry[]> => {
+  const routes: Record<string, WaveEntry[]> = {};
+  for (const entry of wave) {
+    const entries = routes[entry.routeId] ?? [];
+    if (!routes[entry.routeId]) routes[entry.routeId] = entries;
+    entries.push(entry);
+  }
+  return routes;
+};
+
+const routeHealth = (levelId: LevelId, entries: readonly WaveEntry[]): number =>
+  entries.reduce((total, entry) => {
+    const level = definition.levels[levelId];
+    const enemy = definition.enemies[entry.type];
+    return (
+      total +
+      enemyStatsAtLevel(enemy, resolveEnemyLevel(level.enemyLevel, entry.levelOffset)).health
+    );
+  }, 0);
+
+const roundRouteDemand = (levelId: LevelId, round: RoundDefinition, roundIndex: number) =>
+  Object.entries(entriesByRoute(round.wave)).map(([routeId, entries]) => {
+    const health = routeHealth(levelId, entries);
+    const arrivals = entries.map((entry) => entry.at);
+    const arrivalSpan = Math.max(1, Math.max(...arrivals) - Math.min(...arrivals));
+    return {
+      levelId,
+      round: roundIndex + 1,
+      routeId,
+      enemies: entries.length,
+      health,
+      arrivalSpan,
+      demandPerSecond: health / arrivalSpan,
+    };
+  });
+
+const routeDemandForLevel = (levelId: LevelId) =>
+  definition.levels[levelId].rounds.flatMap((round, index) =>
+    roundRouteDemand(levelId, round, index)
   );
-  const firstOrder = solveFirstOrderDamage(base);
-  const firstHealth = solveEnemyHealth(base, firstOrder.scales);
-  const speed = solveEnemySpeeds(base);
-  const firstCandidate = deriveBalancedDefinition(base, {
-    familyScales: firstOrder.scales,
-    enemyOverrides: overridesFrom(firstHealth, speed),
-  });
-  const secondOrder = firstOrderOnly ? null : solveSecondOrderDamage(firstCandidate);
-  const finalFamilyScales = combinedScales(firstOrder.scales, secondOrder);
-  // Durability is the first-order role solve. The transient pass corrects delivery, not the target.
-  const health = firstHealth;
-  const candidate = deriveBalancedDefinition(base, {
-    familyScales: finalFamilyScales,
-    enemyOverrides: overridesFrom(health, speed),
-  });
+
+const routeDemand = (levelIds: readonly LevelId[]) => levelIds.flatMap(routeDemandForLevel);
+
+const exactResults = (levelIds: readonly LevelId[]): PlaytestResult[] =>
+  levelIds.flatMap((levelId) => referenceBuildsFor(levelId).map((plan) => runPlan(levelId, plan)));
+
+const emptyTowerReport = (report: TowerRoundReport): TowerRoundReport => ({
+  chassisId: report.chassisId,
+  damageDealt: 0,
+  kills: 0,
+  shots: 0,
+  overkillDamage: 0,
+  engagedSeconds: 0,
+  targetsServiced: 0,
+  controlApplications: 0,
+  matterInvested: 0,
+  downtime: { noTarget: 0, cooldown: 0, supply: 0 },
+});
+
+const towerWaveRows = (result: PlaytestResult) => {
+  const previous = new Map<string, TowerRoundReport>();
+  return result.reports.flatMap((report) =>
+    Object.entries(report.towers).map(([towerId, current]) => {
+      const before = previous.get(towerId) ?? emptyTowerReport(current);
+      previous.set(towerId, current);
+      const engaged = current.engagedSeconds - before.engagedSeconds;
+      const noTarget = current.downtime.noTarget - before.downtime.noTarget;
+      return {
+        levelId: result.levelId,
+        planName: result.planName,
+        round: report.round,
+        towerId,
+        chassisId: current.chassisId,
+        damage: current.damageDealt - before.damageDealt,
+        kills: current.kills - before.kills,
+        shots: current.shots - before.shots,
+        targets: current.targetsServiced - before.targetsServiced,
+        engaged,
+        coverage: engaged + noTarget > 0 ? engaged / (engaged + noTarget) : 0,
+        overkill: current.overkillDamage - before.overkillDamage,
+        controls: current.controlApplications - before.controlApplications,
+        matter: current.matterInvested,
+      };
+    })
+  );
+};
+
+const parseLevelIds = (args: readonly string[]): LevelId[] => {
+  const index = args.indexOf("--level");
+  if (index < 0) return [...LEVEL_IDS];
+  const levelId = args[index + 1];
+  if (!levelId || !LEVEL_IDS.includes(levelId as never))
+    throw new Error(`Unknown level: ${levelId}`);
+  return [levelId as LevelId];
+};
+
+const buildReport = (levelIds: readonly LevelId[]) => {
+  const results = exactResults(levelIds);
   return {
-    assumptions: {
-      familyReferenceExposures: FAMILY_REFERENCE_EXPOSURES,
-      temperatureExcessCelsius: 40,
-      staticPressureRatioExcess: 0.3,
-      statement:
-        "First order holds one reference exposure fixed; second order integrates the exact transient engine and solves its family sensitivity matrix.",
-    },
-    routes,
-    conduits: LEVEL_IDS.flatMap((levelId) => conduitProfiles(levelId, base)),
-    throughput: LEVEL_IDS.map((levelId) => idealThroughputProfile(levelId, base)),
-    stoichiometry: stoichiometryModel(base),
-    levelProgression: siteLevelProgression(),
-    referenceDamage: referenceDamageProfiles(base),
-    firstOrder,
-    secondOrder,
-    finalFamilyScales,
-    health,
-    speed,
-    behaviors: enemyBehaviorProfiles(base),
-    verification: firstOrderOnly ? [] : verifyLiveBalance(candidate),
+    statement:
+      "Static tower service estimates describe authored capacity; exact fixed-step reference replays remain the balance authority.",
+    towers: towerProfiles(),
+    upgrades: upgradeProfiles(),
+    routes: routeDemand(levelIds),
+    results,
+    towerWaves: results.flatMap(towerWaveRows),
   };
 };
 
-const printLevelProgression = (report: CombatBalanceReport): void => {
-  console.log("\nENEMY LEVEL CURVE");
-  console.log(
-    `Reference Lv ${REFERENCE_ENEMY_LEVEL}; health multiplies by ${number(ENEMY_HEALTH_GROWTH_PER_LEVEL, 3)} per level.`
-  );
+type BalanceReport = ReturnType<typeof buildReport>;
+
+const printTowerRoles = (report: BalanceReport): void => {
+  console.log("Catalyst Castellum tower-defense balance report");
+  console.log(report.statement);
+  console.log("\nTOWER ROLES");
   console.log(
     table(
-      ["site", "base lv", "wave lv", "hp scale", "deckmouth hp", "core hit", "matter"],
-      report.levelProgression.map((level) => [
-        level.levelId,
-        level.enemyLevel,
-        `${level.minimumWaveLevel}-${level.maximumWaveLevel}`,
-        `${number(level.healthScale, 3)}x`,
-        number(level.deckmouthHealth, 1),
-        level.deckmouthCoreDamage,
-        level.deckmouthMatterYield,
+      [
+        "tower",
+        "role",
+        "cost",
+        "damage",
+        "cadence",
+        "DPS",
+        "targets/s",
+        "range",
+        "cap",
+        "DPS/Matter",
+      ],
+      report.towers.map((tower) => [
+        tower.chassisId,
+        tower.role,
+        tower.cost,
+        number(tower.damage, 1),
+        number(tower.cadence, 2),
+        number(tower.dps, 1),
+        number(tower.service, 2),
+        number(tower.range, 1),
+        tower.targetCap,
+        number(tower.matterEfficiency, 2),
       ])
     )
   );
 };
 
-const printRoutes = (report: CombatBalanceReport): void => {
-  console.log("\nENEMY ROUTE / DWELL SOLVE");
+const printUpgradeDeltas = (report: BalanceReport): void => {
+  console.log("\nUPGRADE DELTAS");
   console.log(
     table(
-      ["site", "enemy", "cells", "rooms", "dry s", "1.7 atm s", "60% fill s", "both s"],
+      ["tower", "upgrade", "cost", "damage", "cadence", "range", "cap", "arc"],
+      report.upgrades.map((upgrade) => [
+        upgrade.chassisId,
+        upgrade.upgradeId,
+        upgrade.cost,
+        `${number(upgrade.damageBefore, 1)}→${number(upgrade.damageAfter, 1)}`,
+        `${number(upgrade.cadenceBefore, 2)}→${number(upgrade.cadenceAfter, 2)}`,
+        `${number(upgrade.rangeBefore, 1)}→${number(upgrade.rangeAfter, 1)}`,
+        `${upgrade.capBefore}→${upgrade.capAfter}`,
+        `${number(upgrade.arcBefore, 0)}→${number(upgrade.arcAfter, 0)}`,
+      ])
+    )
+  );
+};
+
+const printRouteDemand = (report: BalanceReport): void => {
+  console.log("\nROUTE DEMAND");
+  console.log(
+    table(
+      ["site", "wave", "route", "enemies", "health", "arrival s", "HP/s"],
       report.routes.map((route) => [
         route.levelId,
-        route.enemyType,
-        route.pathCells,
-        route.roomsVisited,
-        number(route.drySeconds),
-        number(route.pressureSeconds),
-        route.floodedSeconds === null ? "n/a" : number(route.floodedSeconds),
-        route.combinedDragSeconds === null ? "n/a" : number(route.combinedDragSeconds),
+        route.round,
+        route.routeId,
+        route.enemies,
+        number(route.health, 0),
+        number(route.arrivalSpan, 1),
+        number(route.demandPerSecond, 1),
       ])
     )
   );
-  console.log("\nROOM RESIDENCE (deckmouth, dry)");
+};
+
+const printReferenceOutcomes = (report: BalanceReport): void => {
+  console.log("\nEXACT REFERENCE OUTCOMES");
   console.log(
     table(
-      ["site", "room", "cells", "volume", "seconds"],
-      report.routes
-        .filter(({ enemyType }) => enemyType === "deckmouth")
-        .flatMap((route) =>
-          route.rooms.map((room) => [
-            route.levelId,
-            room.roomId,
-            room.cells,
-            number(room.volume),
-            number(room.drySeconds),
+      ["site", "build", "result", "core", "leaks", "damage", "Matter", "towers"],
+      report.results.map((result) => [
+        result.levelId,
+        result.planName,
+        result.success ? "PASS" : "FAIL",
+        number(result.coreIntegrity, 0),
+        result.breached,
+        number(
+          Object.values(result.damageBySource).reduce((sum, value) => sum + value, 0),
+          0
+        ),
+        number(result.matterSpent, 0),
+        result.buildProfile.towers.length,
+      ])
+    )
+  );
+};
+
+const printTowerWaveTelemetry = (report: BalanceReport): void => {
+  console.log("\nTOWER / WAVE TELEMETRY");
+  console.log(
+    table(
+      [
+        "site",
+        "build",
+        "wave",
+        "tower",
+        "damage",
+        "kills",
+        "shots",
+        "targets",
+        "coverage",
+        "overkill",
+        "control",
+        "Matter",
+      ],
+      report.towerWaves.map((row) => [
+        row.levelId,
+        row.planName,
+        row.round,
+        `${row.chassisId}:${row.towerId.split(":").at(-1)}`,
+        number(row.damage, 0),
+        row.kills,
+        row.shots,
+        row.targets,
+        `${number(row.coverage * 100, 0)}%`,
+        number(row.overkill, 0),
+        row.controls,
+        number(row.matter, 0),
+      ])
+    )
+  );
+};
+
+const printRouteLeaks = (report: BalanceReport): void => {
+  console.log("\nROUTE LEAKS BY WAVE");
+  console.log(
+    table(
+      ["site", "build", "wave", "route", "leaks", "core damage"],
+      report.results.flatMap((result) =>
+        result.reports.flatMap((wave) =>
+          Object.entries(wave.breachesByRoute).map(([routeId, leaks]) => [
+            result.levelId,
+            result.planName,
+            wave.round,
+            routeId,
+            leaks,
+            wave.coreDamage,
           ])
         )
-    )
-  );
-};
-
-const printFeed = (report: CombatBalanceReport): void => {
-  const t = report.throughput.find(({ levelId }) => levelId === "morrow_pocket")!;
-  console.log("\nMATERIAL / PROC SOLVE");
-  console.log(
-    table(
-      ["quantity", "per second / seconds"],
-      [
-        ["CL-1 extent", number(t.chlorAlkaliExtentPerSecond, 3)],
-        ["CL-1 Cl2", number(t.chlorinePerSecond, 3)],
-        ["CL-1 H2", number(t.hydrogenPerSecond, 3)],
-        ["CL-1 NaOH", number(t.sodiumHydroxidePerSecond, 3)],
-        ["CL-2 HCl", number(t.hydrogenChloridePerSecond, 3)],
-        ["P-1 HCl(aq)", number(t.hydrochloricAcidPerSecond, 3)],
-        ["CL-4 NaOCl", number(t.hypochloritePerSecond, 3)],
-        ["CL-5 Cl2", number(t.releasedChlorinePerSecond, 3)],
-        ["OX-1 extent/s", number(t.ox1ExtentPerSecond, 3)],
-        ["OX-1 ideal interval", number(t.ox1ExpectedIntervalSeconds, 2)],
-      ]
-    )
-  );
-  console.log("\nALL REACTION RATE CAPS");
-  console.log(
-    table(
-      ["code", "reaction", "kind", "extent/s", "min proc s", "equipment L1/L2/L3"],
-      t.reactions.map((reaction) => [
-        reaction.code,
-        reaction.reactionId,
-        reaction.behaviorKind,
-        number(reaction.maximumExtentPerSecond, 3),
-        number(reaction.minimumProcIntervalSeconds, 3),
-        reaction.equipmentExtentPerSecondByLevel?.map((rate) => number(rate, 2)).join("/") ??
-          "room",
-      ])
-    )
-  );
-  console.log("\nSITE FEED RATE / DEPLETION");
-  console.log(
-    table(
-      ["site", "supply", "phase", "inventory", "port/s", "ideal empty s", "charge"],
-      report.throughput.flatMap((site) =>
-        site.supplies.map((supply) => [
-          site.levelId,
-          supply.supplyId,
-          supply.phase,
-          number(supply.totalInventory, 1),
-          number(supply.portRate, 2),
-          number(supply.idealDischargeSeconds, 1),
-          supply.replenishmentCost ?? "unlimited",
-        ])
       )
     )
   );
-  console.log("\nCONDUIT HOLD-UP");
-  console.log(
-    table(
-      ["connection", "phase", "length", "capacity", "max flow", "ideal prime s"],
-      report.conduits.map((line) => [
-        line.connectionId,
-        line.phase,
-        number(line.routeLength, 1),
-        number(line.capacity, 2),
-        number(line.maximumFlow, 3),
-        number(line.idealPrimeSeconds, 2),
-      ])
-    )
-  );
 };
 
-const printDamage = (report: CombatBalanceReport): void => {
-  console.log("\nREFERENCE DAMAGE MATRIX");
-  console.log(
-    table(
-      ["family", ...ENEMY_TYPES],
-      DAMAGE_FAMILIES.map((family) => [
-        family,
-        ...ENEMY_TYPES.map((enemyType) =>
-          number(
-            report.referenceDamage.find(
-              (entry) => entry.family === family && entry.enemyType === enemyType
-            )?.damage ?? 0,
-            1
-          )
-        ),
-      ])
-    )
-  );
-  console.log("\nDAMAGE COEFFICIENT SOLVE");
-  console.log(
-    table(
-      ["family", "first-order scale", "second-order correction", "final scale"],
-      DAMAGE_FAMILIES.map((family) => [
-        family,
-        PRIMARY_DAMAGE_FAMILIES.includes(family as PrimaryDamageFamily)
-          ? number(report.firstOrder.scales[family as PrimaryDamageFamily], 3)
-          : "1.000",
-        report.secondOrder ? number(report.secondOrder.scales[family], 3) : "skipped",
-        number(report.finalFamilyScales[family], 3),
-      ])
-    )
-  );
-  if (report.secondOrder) {
-    console.log(
-      `\nCoverage: min ${number(report.secondOrder.coverage.minimum, 3)}; p10 ${number(report.secondOrder.coverage.tenthPercentile, 3)}; mean ${number(report.secondOrder.coverage.mean, 3)}; shortfalls ${report.secondOrder.coverage.shortfallRows}/${report.secondOrder.rows.length}.`
-    );
-    console.log("\nTRANSIENT CAMPAIGN SENSITIVITY MATRIX");
-    console.log(
-      table(
-        ["level", "build", "round", ...DAMAGE_FAMILIES, "effective hp", "target"],
-        report.secondOrder.rows.map((row) => [
-          row.levelId,
-          row.planName,
-          row.round,
-          ...DAMAGE_FAMILIES.map((family) => number(row.familyDamage[family], 0)),
-          number(row.effectiveHealth, 0),
-          number(row.targetDamage, 0),
-        ])
-      )
-    );
-  }
-};
-
-const printStoichiometry = (report: CombatBalanceReport): void => {
-  console.log("\nSTOICHIOMETRIC MATRIX S (species rows, reaction columns)");
-  console.log(
-    table(
-      [
-        "species",
-        ...report.stoichiometry.reactions.map((reaction) => reaction.replaceAll("_", " ")),
-      ],
-      report.stoichiometry.species.map((species, row) => [
-        species,
-        ...(report.stoichiometry.matrix[row] ?? []).map((coefficient) => number(coefficient, 0)),
-      ])
-    )
-  );
-};
-
-const printReport = (report: CombatBalanceReport): void => {
-  console.log("Catalyst Castellum combat balance solver");
-  console.log(report.assumptions.statement);
-  printLevelProgression(report);
-  printRoutes(report);
-  printFeed(report);
-  printStoichiometry(report);
-  printDamage(report);
-  printEnemies(report);
-  printVerification(report);
-};
-
-const main = (): void => {
-  const args = process.argv.slice(2);
-  const report = buildReport(args.includes("--first-order"));
-  if (args.includes("--json")) console.log(JSON.stringify(report, null, 2));
-  else printReport(report);
+const printReport = (report: BalanceReport): void => {
+  printTowerRoles(report);
+  printUpgradeDeltas(report);
+  printRouteDemand(report);
+  printReferenceOutcomes(report);
+  printTowerWaveTelemetry(report);
+  printRouteLeaks(report);
 };
 
 try {
-  main();
+  const args = process.argv.slice(2);
+  const report = buildReport(parseLevelIds(args));
+  if (args.includes("--json")) console.log(JSON.stringify(report, null, 2));
+  else printReport(report);
 } catch (error) {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;

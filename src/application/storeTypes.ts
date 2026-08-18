@@ -9,6 +9,10 @@ import type {
   GridCell,
   LevelId,
   RoomId,
+  TowerChassisId,
+  TowerInstanceId,
+  TowerMountFace,
+  TowerOrientation,
 } from "../game/types";
 import type { SaveSlotCatalog, SaveSlotId, TutorialSession } from "./saveSlots";
 import type { GameRuntime } from "../game/runtime";
@@ -60,11 +64,12 @@ export interface PipePreview {
   selectedKind: ProcessLineKind;
 }
 
-/** A candidate module for a chosen hardpoint; nothing grafts until confirmed. */
+/** A candidate module for a chosen graft slot; nothing grafts until confirmed. */
 export interface GraftPreviewOption {
   moduleId: string;
   label: string;
   footprint: { width: number; height: number };
+  equipmentSlots: number;
   cost: number;
   buildable: boolean;
   reason: CommandRejectionCode | null;
@@ -72,7 +77,7 @@ export interface GraftPreviewOption {
 
 export interface GraftPreview {
   hostRoomId: RoomId;
-  hardpointId: string;
+  graftSlotId: string;
   options: GraftPreviewOption[];
 }
 
@@ -82,6 +87,12 @@ export type RoomEffectTone = "increase" | "decrease" | "steady";
 export interface RoomEffectPreview {
   connectionId: ConnectionId;
   rooms: Partial<Record<RoomId, RoomEffectTone>>;
+}
+
+export interface TowerBuildSelection {
+  chassisId: TowerChassisId;
+  mountFace: TowerMountFace;
+  orientation: TowerOrientation;
 }
 
 export interface UiSlice {
@@ -99,6 +110,9 @@ export interface UiSlice {
   graftMode: boolean;
   graftPreview: GraftPreview | null;
   roomEffectPreview: RoomEffectPreview | null;
+  towerBuildSelection: TowerBuildSelection | null;
+  selectedTowerId: TowerInstanceId | null;
+  movingTowerId: TowerInstanceId | null;
   acknowledgeStageIntro: (guideId: string) => void;
   selectRoom: (roomId: RoomId) => void;
   setPipeMode: (pipeMode: boolean) => void;
@@ -106,6 +120,9 @@ export interface UiSlice {
   setGraftMode: (graftMode: boolean) => void;
   setGraftPreview: (preview: GraftPreview | null) => void;
   setRoomEffectPreview: (preview: RoomEffectPreview | null) => void;
+  setTowerBuildSelection: (selection: TowerBuildSelection | null) => void;
+  selectTower: (towerId: TowerInstanceId | null) => void;
+  setMovingTower: (towerId: TowerInstanceId | null) => void;
   showNotice: (notice: string) => void;
   setShowHelp: (show: boolean) => void;
   openManual: (section?: ManualSection) => void;

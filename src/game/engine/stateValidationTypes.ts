@@ -11,7 +11,9 @@ export type StateValidationCode =
   | "identifier_sequence_invalid"
   | "phase_invariant_invalid"
   | "portal_identity_mismatch"
-  | "supply_state_invalid";
+  | "supply_state_invalid"
+  | "tower_state_invalid"
+  | "route_state_invalid";
 
 export interface StateValidationIssue {
   code: StateValidationCode;

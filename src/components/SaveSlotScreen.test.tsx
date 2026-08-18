@@ -15,10 +15,10 @@ describe("debug campaign launcher", () => {
     expect(siteSelect.options).toHaveLength(LEVEL_IDS.length);
     expect([...siteSelect.options].map((option) => option.value)).toEqual(LEVEL_IDS);
     expect(
-      [...siteSelect.options].find((option) => option.value === "make_the_reagent")?.textContent
-    ).toBe("LEVEL 2 · Make the Reagent · GUIDED");
+      [...siteSelect.options].find((option) => option.value === "harkers_brace")?.textContent
+    ).toBe("LEVEL 2 · Harker's Brace · GUIDED");
     expect(
-      [...siteSelect.options].find((option) => option.value === "stored_chlorine")?.textContent
-    ).toBe("LEVEL 3 · Stored Chlorine · GUIDED");
+      [...siteSelect.options].find((option) => option.value === "twelve_cask")?.textContent
+    ).toBe("LEVEL 3 · Twelve-Cask · DEFENSE");
   });
 });

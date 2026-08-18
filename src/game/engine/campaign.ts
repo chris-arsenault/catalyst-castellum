@@ -26,6 +26,7 @@ export const nextLevelIdFor = (
 };
 
 export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailability => ({
+  towers: [...source.towers],
   equipment: [...source.equipment],
   gasLines: [...source.gasLines],
   liquidLines: [...source.liquidLines],

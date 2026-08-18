@@ -25,7 +25,7 @@ const roomSchema = z.object({
   platformCells: z.array(gridCellSchema),
   ladderCells: z.array(gridCellSchema),
   taps: z.object({ gas: tapSchema, liquid: tapSchema }),
-  hardpoints: z.array(
+  graftSlots: z.array(
     z.object({
       id: z.string().min(1),
       cell: gridCellSchema,
@@ -65,6 +65,40 @@ const architecturalConnectionSchema = z.object({
   hostRoomId: roomIdSchema,
 });
 
+const routeGraphSchema = z.object({
+  coreNodeId: z.string().min(1),
+  nodes: z.record(
+    z.string(),
+    z.object({
+      id: z.string().min(1),
+      kind: z.enum(["ingress", "junction", "core"]),
+      cell: gridCellSchema,
+    })
+  ),
+  edges: z.record(
+    z.string(),
+    z.object({
+      id: z.string().min(1),
+      from: z.string().min(1),
+      to: z.string().min(1),
+      cells: z.array(gridCellSchema).min(1),
+      traversal: z.literal("authored_path"),
+      length: z.number().nonnegative(),
+      movementCost: z.number().nonnegative(),
+      eligibility: z.enum(["ground", "flying", "all"]),
+    })
+  ),
+  routes: z.record(
+    z.string(),
+    z.object({
+      id: z.string().min(1),
+      ingressNodeId: z.string().min(1),
+      edgeIds: z.array(z.string().min(1)).min(1),
+      authoredOrder: z.number().int().nonnegative(),
+    })
+  ),
+});
+
 export const worldMapSaveSchema = z.object({
   width: z.number().int().min(1),
   height: z.number().int().min(1),
@@ -73,6 +107,7 @@ export const worldMapSaveSchema = z.object({
   ringRadii: z.object({ inner: z.number(), middle: z.number() }),
   entryCell: gridCellSchema,
   coreBreachCell: gridCellSchema,
+  routeGraph: routeGraphSchema,
   rooms: z.record(roomIdSchema, roomSchema),
   connections: z.record(z.string(), z.union([processLineSchema, architecturalConnectionSchema])),
   utilityNodes: z.record(z.string(), z.object({ cell: gridCellSchema, hostRoomId: roomIdSchema })),

@@ -1,9 +1,9 @@
 import type { LevelDefinition, RoundDefinition } from "../definitionTypes";
-import { LEVEL_IDS, type LevelId } from "../types";
+import { LEVEL_IDS, type CanonicalLevelId, type LevelId } from "../types";
 import { MORROW_POCKET_LEVEL } from "./levels/morrowPocket";
-import { FLASH_POINT_LEVEL } from "./levels/flashPoint";
-import { MAKE_THE_REAGENT_LEVEL } from "./levels/makeTheReagent";
-import { STORED_CHLORINE_LEVEL } from "./levels/storedChlorine";
+import { CLAIM_8_DELTA_LEVEL } from "./levels/claim8Delta";
+import { HARKERS_BRACE_LEVEL } from "./levels/harkersBrace";
+import { TWELVE_CASK_LEVEL } from "./levels/twelveCask";
 import { KETTLEBLACK_LEVEL } from "./levels/kettleblack";
 import { CORDON_41_LEVEL } from "./levels/cordon41";
 import { JUNCTION_L6_LEVEL } from "./levels/junctionL6";
@@ -23,10 +23,10 @@ export type {
 } from "../definitionTypes";
 
 /** Explicit order keeps campaign progression independent from module discovery or file names. */
-export const LEVEL_DEFINITIONS: Record<LevelId, LevelDefinition> = {
-  flash_point: FLASH_POINT_LEVEL,
-  make_the_reagent: MAKE_THE_REAGENT_LEVEL,
-  stored_chlorine: STORED_CHLORINE_LEVEL,
+const CANONICAL_LEVEL_DEFINITIONS: Record<CanonicalLevelId, LevelDefinition> = {
+  claim_8_delta: CLAIM_8_DELTA_LEVEL,
+  harkers_brace: HARKERS_BRACE_LEVEL,
+  twelve_cask: TWELVE_CASK_LEVEL,
   morrow_pocket: MORROW_POCKET_LEVEL,
   kettleblack: KETTLEBLACK_LEVEL,
   cordon_41: CORDON_41_LEVEL,
@@ -38,6 +38,8 @@ export const LEVEL_DEFINITIONS: Record<LevelId, LevelDefinition> = {
   pell_cordon: PELL_CORDON_LEVEL,
 };
 
+export const LEVEL_DEFINITIONS: Record<LevelId, LevelDefinition> = CANONICAL_LEVEL_DEFINITIONS;
+
 export const CAMPAIGN_LEVELS: LevelDefinition[] = LEVEL_IDS.map((id) => LEVEL_DEFINITIONS[id]);
 
 export const currentLevel = (levelId: LevelId): LevelDefinition => LEVEL_DEFINITIONS[levelId];
@@ -48,6 +50,6 @@ export const currentRound = (levelId: LevelId, roundIndex: number): RoundDefinit
 };
 
 export const nextLevelId = (levelId: LevelId): LevelId | null => {
-  const index = LEVEL_IDS.indexOf(levelId);
+  const index = LEVEL_IDS.indexOf(levelId as never);
   return LEVEL_IDS[index + 1] ?? null;
 };

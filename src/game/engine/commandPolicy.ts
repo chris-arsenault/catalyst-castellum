@@ -33,6 +33,7 @@ import {
   topologyHasRoutes,
 } from "./hullCommandPolicy";
 import { evaluateSupplyCharge } from "./supplyCommandPolicy";
+import { evaluateTowerCommand } from "./towerCommandPolicy";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "amount" | "cost" | "refund">> = {}
@@ -52,10 +53,9 @@ const reject = (
 
 /** Construction stays open through the whole round so a failing defense can be corrected mid-wave. */
 const configurationUnlocked = (state: GameState): boolean =>
-  state.phase === "build" || state.phase === "prime" || state.phase === "assault";
+  state.phase === "build" || state.phase === "assault";
 
-const simulationActive = (state: GameState): boolean =>
-  state.phase === "prime" || state.phase === "assault";
+const simulationActive = (state: GameState): boolean => state.phase === "assault";
 
 const equipmentFits = (
   state: GameState,
@@ -240,7 +240,7 @@ const evaluateGraftModule = (
     gameDefinition,
     state.map,
     command.hostRoomId,
-    command.hardpointId,
+    command.graftSlotId,
     command.moduleId
   );
   if (!plan) return reject("placement");
@@ -366,6 +366,13 @@ export const evaluateCommand = (
       return evaluateGraftModule(state, command, definition);
     case "dismantle_module":
       return evaluateDismantleModule(state, command, definition);
+    case "place_tower":
+    case "move_tower":
+    case "rotate_tower":
+    case "set_tower_targeting":
+    case "upgrade_tower":
+    case "dismantle_tower":
+      return evaluateTowerCommand(state, command, definition);
     case "edit_hull_cell":
       return evaluateHullCellEdit(state, command, definition);
     case "edit_hull_cells":
@@ -381,10 +388,8 @@ export const evaluateCommand = (
     case "charge_gas_source":
     case "charge_liquid_source":
       return evaluateSupplyCharge(state, command, definition);
-    case "start_prime":
-      return requirePhase(state, "build");
     case "start_assault":
-      return requirePhase(state, "prime");
+      return requirePhase(state, "build");
     case "begin_level":
       return requirePhase(state, "level_briefing");
     case "continue_round":

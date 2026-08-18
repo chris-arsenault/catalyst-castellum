@@ -31,7 +31,7 @@ const GraftPreviewCard = ({ preview, selectedModuleId, onSelect, onClose }: Prev
         dispatch({
           type: "graft_module",
           hostRoomId: preview.hostRoomId,
-          hardpointId: preview.hardpointId,
+          graftSlotId: preview.graftSlotId,
           moduleId: option.moduleId,
         })
       ) {
@@ -39,7 +39,7 @@ const GraftPreviewCard = ({ preview, selectedModuleId, onSelect, onClose }: Prev
         onClose();
       }
     },
-    [dispatch, onClose, preview.hardpointId, preview.hostRoomId, setGraftPreview]
+    [dispatch, onClose, preview.graftSlotId, preview.hostRoomId, setGraftPreview]
   );
   return (
     <section className="graft-module-palette" data-testid="graft-preview">
@@ -75,6 +75,11 @@ const GraftPreviewCard = ({ preview, selectedModuleId, onSelect, onClose }: Prev
                 {translator.text("ui.graft.preview.footprint", {
                   width: String(option.footprint.width),
                   height: String(option.footprint.height),
+                })}
+              </small>
+              <small>
+                {translator.text("ui.graft.preview.contents", {
+                  slots: String(option.equipmentSlots),
                 })}
               </small>
             </button>
@@ -171,7 +176,7 @@ export const GraftBoard = () => {
             PACK,
             game.map,
             graftPreview.hostRoomId,
-            graftPreview.hardpointId,
+            graftPreview.graftSlotId,
             selectedModuleId
           )
         : null,
@@ -210,9 +215,9 @@ export const GraftBoard = () => {
     },
     [closePreview]
   );
-  const chooseHardpoint = useCallback(
-    (roomId: RoomId, hardpointId: string) => {
-      const preview = planGraftPreview(game, roomId, hardpointId);
+  const chooseGraftSlot = useCallback(
+    (roomId: RoomId, graftSlotId: string) => {
+      const preview = planGraftPreview(game, roomId, graftSlotId);
       setTool("select");
       setGraftPreview(preview);
       setSelectedModuleId(preview.options.find((option) => option.buildable)?.moduleId ?? null);
@@ -265,7 +270,7 @@ export const GraftBoard = () => {
               connectionTargetRoomIds={connectionTargetRoomIds}
               onStroke={editCells}
               onRoom={chooseConnectionRoom}
-              onHardpoint={chooseHardpoint}
+              onGraftSlot={chooseGraftSlot}
             />
             {graftPreview && (
               <GraftPreviewCard

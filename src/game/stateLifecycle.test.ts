@@ -35,14 +35,16 @@ describe("game-state snapshot lifecycle", () => {
   });
 
   it("does not mutate a frozen source while stepping", () => {
-    let source = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
-    source = executeCommand(source, { type: "start_prime" }).state;
+    let source = executeCommand(createScenarioGame("claim_8_delta"), { type: "begin_level" }).state;
+    source = executeCommand(source, { type: "start_assault" }).state;
     deepFreeze(source);
     expect(() => stepGame(source, 0.1)).not.toThrow();
   });
 
   it("does not mutate a frozen source while applying a command", () => {
-    const source = executeCommand(createScenarioGame("flash_point"), { type: "begin_level" }).state;
+    const source = executeCommand(createScenarioGame("claim_8_delta"), {
+      type: "begin_level",
+    }).state;
     deepFreeze(source);
     expect(() =>
       executeCommand(source, {

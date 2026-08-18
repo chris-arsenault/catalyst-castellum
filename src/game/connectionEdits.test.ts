@@ -7,16 +7,17 @@ import { plannedLineConnection } from "./world/processLineEdits";
 import { gasConduitState } from "./world/instances";
 import type { GameState } from "./types";
 
-const PAIR_ID = processLineId("gas_line", "reservoir", "washlock");
+const PAIR_ID = processLineId("gas_line", "gallery", "switchyard");
 
 const buildableState = (): GameState => {
-  const state = createScenarioGame("flash_point");
-  const exam = DEFAULT_GAME_DEFINITION.levels.flash_point.rounds.at(-1);
-  if (!exam) throw new Error("flash_point has no rounds");
+  const state = createScenarioGame("cordon_41");
+  const exam = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1);
+  if (!exam) throw new Error("cordon_41 has no rounds");
   state.phase = "build";
   state.matter = 200;
-  state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.flash_point.rounds.length - 1;
+  state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.length - 1;
   state.availability = {
+    towers: [...exam.availability.towers],
     equipment: [...exam.availability.equipment],
     gasLines: [...exam.availability.gasLines],
     liquidLines: [...exam.availability.liquidLines],
@@ -28,16 +29,16 @@ const build = (state: GameState) =>
   executeCommand(state, {
     type: "build_connection",
     kind: "gas_line",
-    fromRoomId: "reservoir",
-    toRoomId: "washlock",
+    fromRoomId: "gallery",
+    toRoomId: "switchyard",
   });
 
 describe("player-built connections are map edits", () => {
   it("keeps construction blueprints out of live topology", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("cordon_41");
     const liveLines = Object.values(state.map.connections).filter(isProcessLine);
-    expect(liveLines.map(({ id }) => id)).toEqual(["gas:core__furnace"]);
-    expect(state.gasConduits).toHaveProperty("gas:core__furnace");
+    expect(liveLines.map(({ id }) => id)).toEqual([]);
+    expect(state.gasConduits).not.toHaveProperty("gas:core__furnace");
     expect(state.gasConduits).not.toHaveProperty("gas:core__washlock");
   });
 
@@ -64,8 +65,8 @@ describe("process connection lifecycle", () => {
       DEFAULT_GAME_DEFINITION,
       state.map,
       "gas_line",
-      "reservoir",
-      "washlock"
+      "gallery",
+      "switchyard"
     );
     expect(planned).not.toBeNull();
     const result = build(state);

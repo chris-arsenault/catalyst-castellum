@@ -1,10 +1,8 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
 import {
-  DAMAGE_SOURCE_IDS,
   GAS_TYPES,
   LIQUID_TYPES,
-  type DamageSourceId,
   type GasAmounts,
   type GasType,
   type GasZone,
@@ -269,44 +267,6 @@ const emptyHazardChannels = (): HazardChannels => ({
   radiation: 0,
 });
 
-const emptyHazardsBySource = (): Record<DamageSourceId, HazardChannels> =>
-  Object.fromEntries(
-    DAMAGE_SOURCE_IDS.map((sourceId) => [sourceId, emptyHazardChannels()])
-  ) as Record<DamageSourceId, HazardChannels>;
-
-export const roomHazardsBySource = (
-  room: RoomState,
-  floorContact: boolean,
-  needsOxygen: boolean,
-  zone: GasZone,
-  definition: GameDefinition
-): Record<DamageSourceId, HazardChannels> => {
-  const hazards = emptyHazardsBySource();
-  for (const species of Object.values(definition.species)) {
-    if (species.hazards.length > 0 && species.damageSourceId === null) {
-      throw new Error(`Hazardous species ${species.id} needs a damage source.`);
-    }
-    if (species.damageSourceId === null) continue;
-    for (const rule of species.hazards) {
-      if (!hazardExposureApplies(rule, floorContact, needsOxygen)) continue;
-      const value = speciesHazardBasis(room, species.id, rule, zone, definition);
-      hazards[species.damageSourceId][rule.channel] += hazardExcess(value, rule) * rule.rate;
-    }
-  }
-  hazards.thermal_exposure.heat +=
-    Math.max(
-      0,
-      room.gasTemperature[zone] - definition.environmentHazards.gasTemperature.threshold
-    ) * definition.environmentHazards.gasTemperature.rate;
-  hazards.catastrophic_overpressure.pressure +=
-    Math.max(
-      0,
-      roomStaticPressure(room, definition) / STANDARD_PRESSURE -
-        definition.environmentHazards.staticPressure.ratioThreshold
-    ) * definition.environmentHazards.staticPressure.rate;
-  return hazards;
-};
-
 export const roomHazards = (
   room: RoomState,
   floorContact = true,
@@ -315,15 +275,24 @@ export const roomHazards = (
   definition: GameDefinition
 ): HazardChannels => {
   const hazards = emptyHazardChannels();
-  for (const sourceHazards of Object.values(
-    roomHazardsBySource(room, floorContact, needsOxygen, zone, definition)
-  )) {
-    hazards.atmosphere += sourceHazards.atmosphere;
-    hazards.corrosion += sourceHazards.corrosion;
-    hazards.heat += sourceHazards.heat;
-    hazards.pressure += sourceHazards.pressure;
-    hazards.radiation += sourceHazards.radiation;
+  for (const species of Object.values(definition.species)) {
+    for (const rule of species.hazards) {
+      if (!hazardExposureApplies(rule, floorContact, needsOxygen)) continue;
+      const value = speciesHazardBasis(room, species.id, rule, zone, definition);
+      hazards[rule.channel] += hazardExcess(value, rule) * rule.rate;
+    }
   }
+  hazards.heat +=
+    Math.max(
+      0,
+      room.gasTemperature[zone] - definition.environmentHazards.gasTemperature.threshold
+    ) * definition.environmentHazards.gasTemperature.rate;
+  hazards.pressure +=
+    Math.max(
+      0,
+      roomStaticPressure(room, definition) / STANDARD_PRESSURE -
+        definition.environmentHazards.staticPressure.ratioThreshold
+    ) * definition.environmentHazards.staticPressure.rate;
   return hazards;
 };
 

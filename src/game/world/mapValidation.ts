@@ -1,9 +1,16 @@
 import type { GridCell } from "../types";
-import type { MapConnection, ProcessLineConnection, WorldMap } from "./map";
+import type {
+  EnemyRouteDefinition,
+  EnemyRouteEdge,
+  EnemyRouteNode,
+  MapConnection,
+  ProcessLineConnection,
+  WorldMap,
+} from "./map";
 import { isProcessLine, processLineId } from "./map";
 
 /**
- * Shared map validation (ADR-0001): every producer and every in-play map edit runs
+ * Shared map validation (ADR-0001): every site materialization and every in-play map edit runs
  * the same invariants, regardless of how the map was made. Route/identity checks are
  * generalized from the pack compiler.
  */
@@ -65,9 +72,9 @@ const validateRoom = (
       }
     }
   }
-  for (const hardpoint of room.hardpoints) {
-    if (!roomContains(map, roomId, hardpoint.cell))
-      push(issues, `${path}.hardpoints.${hardpoint.id}`, "Hardpoint cell is outside its room.");
+  for (const graftSlot of room.graftSlots) {
+    if (!roomContains(map, roomId, graftSlot.cell))
+      push(issues, `${path}.graftSlots.${graftSlot.id}`, "Graft slot cell is outside its room.");
   }
 };
 
@@ -161,10 +168,116 @@ const validateUtilityNodes = (map: WorldMap, issues: MapIssue[]): void => {
   }
 };
 
+const sameCell = (left: GridCell, right: GridCell): boolean =>
+  left.column === right.column && left.elevation === right.elevation;
+
+const routeGraphIsEmpty = (map: WorldMap): boolean =>
+  Object.keys(map.routeGraph.nodes).length === 0 &&
+  Object.keys(map.routeGraph.edges).length === 0 &&
+  Object.keys(map.routeGraph.routes).length === 0;
+
+const validateRouteCore = (map: WorldMap, issues: MapIssue[]): void => {
+  const core = map.routeGraph.nodes[map.routeGraph.coreNodeId];
+  if (!core || core.kind !== "core") {
+    push(issues, "routeGraph.coreNodeId", "Route graph requires its declared Core node.");
+    return;
+  }
+  if (!sameCell(core.cell, map.coreBreachCell))
+    push(issues, "routeGraph.coreNodeId", "Route graph Core node must match the breach cell.");
+};
+
+const validateRouteNode = (
+  map: WorldMap,
+  nodeId: string,
+  node: EnemyRouteNode,
+  issues: MapIssue[]
+): void => {
+  if (node.id !== nodeId)
+    push(issues, `routeGraph.nodes.${nodeId}.id`, "Route node key and ID differ.");
+  if (!inBounds(map, node.cell))
+    push(issues, `routeGraph.nodes.${nodeId}.cell`, "Route node lies outside the map.");
+};
+
+const validateRouteEdgeCells = (
+  map: WorldMap,
+  edge: EnemyRouteEdge,
+  path: string,
+  issues: MapIssue[]
+): void => {
+  for (const [index, cell] of edge.cells.entries()) {
+    if (!inBounds(map, cell)) push(issues, `${path}.cells.${index}`, "Route edge leaves the map.");
+    const previous = edge.cells[index - 1];
+    if (previous && !cellIsAdjacent(previous, cell))
+      push(issues, `${path}.cells.${index}`, "Route edge cells must be adjacent.");
+  }
+};
+
+const validateRouteEdge = (
+  map: WorldMap,
+  edgeId: string,
+  edge: EnemyRouteEdge,
+  issues: MapIssue[]
+): void => {
+  const path = `routeGraph.edges.${edgeId}`;
+  if (edge.id !== edgeId) push(issues, `${path}.id`, "Route edge key and ID differ.");
+  validateRouteEdgeEndpoints(map, edge, path, issues);
+  validateRouteEdgeCells(map, edge, path, issues);
+};
+
+const validateRouteEdgeEndpoints = (
+  map: WorldMap,
+  edge: EnemyRouteEdge,
+  path: string,
+  issues: MapIssue[]
+): void => {
+  const from = map.routeGraph.nodes[edge.from];
+  const to = map.routeGraph.nodes[edge.to];
+  if (!from) push(issues, `${path}.from`, `Unknown route node ${edge.from}.`);
+  if (!to) push(issues, `${path}.to`, `Unknown route node ${edge.to}.`);
+  if (edge.cells.length === 0) push(issues, `${path}.cells`, "Route edge requires cells.");
+  if (from && edge.cells[0] && !sameCell(from.cell, edge.cells[0]))
+    push(issues, `${path}.cells`, "Route edge does not begin at its source node.");
+  const lastCell = edge.cells.at(-1);
+  if (to && lastCell && !sameCell(to.cell, lastCell))
+    push(issues, `${path}.cells`, "Route edge does not end at its destination node.");
+};
+
+const validateEnemyRoute = (
+  map: WorldMap,
+  routeId: string,
+  route: EnemyRouteDefinition,
+  template: boolean,
+  issues: MapIssue[]
+): void => {
+  const path = `routeGraph.routes.${routeId}`;
+  if (route.id !== routeId) push(issues, `${path}.id`, "Route key and ID differ.");
+  if (map.routeGraph.nodes[route.ingressNodeId]?.kind !== "ingress")
+    push(issues, `${path}.ingressNodeId`, "Route requires an ingress node.");
+  if (!template && route.edgeIds.length === 0)
+    push(issues, `${path}.edgeIds`, "Materialized route requires at least one edge.");
+  for (const edgeId of route.edgeIds) {
+    if (!(edgeId in map.routeGraph.edges))
+      push(issues, `${path}.edgeIds`, `Unknown route edge ${edgeId}.`);
+  }
+};
+
+const validateEnemyRoutes = (map: WorldMap, issues: MapIssue[]): void => {
+  if (routeGraphIsEmpty(map)) return;
+  validateRouteCore(map, issues);
+  for (const [nodeId, node] of Object.entries(map.routeGraph.nodes))
+    validateRouteNode(map, nodeId, node, issues);
+  for (const [edgeId, edge] of Object.entries(map.routeGraph.edges))
+    validateRouteEdge(map, edgeId, edge, issues);
+  const template = Object.keys(map.routeGraph.edges).length === 0;
+  for (const [routeId, route] of Object.entries(map.routeGraph.routes))
+    validateEnemyRoute(map, routeId, route, template, issues);
+};
+
 export const validateWorldMap = (map: WorldMap): readonly MapIssue[] => {
   const issues: MapIssue[] = [];
   validateRooms(map, issues);
   validateConnections(map, issues);
   validateUtilityNodes(map, issues);
+  validateEnemyRoutes(map, issues);
   return issues;
 };

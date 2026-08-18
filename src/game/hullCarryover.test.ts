@@ -4,7 +4,7 @@ import { createScenarioGame } from "./engine/scenarioState";
 import type { LevelDefinition } from "./definitionTypes";
 import { decodeGame, encodeGame } from "./persistence/saveCodec";
 import { extractHullFragment } from "./world/hullFragment";
-import { produceAuthoredSite } from "./world/producer";
+import { materializeAuthoredSite } from "./world/siteMaterialization";
 import type { MapRoom, WorldMap } from "./world/map";
 import { roomState } from "./world/instances";
 
@@ -30,7 +30,7 @@ const mapA: WorldMap = Object.freeze({
 /**
  * Site B: the next dock. Hull rooms and their internal connections are absent (they
  * travel with the player); connections with one hull endpoint stay authored on the
- * site, dangling until the producer embeds the hull at the anchor.
+ * site, dangling until materialization embeds the hull at the anchor.
  */
 const hullInternal = (connectionRooms: readonly string[]): boolean =>
   connectionRooms.every((roomId) => HULL_ROOMS.includes(roomId as (typeof HULL_ROOMS)[number]));
@@ -67,7 +67,7 @@ const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
 
 describe("the hull fragment carries across consecutive authored maps", () => {
   it("extracts hull rooms, internal connections, and live contents from an ending state", () => {
-    const ending = createScenarioGame("flash_point", [], definition);
+    const ending = createScenarioGame("claim_8_delta", [], definition);
     roomState(ending, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 2,
@@ -87,7 +87,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
   });
 
   it("plays two sites in sequence with hull installations intact and fresh interiors", () => {
-    const ending = createScenarioGame("flash_point", [], definition);
+    const ending = createScenarioGame("claim_8_delta", [], definition);
     roomState(ending, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 2,
@@ -99,15 +99,15 @@ describe("the hull fragment carries across consecutive authored maps", () => {
     roomState(ending, "switchyard").liquid.water = 4;
 
     const fragment = extractHullFragment(ending);
-    const site = produceAuthoredSite(
+    const site = materializeAuthoredSite(
       {
         map: mapB,
-        rounds: definition.levels.make_the_reagent.rounds,
+        rounds: definition.levels.harkers_brace.rounds,
         hullAnchor: { columns: 0, elevations: 0 },
       },
       fragment
     );
-    const next = createScenarioGame("make_the_reagent", ["flash_point"], definition, site);
+    const next = createScenarioGame("harkers_brace", ["claim_8_delta"], definition, site);
 
     expect(Object.keys(next.map.rooms).sort()).toEqual(Object.keys(mapA.rooms).sort());
     expect(next.map.rooms.furnace?.provenance).toBe("hull");
@@ -115,34 +115,34 @@ describe("the hull fragment carries across consecutive authored maps", () => {
     expect(roomState(next, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
     expect(roomState(next, "furnace").gas.lower.hydrogen).toBe(0);
     expect(roomState(next, "switchyard").liquid.water).toBe(0);
-    expect(next.run.position).toBe(definition.levelOrder.indexOf("make_the_reagent"));
+    expect(next.campaign.levelIndex).toBe(definition.levelOrder.indexOf("harkers_brace"));
   });
 });
 
 describe("the carried hull persists and translates", () => {
   it("round-trips the carried hull through the current save on the second site", () => {
-    const ending = createScenarioGame("flash_point", [], definition);
+    const ending = createScenarioGame("claim_8_delta", [], definition);
     roomState(ending, "furnace").gas.lower.hydrogen = 9;
     const fragment = extractHullFragment(ending);
-    const site = produceAuthoredSite(
+    const site = materializeAuthoredSite(
       {
         map: mapB,
-        rounds: definition.levels.make_the_reagent.rounds,
+        rounds: definition.levels.harkers_brace.rounds,
         hullAnchor: { columns: 0, elevations: 0 },
       },
       fragment
     );
-    const next = createScenarioGame("make_the_reagent", ["flash_point"], definition, site);
+    const next = createScenarioGame("harkers_brace", ["claim_8_delta"], definition, site);
     const decoded = decodeGame(encodeGame(next, definition), definition);
     expect(decoded).not.toBeNull();
     if (!decoded) return;
     expect(decoded.map.rooms.furnace?.provenance).toBe("hull");
     expect(roomState(decoded, "furnace").gas.lower.hydrogen).toBe(0);
-    expect(decoded.run).toEqual(next.run);
+    expect(decoded.campaign).toEqual(next.campaign);
   });
 
   it("translates hull geometry when the anchor moves", () => {
-    const ending = createScenarioGame("flash_point", [], definition);
+    const ending = createScenarioGame("claim_8_delta", [], definition);
     const fragment = extractHullFragment(ending);
     // A sparse site with room to dock the hull far from its old coordinates.
     const sparseSite: WorldMap = Object.freeze({
@@ -154,10 +154,10 @@ describe("the carried hull persists and translates", () => {
         Object.entries(mapB.utilityNodes).filter(([, node]) => node.hostRoomId === "core")
       ),
     });
-    const site = produceAuthoredSite(
+    const site = materializeAuthoredSite(
       {
         map: sparseSite,
-        rounds: definition.levels.make_the_reagent.rounds,
+        rounds: definition.levels.harkers_brace.rounds,
         hullAnchor: { columns: 70, elevations: 0 },
       },
       fragment

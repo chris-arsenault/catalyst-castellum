@@ -16,13 +16,16 @@ export const BUILD_ARCHETYPE_IDS = [
   "carrier",
   "pressure",
   "hybrid",
+  "precise",
+  "rapid",
+  "area",
+  "support",
 ] as const;
 
 export type BuildArchetypeId = (typeof BUILD_ARCHETYPE_IDS)[number];
 
 export interface PlaytestRoundPlan {
   commands: readonly GameCommand[];
-  primeFraction: number;
 }
 
 export interface PlaytestPlan {
@@ -32,6 +35,7 @@ export interface PlaytestPlan {
 }
 
 export interface BuildProfile {
+  towers: string[];
   equipment: string[];
   enabledGasLines: string[];
   enabledLiquidLines: string[];
@@ -54,8 +58,6 @@ export interface PlaytestResult {
   damageBySource: Record<DamageSourceId, number>;
   killsBySource: Record<DamageSourceId, number>;
   damageByChannel: HazardChannels;
-  pulseDamage: number;
-  continuousDamage: number;
   matterSpent: number;
   buildProfile: BuildProfile;
   buildSignature: string;

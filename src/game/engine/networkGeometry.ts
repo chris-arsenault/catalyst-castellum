@@ -55,7 +55,7 @@ export const conduitCapacity = (
   state: GameState,
   runId: ConnectionId,
   phase: TransportPhase,
-  definition: GameDefinition
+  _definition: GameDefinition
 ): number => {
   const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduitLength(state, runId, phase) * conduit.volumePerCell : 0;
@@ -65,7 +65,7 @@ export const conduitMaxFlow = (
   state: GameState,
   runId: ConnectionId,
   phase: TransportPhase,
-  definition: GameDefinition
+  _definition: GameDefinition
 ): number => {
   const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduit.maxFlow * lengthFactor(conduitLength(state, runId, phase)) : 0;

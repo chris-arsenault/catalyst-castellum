@@ -10,6 +10,7 @@ import { ambientGas, SPECIES_DEFINITIONS } from "./content/substances";
 import { compileGamePack } from "./authoring/compiler";
 import type { GameDefinition, GameDefinitionSource } from "./definitionTypes";
 import { LEVEL_IDS } from "./identifiers";
+import { TOWER_DEFINITIONS } from "./content/towers";
 
 export type {
   EnvironmentHazardRules,
@@ -42,6 +43,7 @@ export const deriveGame = (
     reactions: base.reactions,
     equipment: base.equipment,
     enemies: base.enemies,
+    towers: base.towers,
     levels: base.levels,
     ambientGas: base.ambientGas,
     environmentHazards: base.environmentHazards,
@@ -53,7 +55,7 @@ export const deriveGame = (
 export const DEFAULT_GAME_DEFINITION = defineGame({
   id: "catalyst-castellum",
   packId: "catalyst-castellum",
-  contentVersion: 15,
+  contentVersion: 19,
   map: WORLD_MAP,
   lineBlueprints: WORLD_LINE_BLUEPRINTS,
   lineSpecs: LINE_SPECS,
@@ -63,6 +65,7 @@ export const DEFAULT_GAME_DEFINITION = defineGame({
   reactions: REACTION_DEFINITIONS,
   equipment: EQUIPMENT_DEFINITIONS,
   enemies: ENEMY_DEFINITIONS,
+  towers: TOWER_DEFINITIONS,
   levels: LEVEL_DEFINITIONS,
   ambientGas: ambientGas(),
   environmentHazards: ENVIRONMENT_HAZARD_RULES,

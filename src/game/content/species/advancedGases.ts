@@ -11,7 +11,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 16.043,
     referenceDensity: 0.554,
     color: GAS_COLORS.methane,
-    damageSourceId: null,
     hazards: [],
   },
   ammonia: {
@@ -23,7 +22,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 17.031,
     referenceDensity: 0.588,
     color: GAS_COLORS.ammonia,
-    damageSourceId: "nitrogen_chemistry",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -54,7 +52,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 30.006,
     referenceDensity: 1.036,
     color: GAS_COLORS.nitric_oxide,
-    damageSourceId: "nitrogen_chemistry",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -76,7 +73,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 46.005,
     referenceDensity: 1.588,
     color: GAS_COLORS.nitrogen_dioxide,
-    damageSourceId: "nitrogen_chemistry",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -107,7 +103,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 44.013,
     referenceDensity: 1.519,
     color: GAS_COLORS.nitrous_oxide,
-    damageSourceId: null,
     hazards: [],
   },
   nickel_carbonyl: {
@@ -119,7 +114,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 170.73,
     referenceDensity: 5.89,
     color: GAS_COLORS.nickel_carbonyl,
-    damageSourceId: "nickel_carbonyl",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -141,7 +135,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 352.02,
     referenceDensity: 12.1,
     color: GAS_COLORS.uranium_hexafluoride,
-    damageSourceId: "uranium_chemistry",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -181,7 +174,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 20.006,
     referenceDensity: 0.69,
     color: GAS_COLORS.hydrogen_fluoride,
-    damageSourceId: "hydrogen_fluoride",
     hazards: [
       {
         basis: "gas_partial_ratio",
@@ -212,7 +204,6 @@ export const ADVANCED_GAS_DEFINITIONS = {
     molarMass: 37.997,
     referenceDensity: 1.312,
     color: GAS_COLORS.fluorine,
-    damageSourceId: "fluorine",
     hazards: [
       {
         basis: "gas_partial_ratio",

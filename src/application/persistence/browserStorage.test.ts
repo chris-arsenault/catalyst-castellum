@@ -22,7 +22,7 @@ afterEach(() => {
 describe("browser save-slot persistence", () => {
   it("round-trips and clears three isolated game-and-tutorial records", () => {
     const first = DEFAULT_GAME_RUNTIME.createScenario("morrow_pocket");
-    const second = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
+    const second = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
     saveGameSlot("slot-1", first, session(["guide-a"]));
     saveGameSlot("slot-2", second, session([]));
 
@@ -31,15 +31,15 @@ describe("browser save-slot persistence", () => {
       dismissedGuideIds: ["guide-a"],
     });
     expect(loadSaveSlot("slot-1")?.game.campaign.levelId).toBe("morrow_pocket");
-    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("flash_point");
+    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("claim_8_delta");
 
     clearSaveSlot("slot-1");
     expect(loadSaveSlot("slot-1")).toBeNull();
-    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("flash_point");
+    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("claim_8_delta");
   });
 
   it("keeps each run's guidance choice with its slot", () => {
-    const game = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
+    const game = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
     saveGameSlot("slot-1", game, session([], false));
     saveGameSlot("slot-2", game, session([]));
 
@@ -48,17 +48,17 @@ describe("browser save-slot persistence", () => {
   });
 
   it("rejects a malformed slot without affecting valid neighboring slots", () => {
-    saveGameSlot("slot-2", DEFAULT_GAME_RUNTIME.createScenario("stored_chlorine"), session([]));
+    saveGameSlot("slot-2", DEFAULT_GAME_RUNTIME.createScenario("twelve_cask"), session([]));
     window.localStorage.setItem("catalyst-castellum:save:slot-1:v2", "not-json");
 
     const catalog = loadSaveSlots();
     expect(catalog["slot-1"]).toBeNull();
-    expect(catalog["slot-2"]?.game.campaign.levelId).toBe("stored_chlorine");
+    expect(catalog["slot-2"]?.game.campaign.levelId).toBe("twelve_cask");
   });
 
   it("debounces repeated snapshots and persists the latest one to its named slot", () => {
     vi.useFakeTimers();
-    const first = DEFAULT_GAME_RUNTIME.createScenario("flash_point");
+    const first = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
     const latest = DEFAULT_GAME_RUNTIME.createScenario("morrow_pocket");
     scheduleGameSave("slot-3", first, session([]));
     scheduleGameSave("slot-3", latest, session(["complete"]));
@@ -73,7 +73,7 @@ describe("browser save-slot persistence", () => {
     vi.useFakeTimers();
     scheduleGameSave(
       "slot-1",
-      DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent"),
+      DEFAULT_GAME_RUNTIME.createScenario("harkers_brace"),
       session(["old"])
     );
     cancelScheduledGameSave("slot-1");
@@ -84,11 +84,11 @@ describe("browser save-slot persistence", () => {
 
   it("flushes pending state synchronously for page and menu lifecycle events", () => {
     vi.useFakeTimers();
-    const game = DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent");
+    const game = DEFAULT_GAME_RUNTIME.createScenario("harkers_brace");
     scheduleGameSave("slot-2", game, session([]));
     flushScheduledGameSave();
-    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("make_the_reagent");
+    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("harkers_brace");
     vi.advanceTimersByTime(750);
-    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("make_the_reagent");
+    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("harkers_brace");
   });
 });

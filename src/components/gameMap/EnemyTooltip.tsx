@@ -1,45 +1,12 @@
 import { ENEMY_DEFINITIONS } from "../../presentation/defaultGame";
-import {
-  enemyGasZone,
-  enemyRoomId,
-  enemyWorldPosition,
-  liquidSurfaceElevation,
-  roomHazards,
-} from "../../game/queries";
-import type { EnemyState, GameState, HazardChannels } from "../../game/types";
+import { enemyGasZone, enemyRoomId } from "../../game/queries";
+import type { EnemyState, GameState } from "../../game/types";
 import type { WorldMap } from "../../game/world/map";
-import { DAMAGE_CHANNELS, dominantDamageChannel } from "../../presentation/damageCopy";
+import { dominantDamageChannel } from "../../presentation/damageCopy";
 import { enemyCopy } from "../../presentation/entityCopy";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { Translator } from "../../localization/translator";
-import { roomState } from "../../game/world/instances";
 import { roomDefinition } from "../../presentation/defaultGame";
-
-const enemyExposure = (game: GameState, enemy: EnemyState): HazardChannels | null => {
-  const roomId = enemyRoomId(enemy, game);
-  if (!roomId) return null;
-  const definition = ENEMY_DEFINITIONS[enemy.type];
-  const footElevation = enemyWorldPosition(enemy).elevation - 0.5;
-  const floorContact =
-    !definition.flying &&
-    enemy.mode !== "climbing" &&
-    enemy.mode !== "falling" &&
-    liquidSurfaceElevation(roomState(game, roomId), game) > footElevation;
-  const base = roomHazards(
-    roomState(game, roomId),
-    floorContact,
-    definition.needsOxygen,
-    enemyGasZone(enemy, game),
-    game
-  );
-  return {
-    atmosphere: base.atmosphere * definition.hazardMultipliers.atmosphere,
-    corrosion: base.corrosion * definition.hazardMultipliers.corrosion,
-    heat: base.heat * definition.hazardMultipliers.heat,
-    pressure: base.pressure * definition.hazardMultipliers.pressure,
-    radiation: base.radiation * definition.hazardMultipliers.radiation,
-  };
-};
 
 const enemyPositionCopy = (
   map: WorldMap,
@@ -66,33 +33,6 @@ const movementCopy = (enemy: EnemyState, translator: Translator): string =>
       } as const
     )[enemy.mode]
   );
-
-const EnemyExposure = ({ exposure }: { exposure: HazardChannels | null }) => {
-  const { damage, formatters, translator } = useGamePresentation();
-  const active = exposure ? DAMAGE_CHANNELS.filter((channel) => exposure[channel] > 0.01) : [];
-  return (
-    <section className="enemy-exposure-detail">
-      <strong>{translator.text("ui.map.enemy.exposure")}</strong>
-      {active.length > 0 ? (
-        active.map((channel) => (
-          <div key={channel}>
-            <span style={{ color: damage.channelStyle[channel].color }}>
-              {damage.channelStyle[channel].label}
-            </span>
-            <b>
-              {translator.text("ui.map.enemy.exposureRate", {
-                rate: formatters.number(exposure?.[channel] ?? 0, 1),
-              })}
-            </b>
-            <small>{damage.channelDetail[channel]}</small>
-          </div>
-        ))
-      ) : (
-        <p>{translator.text("ui.map.enemy.exposureClear")}</p>
-      )}
-    </section>
-  );
-};
 
 const damagePrecision = (amount: number): number => {
   if (amount >= 10) return 0;
@@ -237,7 +177,6 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
         </div>
       </dl>
       <EnemyBehavior enemy={enemy} />
-      <EnemyExposure exposure={enemyExposure(game, enemy)} />
       <EnemyLastDamage enemy={enemy} />
       <small>{translator.text("ui.map.enemy.footer")}</small>
     </aside>

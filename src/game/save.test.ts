@@ -3,7 +3,7 @@ import { emptyDamageLedger, emptyHazardChannels } from "./engine/damage";
 import { decodeGame, encodeGame } from "./save";
 import { createScenarioGame, executeCommand, findEnemyPath } from "./simulation";
 import { type EnemyState, type GameState } from "./types";
-import { gasConduitState, roomState } from "./world/instances";
+import { roomState } from "./world/instances";
 import { DEFAULT_GAME_DEFINITION } from "./definition";
 import { initialEnemyBehaviorState } from "./engine/enemyBehaviors";
 
@@ -25,12 +25,13 @@ const persistedEnemy = (game: GameState): EnemyState => {
     damageTaken: 53,
     damageBySource: emptyDamageLedger(),
     lastDamage: {
-      sourceId: "hydrogen_oxygen_combustion",
-      channels: { ...emptyHazardChannels(), pressure: 53 },
+      sourceId: "tower_projector",
+      channels: { ...emptyHazardChannels(), heat: 53 },
       amount: 53,
       elapsed: 11,
     },
     behavior: { kind: "standard" },
+    effects: [],
   };
 };
 
@@ -42,8 +43,8 @@ const membraneCellOperation = (game: GameState) => {
   return { anode, operation };
 };
 
-const morrowPocketWithMembraneCell = (): GameState => {
-  const entered = executeCommand(createScenarioGame("morrow_pocket"), { type: "begin_level" });
+const processSiteWithMembraneCell = (): GameState => {
+  const entered = executeCommand(createScenarioGame("cordon_41"), { type: "begin_level" });
   const installed = executeCommand(entered.state, {
     type: "install_equipment",
     roomId: "lower_intake",
@@ -55,19 +56,17 @@ const morrowPocketWithMembraneCell = (): GameState => {
 };
 
 describe("current persistence", () => {
-  it("round-trips conduit routes, damage ledgers, and structured incidents", () => {
-    const game = createScenarioGame("flash_point");
+  it("round-trips route state, damage ledgers, and structured incidents", () => {
+    const game = createScenarioGame("claim_8_delta");
     game.phase = "assault";
-    gasConduitState(game, "gas:core__furnace").enabled = true;
-    gasConduitState(game, "gas:core__furnace").gas.hydrogen = 4;
     game.rooms.furnace!.stationary.surface_nickel = 2.5;
     game.enemies.push(persistedEnemy(game));
     game.nextEnemyId = 10;
-    game.enemies[0]!.damageBySource.hydrogen_oxygen_combustion.pressure = 53;
+    game.enemies[0]!.damageBySource.tower_projector.heat = 53;
     game.incidents.push({
       id: 3,
       elapsed: 11,
-      levelId: "flash_point",
+      levelId: "claim_8_delta",
       round: 1,
       phase: "assault",
       roomId: "furnace",
@@ -76,29 +75,17 @@ describe("current persistence", () => {
       reactionExtent: 3,
       pressureImpulse: 132,
       heatDelta: 33,
-      damageByChannel: { ...emptyHazardChannels(), pressure: 53 },
-      targets: [
-        {
-          enemyId: 9,
-          enemyType: "deckmouth",
-          worldPosition: { x: 98, elevation: 14 },
-          healthBefore: 74,
-          healthAfter: 21,
-          damageByChannel: { ...emptyHazardChannels(), pressure: 53 },
-          killed: false,
-        },
-      ],
+      damageByChannel: emptyHazardChannels(),
+      targets: [],
     });
     game.nextIncidentId = 4;
 
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the current save to decode.");
-    expect(decoded.version).toBe(23);
-    expect(gasConduitState(decoded, "gas:core__furnace").route).toEqual(
-      gasConduitState(game, "gas:core__furnace").route
-    );
-    expect(decoded.enemies[0]?.damageBySource.hydrogen_oxygen_combustion.pressure).toBe(53);
+    expect(decoded.version).toBe(27);
+    expect(decoded.map.routeGraph).toEqual(game.map.routeGraph);
+    expect(decoded.enemies[0]?.damageBySource.tower_projector.heat).toBe(53);
     expect(decoded.enemies[0]?.path).toEqual(game.enemies[0]?.path);
     expect(decoded.enemies[0]).toMatchObject({
       level: 20,
@@ -107,13 +94,19 @@ describe("current persistence", () => {
       mode: game.enemies[0]?.mode,
       facing: 1,
     });
-    expect(decoded.incidents[0]?.targets[0]?.healthAfter).toBe(21);
+    expect(decoded.incidents[0]).toMatchObject({
+      sourceId: "hydrogen_oxygen_combustion",
+      reactionExtent: 3,
+      pressureImpulse: 132,
+      heatDelta: 33,
+      targets: [],
+    });
     expect(decoded.rooms.furnace?.stationary.surface_nickel).toBe(2.5);
     expect(decoded.portalStates).toEqual(game.portalStates);
   });
 
   it("round-trips each installed machine's operation telemetry and port inventory", () => {
-    const game = morrowPocketWithMembraneCell();
+    const game = processSiteWithMembraneCell();
     const { anode, operation } = membraneCellOperation(game);
     operation.totalProcessed = 12.5;
     operation.lastRate = 0.56;
@@ -131,7 +124,7 @@ describe("current persistence", () => {
 
 describe("enemy behavior persistence", () => {
   it("round-trips special enemy resources", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     game.phase = "assault";
     const anchor: EnemyState = {
       ...persistedEnemy(game),
@@ -162,7 +155,7 @@ describe("enemy behavior persistence", () => {
 
 describe("save decoding", () => {
   it("rejects saves from earlier schema versions", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const envelope = JSON.parse(encodeGame(game)) as {
       game: Omit<GameState, "version"> & { version: number };
     };
@@ -177,7 +170,7 @@ describe("save decoding", () => {
   });
 
   it("rejects installed operation state that differs from its equipment definition", () => {
-    const game = morrowPocketWithMembraneCell();
+    const game = processSiteWithMembraneCell();
     const envelope = JSON.parse(encodeGame(game)) as { game: GameState };
     const cell = envelope.game.rooms.lower_intake?.equipment.socket_a;
     if (!cell) throw new Error("Expected an installed membrane cell.");
@@ -189,7 +182,7 @@ describe("save decoding", () => {
 
 describe("canonical portal persistence", () => {
   it("rejects state missing any canonical portal state", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const envelope = JSON.parse(encodeGame(game)) as { game: GameState };
     envelope.game.portalStates = {};
 
@@ -199,21 +192,21 @@ describe("canonical portal persistence", () => {
 
 describe("enemy navigation persistence", () => {
   it("rejects an out-of-range path cursor", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     game.enemies.push(persistedEnemy(game));
     game.enemies[0]!.pathIndex = 999;
     expect(decodeGame(encodeGame(game))).toBeNull();
   });
 
   it("rejects paths through out-of-bounds or non-adjacent cells", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     game.enemies.push(persistedEnemy(game));
     game.enemies[0]!.path[0]!.cell = { column: -99, elevation: 999 };
     expect(decodeGame(encodeGame(game))).toBeNull();
   });
 
   it("rejects a ground enemy persisted with an otherwise-adjacent flying path", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const enemy = persistedEnemy(game);
     enemy.path = findEnemyPath({ flying: true, portalStates: game.portalStates });
     enemy.pathIndex = 0;
@@ -225,7 +218,7 @@ describe("enemy navigation persistence", () => {
   });
 
   it("rejects sideways walking away from an unsupported fall cell", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const enemy = persistedEnemy(game);
     const holeIndex = enemy.path.findIndex(
       (step) => step.cell.column === 28 && step.cell.elevation === 24
@@ -243,7 +236,7 @@ describe("enemy navigation persistence", () => {
   });
 
   it("rejects downward ladder travel mislabeled as falling", () => {
-    const game = createScenarioGame("flash_point");
+    const game = createScenarioGame("claim_8_delta");
     const enemy = persistedEnemy(game);
     const ladderIndex = enemy.path.findIndex(
       (step) => step.cell.column === 8 && step.cell.elevation === 6

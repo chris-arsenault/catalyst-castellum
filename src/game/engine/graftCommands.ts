@@ -20,7 +20,7 @@ export const graftModuleCommand = (
     definition,
     state.map,
     command.hostRoomId,
-    command.hardpointId,
+    command.graftSlotId,
     command.moduleId
   );
   if (!plan) throw new Error(`Graft plan vanished for ${command.hostRoomId}.`);

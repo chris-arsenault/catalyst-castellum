@@ -1,17 +1,7 @@
-import { ArrowRight, Flame, Gauge, MapPinned, RefreshCw, Wind, Zap } from "lucide-react";
-import type { GuideConceptKind, GuideDefinition } from "./guideModel";
+import { Flame, MapPinned } from "lucide-react";
+import type { GuideDefinition } from "./guideModel";
 import { useGamePresentation } from "../application/presentationContext";
 import { tutorialText } from "./tutorialCopy";
-
-const ConceptIcon = ({ kind }: { kind: GuideConceptKind }) => {
-  if (kind === "feed") return <Wind size={16} />;
-  if (kind === "accumulate") return <Gauge size={16} />;
-  if (kind === "mix" || kind === "separate") return <RefreshCw size={16} />;
-  if (kind === "relieve") return <Wind size={16} />;
-  if (kind === "heat") return <Flame size={16} />;
-  if (kind === "route") return <ArrowRight size={16} />;
-  return <Zap size={16} />;
-};
 
 /**
  * A guide's field story, teaching model, and objective. Rendered by the
@@ -31,31 +21,6 @@ export const GuideIntro = ({ guide }: { guide: GuideDefinition }) => {
           <p key={paragraph}>{tutorialText(translator, paragraph)}</p>
         ))}
       </div>
-      {guide.story.model && (
-        <section className="tutorial-concept-model" aria-labelledby="tutorial-concept-title">
-          <header>
-            <span id="tutorial-concept-title">
-              {translator.text("tutorial.common.processModel")}
-            </span>
-            <p>{tutorialText(translator, guide.story.model.principle)}</p>
-          </header>
-          <ol className="tutorial-concept-chain">
-            {guide.story.model.stages.map((stage) => (
-              <li key={stage.kind}>
-                <span className="tutorial-concept-icon">
-                  <ConceptIcon kind={stage.kind} />
-                </span>
-                <div>
-                  <small>{tutorialText(translator, stage.title)}</small>
-                  <strong>{tutorialText(translator, stage.metric)}</strong>
-                  <p>{tutorialText(translator, stage.detail)}</p>
-                </div>
-              </li>
-            ))}
-          </ol>
-          <footer>{tutorialText(translator, guide.story.model.conclusion)}</footer>
-        </section>
-      )}
       <div className="guide-intro-goal">
         <span>
           <Flame size={16} /> {translator.text("tutorial.common.fieldObjective")}

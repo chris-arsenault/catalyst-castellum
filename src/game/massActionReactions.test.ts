@@ -23,14 +23,14 @@ const clearRoom = (target: RoomState): void => {
 };
 
 beforeEach(() => {
-  state = createScenarioGame("flash_point");
+  state = createScenarioGame("claim_8_delta");
   room = roomState(state, "furnace");
   clearRoom(room);
 });
 
 describe("advanced electrolysis", () => {
   it("executes UF-3 through its authored recovery cell and leaves both gases in the host room", () => {
-    const processState = createScenarioGame("flash_point");
+    const processState = createScenarioGame("claim_8_delta");
     const processRoom = roomState(processState, "furnace");
     clearRoom(processRoom);
     processRoom.equipment.socket_a = createEquipmentInstance(
@@ -48,7 +48,7 @@ describe("advanced electrolysis", () => {
   });
 
   it("executes every installed powered machine with independent feed and telemetry", () => {
-    const processState = createScenarioGame("flash_point");
+    const processState = createScenarioGame("claim_8_delta");
     const furnace = roomState(processState, "furnace");
     const gallery = roomState(processState, "gallery");
     clearRoom(furnace);

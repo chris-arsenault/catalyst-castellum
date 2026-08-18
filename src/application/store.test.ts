@@ -20,7 +20,7 @@ const dependencies = (overrides: Partial<GameStoreDependencies> = {}): GameStore
 
 const saveRecord = (overrides: Partial<SaveSlotRecord> = {}): SaveSlotRecord => ({
   id: "slot-1",
-  game: DEFAULT_GAME_RUNTIME.createScenario("make_the_reagent"),
+  game: DEFAULT_GAME_RUNTIME.createScenario("harkers_brace"),
   dismissedGuideIds: ["guide-1"],
   guidanceEnabled: true,
   savedAt: 1234,
@@ -95,11 +95,11 @@ describe("game store composition", () => {
 });
 
 describe("debug save-slot starts", () => {
-  it("starts the existing chlorine tutorial from its empty authored checkpoint", () => {
+  it("starts the vertical-defense tutorial from its empty authored checkpoint", () => {
     const store = createStore<GameStore>(createGameStoreState(dependencies()));
     store.getState().initialize();
 
-    store.getState().startNewGameAtLevel("slot-2", "make_the_reagent");
+    store.getState().startNewGameAtLevel("slot-2", "harkers_brace");
 
     expect(store.getState().game.phase).toBe("level_briefing");
     expect(
@@ -109,7 +109,9 @@ describe("debug save-slot starts", () => {
     ).toEqual([]);
 
     expect(store.getState().dispatch({ type: "begin_level" })).toBe(true);
-    expect(guideDefinitionFor(store.getState().game)?.id).toBe("make_the_reagent:co_products:v1");
+    expect(guideDefinitionFor(store.getState().game)?.id).toBe(
+      "harkers_brace:vertical_coverage:v1"
+    );
   });
 
   it("starts a debug campaign at an authored level with earlier sites completed", () => {
@@ -151,7 +153,7 @@ describe("active save-slot lifecycle", () => {
     store.getState().startNewGame("slot-2");
 
     expect(store.getState().dispatch({ type: "begin_level" })).toBe(true);
-    expect(store.getState().dispatch({ type: "start_prime" })).toBe(true);
+    expect(store.getState().dispatch({ type: "start_assault" })).toBe(true);
     const beforeTick = store.getState().game;
     store.getState().tick(0.1);
     expect(store.getState().game).not.toBe(beforeTick);
@@ -167,7 +169,7 @@ describe("active save-slot lifecycle", () => {
     const store = createStore<GameStore>(createGameStoreState(adapters));
     store.getState().initialize();
     store.getState().startNewGame("slot-1");
-    store.setState({ dismissedGuideIds: ["flash_point:first_spark:v3"] });
+    store.setState({ dismissedGuideIds: ["claim_8_delta:defense_guidance:v1"] });
     store.getState().selectRoom("washlock");
     const revision = store.getState().tutorialSessionRevision;
 
@@ -182,7 +184,7 @@ describe("active save-slot lifecycle", () => {
     expect(store.getState()).toMatchObject({
       activeSlotId: "slot-1",
       dismissedGuideIds: [],
-      selectedRoomId: "furnace",
+      selectedRoomId: "switchyard",
       tutorialSessionRevision: revision + 1,
     });
   });

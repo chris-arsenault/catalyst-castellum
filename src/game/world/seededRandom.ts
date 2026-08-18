@@ -1,4 +1,4 @@
-/** Small deterministic RNG for pre-simulation content draws (ADR-0003). */
+/** Small deterministic random source for reproducible non-simulation choices. */
 export interface RandomSource {
   next: () => number;
 }

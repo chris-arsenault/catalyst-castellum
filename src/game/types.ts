@@ -27,6 +27,7 @@ export * from "./facilityTypes";
 export * from "./geometryTypes";
 export * from "./identifiers";
 export * from "./enemyTypes";
+export * from "./towerTypes";
 import type { GridCell } from "./geometryTypes";
 
 export type GasType = (typeof GAS_TYPES)[number];
@@ -58,7 +59,10 @@ export type ProcessFamilyId = (typeof PROCESS_FAMILY_IDS)[number];
 export type ReactionRegime = (typeof REACTION_REGIMES)[number];
 /** Species family; "common" marks shared precursors offered under every palette. */
 export type SpeciesFamily = ProcessFamilyId | "common";
-export type LevelId = (typeof LEVEL_IDS)[number];
+export type CanonicalLevelId = (typeof LEVEL_IDS)[number];
+/** Campaign level identity; alias retained at runtime and save boundaries. */
+// eslint-disable-next-line sonarjs/redundant-type-aliases
+export type LevelId = CanonicalLevelId;
 export type DamageSourceId = (typeof DAMAGE_SOURCE_IDS)[number];
 export type LimitConditionCode = (typeof LIMIT_CONDITION_CODES)[number];
 
@@ -112,8 +116,6 @@ export interface SpeciesDefinition {
   molarMass: number;
   referenceDensity: number;
   color: string;
-  /** Combat attribution for every hazard rule owned by this species. */
-  damageSourceId: DamageSourceId | null;
   hazards: readonly SpeciesHazardRule[];
 }
 
@@ -180,9 +182,6 @@ export type ReactionBehaviorDefinition =
       pressurePulsePerExtent: number;
       gasHeatPerExtent: number;
       roomHeatPerExtent: number;
-      pressureDamageBase: number;
-      pressureDamagePerExtent: number;
-      heatDamagePerExtent: number;
     }
   | {
       kind: "gas_recombination";

@@ -1,5 +1,6 @@
+/* eslint-disable max-lines-per-function -- The map surface binds camera, hover, construction, and Pixi interaction state. */
 import { architecturalConnections } from "../game/world/map";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState, type PointerEvent } from "react";
 import type { CameraTransform } from "./gameMap/mapGeometry";
 import type { GameState, RoomId, SpeciesId } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
@@ -10,6 +11,10 @@ import { useGameStore } from "../application/store";
 import { useMapCamera, useMapInteractions } from "./gameMap/useMapCamera";
 import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
 import { usePipeRoomEffectHover } from "./gameMap/usePipeRoomEffectHover";
+import { mapViewFor } from "./gameMap/mapGeometry";
+import type { TowerPlacementPreview } from "../presentation/towerPlanning";
+import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
+import { useGamePresentation } from "../application/presentationContext";
 
 interface GameMapProps {
   game: GameState;
@@ -44,10 +49,18 @@ export const GameMap = ({
   onTogglePipeMode,
   pipeMode,
 }: GameMapProps) => {
+  const { towerPlanning, translator } = useGamePresentation();
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
   const pipePreview = useGameStore((state) => state.pipePreview);
   const roomEffectPreview = useGameStore((state) => state.roomEffectPreview);
+  const towerBuildSelection = useGameStore((state) => state.towerBuildSelection);
+  const setTowerBuildSelection = useGameStore((state) => state.setTowerBuildSelection);
+  const selectedTowerId = useGameStore((state) => state.selectedTowerId);
+  const selectTower = useGameStore((state) => state.selectTower);
+  const dispatch = useGameStore((state) => state.dispatch);
+  const movingTowerId = useGameStore((state) => state.movingTowerId);
+  const [towerPreview, setTowerPreview] = useState<TowerPlacementPreview | null>(null);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
   const onHoverRun = usePipeRoomEffectHover(game, hover.onHoverRun);
@@ -62,16 +75,97 @@ export const GameMap = ({
     [onConnectRooms, probePointer]
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
-  const mapInteractions = useMapInteractions(pipeMode, camera, trackPointer, clearPipeDrag);
+  const towerMode = towerBuildSelection !== null;
+  useEffect(() => {
+    if (!towerBuildSelection) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setTowerBuildSelection(null);
+        setTowerPreview(null);
+        return;
+      }
+      if (event.key.toLowerCase() !== "r") return;
+      const orientations =
+        DEFAULT_GAME_RUNTIME.definition.towers[towerBuildSelection.chassisId].orientations;
+      const current = orientations.indexOf(towerBuildSelection.orientation);
+      const orientation = orientations[(current + 1) % orientations.length];
+      if (orientation) setTowerBuildSelection({ ...towerBuildSelection, orientation });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [setTowerBuildSelection, towerBuildSelection]);
+  const mapInteractions = useMapInteractions(
+    pipeMode || towerMode,
+    camera,
+    (event) => {
+      trackPointer(event);
+      if (!towerBuildSelection) return;
+      const canvas = event.currentTarget.querySelector("canvas");
+      const bounds = canvas?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect();
+      const worldPoint = mapViewFor(game.map).clientToWorldPoint(
+        { x: event.clientX, y: event.clientY },
+        camera.camera,
+        { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height }
+      );
+      setTowerPreview(
+        towerPlanning.planPlacement(
+          game,
+          worldPoint,
+          towerBuildSelection.chassisId,
+          towerBuildSelection.mountFace,
+          towerBuildSelection.orientation,
+          movingTowerId
+        )
+      );
+    },
+    clearPipeDrag
+  );
+  const placeTower = useCallback(() => {
+    if (!towerBuildSelection || !towerPreview) return;
+    if (!towerPreview.allowed) return;
+    const accepted = movingTowerId
+      ? dispatch({
+          type: "move_tower",
+          towerId: movingTowerId,
+          mountFace: towerBuildSelection.mountFace,
+          orientation: towerBuildSelection.orientation,
+          anchor: towerPreview.anchor,
+        })
+      : dispatch({
+          type: "place_tower",
+          chassisId: towerBuildSelection.chassisId,
+          mountFace: towerBuildSelection.mountFace,
+          orientation: towerBuildSelection.orientation,
+          anchor: towerPreview.anchor,
+        });
+    if (accepted) {
+      const placedId = Object.keys(useGameStore.getState().game.towers).at(-1) ?? null;
+      selectTower(movingTowerId ?? placedId);
+      setTowerPreview(null);
+    }
+  }, [dispatch, movingTowerId, selectTower, towerBuildSelection, towerPreview]);
 
   return (
     <div
       ref={wrapperRef}
-      className={`game-map-canvas ${pipeMode ? "pipe-mode" : ""}`}
+      className={`game-map-canvas ${pipeMode ? "pipe-mode" : ""} ${towerMode ? "tower-mode" : ""}`}
       data-testid="game-map"
       data-tutorial-anchor="game-map"
+      role="button"
+      tabIndex={0}
+      aria-label={translator.text("ui.map.interactionSurface")}
       {...mapTelemetry(game, camera.camera, pipeMode)}
       {...mapInteractions}
+      onClick={placeTower}
+      onKeyDown={(event) => {
+        if (!towerMode || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        placeTower();
+      }}
+      onPointerLeave={(event: PointerEvent<HTMLDivElement>) => {
+        if (towerMode) setTowerPreview(null);
+        mapInteractions.onPointerCancel?.(event);
+      }}
     >
       <MapScene
         camera={camera.camera}
@@ -91,6 +185,9 @@ export const GameMap = ({
         selectedRoomId={selectedRoomId}
         selectedSpecies={selectedSpecies}
         roomEffectPreview={roomEffectPreview}
+        placementPreview={towerPreview}
+        selectedTowerId={selectedTowerId}
+        onSelectTower={selectTower}
       />
       <PipePreviewPopup />
       <MapChrome

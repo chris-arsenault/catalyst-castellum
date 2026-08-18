@@ -19,13 +19,13 @@ describe("game runtime", () => {
       },
     });
     const runtime = createGameRuntime(alternateDefinition);
-    const briefing = runtime.createScenario("flash_point");
+    const briefing = runtime.createScenario("claim_8_delta");
 
     expect(runtime.definition.id).toBe("runtime-test");
     expect(roomState(briefing, "furnace").temperature).toBe(44);
     expect(runtime.validate(briefing)).toEqual([]);
-    expect(runtime.level(briefing).id).toBe("flash_point");
-    expect(runtime.round(briefing).id).toBe("first_spark");
+    expect(runtime.level(briefing).id).toBe("claim_8_delta");
+    expect(runtime.round(briefing).id).toBe("first_coverage");
     expect(runtime.evaluate(briefing, { type: "begin_level" }).allowed).toBe(true);
     expect(runtime.execute(briefing, { type: "begin_level" }).state.phase).toBe("build");
     expect(Object.isFrozen(runtime)).toBe(true);
@@ -39,8 +39,8 @@ describe("game runtime", () => {
       contentVersion: 7,
       levels: {
         ...DEFAULT_GAME_DEFINITION.levels,
-        flash_point: {
-          ...DEFAULT_GAME_DEFINITION.levels.flash_point,
+        claim_8_delta: {
+          ...DEFAULT_GAME_DEFINITION.levels.claim_8_delta,
           startingMatter: 91,
         },
       },

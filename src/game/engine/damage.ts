@@ -29,11 +29,10 @@ export interface DamagePacket {
 export interface HazardBurst {
   roomId: RoomId;
   zone: GasZone | null;
-  sourceId: DamageSourceId;
+  sourceId: "hydrogen_oxygen_combustion";
   reactionExtent: number;
   pressureImpulse: number;
   heatDelta: number;
-  channels: HazardChannels;
 }
 
 export interface AppliedDamagePacket {
@@ -87,12 +86,16 @@ const resistedChannels = (
   definition: GameDefinition
 ): HazardChannels => {
   const multipliers = definition.enemies[enemy.type].hazardMultipliers;
+  const armorBreak = enemy.effects
+    .filter((effect) => effect.kind === "armor_break")
+    .reduce((total, effect) => total + effect.magnitude, 0);
+  const effectMultiplier = 1 + armorBreak;
   return {
-    atmosphere: channels.atmosphere * multipliers.atmosphere,
-    corrosion: channels.corrosion * multipliers.corrosion,
-    heat: channels.heat * multipliers.heat,
-    pressure: channels.pressure * multipliers.pressure,
-    radiation: channels.radiation * multipliers.radiation,
+    atmosphere: channels.atmosphere * multipliers.atmosphere * effectMultiplier,
+    corrosion: channels.corrosion * multipliers.corrosion * effectMultiplier,
+    heat: channels.heat * multipliers.heat * effectMultiplier,
+    pressure: channels.pressure * multipliers.pressure * effectMultiplier,
+    radiation: channels.radiation * multipliers.radiation * effectMultiplier,
   };
 };
 

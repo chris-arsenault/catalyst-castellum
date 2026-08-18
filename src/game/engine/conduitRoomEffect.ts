@@ -164,9 +164,9 @@ const roomEffectiveness = (game: GameState, roomId: RoomId, definition: GameDefi
   simulateInstalledEquipment(game, RESPONSE_SECONDS, definition);
   const bursts = simulateReactions(game, RESPONSE_SECONDS, definition);
   const analysis = analyzeRoom(roomState(game, roomId), definition);
-  const burstStrength = bursts
+  const reactionEnvironment = bursts
     .filter((burst) => burst.roomId === roomId)
-    .reduce((total, burst) => total + channelTotal(burst.channels), 0);
+    .reduce((total, burst) => total + burst.pressureImpulse / 20 + burst.heatDelta / 10, 0);
   const routeControl =
     (1 - analysis.groundMovementMultiplier) * 12 + (1 - analysis.flyingMovementMultiplier) * 6;
   const room = roomState(game, roomId);
@@ -180,7 +180,7 @@ const roomEffectiveness = (game: GameState, roomId: RoomId, definition: GameDefi
   );
   return (
     channelTotal(analysis.hazards) +
-    burstStrength +
+    reactionEnvironment +
     routeControl +
     (reactionRate + equipmentRate) * REACTION_RATE_WEIGHT
   );

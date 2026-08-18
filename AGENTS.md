@@ -4,16 +4,17 @@ Catalyst Castellum is a deterministic React/Pixi vertical tower-defense campaign
 
 ## Read first
 
-| Topic                    | Link                                                               |
-| ------------------------ | ------------------------------------------------------------------ |
-| Workspace overview       | [README.md](README.md)                                             |
-| Documentation index      | [docs/README.md](docs/README.md)                                   |
-| Architecture             | [docs/architecture.md](docs/architecture.md)                       |
-| Architecture decisions   | [docs/adr/README.md](docs/adr/README.md)                           |
-| Campaign design          | [docs/campaign-defense-design.md](docs/campaign-defense-design.md) |
-| Narrative and copy style | [docs/narrative/style-guide.md](docs/narrative/style-guide.md)     |
-| Backlog                  | [BACKLOG.md](BACKLOG.md)                                           |
-| Changelog                | [CHANGELOG.md](CHANGELOG.md)                                       |
+| Topic                      | Link                                                               |
+| -------------------------- | ------------------------------------------------------------------ |
+| Active implementation plan | [TOWER-DEFENSE-REWORK-PLAN.md](TOWER-DEFENSE-REWORK-PLAN.md)       |
+| Workspace overview         | [README.md](README.md)                                             |
+| Documentation index        | [docs/README.md](docs/README.md)                                   |
+| Architecture               | [docs/architecture.md](docs/architecture.md)                       |
+| Architecture decisions     | [docs/adr/README.md](docs/adr/README.md)                           |
+| Campaign design            | [docs/campaign-defense-design.md](docs/campaign-defense-design.md) |
+| Narrative and copy style   | [docs/narrative/style-guide.md](docs/narrative/style-guide.md)     |
+| Backlog                    | [BACKLOG.md](BACKLOG.md)                                           |
+| Changelog                  | [CHANGELOG.md](CHANGELOG.md)                                       |
 
 ## Critical rules
 

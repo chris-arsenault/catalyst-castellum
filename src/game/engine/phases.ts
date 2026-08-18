@@ -13,6 +13,23 @@ const makeReport = (state: GameState): RoundReport => ({
   ...state.stats,
   levelId: state.campaign.levelId,
   round: state.campaign.roundIndex + 1,
+  towers: Object.fromEntries(
+    Object.values(state.towers).map((tower) => [
+      tower.id,
+      {
+        chassisId: tower.chassisId,
+        damageDealt: tower.damageDealt,
+        kills: tower.kills,
+        shots: tower.shots,
+        overkillDamage: tower.telemetry.overkillDamage,
+        engagedSeconds: tower.telemetry.engagedSeconds,
+        targetsServiced: tower.telemetry.targetsServiced,
+        controlApplications: tower.telemetry.controlApplications,
+        matterInvested: tower.totalMatterSpent,
+        downtime: { ...tower.telemetry.downtime },
+      },
+    ])
+  ),
 });
 
 const bankRound = (state: GameState): RoundReport => {
@@ -38,7 +55,6 @@ const completeCampaign = (state: GameState, definition: GameDefinition): void =>
     state.campaign.completedLevelIds.push(level.id);
   }
   transitionPhase(state, "victory");
-  state.run.outcome = "victorious";
   addEvent(state, "good", "campaign_completed", {
     completedLevels: state.campaign.completedLevelIds.length,
     coreIntegrity: Math.round(state.coreIntegrity),
@@ -63,11 +79,11 @@ export const completeAssault = (state: GameState, definition: GameDefinition): v
   completeCampaign(state, definition);
 };
 
-export const beginAssault = (state: GameState, automatic: boolean): void => {
+export const beginAssault = (state: GameState): void => {
   transitionPhase(state, "assault");
   state.spawnCursor = 0;
   state.enemies = [];
-  addEvent(state, "warning", "assault_started", { automatic });
+  addEvent(state, "warning", "assault_started");
 };
 
 export const advanceRound = (state: GameState, definition: GameDefinition): void => {
@@ -84,6 +100,5 @@ export const advanceRound = (state: GameState, definition: GameDefinition): void
 export const declareDefeat = (state: GameState): void => {
   state.lastReport = makeReport(state);
   transitionPhase(state, "defeat");
-  state.run.outcome = "defeated";
   addEvent(state, "danger", "scenario_defeated", {}, "core");
 };

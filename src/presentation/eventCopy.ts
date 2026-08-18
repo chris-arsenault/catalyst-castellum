@@ -26,19 +26,13 @@ interface EventCopyContext extends EventCopyServices {
 type EventCopyHandler = (event: GameEvent, context: EventCopyContext) => EventCopy | null;
 
 const DAMAGE_SOURCE_KEYS: Record<DamageSourceId, LocaleKey> = {
-  asphyxiation: "events.damage.asphyxiation",
-  carbon_monoxide: "events.damage.carbon_monoxide",
-  chlorine_gas: "events.damage.chlorine_gas",
-  hydrogen_chloride_gas: "events.damage.hydrogen_chloride_gas",
-  liquid_corrosion: "events.damage.liquid_corrosion",
-  nitrogen_chemistry: "events.damage.nitrogen_chemistry",
-  nickel_carbonyl: "events.damage.nickel_carbonyl",
-  hydrogen_fluoride: "events.damage.hydrogen_fluoride",
-  fluorine: "events.damage.fluorine",
-  uranium_chemistry: "events.damage.uranium_chemistry",
-  thermal_exposure: "events.damage.thermal_exposure",
-  catastrophic_overpressure: "events.damage.catastrophic_overpressure",
-  hydrogen_oxygen_combustion: "events.damage.hydrogen_oxygen_combustion",
+  tower_bolt: "events.damage.tower_bolt",
+  tower_repeater: "events.damage.tower_repeater",
+  tower_projector: "events.damage.tower_projector",
+  tower_mortar: "events.damage.tower_mortar",
+  tower_snare: "events.damage.tower_snare",
+  tower_flak: "events.damage.tower_flak",
+  tower_relay: "events.damage.tower_relay",
 };
 
 const sourceLabel = (sourceId: string, translator: Translator): string =>
@@ -47,7 +41,7 @@ const sourceLabel = (sourceId: string, translator: Translator): string =>
     : translator.text("events.damage.fallback");
 
 const scenarioStartCopy: EventCopyHandler = (event, context) => {
-  const { definition, formatters, levelCopy, translator } = context;
+  const { definition, levelCopy, translator } = context;
   switch (event.code) {
     case "scenario_started": {
       const text = levelCopy.level(definition.levels[event.levelId]);
@@ -68,13 +62,6 @@ const scenarioStartCopy: EventCopyHandler = (event, context) => {
         detail: round ? levelCopy.round(level, round).objective : levelText.lesson,
       };
     }
-    case "prime_started":
-      return {
-        title: translator.text("events.prime.title", { round: event.round }),
-        detail: translator.text("events.prime.detail", {
-          seconds: formatters.number(event.parameters.primeSeconds),
-        }),
-      };
     default:
       return null;
   }
@@ -228,23 +215,12 @@ const enemyNeutralizedCopy: EventCopyHandler = (event, context) => {
 const roundOutcomeCopy: EventCopyHandler = (event, context) => {
   const { definition, formatters, translator } = context;
   if (event.code === "flash_incident") {
-    const summary =
-      event.parameters.hitCount === 0
-        ? translator.text("events.flash.clear")
-        : translator.text("events.flash.hits", {
-            hits: event.parameters.hitCount,
-            killed: event.parameters.killed,
-            damage: formatters.number(event.parameters.damage),
-          });
     return {
-      title: translator.text("events.flash.title", {
-        hits: event.parameters.hitCount,
-        killed: event.parameters.killed,
-      }),
+      title: translator.text("events.flash.title"),
       detail: translator.text("events.flash.detail", {
         pressure: formatters.number(event.parameters.pressureImpulse),
         extent: formatters.number(event.parameters.reactionExtent),
-        summary,
+        heat: formatters.number(event.parameters.heatDelta),
       }),
     };
   }
@@ -291,12 +267,7 @@ const campaignProgressCopy: EventCopyHandler = (event, context) => {
       };
     case "assault_started":
       return {
-        title: translator.text(
-          event.parameters.automatic
-            ? "events.assault.automatic.title"
-            : "events.assault.early.title",
-          { round: event.round }
-        ),
+        title: translator.text("events.assault.title", { round: event.round }),
         detail: translator.text("events.assault.detail"),
       };
     case "round_advanced": {

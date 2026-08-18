@@ -53,7 +53,7 @@ const phaseChannel = (
   state: GameState,
   runId: ConnectionId,
   phase: TransportPhase,
-  gameDefinition: GameDefinition
+  _gameDefinition: GameDefinition
 ): TransportChannelTelemetry | null => {
   const definition = maybeLineDefinition(state, runId, phase);
   if (!definition) return null;
@@ -102,7 +102,7 @@ export const transportRunMaterialFlow = (
   state: GameState,
   runId: ConnectionId,
   species: SpeciesId,
-  gameDefinition: GameDefinition
+  _gameDefinition: GameDefinition
 ): MaterialRunFlow => {
   const phase: TransportPhase = GAS_TYPES.includes(species as GasType) ? "gas" : "liquid";
   const definition = maybeLineDefinition(state, runId, phase);
@@ -129,7 +129,7 @@ export const transportRunPhaseStatus = (
   state: GameState,
   runId: ConnectionId,
   phase: TransportPhase,
-  definition: GameDefinition
+  _definition: GameDefinition
 ): TransportPhaseStatus => {
   const exists = maybeLineDefinition(state, runId, phase) !== null;
   if (!exists) {

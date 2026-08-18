@@ -43,15 +43,15 @@ const representativeState = (): GameState => {
     const result = runtime.execute(state, command);
     if (result.accepted) state = result.state;
   }
-  state = runtime.execute(state, { type: "start_prime" }).state;
-  return runtime.step(state, runtime.round(state).primeSeconds + 8);
+  state = runtime.execute(state, { type: "start_assault" }).state;
+  return runtime.step(state, 8);
 };
 
 const baseline = (): PerformanceBaseline => {
   const state = representativeState();
   const encoded = encodeGame(state);
   return {
-    scenario: "morrow_pocket after prime plus 8 simulated seconds",
+    scenario: "morrow_pocket after 8 simulated assault seconds",
     saveBytes: Buffer.byteLength(encoded, "utf8"),
     clone: measure(200, () => {
       cloneGame(state);

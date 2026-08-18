@@ -10,18 +10,18 @@ const gameAt = (levelId: Parameters<typeof createScenarioGame>[0], phase: GameSt
 
 describe("captain's log entries", () => {
   it("opens on the act when the current site starts one and on the site otherwise", () => {
-    expect(defaultLogbookSelection(gameAt("flash_point", "level_briefing"))).toEqual({
+    expect(defaultLogbookSelection(gameAt("claim_8_delta", "level_briefing"))).toEqual({
       kind: "act",
       actId: "good_standing",
     });
-    expect(defaultLogbookSelection(gameAt("make_the_reagent", "level_briefing"))).toEqual({
+    expect(defaultLogbookSelection(gameAt("harkers_brace", "level_briefing"))).toEqual({
       kind: "site",
       siteId: "harkers_brace",
     });
   });
 
   it("opens on the secured site once the castellum clears it", () => {
-    expect(defaultLogbookSelection(gameAt("flash_point", "level_complete"))).toEqual({
+    expect(defaultLogbookSelection(gameAt("claim_8_delta", "level_complete"))).toEqual({
       kind: "site",
       siteId: "claim_8_delta",
     });

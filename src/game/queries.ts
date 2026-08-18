@@ -14,6 +14,9 @@ import * as physics from "./engine/physics";
 import * as reactions from "./engine/reactions";
 import * as roomState from "./engine/roomState";
 import * as telemetry from "./engine/transportTelemetry";
+import * as towerPlacement from "./engine/towerPlacement";
+import * as towerStats from "./engine/towerStats";
+import * as towerTargeting from "./engine/towerTargeting";
 
 export type { FlashIgnitionStatus } from "./engine/flashReaction";
 export type { HydrogenChlorineReactionStatus } from "./engine/reactions";
@@ -39,6 +42,45 @@ const bindDefinition =
         )?.map ?? definition.map
       )
     );
+
+const createTowerQueries = (definition: GameDefinition) => ({
+  effectiveTowerStats: (
+    tower: Parameters<typeof towerStats.effectiveTowerStats>[0],
+    state?: Parameters<typeof towerStats.effectiveTowerStats>[2]
+  ) =>
+    towerStats.effectiveTowerStats(
+      tower,
+      definitionForMap(definition, state?.map ?? definition.map),
+      state
+    ),
+  towerCoversPoint: (
+    state: Parameters<typeof towerTargeting.towerCoversPoint>[0],
+    tower: Parameters<typeof towerTargeting.towerCoversPoint>[1],
+    target: Parameters<typeof towerTargeting.towerCoversPoint>[2],
+    layer: Parameters<typeof towerTargeting.towerCoversPoint>[3]
+  ) =>
+    towerTargeting.towerCoversPoint(
+      state,
+      tower,
+      target,
+      layer,
+      definitionForMap(definition, state.map)
+    ),
+  resolveTowerPlacement: (
+    chassisId: Parameters<typeof towerPlacement.resolveTowerPlacement>[0],
+    anchor: Parameters<typeof towerPlacement.resolveTowerPlacement>[1],
+    mountFace: Parameters<typeof towerPlacement.resolveTowerPlacement>[2],
+    orientation: Parameters<typeof towerPlacement.resolveTowerPlacement>[3],
+    carrier: MapCarrier = definition
+  ) =>
+    towerPlacement.resolveTowerPlacement(
+      chassisId,
+      anchor,
+      mountFace,
+      orientation,
+      definitionForMap(definition, carrier.map)
+    ),
+});
 
 /** Definition-bound, read-only engine queries for application and presentation code. */
 export const createGameQueries = (definition: GameDefinition) =>
@@ -113,6 +155,7 @@ export const createGameQueries = (definition: GameDefinition) =>
     transportRunChannels: bindDefinition(telemetry.transportRunChannels, definition),
     transportRunMaterialFlow: bindDefinition(telemetry.transportRunMaterialFlow, definition),
     transportRunPhaseStatus: bindDefinition(telemetry.transportRunPhaseStatus, definition),
+    ...createTowerQueries(definition),
   });
 
 export type GameQueries = ReturnType<typeof createGameQueries>;
@@ -155,6 +198,9 @@ export const {
   transportRunChannels,
   transportRunMaterialFlow,
   transportRunPhaseStatus,
+  effectiveTowerStats,
+  towerCoversPoint,
+  resolveTowerPlacement,
 } = DEFAULT_GAME_QUERIES;
 
 export const STANDARD_PRESSURE = physics.STANDARD_PRESSURE;

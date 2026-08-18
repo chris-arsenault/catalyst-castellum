@@ -17,7 +17,7 @@ const room = (id: string, column: number, elevation: number): MapRoom => ({
     gas: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.72, sourceIds: [] },
     liquid: { capacity: 18, includeRoomInventory: true, roomPortHeight: 0.12, sourceIds: [] },
   },
-  hardpoints: [],
+  graftSlots: [],
   provenance: "site",
 });
 
@@ -47,6 +47,7 @@ const mapWith = (connections: readonly ProcessLineConnection[]): WorldMap => ({
   ringRadii: { inner: 4, middle: 8 },
   entryCell: { column: 0, elevation: 0 },
   coreBreachCell: { column: 9, elevation: 0 },
+  routeGraph: { coreNodeId: "core", nodes: {}, edges: {}, routes: {} },
   rooms: { alpha: room("alpha", 0, 0), beta: room("beta", 8, 0) },
   connections: Object.fromEntries(connections.map((connection) => [connection.id, connection])),
   utilityNodes: {},

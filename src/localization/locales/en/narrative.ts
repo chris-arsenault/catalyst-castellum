@@ -73,7 +73,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.sites.kettleblack.region": "Kettleblack Drifts",
   "narrative.sites.kettleblack.contract": "Independent ringglass survey",
   "narrative.sites.kettleblack.briefing":
-    "Kettleblack is a sealed industrial wreck seamed with dark flakes of ringglass. Surveyor wants every deposit numbered and mapped before it is touched. Buyer is paying for a fast, continuous recovery. For the first time, the two contracts pull in opposite directions.",
+    "Kettleblack is a sealed cutter wreck seamed with dark flakes of ringglass. Surveyor wants every deposit numbered and mapped before it is touched. Buyer is paying for a fast, continuous recovery. For the first time, the two contracts pull in opposite directions.",
   "narrative.sites.cordon_41.name": "Cordon 41",
   "narrative.sites.cordon_41.code": "DC-C41",
   "narrative.sites.cordon_41.region": "Outer Pell Approach",

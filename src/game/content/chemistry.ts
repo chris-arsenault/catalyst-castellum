@@ -52,9 +52,6 @@ export const REACTION_DEFINITIONS: Record<ReactionId, ReactionDefinition> = {
       pressurePulsePerExtent: 20,
       gasHeatPerExtent: 11,
       roomHeatPerExtent: 1.8,
-      pressureDamageBase: 59.46,
-      pressureDamagePerExtent: 7.945,
-      heatDamagePerExtent: 1.979,
     },
   },
   hydrogen_chlorine_recombination: {

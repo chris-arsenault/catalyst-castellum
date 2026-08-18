@@ -67,7 +67,7 @@ const ArchitecturalConnection = ({
   const controllable =
     (portal.kind === "door" || portal.kind === "trapdoor") &&
     !model.state.sealed &&
-    (game.phase === "build" || game.phase === "prime" || game.phase === "assault");
+    (game.phase === "build" || game.phase === "assault");
   const gasDirection = translator.text(
     model.gasFlow >= 0 ? "ui.architecture.direction.out" : "ui.architecture.direction.in"
   );

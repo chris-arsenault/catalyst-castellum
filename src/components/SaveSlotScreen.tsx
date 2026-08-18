@@ -15,7 +15,6 @@ const phaseLabel = (phase: SaveSlotRecord["game"]["phase"], translator: Translat
   const keys = {
     level_briefing: "ui.save.phase.briefing",
     build: "ui.save.phase.planning",
-    prime: "ui.save.phase.prime",
     assault: "ui.save.phase.assault",
     round_result: "ui.save.phase.roundComplete",
     level_complete: "ui.save.phase.checkpointComplete",

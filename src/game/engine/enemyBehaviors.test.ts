@@ -1,11 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { roomAtWorldPoint } from "../content/facilityGeometry";
 import { DEFAULT_GAME_DEFINITION } from "../definition";
-import { createScenarioGame, findEnemyPath, resolveEnemyCombat } from "../simulation";
+import { createScenarioGame, findEnemyPath } from "../simulation";
 import type { EnemyState, EnemyType, GameState } from "../types";
 import { roomState } from "../world/instances";
-import { emptyDamageLedger, emptyHazardChannels, type HazardBurst } from "./damage";
-import { initialEnemyBehaviorState, simulateEnemyBehaviors } from "./enemyBehaviors";
+import {
+  applyDamagePackets,
+  applyDamagePacketsWithScale,
+  emptyDamageLedger,
+  emptyHazardChannels,
+  type DamagePacket,
+} from "./damage";
+import {
+  initialEnemyBehaviorState,
+  simulateEnemyBehaviors,
+  transitionArmoredMolt,
+} from "./enemyBehaviors";
+import { towerFieldDamageScale } from "./enemyField";
 import { enemyGasZone } from "./enemyPosition";
 import { enemyBehaviorSpeedMultiplier } from "./enemyMovementRules";
 
@@ -13,7 +24,7 @@ const positionedEnemy = (type: EnemyType, id: number, health?: number): EnemySta
   const definition = DEFAULT_GAME_DEFINITION.enemies[type];
   const path = findEnemyPath({
     flying: definition.flying,
-    portalStates: createScenarioGame("flash_point").portalStates,
+    portalStates: createScenarioGame("claim_8_delta").portalStates,
   });
   const pathIndex = path.findIndex(
     (step) =>
@@ -38,40 +49,42 @@ const positionedEnemy = (type: EnemyType, id: number, health?: number): EnemySta
     damageBySource: emptyDamageLedger(),
     lastDamage: null,
     behavior: initialEnemyBehaviorState(definition, 20),
+    effects: [],
   };
 };
 
 const stateFor = (enemies: EnemyState[]): GameState => {
-  const state = createScenarioGame("flash_point");
+  const state = createScenarioGame("claim_8_delta");
   state.phase = "assault";
   state.enemies = enemies;
   return state;
 };
 
-const burst = (pressure: number): HazardBurst => ({
-  roomId: "furnace",
-  zone: "lower",
-  sourceId: "hydrogen_oxygen_combustion",
-  reactionExtent: 3,
-  pressureImpulse: 132,
-  heatDelta: 33,
+const towerPacket = (pressure: number): DamagePacket => ({
+  key: "tower:test",
+  sourceId: "tower_mortar",
   channels: { ...emptyHazardChannels(), pressure },
 });
 
 describe("enemy behavior mechanics", () => {
-  it("spends one shared field proportionally across same-room allies and leaves the Anchor exposed", () => {
+  it("spends one shared field against ordinary tower attacks and leaves the Anchor exposed", () => {
     const anchor = positionedEnemy("anchor", 50, 300);
     const first = positionedEnemy("deckmouth", 51, 200);
     const second = positionedEnemy("deckmouth", 52, 200);
     const state = stateFor([anchor, first, second]);
 
-    resolveEnemyCombat(state, 0.1, [burst(100)]);
+    const packet = towerPacket(100);
+    applyDamagePackets(state, anchor, [packet], DEFAULT_GAME_DEFINITION);
+    const firstScale = towerFieldDamageScale(state, first, [packet], DEFAULT_GAME_DEFINITION);
+    applyDamagePacketsWithScale(state, first, [packet], firstScale, DEFAULT_GAME_DEFINITION);
+    const secondScale = towerFieldDamageScale(state, second, [packet], DEFAULT_GAME_DEFINITION);
+    applyDamagePacketsWithScale(state, second, [packet], secondScale, DEFAULT_GAME_DEFINITION);
 
     expect(anchor.damageTaken).toBeCloseTo(100, 8);
-    expect(first.damageTaken).toBeCloseTo(15, 8);
-    expect(second.damageTaken).toBeCloseTo(15, 8);
+    expect(first.damageTaken).toBe(0);
+    expect(second.damageTaken).toBeGreaterThan(0);
     expect(state.stats.fieldDamageAbsorbed).toBeCloseTo(170, 8);
-    expect(state.stats.fieldDamageAbsorbedBySource.hydrogen_oxygen_combustion).toBeCloseTo(170, 8);
+    expect(state.stats.fieldDamageAbsorbedBySource.tower_mortar).toBeCloseTo(170, 8);
     expect(anchor.behavior).toMatchObject({ kind: "shared_field", charge: 0, active: false });
   });
 
@@ -79,7 +92,13 @@ describe("enemy behavior mechanics", () => {
     const splitback = positionedEnemy("splitback", 60);
     const state = stateFor([splitback]);
 
-    resolveEnemyCombat(state, 0.1, [burst(100)]);
+    const application = applyDamagePackets(
+      state,
+      splitback,
+      [towerPacket(100)],
+      DEFAULT_GAME_DEFINITION
+    );
+    transitionArmoredMolt(state, splitback, "furnace", application.killed);
 
     expect(splitback.health).toBeCloseTo(60, 8);
     expect(splitback.behavior).toMatchObject({ kind: "armored_molt", phase: "exposed" });

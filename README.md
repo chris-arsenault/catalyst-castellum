@@ -28,18 +28,19 @@ Use `make ci` for the complete repository gate and `pnpm test:e2e` for the brows
 
 ## Documentation
 
-| Topic                   | Link                                                               |
-| ----------------------- | ------------------------------------------------------------------ |
-| Documentation index     | [docs/README.md](docs/README.md)                                   |
-| Architecture            | [docs/architecture.md](docs/architecture.md)                       |
-| Campaign defense design | [docs/campaign-defense-design.md](docs/campaign-defense-design.md) |
-| Tutorial campaign       | [docs/tutorial-campaign.md](docs/tutorial-campaign.md)             |
-| Combat balance          | [docs/combat-balance-model.md](docs/combat-balance-model.md)       |
-| Narrative canon         | [docs/narrative/lore-bible.md](docs/narrative/lore-bible.md)       |
-| Architecture decisions  | [docs/adr/README.md](docs/adr/README.md)                           |
-| Backlog                 | [BACKLOG.md](BACKLOG.md)                                           |
-| Changelog               | [CHANGELOG.md](CHANGELOG.md)                                       |
-| Agent guide             | [AGENTS.md](AGENTS.md)                                             |
+| Topic                               | Link                                                               |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| Tower-defense implementation record | [TOWER-DEFENSE-REWORK-PLAN.md](TOWER-DEFENSE-REWORK-PLAN.md)       |
+| Documentation index                 | [docs/README.md](docs/README.md)                                   |
+| Architecture                        | [docs/architecture.md](docs/architecture.md)                       |
+| Campaign defense design             | [docs/campaign-defense-design.md](docs/campaign-defense-design.md) |
+| Tutorial campaign                   | [docs/tutorial-campaign.md](docs/tutorial-campaign.md)             |
+| Combat balance                      | [docs/combat-balance-model.md](docs/combat-balance-model.md)       |
+| Narrative canon                     | [docs/narrative/lore-bible.md](docs/narrative/lore-bible.md)       |
+| Architecture decisions              | [docs/adr/README.md](docs/adr/README.md)                           |
+| Backlog                             | [BACKLOG.md](BACKLOG.md)                                           |
+| Changelog                           | [CHANGELOG.md](CHANGELOG.md)                                       |
+| Agent guide                         | [AGENTS.md](AGENTS.md)                                             |
 
 ## License
 

@@ -25,7 +25,7 @@ describe("phase model", () => {
   });
 
   it("rejects undeclared transitions without mutating state", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     const before = { phase: state.phase, phaseTime: state.phaseTime };
     expect(() => transitionPhase(state, "assault")).toThrow(
       "Illegal phase transition: level_briefing -> assault"
@@ -34,7 +34,7 @@ describe("phase model", () => {
   });
 
   it("applies transition entry invariants centrally", () => {
-    const state = createScenarioGame("flash_point");
+    const state = createScenarioGame("claim_8_delta");
     state.phaseTime = 12;
     state.paused = true;
     transitionPhase(state, "build");

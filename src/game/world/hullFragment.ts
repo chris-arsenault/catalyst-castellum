@@ -5,6 +5,8 @@ import type {
   LiquidConduitState,
   RoomId,
   RoomState,
+  TowerInstance,
+  TowerInstanceId,
   ConnectionId,
 } from "../types";
 import type { MapConnection, MapRoom, MapUtilityNode, WorldMap } from "./map";
@@ -15,7 +17,7 @@ import { validateWorldMap } from "./mapValidation";
  * The player's persistent castellum as data (ADR-0004): hull-provenance rooms, the
  * connections internal to them, and their live contents, extracted from an ending
  * state and embedded by translation into the next produced map. The simulation never
- * composes hull and site at runtime — producers do this before a level starts.
+ * composes hull and site at runtime. Materialization does this before a level starts.
  */
 export interface HullFragment {
   rooms: Record<RoomId, MapRoom>;
@@ -24,6 +26,7 @@ export interface HullFragment {
   roomStates: Record<RoomId, RoomState>;
   gasConduits: Record<ConnectionId, GasConduitState>;
   liquidConduits: Record<ConnectionId, LiquidConduitState>;
+  towers: Record<TowerInstanceId, TowerInstance>;
 }
 
 const deepCopy = <Value>(value: Value): Value => structuredClone(value);
@@ -56,7 +59,7 @@ const hullUtilityNodeRecords = (
   );
 
 /**
- * The room where a generated site meets the traveling hull. Choosing the room with the
+ * The room where an authored site meets the traveling hull. Choosing the room with the
  * greatest architectural distance from Core makes every linear graft part of the final
  * enemy route; geometry and id provide deterministic branch tie-breakers.
  */
@@ -124,7 +127,15 @@ export const hullLayoutFromMap = (map: WorldMap): HullFragment => {
   const rooms = hullRoomRecords(map);
   const connections = hullConnectionRecords(map, rooms);
   const utilityNodes = hullUtilityNodeRecords(map, rooms);
-  return { rooms, connections, utilityNodes, roomStates: {}, gasConduits: {}, liquidConduits: {} };
+  return {
+    rooms,
+    connections,
+    utilityNodes,
+    roomStates: {},
+    gasConduits: {},
+    liquidConduits: {},
+    towers: {},
+  };
 };
 
 const extractConduitStates = (
@@ -155,6 +166,11 @@ export const extractHullFragment = (state: GameState): HullFragment => {
     connections,
     utilityNodes,
     roomStates,
+    towers: Object.fromEntries(
+      Object.entries(state.towers)
+        .filter(([, tower]) => tower.provenance === "hull")
+        .map(([towerId, tower]) => [towerId, deepCopy(tower)])
+    ),
     ...extractConduitStates(state, connections),
   };
 };
@@ -183,9 +199,9 @@ const shiftRoom = (room: MapRoom, offset: HullOffset): MapRoom => ({
   ),
   platformCells: room.platformCells.map((cell) => shiftCell(cell, offset)),
   ladderCells: room.ladderCells.map((cell) => shiftCell(cell, offset)),
-  hardpoints: room.hardpoints.map((hardpoint) => ({
-    ...hardpoint,
-    cell: shiftCell(hardpoint.cell, offset),
+  graftSlots: room.graftSlots.map((graftSlot) => ({
+    ...graftSlot,
+    cell: shiftCell(graftSlot.cell, offset),
   })),
 });
 
@@ -203,8 +219,8 @@ const shiftConnection = (connection: MapConnection, offset: HullOffset): MapConn
       };
 
 /**
- * Translate the fragment onto a produced map. Loud on id collisions and validation
- * failures — a producer that embeds an illegal hull has no legal output.
+ * Translate the fragment onto a materialized map. Loud on id collisions and validation
+ * failures: a site that embeds an illegal hull has no legal materialization.
  */
 export const embedHullFragment = (
   map: WorldMap,
@@ -253,6 +269,24 @@ export const shiftFragmentStateRoutes = (
     Object.entries(fragment.liquidConduits).map(([id, conduit]) => [
       id,
       { ...deepCopy(conduit), route: conduit.route.map((cell) => shiftCell(cell, offset)) },
+    ])
+  ),
+  towers: Object.fromEntries(
+    Object.entries(fragment.towers).map(([towerId, tower]) => [
+      towerId,
+      {
+        ...deepCopy(tower),
+        placement: {
+          ...deepCopy(tower.placement),
+          anchor: shiftCell(tower.placement.anchor, offset),
+          occupiedCells: tower.placement.occupiedCells.map((cell) => shiftCell(cell, offset)),
+          supportCells: tower.placement.supportCells.map((cell) => shiftCell(cell, offset)),
+          firingOrigin: {
+            x: tower.placement.firingOrigin.x + offset.columns,
+            elevation: tower.placement.firingOrigin.elevation + offset.elevations,
+          },
+        },
+      },
     ])
   ),
 });

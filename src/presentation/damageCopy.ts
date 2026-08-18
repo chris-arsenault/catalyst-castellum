@@ -1,4 +1,5 @@
-import { DAMAGE_SOURCE_IDS, type DamageSourceId, type HazardChannels } from "../game/types";
+import { DAMAGE_SOURCE_IDS } from "../game/identifiers";
+import type { DamageSourceId, HazardChannels } from "../game/types";
 import { DEFAULT_TRANSLATOR, type Translator } from "../localization/translator";
 import type { LocaleKey } from "../localization/types";
 
@@ -58,19 +59,13 @@ export const damageSourceLabel = DEFAULT_DAMAGE_COPY.sourceLabel;
 export const damageSourceDetail = DEFAULT_DAMAGE_COPY.sourceDetail;
 
 export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"> = {
-  asphyxiation: "continuous",
-  carbon_monoxide: "continuous",
-  chlorine_gas: "continuous",
-  hydrogen_chloride_gas: "continuous",
-  liquid_corrosion: "continuous",
-  nitrogen_chemistry: "continuous",
-  nickel_carbonyl: "continuous",
-  hydrogen_fluoride: "continuous",
-  fluorine: "continuous",
-  uranium_chemistry: "continuous",
-  thermal_exposure: "continuous",
-  catastrophic_overpressure: "continuous",
-  hydrogen_oxygen_combustion: "impact",
+  tower_bolt: "impact",
+  tower_repeater: "impact",
+  tower_projector: "impact",
+  tower_mortar: "impact",
+  tower_snare: "impact",
+  tower_flak: "impact",
+  tower_relay: "impact",
 };
 
 export const formatDamageAmount = (amount: number): string => {

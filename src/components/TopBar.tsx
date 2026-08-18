@@ -12,7 +12,6 @@ const localizedPhaseLabel = (phase: GamePhase, translator: Translator): string =
   const keys = {
     level_briefing: "ui.topbar.phase.briefing",
     build: "ui.topbar.phase.planning",
-    prime: "ui.topbar.phase.prime",
     assault: "ui.topbar.phase.assault",
     round_result: "ui.topbar.phase.roundResult",
     level_complete: "ui.topbar.phase.levelComplete",

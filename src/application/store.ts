@@ -43,6 +43,9 @@ const CLEAN_TUTORIAL_UI = {
   graftMode: false,
   graftPreview: null,
   roomEffectPreview: null,
+  towerBuildSelection: null,
+  selectedTowerId: null,
+  movingTowerId: null,
 };
 
 const replaceSlotWithLevel = (

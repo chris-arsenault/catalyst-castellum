@@ -1,200 +1,134 @@
 import type { ReferenceBuildDefinition } from "../playtestPortfolios";
 import {
-  buildLine as line,
-  GAS_CHARGE,
-  install,
-  LIQUID_CHARGES,
+  placeTower as place,
   portfolioRound as round,
-  upgrade,
+  targetTower as target,
+  upgradeTower as upgrade,
 } from "./buildCommands";
 
-const flashBattery: ReferenceBuildDefinition = {
-  id: "distributed_flash_battery",
-  archetype: "burst",
+const towerId = (sequence: number): string => `tower:morrow_pocket:${sequence}`;
+
+const preciseCrossfire: ReferenceBuildDefinition = {
+  id: "precise_crossfire",
+  archetype: "precise",
   rounds: [
     round([
-      ...line("gas_line", "core", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      upgrade("furnace", "socket_b"),
+      place("bolt_caster", { column: 6, elevation: 8 }, "left_wall", "right"),
+      place("bolt_caster", { column: 6, elevation: 20 }, "left_wall", "right"),
+      place("bolt_caster", { column: 28, elevation: 22 }, "ceiling", "down"),
+      place("bolt_caster", { column: 41, elevation: 22 }, "ceiling", "down"),
+      place("bolt_caster", { column: 41, elevation: 12 }, "ceiling", "down"),
+      upgrade(towerId(3), "bolt_calibration"),
+      upgrade(towerId(5), "bolt_calibration"),
     ]),
     round([
-      GAS_CHARGE,
-      ...line("gas_line", "core", "gallery"),
-      install("gallery", "socket_a", "thermal_coil"),
-      install("gallery", "socket_b", "gas_agitator"),
-      upgrade("gallery", "socket_b"),
+      place("bolt_caster", { column: 48, elevation: 8 }, "right_wall", "left"),
+      target(towerId(6), "strongest"),
     ]),
-    round([
-      GAS_CHARGE,
-      ...line("gas_line", "core", "switchyard"),
-      install("switchyard", "socket_a", "thermal_coil"),
-      install("switchyard", "socket_b", "gas_agitator"),
-      upgrade("switchyard", "socket_b"),
-    ]),
-    round([
-      GAS_CHARGE,
-      upgrade("furnace", "socket_b"),
-      upgrade("gallery", "socket_b"),
-      upgrade("switchyard", "socket_b"),
-    ]),
-    round([GAS_CHARGE]),
+    round([upgrade(towerId(1), "bolt_calibration"), upgrade(towerId(2), "bolt_calibration")]),
+    round([upgrade(towerId(3), "bolt_piercing"), upgrade(towerId(5), "bolt_piercing")]),
+    round(),
   ],
 };
 
-const acidExposureLine: ReferenceBuildDefinition = {
-  id: "acid_exposure_line",
-  archetype: "continuous",
+const rapidInterlock: ReferenceBuildDefinition = {
+  id: "rapid_interlock",
+  archetype: "rapid",
   rounds: [
     round([
-      install("lower_intake", "socket_a", "membrane_cell"),
-      ...line("liquid_line", "core", "lower_intake"),
-      ...line("gas_line", "lower_intake", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      ...line("gas_line", "furnace", "gallery"),
-      ...line("gas_line", "gallery", "washlock"),
+      place("repeater", { column: 6, elevation: 8 }, "left_wall", "right"),
+      place("repeater", { column: 6, elevation: 20 }, "left_wall", "right"),
+      place("repeater", { column: 28, elevation: 22 }, "ceiling", "down"),
+      place("repeater", { column: 41, elevation: 22 }, "ceiling", "down"),
+      place("repeater", { column: 41, elevation: 12 }, "ceiling", "down"),
+      place("flak_nest", { column: 25, elevation: 11 }, "ceiling", "down"),
+      upgrade(towerId(5), "repeater_feed"),
     ]),
     round([
-      ...LIQUID_CHARGES,
-      upgrade("lower_intake", "socket_a"),
-      upgrade("furnace", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      install("gallery", "socket_a", "gas_agitator"),
+      place("repeater", { column: 48, elevation: 8 }, "right_wall", "left"),
+      upgrade(towerId(3), "repeater_feed"),
     ]),
-    round([
-      ...LIQUID_CHARGES,
-      upgrade("gallery", "socket_a"),
-      install("washlock", "socket_a", "wet_contactor"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      upgrade("lower_intake", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      upgrade("gallery", "socket_a"),
-    ]),
-    round(LIQUID_CHARGES),
+    round([upgrade(towerId(1), "repeater_feed"), upgrade(towerId(2), "repeater_feed")]),
+    round([upgrade(towerId(5), "repeater_tracking"), upgrade(towerId(6), "flak_burst")]),
+    round(),
   ],
 };
 
-const causticFloor: ReferenceBuildDefinition = {
-  id: "caustic_drag_floor",
+const areaBarrage: ReferenceBuildDefinition = {
+  id: "area_barrage",
+  archetype: "area",
+  rounds: [
+    round([
+      place("line_projector", { column: 10, elevation: 11 }, "ceiling", "down"),
+      place("line_projector", { column: 22, elevation: 14 }, "left_wall", "right"),
+      place("line_projector", { column: 42, elevation: 22 }, "ceiling", "down"),
+      place("line_projector", { column: 42, elevation: 12 }, "ceiling", "down"),
+      place("mortar", { column: 15, elevation: 4 }, "floor", "left"),
+      place("bolt_caster", { column: 28, elevation: 22 }, "ceiling", "down"),
+    ]),
+    round([
+      place("line_projector", { column: 6, elevation: 20 }, "left_wall", "right"),
+      place("line_projector", { column: 48, elevation: 8 }, "right_wall", "left"),
+    ]),
+    round([upgrade(towerId(5), "mortar_payload"), upgrade(towerId(6), "bolt_calibration")]),
+    round([upgrade(towerId(1), "projector_focus"), upgrade(towerId(4), "projector_focus")]),
+    round([
+      place("line_projector", { column: 46, elevation: 12 }, "ceiling", "down"),
+      upgrade(towerId(8), "projector_focus"),
+      upgrade(towerId(9), "projector_focus"),
+    ]),
+  ],
+};
+
+const controlledKillbox: ReferenceBuildDefinition = {
+  id: "controlled_killbox",
   archetype: "control",
   rounds: [
     round([
-      install("lower_intake", "socket_a", "membrane_cell"),
-      ...line("liquid_line", "core", "lower_intake"),
-      ...line("gas_line", "lower_intake", "reservoir"),
-      ...line("liquid_line", "lower_intake", "reservoir"),
-      install("reservoir", "socket_a", "wet_contactor"),
+      place("snare_emitter", { column: 10, elevation: 11 }, "ceiling", "down"),
+      place("snare_emitter", { column: 28, elevation: 22 }, "ceiling", "down"),
+      place("snare_emitter", { column: 41, elevation: 22 }, "ceiling", "down"),
+      place("snare_emitter", { column: 41, elevation: 12 }, "ceiling", "down"),
+      place("repeater", { column: 6, elevation: 8 }, "left_wall", "right"),
+      place("repeater", { column: 6, elevation: 20 }, "left_wall", "right"),
+      place("repeater", { column: 30, elevation: 22 }, "ceiling", "down"),
+      place("repeater", { column: 48, elevation: 8 }, "right_wall", "left"),
+      place("flak_nest", { column: 25, elevation: 11 }, "ceiling", "down"),
     ]),
-    round([
-      ...LIQUID_CHARGES,
-      ...line("liquid_line", "reservoir", "washlock"),
-      install("washlock", "socket_a", "wet_contactor"),
-      upgrade("lower_intake", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      install("lower_intake", "socket_b", "wet_contactor"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      upgrade("lower_intake", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round(LIQUID_CHARGES),
+    round([upgrade(towerId(2), "snare_duration"), upgrade(towerId(4), "snare_duration")]),
+    round([upgrade(towerId(5), "repeater_feed"), upgrade(towerId(8), "repeater_feed")]),
+    round([upgrade(towerId(3), "snare_duration"), upgrade(towerId(9), "flak_burst")]),
+    round(),
   ],
 };
 
-const storedRelease: ReferenceBuildDefinition = {
-  id: "stored_hypochlorite_release",
-  archetype: "storage",
+const supportedBattery: ReferenceBuildDefinition = {
+  id: "supported_battery",
+  archetype: "support",
   rounds: [
     round([
-      install("lower_intake", "socket_a", "membrane_cell"),
-      ...line("liquid_line", "core", "lower_intake"),
-      ...line("gas_line", "lower_intake", "reservoir"),
-      ...line("liquid_line", "lower_intake", "reservoir"),
-      install("reservoir", "socket_a", "wet_contactor"),
+      place("relay", { column: 41, elevation: 12 }, "ceiling", "down"),
+      place("bolt_caster", { column: 6, elevation: 8 }, "left_wall", "right"),
+      place("repeater", { column: 6, elevation: 20 }, "left_wall", "right"),
+      place("mortar", { column: 15, elevation: 4 }, "floor", "left"),
+      place("bolt_caster", { column: 28, elevation: 22 }, "ceiling", "down"),
+      place("repeater", { column: 41, elevation: 22 }, "ceiling", "down"),
+      place("flak_nest", { column: 25, elevation: 11 }, "ceiling", "down"),
     ]),
     round([
-      ...LIQUID_CHARGES,
-      ...line("gas_line", "lower_intake", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      ...line("gas_line", "furnace", "gallery"),
-      ...line("gas_line", "gallery", "washlock"),
-      ...line("liquid_line", "reservoir", "washlock"),
-      install("washlock", "socket_a", "wet_contactor"),
+      place("line_projector", { column: 48, elevation: 8 }, "right_wall", "left"),
+      target(towerId(1), "support"),
     ]),
-    round([
-      ...LIQUID_CHARGES,
-      upgrade("lower_intake", "socket_a"),
-      upgrade("furnace", "socket_b"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round([
-      ...LIQUID_CHARGES,
-      upgrade("lower_intake", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round(LIQUID_CHARGES),
-  ],
-};
-
-const hybridDefense: ReferenceBuildDefinition = {
-  id: "flash_corrosion_hybrid",
-  archetype: "hybrid",
-  rounds: [
-    round([
-      ...line("gas_line", "core", "furnace"),
-      install("furnace", "socket_a", "thermal_coil"),
-      install("furnace", "socket_b", "gas_agitator"),
-      install("lower_intake", "socket_a", "membrane_cell"),
-      ...line("liquid_line", "core", "lower_intake"),
-      ...line("gas_line", "lower_intake", "reservoir"),
-      ...line("liquid_line", "lower_intake", "reservoir"),
-      install("reservoir", "socket_a", "wet_contactor"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...LIQUID_CHARGES,
-      ...line("liquid_line", "reservoir", "washlock"),
-      install("washlock", "socket_a", "wet_contactor"),
-      upgrade("furnace", "socket_b"),
-      upgrade("lower_intake", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...LIQUID_CHARGES,
-      ...line("gas_line", "core", "gallery"),
-      install("gallery", "socket_a", "thermal_coil"),
-      install("gallery", "socket_b", "gas_agitator"),
-      upgrade("washlock", "socket_a"),
-    ]),
-    round([
-      GAS_CHARGE,
-      ...LIQUID_CHARGES,
-      upgrade("furnace", "socket_b"),
-      upgrade("gallery", "socket_b"),
-      upgrade("lower_intake", "socket_a"),
-      upgrade("reservoir", "socket_a"),
-    ]),
-    round([GAS_CHARGE, ...LIQUID_CHARGES]),
+    round([upgrade(towerId(4), "mortar_payload"), upgrade(towerId(5), "bolt_calibration")]),
+    round([upgrade(towerId(6), "repeater_feed"), upgrade(towerId(7), "flak_burst")]),
+    round(),
   ],
 };
 
 export const MORROW_POCKET_REFERENCE_BUILDS: readonly ReferenceBuildDefinition[] = [
-  flashBattery,
-  acidExposureLine,
-  causticFloor,
-  storedRelease,
-  hybridDefense,
+  preciseCrossfire,
+  rapidInterlock,
+  areaBarrage,
+  controlledKillbox,
+  supportedBattery,
 ];

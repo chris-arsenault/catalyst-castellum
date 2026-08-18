@@ -1,117 +1,120 @@
-import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { ProcessFamilyId, WaveEntry } from "../../types";
 import { enemySequence } from "../enemies";
-import { ACT_THREE_SITE_SEEDS, LANE_SIX_SITE } from "../sites/actThree";
+import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { actThreeSupplies } from "./actThreeShared";
 import { paletteAvailability } from "./fullPlant";
-import type { ProcessFamilyId } from "../../types";
-
-const LANE_SIX_PALETTE: readonly ProcessFamilyId[] = ["carbon_steam", "nickel", "nitrogen_oxide"];
-const LANE_SIX_AVAILABILITY = paletteAvailability(LANE_SIX_PALETTE);
 import { emptyLoadout } from "./helpers";
 
-const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
-  entries.flat().sort((left, right) => left.at - right.at);
+const PALETTE: readonly ProcessFamilyId[] = ["carbon_steam", "nickel", "chlorine_sodium"];
+const AVAILABLE = paletteAvailability(PALETTE);
+const ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "west_convoy",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "paired_convoy",
+    roomId: "switchyard",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.04,
+    eligibility: "all",
+  },
+];
+const on = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+const wave = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
 
+/** Lane Six compresses alternating convoy columns across a long paired approach. */
 export const LANE_SIX_LEVEL: LevelDefinition = {
   id: "lane_six",
   number: 11,
-  palette: LANE_SIX_PALETTE,
+  palette: PALETTE,
   enemyLevel: 30,
   focusRoomId: "gallery",
-  featuredReactionIds: [
-    "hydrogen_oxygen_combustion",
-    "nitrogen_dioxide_absorption",
-    "nickel_carbonyl_deposition",
-    "uranyl_fluoride_recovery",
-  ],
-  startingMatter: 490,
+  featuredReactionIds: ["chlor_alkali_electrolysis", "nickel_carbonyl_deposition"],
+  startingMatter: 500,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
   supplies: actThreeSupplies("lane_marker", {
     gasCapacity: 1_250,
-    gasContents: {
-      hydrogen: 360,
-      oxygen: 180,
-      nitrogen: 240,
-      carbon_monoxide: 180,
-    },
+    gasContents: { hydrogen: 360, oxygen: 180, nitrogen: 240, carbon_monoxide: 180 },
     gasCost: 46,
     water: 240,
-    brine: 0,
+    brine: 240,
     liquidCapacity: 280,
-    hazard: {
-      gas: {
-        contents: { ammonia: 50, nitrogen_dioxide: 18 },
-        capacity: 100,
-        cost: 22,
-        availableFromRound: "lane_marker",
-      },
-    },
     waterCost: 14,
     brineCost: 18,
   }),
-  site: { kind: "generated", seed: ACT_THREE_SITE_SEEDS.lane_six, spec: LANE_SIX_SITE },
+  site: {
+    kind: "fixed",
+    map: FIXED_CAMPAIGN_MAPS.lane_six,
+    hullAnchor: { columns: 84, elevations: 0 },
+  },
   loadout: {
     ...emptyLoadout(),
     stationary: {
       furnace: { solid_carbon: 34, iron_catalyst: 5 },
-      gallery: { platinum_catalyst: 4, surface_nickel: 18 },
+      gallery: { surface_nickel: 18 },
       lower_intake: { nickel_oxide: 18, surface_nickel: 18 },
     },
   },
+  routes: ROUTES,
   rounds: [
     {
       id: "lane_marker",
-      primeSeconds: 72,
-      wave: enemySequence(3, "deckmouth", 0.5, 1.8, -10),
-      availability: LANE_SIX_AVAILABILITY,
+      wave: wave(
+        on("west_convoy", enemySequence(7, "deckmouth", 0.5, 1.8, -11)),
+        on("paired_convoy", enemySequence(6, "flintjack", 1, 1.5, -11))
+      ),
+      availability: AVAILABLE,
     },
     {
       id: "fast_column",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(8, "flintjack", 0.5, 1.2, -9),
-        enemySequence(4, "clatter", 1.5, 1.8, -9)
+        on("west_convoy", enemySequence(9, "flintjack", 0.5, 1.1, -10)),
+        on("paired_convoy", enemySequence(7, "clatter", 1, 1.45, -10))
       ),
-      availability: LANE_SIX_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "field_column",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(4, "splitback", 1, 2.6, -9),
-        enemySequence(4, "redlung", 2, 2.5, -8),
-        enemySequence(2, "glowbag", 3.5, 3, -9),
-        enemySequence(1, "anchor", 5, 1, -9)
+        on("west_convoy", enemySequence(6, "splitback", 0.5, 2.1, -9)),
+        on("paired_convoy", enemySequence(5, "redlung", 1, 2.2, -9)),
+        on("paired_convoy", enemySequence(4, "glowbag", 1.5, 2.2, -10)),
+        on("paired_convoy", enemySequence(1, "anchor", 3, 1, -10))
       ),
-      availability: LANE_SIX_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "convoy_window",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(10, "flintjack", 0.5, 1.05, -8),
-        enemySequence(6, "deckmouth", 1, 1.55, -8),
-        enemySequence(4, "clatter", 2, 1.9, -8),
-        enemySequence(3, "shear_jelly", 3, 2.5, -8),
-        enemySequence(3, "glowbag", 4, 2.6, -8)
+        on("west_convoy", enemySequence(9, "flintjack", 0.5, 0.95, -9)),
+        on("paired_convoy", enemySequence(7, "deckmouth", 1, 1.35, -9)),
+        on("west_convoy", enemySequence(6, "clatter", 1.5, 1.45, -9)),
+        on("paired_convoy", enemySequence(5, "shear_jelly", 2, 1.9, -9)),
+        on("paired_convoy", enemySequence(4, "glowbag", 2.5, 2, -9))
       ),
-      availability: LANE_SIX_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "whole_lane",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(8, "flintjack", 0.5, 1.1, -6),
-        enemySequence(6, "deckmouth", 1, 1.5, -6),
-        enemySequence(5, "splitback", 2, 2.2, -7),
-        enemySequence(4, "redlung", 2.5, 2.4, -6),
-        enemySequence(4, "clatter", 3, 1.9, -5),
-        enemySequence(3, "glowbag", 4, 2.5, -6),
-        enemySequence(2, "shear_jelly", 5, 2.7, -5),
-        enemySequence(1, "anchor", 7, 1, 1)
+        on("west_convoy", enemySequence(8, "flintjack", 0.5, 0.95, -9)),
+        on("paired_convoy", enemySequence(4, "deckmouth", 1, 1.3, -9)),
+        on("west_convoy", enemySequence(6, "splitback", 1.5, 1.9, -9)),
+        on("paired_convoy", enemySequence(3, "redlung", 2, 2, -9)),
+        on("west_convoy", enemySequence(6, "clatter", 2.5, 1.4, -9)),
+        on("paired_convoy", enemySequence(2, "glowbag", 3, 2, -9)),
+        on("paired_convoy", enemySequence(3, "shear_jelly", 3.5, 2, -9)),
+        on("paired_convoy", enemySequence(1, "anchor", 5, 1, -10))
       ),
-      availability: LANE_SIX_AVAILABILITY,
+      availability: AVAILABLE,
     },
   ],
 };

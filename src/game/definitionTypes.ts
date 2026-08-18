@@ -25,6 +25,8 @@ import type {
   SiteSupplyDefinition,
   WaveEntry,
   WorldPoint,
+  TowerChassisId,
+  TowerDefinition,
 } from "./types";
 import type {
   ArchitecturalConnection,
@@ -33,7 +35,7 @@ import type {
   WorldMap,
 } from "./world/map";
 import type { ModuleId, ModuleTemplate } from "./world/modules";
-import type { GeneratedLevelSite } from "./world/siteGeneratorTypes";
+import type { FixedLevelSite } from "./world/fixedLevelSite";
 
 export type ScenarioRoomEquipment = Partial<
   Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentLoadout>>>
@@ -61,9 +63,16 @@ export interface FacilityLoadout {
 
 export interface RoundDefinition {
   id: string;
-  primeSeconds: number;
   wave: WaveEntry[];
   availability: ScenarioAvailability;
+}
+
+export interface RouteIngressDefinition {
+  id: string;
+  roomId: RoomId;
+  offset: GridCell;
+  movementCost: number;
+  eligibility: "ground" | "flying" | "all";
 }
 
 export interface LevelDefinition {
@@ -82,8 +91,9 @@ export interface LevelDefinition {
   supplies: readonly SiteSupplyDefinition[];
   loadout: FacilityLoadout;
   rounds: RoundDefinition[];
-  /** Null levels use the pack's authored map; generated sites use a fixed tutorial seed. */
-  site: GeneratedLevelSite | null;
+  routes: readonly RouteIngressDefinition[];
+  /** Null levels use the pack map; fixed sites embed the traveling hull into authored geometry. */
+  site: FixedLevelSite | null;
 }
 
 export interface EnvironmentHazardRules {
@@ -136,6 +146,7 @@ export interface GamePackSource {
   readonly reactions: Readonly<Record<ReactionId, ReactionDefinition>>;
   readonly equipment: Readonly<Record<EquipmentId, EquipmentDefinition>>;
   readonly enemies: Readonly<Record<EnemyType, EnemyDefinition>>;
+  readonly towers: Readonly<Record<TowerChassisId, TowerDefinition>>;
   readonly levels: Readonly<Record<LevelId, LevelDefinition>>;
   readonly ambientGas: GasAmounts;
   readonly environmentHazards: EnvironmentHazardRules;

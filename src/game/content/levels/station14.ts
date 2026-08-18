@@ -1,43 +1,55 @@
-import type { LevelDefinition, RoundDefinition } from "../../definitionTypes";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { ProcessFamilyId, WaveEntry } from "../../types";
 import { enemySequence } from "../enemies";
-import { ACT_THREE_SITE_SEEDS, STATION_14_SITE } from "../sites/actThree";
+import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { actThreeSupplies } from "./actThreeShared";
 import { paletteAvailability } from "./fullPlant";
-import type { ProcessFamilyId } from "../../types";
-
-const STATION_14_PALETTE: readonly ProcessFamilyId[] = [
-  "uranium_fluorine",
-  "carbon_steam",
-  "chlorine_sodium",
-];
-const STATION_14_AVAILABILITY = paletteAvailability(STATION_14_PALETTE);
 import { emptyLoadout } from "./helpers";
 
-const wave = (...entries: readonly RoundDefinition["wave"][]): RoundDefinition["wave"] =>
-  entries.flat().sort((left, right) => left.at - right.at);
+const PALETTE: readonly ProcessFamilyId[] = ["uranium_fluorine", "carbon_steam", "chlorine_sodium"];
+const AVAILABLE = paletteAvailability(PALETTE);
+const ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "council_west",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "council_high",
+    roomId: "gallery",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.05,
+    eligibility: "flying",
+  },
+  {
+    id: "council_lower",
+    roomId: "switchyard",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.1,
+    eligibility: "all",
+  },
+];
+const on = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+const wave = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
 
+/** Station 14 divides Council formations between the west deck, upper air, and lower approach. */
 export const STATION_14_LEVEL: LevelDefinition = {
   id: "station_14",
   number: 9,
-  palette: STATION_14_PALETTE,
+  palette: PALETTE,
   enemyLevel: 28,
   focusRoomId: "reservoir",
-  featuredReactionIds: [
-    "uranium_hexafluoride_hydrolysis",
-    "uranyl_fluoride_recovery",
-    "hydrogen_fluoride_electrolysis",
-  ],
-  startingMatter: 430,
+  featuredReactionIds: ["hydrogen_fluoride_electrolysis", "chlor_alkali_electrolysis"],
+  startingMatter: 440,
   startingCoreIntegrity: 100,
   assaultTheme: "standard",
   supplies: actThreeSupplies("first_beacon", {
     gasCapacity: 950,
-    gasContents: {
-      hydrogen: 320,
-      oxygen: 160,
-      hydrogen_fluoride: 220,
-      nitrogen: 80,
-    },
+    gasContents: { hydrogen: 320, oxygen: 160, hydrogen_fluoride: 220, nitrogen: 80 },
     gasCost: 38,
     water: 200,
     brine: 200,
@@ -45,7 +57,11 @@ export const STATION_14_LEVEL: LevelDefinition = {
     waterCost: 12,
     brineCost: 16,
   }),
-  site: { kind: "generated", seed: ACT_THREE_SITE_SEEDS.station_14, spec: STATION_14_SITE },
+  site: {
+    kind: "fixed",
+    map: FIXED_CAMPAIGN_MAPS.station_14,
+    hullAnchor: { columns: 76, elevations: 0 },
+  },
   loadout: {
     ...emptyLoadout(),
     stationary: {
@@ -53,58 +69,58 @@ export const STATION_14_LEVEL: LevelDefinition = {
       gallery: { uranyl_fluoride: 36 },
     },
   },
+  routes: ROUTES,
   rounds: [
     {
       id: "first_beacon",
-      primeSeconds: 72,
-      wave: enemySequence(1, "deckmouth", 1, 1, -8),
-      availability: STATION_14_AVAILABILITY,
+      wave: wave(
+        on("council_west", enemySequence(6, "deckmouth", 0.5, 2.2, -9)),
+        on("council_high", enemySequence(2, "glowbag", 1.5, 3, -10))
+      ),
+      availability: AVAILABLE,
     },
     {
       id: "split_position",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(2, "clatter", 0.5, 1.8, -7),
-        enemySequence(1, "shear_jelly", 2, 1, -7),
-        enemySequence(1, "glowbag", 4, 1, -8)
+        on("council_west", enemySequence(6, "flintjack", 0.5, 1.7, -9)),
+        on("council_lower", enemySequence(5, "clatter", 1, 1.9, -9)),
+        on("council_high", enemySequence(2, "glowbag", 1.5, 2.6, -10))
       ),
-      availability: STATION_14_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "shielded_return",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(2, "splitback", 1, 3, -8),
-        enemySequence(2, "redlung", 2, 3.2, -7),
-        enemySequence(1, "anchor", 4, 1, -8)
+        on("council_west", enemySequence(5, "splitback", 0.5, 2.5, -9)),
+        on("council_lower", enemySequence(5, "redlung", 1, 2.5, -9)),
+        on("council_high", enemySequence(2, "shear_jelly", 1.5, 2.4, -9)),
+        on("council_lower", enemySequence(1, "anchor", 3, 1, -10))
       ),
-      availability: STATION_14_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "fourth_signal",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(7, "flintjack", 0.5, 1.45, -6),
-        enemySequence(4, "clatter", 1.5, 2, -6),
-        enemySequence(3, "glowbag", 3, 2.8, -7),
-        enemySequence(2, "shear_jelly", 5, 3, -6)
+        on("council_west", enemySequence(7, "flintjack", 0.5, 1.4, -8)),
+        on("council_lower", enemySequence(6, "clatter", 1, 1.7, -8)),
+        on("council_high", enemySequence(3, "glowbag", 1.5, 2.2, -9)),
+        on("council_lower", enemySequence(2, "shear_jelly", 2, 2.2, -8))
       ),
-      availability: STATION_14_AVAILABILITY,
+      availability: AVAILABLE,
     },
     {
       id: "near_echo",
-      primeSeconds: 72,
       wave: wave(
-        enemySequence(5, "deckmouth", 0.5, 1.7, -4),
-        enemySequence(5, "flintjack", 1, 1.5, -4),
-        enemySequence(3, "splitback", 2, 2.8, -5),
-        enemySequence(3, "redlung", 3, 2.7, -4),
-        enemySequence(2, "clatter", 4, 2.5, -3),
-        enemySequence(2, "glowbag", 5, 3, -4),
-        enemySequence(1, "shear_jelly", 6, 1, 1),
-        enemySequence(1, "anchor", 7.5, 1, -5)
+        on("council_west", enemySequence(6, "deckmouth", 0.5, 1.8, -8)),
+        on("council_west", enemySequence(6, "flintjack", 1, 1.4, -8)),
+        on("council_lower", enemySequence(5, "splitback", 1.5, 2.1, -8)),
+        on("council_lower", enemySequence(5, "redlung", 2, 2.3, -8)),
+        on("council_lower", enemySequence(5, "clatter", 2.5, 1.8, -8)),
+        on("council_high", enemySequence(2, "glowbag", 3, 2.3, -8)),
+        on("council_high", enemySequence(2, "shear_jelly", 3.5, 2.4, -8)),
+        on("council_lower", enemySequence(1, "anchor", 5, 1, -9))
       ),
-      availability: STATION_14_AVAILABILITY,
+      availability: AVAILABLE,
     },
   ],
 };

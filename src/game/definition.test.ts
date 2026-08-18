@@ -22,16 +22,16 @@ describe("explicit game definitions", () => {
       },
     });
 
-    const original = createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
-    const variant = createScenarioGame("flash_point", [], alternate);
+    const original = createScenarioGame("claim_8_delta", [], DEFAULT_GAME_DEFINITION);
+    const variant = createScenarioGame("claim_8_delta", [], alternate);
     expect(roomState(original, "furnace").temperature).toBe(22);
     expect(roomState(variant, "furnace").temperature).toBe(60);
     expect(DEFAULT_GAME_DEFINITION.map.width).toBe(76);
     expect(alternate.map.width).toBe(80);
 
     const variantBuild = executeCommand(variant, { type: "begin_level" }, alternate).state;
-    const variantPrime = executeCommand(variantBuild, { type: "start_prime" }, alternate).state;
-    expect(roomState(stepGame(variantPrime, 0.1, alternate), "furnace").temperature).not.toBe(
+    const variantAssault = executeCommand(variantBuild, { type: "start_assault" }, alternate).state;
+    expect(roomState(stepGame(variantAssault, 0.1, alternate), "furnace").temperature).not.toBe(
       roomState(stepGame(original, 0.1, DEFAULT_GAME_DEFINITION), "furnace").temperature
     );
   });

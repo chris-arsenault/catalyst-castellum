@@ -1,4 +1,4 @@
-import { Biohazard, Droplets, Flame, Gauge, Wind } from "lucide-react";
+import { Blocks, Crosshair, Gauge, Route, Wind } from "lucide-react";
 import { useGamePresentation } from "../../application/presentationContext";
 import type { Translator } from "../../localization/translator";
 
@@ -10,41 +10,36 @@ const operatingPhaseCopy = (translator: Translator) => [
   },
   {
     number: "02",
-    title: translator.text("ui.manual.operations.phase.prime.title"),
-    detail: translator.text("ui.manual.operations.phase.prime.detail"),
-  },
-  {
-    number: "03",
     title: translator.text("ui.manual.operations.phase.assault.title"),
     detail: translator.text("ui.manual.operations.phase.assault.detail"),
   },
   {
-    number: "04",
-    title: translator.text("ui.manual.operations.phase.analyze.title"),
-    detail: translator.text("ui.manual.operations.phase.analyze.detail"),
+    number: "03",
+    title: translator.text("ui.manual.operations.phase.report.title"),
+    detail: translator.text("ui.manual.operations.phase.report.detail"),
   },
 ];
 
 const fieldNoteCopy = (translator: Translator) => [
   {
+    icon: Crosshair,
+    title: translator.text("ui.manual.operations.note.towers.title"),
+    detail: translator.text("ui.manual.operations.note.towers.detail"),
+  },
+  {
+    icon: Route,
+    title: translator.text("ui.manual.operations.note.routes.title"),
+    detail: translator.text("ui.manual.operations.note.routes.detail"),
+  },
+  {
+    icon: Blocks,
+    title: translator.text("ui.manual.operations.note.grafts.title"),
+    detail: translator.text("ui.manual.operations.note.grafts.detail"),
+  },
+  {
     icon: Wind,
-    title: translator.text("ui.manual.operations.note.process.title"),
-    detail: translator.text("ui.manual.operations.note.process.detail"),
-  },
-  {
-    icon: Flame,
-    title: translator.text("ui.manual.operations.note.equipment.title"),
-    detail: translator.text("ui.manual.operations.note.equipment.detail"),
-  },
-  {
-    icon: Droplets,
-    title: translator.text("ui.manual.operations.note.liquid.title"),
-    detail: translator.text("ui.manual.operations.note.liquid.detail"),
-  },
-  {
-    icon: Biohazard,
-    title: translator.text("ui.manual.operations.note.enemy.title"),
-    detail: translator.text("ui.manual.operations.note.enemy.detail"),
+    title: translator.text("ui.manual.operations.note.chemistry.title"),
+    detail: translator.text("ui.manual.operations.note.chemistry.detail"),
   },
 ];
 

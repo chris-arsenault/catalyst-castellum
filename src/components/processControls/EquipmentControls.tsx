@@ -8,7 +8,6 @@ import {
   type EquipmentInstance,
   type EquipmentId,
   type EquipmentSocketId,
-  type GameState,
   type RoomId,
 } from "../../game/types";
 import { BinaryControl } from "./ActuatorControls";
@@ -38,29 +37,6 @@ const equipmentUpgradeTutorialAnchor = (
     ? TUTORIAL_ANCHORS.furnaceAgitatorUpgrade
     : null;
 
-const usesTwoSocketFurnaceLesson = (game: GameState): boolean =>
-  game.campaign.levelId === "make_the_reagent"
-    ? game.campaign.roundIndex >= 2
-    : game.campaign.levelId === "kettleblack" && game.campaign.roundIndex === 0;
-
-const emptySocketTutorialAnchor = (game: GameState, roomId: RoomId): TutorialAnchorId | null => {
-  if (roomId === "lower_intake" && game.campaign.levelId === "make_the_reagent")
-    return TUTORIAL_ANCHORS.lowerIntakeMembraneCell;
-  if (roomId === "gallery" && game.campaign.levelId === "flash_point")
-    return TUTORIAL_ANCHORS.galleryAgitator;
-  if (roomId !== "furnace") return null;
-  if (game.campaign.levelId === "flash_point") return TUTORIAL_ANCHORS.furnaceAgitator;
-  if (usesTwoSocketFurnaceLesson(game)) {
-    const thermalInstalled = Object.values(roomState(game, "furnace").equipment).some(
-      (instance) => instance?.equipmentId === "thermal_coil"
-    );
-    return thermalInstalled
-      ? TUTORIAL_ANCHORS.furnaceAgitator
-      : TUTORIAL_ANCHORS.furnaceThermalCoil;
-  }
-  return null;
-};
-
 const equipmentActionCommands = (
   instance: EquipmentInstance,
   roomId: RoomId,
@@ -84,7 +60,6 @@ const EmptyEquipmentSocket = ({
   socketId: EquipmentSocketId;
 }) => {
   const { translator } = useGamePresentation();
-  const game = useGameStore((state) => state.game);
   const openEquipmentBuild = useGameStore((state) => state.openEquipmentBuild);
   return (
     <article className="equipment-socket empty">
@@ -92,7 +67,6 @@ const EmptyEquipmentSocket = ({
         className="equipment-socket-build"
         type="button"
         data-testid={`open-equipment-build-${roomId}-${socketId}`}
-        data-tutorial-anchor={emptySocketTutorialAnchor(game, roomId) ?? undefined}
         onClick={() => openEquipmentBuild(roomId, socketId)}
       >
         <i>

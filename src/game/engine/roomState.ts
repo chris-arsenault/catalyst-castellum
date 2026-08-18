@@ -1,3 +1,5 @@
+/* eslint-disable max-lines-per-function -- Combat snapshots enumerate every mutable branch explicitly. */
+
 import { emptyGas, emptyLiquid } from "../materials";
 import type { GameDefinition } from "../definitionTypes";
 import {
@@ -151,18 +153,70 @@ const cloneNetworkState = (
 
 const cloneCombatState = (
   state: GameState
-): Pick<GameState, "enemies" | "stats" | "lastReport" | "events" | "incidents"> => ({
+): Pick<
+  GameState,
+  | "enemies"
+  | "towers"
+  | "towerAttacks"
+  | "environmentalFields"
+  | "towerSupply"
+  | "stats"
+  | "lastReport"
+  | "events"
+  | "incidents"
+> => ({
   enemies: state.enemies.map((enemy) => ({
     ...enemy,
     behavior: { ...enemy.behavior },
+    effects: enemy.effects.map((effect) => ({ ...effect })),
     path: enemy.path.map((step) => ({ ...step, cell: { ...step.cell } })),
     damageBySource: cloneDamageLedger(enemy.damageBySource),
     lastDamage: enemy.lastDamage
       ? { ...enemy.lastDamage, channels: cloneHazards(enemy.lastDamage.channels) }
       : null,
   })),
+  towers: Object.fromEntries(
+    Object.entries(state.towers).map(([towerId, tower]) => [
+      towerId,
+      {
+        ...tower,
+        placement: {
+          ...tower.placement,
+          anchor: { ...tower.placement.anchor },
+          occupiedCells: tower.placement.occupiedCells.map((cell) => ({ ...cell })),
+          supportCells: tower.placement.supportCells.map((cell) => ({ ...cell })),
+          firingOrigin: { ...tower.placement.firingOrigin },
+        },
+        upgrades: [...tower.upgrades],
+        localResources: {
+          gas: { ...tower.localResources.gas },
+          liquid: { ...tower.localResources.liquid },
+        },
+        currentTargetIds: [...tower.currentTargetIds],
+        telemetry: {
+          ...tower.telemetry,
+          downtime: { ...tower.telemetry.downtime },
+        },
+      },
+    ])
+  ),
+  towerAttacks: state.towerAttacks.map((attack) => ({
+    ...attack,
+    source: { ...attack.source },
+    target: { ...attack.target },
+    targetEnemyIds: [...attack.targetEnemyIds],
+    killedEnemyIds: [...attack.killedEnemyIds],
+  })),
+  environmentalFields: state.environmentalFields.map((field) => ({ ...field })),
+  towerSupply: Object.fromEntries(
+    Object.entries(state.towerSupply).map(([towerId, status]) => [
+      towerId,
+      { ...status, connectionIds: [...status.connectionIds] },
+    ])
+  ),
   stats: {
     ...state.stats,
+    breachesByRoute: { ...state.stats.breachesByRoute },
     damageByChannel: cloneHazards(state.stats.damageByChannel),
     damageBySource: { ...state.stats.damageBySource },
     fieldDamageAbsorbedBySource: { ...state.stats.fieldDamageAbsorbedBySource },
@@ -173,10 +227,17 @@ const cloneCombatState = (
         ...state.lastReport,
         damageByChannel: cloneHazards(state.lastReport.damageByChannel),
         damageBySource: { ...state.lastReport.damageBySource },
+        breachesByRoute: { ...state.lastReport.breachesByRoute },
         fieldDamageAbsorbedBySource: {
           ...state.lastReport.fieldDamageAbsorbedBySource,
         },
         killsBySource: { ...state.lastReport.killsBySource },
+        towers: Object.fromEntries(
+          Object.entries(state.lastReport.towers).map(([towerId, report]) => [
+            towerId,
+            { ...report, downtime: { ...report.downtime } },
+          ])
+        ),
       }
     : null,
   events: state.events.map((event) => ({
@@ -200,7 +261,6 @@ export const cloneGame = (state: GameState): GameState => ({
   // The map is immutable between edits; clones share it so derived geometry caches hold.
   map: state.map,
   mapRevision: state.mapRevision,
-  run: { ...state.run },
   world: {
     rooms: [...state.world.rooms],
     connections: [...state.world.connections],
@@ -210,6 +270,7 @@ export const cloneGame = (state: GameState): GameState => ({
     completedLevelIds: [...state.campaign.completedLevelIds],
   },
   availability: {
+    towers: [...state.availability.towers],
     equipment: [...state.availability.equipment],
     gasLines: [...state.availability.gasLines],
     liquidLines: [...state.availability.liquidLines],

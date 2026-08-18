@@ -147,7 +147,7 @@ const deliverGas = (
   runId: ConnectionId,
   packet: GasAmounts,
   packetTemperature: number,
-  gameDefinition: GameDefinition
+  _gameDefinition: GameDefinition
 ): void => {
   const definition = gasLineDefinition(state, runId);
   if (!definition) return;

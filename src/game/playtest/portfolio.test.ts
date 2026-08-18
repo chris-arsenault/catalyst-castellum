@@ -34,10 +34,9 @@ const result = (
   damageBySource: sourceTotals(),
   killsBySource: sourceTotals(),
   damageByChannel: { atmosphere: 0, corrosion: 0, heat: 0, pressure: 0, radiation: 0 },
-  pulseDamage: 0,
-  continuousDamage: 0,
   matterSpent: 10,
   buildProfile: {
+    towers: [],
     equipment: [],
     enabledGasLines: [],
     enabledLiquidLines: [],
@@ -68,10 +67,6 @@ describe("reference-build portfolios", () => {
         expect(build.rounds.length, `${levelId}.${build.id}`).toBeLessThanOrEqual(
           LEVEL_DEFINITIONS[portfolio.levelId].rounds.length
         );
-        for (const round of build.rounds) {
-          expect(round.primeFraction).toBeGreaterThan(0);
-          expect(round.primeFraction).toBeLessThanOrEqual(1);
-        }
       }
     }
   });

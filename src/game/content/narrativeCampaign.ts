@@ -75,7 +75,7 @@ export const NARRATIVE_SITES: readonly NarrativeSiteDefinition[] = [
     order: 1,
     authoredEnemyLevel: 20,
     mapPosition: { x: 8, y: 76 },
-    levelId: "flash_point",
+    levelId: "claim_8_delta",
     briefingDialogue: lines(
       ["clean_ledger", "malk_tern"],
       ["empty_spine", "mavo"],
@@ -89,7 +89,7 @@ export const NARRATIVE_SITES: readonly NarrativeSiteDefinition[] = [
     order: 2,
     authoredEnemyLevel: 21,
     mapPosition: { x: 20, y: 61 },
-    levelId: "make_the_reagent",
+    levelId: "harkers_brace",
     briefingDialogue: lines(
       ["brace_terms", "malk_tern"],
       ["cell_train", "mavo"],
@@ -103,7 +103,7 @@ export const NARRATIVE_SITES: readonly NarrativeSiteDefinition[] = [
     order: 3,
     authoredEnemyLevel: 22,
     mapPosition: { x: 31, y: 72 },
-    levelId: "stored_chlorine",
+    levelId: "twelve_cask",
     briefingDialogue: lines(
       ["storage_claim", "malk_tern"],
       ["raw_return", "surveyor"],
@@ -296,9 +296,9 @@ export const NARRATIVE_ROUTE_EDGES: readonly Readonly<{
 }));
 
 export const NARRATIVE_SITE_BY_LEVEL: Readonly<Record<LevelId, NarrativeSiteId>> = {
-  flash_point: "claim_8_delta",
-  make_the_reagent: "harkers_brace",
-  stored_chlorine: "twelve_cask",
+  claim_8_delta: "claim_8_delta",
+  harkers_brace: "harkers_brace",
+  twelve_cask: "twelve_cask",
   morrow_pocket: "morrow_pocket",
   kettleblack: "kettleblack",
   cordon_41: "cordon_41",

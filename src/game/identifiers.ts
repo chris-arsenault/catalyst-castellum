@@ -52,6 +52,54 @@ export const ENEMY_TYPES = [
   "glowbag",
 ] as const;
 
+export const TOWER_CHASSIS_IDS = [
+  "bolt_caster",
+  "repeater",
+  "line_projector",
+  "mortar",
+  "snare_emitter",
+  "flak_nest",
+  "relay",
+] as const;
+
+export const TOWER_UPGRADE_IDS = [
+  "bolt_calibration",
+  "bolt_piercing",
+  "repeater_feed",
+  "repeater_tracking",
+  "projector_focus",
+  "projector_fan",
+  "mortar_payload",
+  "mortar_radius",
+  "snare_duration",
+  "snare_field",
+  "flak_burst",
+  "flak_ceiling",
+  "relay_range",
+  "relay_service",
+] as const;
+
+export const TOWER_ATTACK_STRATEGIES = ["hitscan", "projectile", "cone", "lob", "area"] as const;
+export const TOWER_TARGET_POLICIES = [
+  "first",
+  "last",
+  "nearest",
+  "strongest",
+  "weakest",
+  "armored",
+  "flying",
+  "support",
+] as const;
+export const TOWER_MOUNT_FACES = ["floor", "left_wall", "right_wall", "ceiling"] as const;
+export const TOWER_ORIENTATIONS = ["left", "right", "up", "down"] as const;
+export const CONTROL_EFFECT_KINDS = [
+  "slow",
+  "stun",
+  "reveal",
+  "armor_break",
+  "route_displacement",
+] as const;
+
 export const EQUIPMENT_OUTPUT_IDS = ["anode_header", "cathode_header", "cell_liquor"] as const;
 
 export const EQUIPMENT_IDS = [
@@ -70,19 +118,13 @@ export const EQUIPMENT_SOCKET_IDS = ["socket_a", "socket_b"] as const;
 export const EQUIPMENT_LEVELS = [1, 2, 3] as const;
 
 export const DAMAGE_SOURCE_IDS = [
-  "asphyxiation",
-  "carbon_monoxide",
-  "chlorine_gas",
-  "hydrogen_chloride_gas",
-  "liquid_corrosion",
-  "nitrogen_chemistry",
-  "nickel_carbonyl",
-  "hydrogen_fluoride",
-  "fluorine",
-  "uranium_chemistry",
-  "thermal_exposure",
-  "catastrophic_overpressure",
-  "hydrogen_oxygen_combustion",
+  "tower_bolt",
+  "tower_repeater",
+  "tower_projector",
+  "tower_mortar",
+  "tower_snare",
+  "tower_flak",
+  "tower_relay",
 ] as const;
 
 export const PROCESS_FAMILY_IDS = [
@@ -130,9 +172,9 @@ export const REACTION_IDS = [
 ] as const;
 
 export const LEVEL_IDS = [
-  "flash_point",
-  "make_the_reagent",
-  "stored_chlorine",
+  "claim_8_delta",
+  "harkers_brace",
+  "twelve_cask",
   "morrow_pocket",
   "kettleblack",
   "cordon_41",
@@ -178,7 +220,6 @@ export const ROOM_REACTION_IDS = [
 export const GAME_PHASES = [
   "level_briefing",
   "build",
-  "prime",
   "assault",
   "round_result",
   "level_complete",
@@ -214,6 +255,9 @@ export const GAME_EVENT_CODES = [
   "enemy_molted",
   "equipment_installed",
   "equipment_upgraded",
+  "tower_placed",
+  "tower_upgraded",
+  "tower_dismantled",
   "vessel_medium_loaded",
   "flash_cycle_started",
   "flash_incident",
@@ -221,7 +265,6 @@ export const GAME_EVENT_CODES = [
   "hcl_production_started",
   "level_planning_started",
   "liquid_source_charged",
-  "prime_started",
   "equipment_operation_started",
   "round_advanced",
   "round_completed",

@@ -9,7 +9,7 @@ import { hullPlanningMap } from "./hullFragment";
 /**
  * In-play map edits (ADR-0001): every edit produces a new frozen map object — the
  * derived-geometry caches key off map identity — and runs the shared validator, so a
- * player edit obeys exactly the invariants a producer's output does.
+ * player edit obeys the same invariants as a materialized campaign map.
  */
 
 /** Append a connection; authored insertion order stays a prefix (iteration order is behavior). */

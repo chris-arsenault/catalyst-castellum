@@ -67,7 +67,7 @@ const room = (
   platformCells: [],
   ladderCells: [],
   taps: { gas: gasTap(), liquid: liquidTap() },
-  hardpoints: [],
+  graftSlots: [],
   provenance: "site",
   ...overrides,
 });
@@ -81,6 +81,26 @@ const WORLD_MAP_BASE: WorldMap = {
   ringRadii: { inner: 22, middle: 38 },
   entryCell: cell(1, 4),
   coreBreachCell: cell(49, 4),
+  routeGraph: {
+    coreNodeId: "core",
+    nodes: {
+      "ingress:entry_to_core": {
+        id: "ingress:entry_to_core",
+        kind: "ingress",
+        cell: cell(1, 4),
+      },
+      core: { id: "core", kind: "core", cell: cell(49, 4) },
+    },
+    edges: {},
+    routes: {
+      entry_to_core: {
+        id: "entry_to_core",
+        ingressNodeId: "ingress:entry_to_core",
+        edgeIds: [],
+        authoredOrder: 0,
+      },
+    },
+  },
   rooms: {
     west_intake: room(
       "west_intake",
@@ -134,7 +154,7 @@ const WORLD_MAP_BASE: WorldMap = {
       {
         socketCells: { socket_a: cell(35, 4), socket_b: cell(45, 4) },
         ladderCells: verticalCells(39, 4, 12),
-        hardpoints: [
+        graftSlots: [
           { id: "forward", cell: cell(30, 4), facing: "left" },
           { id: "upper", cell: cell(39, 12), facing: "up" },
         ],
@@ -159,7 +179,7 @@ const WORLD_MAP_BASE: WorldMap = {
       { column: 51, elevation: 4, width: 18, height: 16 },
       {
         provenance: "hull",
-        hardpoints: [],
+        graftSlots: [],
         taps: {
           gas: gasTap({
             capacity: 24,

@@ -37,7 +37,12 @@ export const createGameSessionActions = (
       game,
       notice: null,
       ...(levelChanged || checkpointRestarted
-        ? { selectedRoomId: dependencies.runtime.level(game).focusRoomId }
+        ? {
+            selectedRoomId: dependencies.runtime.level(game).focusRoomId,
+            selectedTowerId: null,
+            towerBuildSelection: null,
+            movingTowerId: null,
+          }
         : {}),
     });
     return true;

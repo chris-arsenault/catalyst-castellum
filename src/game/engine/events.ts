@@ -21,6 +21,7 @@ export const makeStats = (): RoundStats => ({
   killed: 0,
   breached: 0,
   coreDamage: 0,
+  breachesByRoute: {},
   damageDealt: 0,
   reactions: 0,
   combustionFlashes: 0,

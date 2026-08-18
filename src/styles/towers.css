@@ -1,0 +1,273 @@
+.game-map-canvas.tower-mode,
+.game-map-canvas.tower-mode:active {
+  cursor: crosshair;
+}
+
+.tower-color-bolt_caster {
+  --tower-color: #f0c96a;
+}
+
+.tower-color-repeater {
+  --tower-color: #e88a52;
+}
+
+.tower-color-line_projector {
+  --tower-color: #ff6b48;
+}
+
+.tower-color-mortar {
+  --tower-color: #91a56c;
+}
+
+.tower-color-snare_emitter {
+  --tower-color: #65c9b5;
+}
+
+.tower-color-flak_nest {
+  --tower-color: #a886dc;
+}
+
+.tower-color-relay {
+  --tower-color: #72d7e3;
+}
+
+.tower-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(35, 67, 55, 0.18), transparent 180px), var(--panel);
+}
+
+.tower-panel > header {
+  padding: 3px 3px 12px;
+  border-bottom: 1px solid rgba(126, 158, 144, 0.18);
+}
+
+.tower-panel > header span,
+.tower-section-heading span {
+  color: var(--lime);
+  font: 750 8px/1 var(--mono);
+  letter-spacing: 0.12em;
+}
+
+.tower-panel h2,
+.tower-panel h3,
+.tower-panel h4,
+.tower-panel p {
+  margin: 0;
+}
+
+.tower-panel h2 {
+  margin-top: 4px;
+  color: var(--text-strong);
+  font-size: 18px;
+}
+
+.tower-panel-section {
+  display: grid;
+  gap: 9px;
+  padding: 13px 2px;
+  border-bottom: 1px solid rgba(126, 158, 144, 0.14);
+}
+
+.tower-panel-section > h3,
+.tower-section-heading h3 {
+  color: #d8e7de;
+  font: 700 11px/1.2 var(--mono);
+  text-transform: uppercase;
+}
+
+.tower-palette {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.tower-palette button,
+.tower-option-row button,
+.tower-upgrade-list button,
+.tower-dismantle,
+.tower-move,
+.tower-section-heading > button {
+  border: 1px solid #29483d;
+  border-radius: 5px;
+  background: #091410;
+  color: #a8bdb2;
+  cursor: pointer;
+}
+
+.tower-palette button {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  gap: 3px;
+  padding: 9px 8px 8px 12px;
+  text-align: left;
+}
+
+.tower-palette button:hover,
+.tower-option-row button:hover,
+.tower-upgrade-list button:hover:not(:disabled),
+.tower-palette button.selected,
+.tower-option-row button.selected {
+  border-color: #91bca8;
+  background: #11251d;
+  color: #e2eee7;
+}
+
+.tower-color {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 4px;
+  width: 3px;
+  border-radius: 3px;
+  background: var(--tower-color);
+}
+
+.tower-palette strong {
+  overflow: hidden;
+  color: #dce9e1;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tower-palette small {
+  color: #728f82;
+  font-size: 8.5px;
+}
+
+.tower-upgrade-list small {
+  color: #718d80;
+  font: 500 8px/1.35 var(--mono);
+}
+
+.tower-palette b {
+  color: var(--lime);
+  font: 700 8px/1 var(--mono);
+}
+
+.tower-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tower-section-heading > button {
+  display: grid;
+  width: 26px;
+  height: 26px;
+  place-items: center;
+}
+
+.placement-controls p,
+.tower-empty {
+  color: #7f9a8d;
+  font-size: 10.5px;
+  line-height: 1.45;
+}
+
+.tower-option-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tower-option-row button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 27px;
+  padding: 5px 8px;
+  font: 650 8.5px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.selected-tower h4 {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #88a99a;
+  font: 700 9px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.tower-stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.tower-stat-row span {
+  padding: 4px 6px;
+  border-radius: 3px;
+  background: rgba(78, 111, 97, 0.16);
+  color: #94aea1;
+  font: 650 8px/1 var(--mono);
+}
+
+.tower-upgrade-list {
+  display: grid;
+  gap: 5px;
+}
+
+.tower-upgrade-list button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px;
+  text-align: left;
+}
+
+.tower-upgrade-list button:disabled {
+  cursor: default;
+  opacity: 0.52;
+}
+
+.tower-upgrade-list strong {
+  color: #ccddd4;
+  font-size: 9px;
+}
+
+.tower-upgrade-list span {
+  color: var(--lime);
+  font: 650 8px/1 var(--mono);
+  white-space: nowrap;
+}
+
+.tower-dismantle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 31px;
+  color: #d99385;
+  font: 650 8.5px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.tower-move {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 31px;
+  color: #a9d6c0;
+  font: 650 8.5px/1 var(--mono);
+  text-transform: uppercase;
+}
+
+.tower-dismantle:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.tower-empty {
+  padding: 13px 3px;
+}

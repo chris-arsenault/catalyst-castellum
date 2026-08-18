@@ -1,3 +1,5 @@
+/* eslint-disable max-lines -- The current save schema stays contiguous for compatibility review. */
+
 import { z } from "zod";
 import type { GameDefinition } from "../definitionTypes";
 import {
@@ -18,6 +20,13 @@ import {
   LIQUID_TYPES,
   ROOM_REACTION_IDS,
   STATIONARY_TYPES,
+  CONTROL_EFFECT_KINDS,
+  TOWER_ATTACK_STRATEGIES,
+  TOWER_CHASSIS_IDS,
+  TOWER_MOUNT_FACES,
+  TOWER_ORIENTATIONS,
+  TOWER_TARGET_POLICIES,
+  TOWER_UPGRADE_IDS,
   type GameState,
 } from "../types";
 import { validateWorldMap } from "../world/mapValidation";
@@ -36,6 +45,13 @@ const equipmentIdSchema = z.enum(EQUIPMENT_IDS);
 const socketIdSchema = z.enum(EQUIPMENT_SOCKET_IDS);
 const runIdSchema = z.string().min(1);
 const damageSourceSchema = z.enum(DAMAGE_SOURCE_IDS);
+const towerIdSchema = z.string().min(1);
+const towerChassisSchema = z.enum(TOWER_CHASSIS_IDS);
+const towerUpgradeSchema = z.enum(TOWER_UPGRADE_IDS);
+const towerAttackStrategySchema = z.enum(TOWER_ATTACK_STRATEGIES);
+const towerMountFaceSchema = z.enum(TOWER_MOUNT_FACES);
+const towerOrientationSchema = z.enum(TOWER_ORIENTATIONS);
+const towerTargetPolicySchema = z.enum(TOWER_TARGET_POLICIES);
 
 const gasSchema = z.object({
   oxygen: z.number().nonnegative(),
@@ -192,6 +208,15 @@ const enemyBehaviorSchema = z.discriminatedUnion("kind", [
   }),
 ]);
 
+const enemyControlEffectSchema = z.object({
+  sourceTowerId: towerIdSchema,
+  kind: z.enum(CONTROL_EFFECT_KINDS),
+  magnitude: z.number().nonnegative(),
+  remaining: z.number().nonnegative(),
+  stacking: z.enum(["strongest", "additive"]),
+  floor: z.number().nonnegative(),
+});
+
 const enemySchema = z.object({
   id: z.number().int().positive(),
   type: z.enum(ENEMY_TYPES),
@@ -209,6 +234,73 @@ const enemySchema = z.object({
   damageBySource: damageLedgerSchema,
   lastDamage: damageReceiptSchema.nullable(),
   behavior: enemyBehaviorSchema.default({ kind: "standard" }),
+  effects: z.array(enemyControlEffectSchema),
+});
+
+const towerPlacementSchema = z.object({
+  anchor: gridCellSchema,
+  mountFace: towerMountFaceSchema,
+  orientation: towerOrientationSchema,
+  occupiedCells: z.array(gridCellSchema).min(1),
+  supportCells: z.array(gridCellSchema).min(1),
+  firingOrigin: worldPointSchema,
+});
+
+const towerSchema = z.object({
+  id: towerIdSchema,
+  chassisId: towerChassisSchema,
+  placement: towerPlacementSchema,
+  provenance: z.enum(["site", "hull"]),
+  upgrades: z.array(towerUpgradeSchema),
+  targetPolicy: towerTargetPolicySchema,
+  cooldown: z.number().nonnegative(),
+  localResources: z.object({
+    gas: z.partialRecord(z.enum(GAS_TYPES), z.number().nonnegative()),
+    liquid: z.partialRecord(z.enum(LIQUID_TYPES), z.number().nonnegative()),
+  }),
+  currentTargetIds: z.array(z.number().int().positive()),
+  damageDealt: z.number().nonnegative(),
+  kills: z.number().int().nonnegative(),
+  shots: z.number().int().nonnegative(),
+  totalMatterSpent: z.number().nonnegative(),
+  downtimeReason: z.enum(["none", "no_target", "cooldown", "supply"]),
+  telemetry: z.object({
+    engagedSeconds: z.number().nonnegative(),
+    targetsServiced: z.number().int().nonnegative(),
+    overkillDamage: z.number().nonnegative(),
+    controlApplications: z.number().int().nonnegative(),
+    downtime: z.object({
+      noTarget: z.number().nonnegative(),
+      cooldown: z.number().nonnegative(),
+      supply: z.number().nonnegative(),
+    }),
+  }),
+});
+
+const towerAttackSchema = z.object({
+  id: z.number().int().positive(),
+  towerId: towerIdSchema,
+  strategy: towerAttackStrategySchema,
+  source: worldPointSchema,
+  target: worldPointSchema,
+  targetEnemyIds: z.array(z.number().int().positive()),
+  startedAt: z.number().nonnegative(),
+  expiresAt: z.number().nonnegative(),
+  damage: z.number().nonnegative(),
+  killedEnemyIds: z.array(z.number().int().positive()),
+});
+
+const environmentalFieldSchema = z.object({
+  id: z.string().min(1),
+  sourceId: z.string().min(1),
+  effect: z.enum(["visibility", "cadence", "movement", "damage", "reveal"]),
+  roomId: roomIdSchema,
+  zone: z.enum(["lower", "upper", "both"]),
+  intensity: z.number().nonnegative(),
+  remaining: z.number().nonnegative(),
+  decayPerSecond: z.number().nonnegative(),
+  stacking: z.enum(["strongest", "additive"]),
+  species: speciesIdSchema.nullable(),
 });
 
 const statsSchema = z.object({
@@ -216,6 +308,7 @@ const statsSchema = z.object({
   killed: z.number().int().nonnegative(),
   breached: z.number().int().nonnegative(),
   coreDamage: z.number().nonnegative(),
+  breachesByRoute: z.record(z.string(), z.number().int().nonnegative()),
   damageDealt: z.number().nonnegative(),
   reactions: z.number().nonnegative(),
   combustionFlashes: z.number().int().nonnegative(),
@@ -233,6 +326,25 @@ const statsSchema = z.object({
 const reportSchema = statsSchema.extend({
   levelId: levelIdSchema,
   round: z.number().int().positive(),
+  towers: z.record(
+    towerIdSchema,
+    z.object({
+      chassisId: towerChassisSchema,
+      damageDealt: z.number().nonnegative(),
+      kills: z.number().int().nonnegative(),
+      shots: z.number().int().nonnegative(),
+      overkillDamage: z.number().nonnegative(),
+      engagedSeconds: z.number().nonnegative(),
+      targetsServiced: z.number().int().nonnegative(),
+      controlApplications: z.number().int().nonnegative(),
+      matterInvested: z.number().nonnegative(),
+      downtime: z.object({
+        noTarget: z.number().nonnegative(),
+        cooldown: z.number().nonnegative(),
+        supply: z.number().nonnegative(),
+      }),
+    })
+  ),
 });
 const eventSchema = z.object({
   id: z.number().int().positive(),
@@ -263,7 +375,7 @@ const incidentSchema = z.object({
   phase: phaseSchema,
   roomId: roomIdSchema,
   zone: z.enum(["lower", "upper"]).nullable(),
-  sourceId: damageSourceSchema,
+  sourceId: z.union([damageSourceSchema, z.literal("hydrogen_oxygen_combustion")]),
   reactionExtent: z.number().nonnegative(),
   pressureImpulse: z.number().nonnegative(),
   heatDelta: z.number().nonnegative(),
@@ -275,10 +387,12 @@ const campaignSchema = z.object({
   levelId: levelIdSchema,
   levelIndex: z.number().int().nonnegative(),
   roundIndex: z.number().int().nonnegative(),
-  checkpointLevelId: levelIdSchema,
   completedLevelIds: z.array(levelIdSchema),
+  operationCheckpoint: z.string().nullable(),
+  retryCount: z.number().int().nonnegative(),
 });
 const availabilitySchema = z.object({
+  towers: z.array(towerChassisSchema),
   equipment: z.array(equipmentIdSchema),
   gasLines: z.array(runIdSchema),
   liquidLines: z.array(runIdSchema),
@@ -308,8 +422,28 @@ const gameSimulationSchema = z.object({
   gasVent: gasSchema,
   liquidDrain: liquidSchema,
   enemies: z.array(enemySchema),
+  towers: z.record(towerIdSchema, towerSchema),
+  towerAttacks: z.array(towerAttackSchema),
+  environmentalFields: z.array(environmentalFieldSchema),
+  towerSupply: z.record(
+    towerIdSchema,
+    z.object({
+      towerId: towerIdSchema,
+      destinationRoomId: roomIdSchema,
+      connectionIds: z.array(runIdSchema),
+      availableRate: z.number().nonnegative(),
+      demandedRate: z.number().nonnegative(),
+      storedAmount: z.number().nonnegative(),
+      capacity: z.number().nonnegative(),
+      limitingSpecies: speciesIdSchema.nullable(),
+      mode: z.enum(["assisted", "direct", "reduced", "paused"]),
+      modifier: z.number().nonnegative(),
+    })
+  ),
   spawnCursor: z.number().int().nonnegative(),
   nextEnemyId: z.number().int().positive(),
+  nextTowerSequence: z.number().int().positive(),
+  nextTowerAttackId: z.number().int().positive(),
   nextEventId: z.number().int().positive(),
   nextIncidentId: z.number().int().positive(),
   coreIntegrity: z.number().min(0).max(100),
@@ -329,15 +463,10 @@ const packIdentitySchema = z.object({
 });
 
 const gameSchema = gameSimulationSchema.extend({
-  version: z.literal(23),
+  version: z.literal(27),
   pack: packIdentitySchema,
   map: worldMapSaveSchema,
   mapRevision: z.number().int().min(0),
-  run: z.object({
-    seed: z.string().min(1),
-    position: z.number().int().min(0),
-    outcome: z.enum(["active", "defeated", "victorious"]),
-  }),
 });
 
 const saveEnvelopeSchema = z.object({
@@ -347,7 +476,11 @@ const saveEnvelopeSchema = z.object({
   game: gameSchema,
 });
 
-export const encodeGame = (game: GameState, definition: GameDefinition): string => {
+export const encodeGame = (
+  game: GameState,
+  definition: GameDefinition,
+  savedAt = new Date().toISOString()
+): string => {
   if (
     game.pack.id !== definition.packId ||
     game.pack.contentVersion !== definition.contentVersion
@@ -356,7 +489,7 @@ export const encodeGame = (game: GameState, definition: GameDefinition): string 
   }
   return JSON.stringify({
     format: "catalyst-castellum-save",
-    savedAt: new Date().toISOString(),
+    savedAt,
     pack: game.pack,
     game,
   });

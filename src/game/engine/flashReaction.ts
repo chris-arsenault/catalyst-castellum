@@ -1,19 +1,11 @@
 import type { GameDefinition } from "../definitionTypes";
-import type {
-  GameState,
-  GasZone,
-  LimitingFactor,
-  ReactionBehaviorDefinition,
-  RoomState,
-} from "../types";
-import { emptyHazardChannels, type HazardBurst } from "./damage";
+import type { GameState, GasZone, LimitingFactor, RoomState } from "../types";
+import type { HazardBurst } from "./damage";
 import { roomEquipmentIsActive, roomGasReactionMultiplier } from "./equipment";
 import { addEvent } from "./events";
 import { clamp } from "./math";
 import { gasPercent } from "./physics";
 import { applyReactionExtent, type MutableReactionInventory } from "./reactionExecutor";
-
-type FlashBehavior = Extract<ReactionBehaviorDefinition, { kind: "flash" }>;
 
 export interface FlashIgnitionStatus {
   agitationReady: boolean;
@@ -106,22 +98,15 @@ const makeBurst = (
   zone: GasZone,
   reacted: number,
   pressureImpulse: number,
-  heatDelta: number,
-  behavior: FlashBehavior
-): HazardBurst => {
-  const channels = emptyHazardChannels();
-  channels.pressure = behavior.pressureDamageBase + reacted * behavior.pressureDamagePerExtent;
-  channels.heat = reacted * behavior.heatDamagePerExtent;
-  return {
-    roomId: room.id,
-    zone,
-    sourceId: "hydrogen_oxygen_combustion",
-    reactionExtent: reacted,
-    pressureImpulse,
-    heatDelta,
-    channels,
-  };
-};
+  heatDelta: number
+): HazardBurst => ({
+  roomId: room.id,
+  zone,
+  sourceId: "hydrogen_oxygen_combustion",
+  reactionExtent: reacted,
+  pressureImpulse,
+  heatDelta,
+});
 
 export const simulateHydrogenOxygenFlash = (
   state: GameState,
@@ -169,5 +154,5 @@ export const simulateHydrogenOxygenFlash = (
   if (room.combustionCount === 1) {
     addEvent(state, "danger", "flash_cycle_started", { zone }, room.id);
   }
-  return makeBurst(room, zone, reacted, pressureImpulse, heatDelta, behavior);
+  return makeBurst(room, zone, reacted, pressureImpulse, heatDelta);
 };

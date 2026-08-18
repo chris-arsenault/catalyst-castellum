@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import type { GameState, GridCell, RoomId } from "../game/types";
 import { cellKey } from "../game/spatial";
 import { architecturalConnections, isProcessLine, type WorldMap } from "../game/world/map";
-import { hardpointOccupied } from "../game/world/modules";
+import { graftSlotOccupied } from "../game/world/modules";
 import { hullPlanningMap } from "../game/world/hullFragment";
 import { useGamePresentation } from "../application/presentationContext";
 import { hullEnemyRoute } from "../presentation/graftPlanning";
@@ -28,7 +28,7 @@ interface HullBuilderCanvasProps {
   connectionTargetRoomIds: readonly RoomId[];
   onStroke: (roomId: RoomId, targets: readonly GridCell[]) => void;
   onRoom: (roomId: RoomId) => void;
-  onHardpoint: (roomId: RoomId, hardpointId: string) => void;
+  onGraftSlot: (roomId: RoomId, graftSlotId: string) => void;
 }
 
 const CELL = 18;
@@ -40,6 +40,18 @@ const gridCellsForRoom = (map: WorldMap, roomId: RoomId): GridCell[] => {
     column: room.bounds.column + (index % room.bounds.width),
     elevation: room.bounds.elevation + Math.floor(index / room.bounds.width),
   }));
+};
+
+const boundaryCellsForRoom = (map: WorldMap, roomId: RoomId): GridCell[] => {
+  const room = map.rooms[roomId];
+  if (!room) return [];
+  return gridCellsForRoom(map, roomId).filter(
+    (target) =>
+      target.column === room.bounds.column ||
+      target.column === room.bounds.column + room.bounds.width - 1 ||
+      target.elevation === room.bounds.elevation ||
+      target.elevation === room.bounds.elevation + room.bounds.height - 1
+  );
 };
 
 const activationKey = (event: React.KeyboardEvent<SVGGElement>, activate: () => void): void => {
@@ -55,7 +67,7 @@ export const HullBuilderCanvas = ({
   connectionTargetRoomIds,
   onStroke,
   onRoom,
-  onHardpoint,
+  onGraftSlot,
 }: HullBuilderCanvasProps) => {
   const { translator } = useGamePresentation();
   const [stroke, setStroke] = useState<HullStroke | null>(null);
@@ -213,6 +225,45 @@ export const HullBuilderCanvas = ({
           })
         )}
 
+        {candidateRoomId &&
+          boundaryCellsForRoom(map, candidateRoomId).map((target) => (
+            <rect
+              key={`tower-surface:${cellKey(target)}`}
+              className="hull-tower-surface"
+              x={x(target.column) + 3}
+              y={y(target.elevation) + 3}
+              width={CELL - 6}
+              height={CELL - 6}
+            />
+          ))}
+
+        {rooms.flatMap((room) =>
+          Object.entries(room.socketCells).flatMap(([socketId, target]) =>
+            target && !game.rooms[room.id]?.equipment[socketId as "socket_a" | "socket_b"]
+              ? [
+                  <g
+                    key={`socket:${room.id}:${socketId}`}
+                    className="hull-equipment-position"
+                    transform={`translate(${x(target.column) + CELL / 2} ${y(target.elevation) + CELL / 2})`}
+                  >
+                    <rect x={-5} y={-5} width={10} height={10} />
+                    <path d="M-3 0 H3 M0 -3 V3" />
+                  </g>,
+                ]
+              : []
+          )
+        )}
+
+        {Object.values(game.towers).map((tower) => (
+          <g
+            key={`tower:${tower.id}`}
+            className="hull-persistent-tower"
+            transform={`translate(${x(tower.placement.anchor.column) + CELL / 2} ${y(tower.placement.anchor.elevation) + CELL / 2})`}
+          >
+            <path d="M0 -7 L7 0 L0 7 L-7 0 Z" />
+          </g>
+        ))}
+
         {rooms.flatMap((room) =>
           room.platformCells.map((target) => (
             <rect
@@ -281,17 +332,17 @@ export const HullBuilderCanvas = ({
         ))}
 
         {rooms.flatMap((room) =>
-          room.hardpoints.map((hardpoint) => {
-            const occupied = hardpointOccupied(map, room.id, hardpoint.id);
+          room.graftSlots.map((graftSlot) => {
+            const occupied = graftSlotOccupied(map, room.id, graftSlot.id);
             const committed = room.id in committedHull.rooms;
-            const activate = () => onHardpoint(room.id, hardpoint.id);
+            const activate = () => onGraftSlot(room.id, graftSlot.id);
             const available = !occupied && committed && tool === "select";
             return (
               <g
-                key={`${room.id}:${hardpoint.id}`}
-                className={`hull-hardpoint ${occupied ? "occupied" : "available"}`}
-                transform={`translate(${x(hardpoint.cell.column) + CELL / 2} ${y(hardpoint.cell.elevation) + CELL / 2})`}
-                data-testid={`graft-hardpoint-${hardpoint.id}`}
+                key={`${room.id}:${graftSlot.id}`}
+                className={`hull-graft-slot ${occupied ? "occupied" : "available"}`}
+                transform={`translate(${x(graftSlot.cell.column) + CELL / 2} ${y(graftSlot.cell.elevation) + CELL / 2})`}
+                data-testid={`graft-slot-${graftSlot.id}`}
                 role={available ? "button" : undefined}
                 tabIndex={available ? 0 : undefined}
                 onClick={available ? activate : undefined}

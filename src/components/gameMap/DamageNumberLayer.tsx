@@ -17,9 +17,11 @@ export const DamageNumberLayer = ({ game }: { game: GameState }) => {
     <>
       {game.incidents.flatMap((incident) => {
         const age = game.elapsed - incident.elapsed;
+        if (incident.sourceId === "hydrogen_oxygen_combustion") return [];
+        const sourceId = incident.sourceId;
         if (
           !transientIncidentVisible(game, incident, VISIBLE_SECONDS) ||
-          damageSourceDisplay[incident.sourceId] === "continuous"
+          damageSourceDisplay[sourceId] === "continuous"
         )
           return [];
         const progress = age / VISIBLE_SECONDS;
@@ -54,7 +56,7 @@ export const DamageNumberLayer = ({ game }: { game: GameState }) => {
                 }}
               />
               <pixiText
-                text={damageSourceLabel[incident.sourceId].toUpperCase()}
+                text={damageSourceLabel[sourceId].toUpperCase()}
                 anchor={{ x: 0.5, y: 0 }}
                 y={2}
                 eventMode="none"

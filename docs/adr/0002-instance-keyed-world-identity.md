@@ -1,7 +1,7 @@
 # ADR-0002: Rooms, runs, and portals are instance-keyed, not closed unions
 
 Date: 2026-07-15
-Status: accepted
+Status: superseded by ADR-0014
 
 ## Context
 

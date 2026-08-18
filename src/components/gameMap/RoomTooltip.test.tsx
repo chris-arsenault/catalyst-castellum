@@ -1,7 +1,8 @@
 /** @vitest-environment jsdom */
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
-import { createScenarioGame } from "../../game/simulation";
+import { DEFAULT_GAME_DEFINITION } from "../../game/definition";
+import { createScenarioGame, executeCommand } from "../../game/simulation";
 import { RoomTooltip } from "./RoomTooltip";
 import { gasConduitState, roomState } from "../../game/world/instances";
 
@@ -9,7 +10,24 @@ afterEach(cleanup);
 
 describe("room map detail", () => {
   it("shows complete layered composition and distinguishes static pressure from a flash pulse", () => {
-    const game = createScenarioGame("flash_point");
+    const initial = createScenarioGame("cordon_41");
+    initial.phase = "build";
+    initial.matter = 999;
+    const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1)!;
+    initial.availability = {
+      towers: [...round.availability.towers],
+      equipment: [...round.availability.equipment],
+      gasLines: [...round.availability.gasLines],
+      liquidLines: [...round.availability.liquidLines],
+    };
+    const built = executeCommand(initial, {
+      type: "build_connection",
+      kind: "gas_line",
+      fromRoomId: "core",
+      toRoomId: "furnace",
+    });
+    expect(built.accepted, built.code ?? undefined).toBe(true);
+    const game = built.state;
     roomState(game, "furnace").gas.upper.hydrogen = 18;
     roomState(game, "furnace").gas.upper.oxygen = 9;
     roomState(game, "furnace").gas.lower.hydrogen = 7;
@@ -27,7 +45,7 @@ describe("room map detail", () => {
     expect(tooltip.textContent).toContain("Static pressure");
     expect(tooltip.textContent).toContain("OX-1 pulse+38 kPa");
     expect(tooltip.textContent).toContain("2 open passages");
-    expect(tooltip.textContent).toContain("THERMAL");
-    expect(tooltip.textContent).toContain("Thermal exposure begins above 60 °C");
+    expect(tooltip.textContent).toContain("Battlefield environment");
+    expect(tooltip.textContent).toContain("Lower atmosphere at 72°C");
   });
 });

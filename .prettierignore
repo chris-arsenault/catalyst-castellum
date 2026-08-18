@@ -4,5 +4,6 @@ node_modules/
 playwright-report/
 test-results/
 pnpm-lock.yaml
+src/game/content/sites/fixedCampaignMaps.ts
 .terraform/
 *_REVIEW.md

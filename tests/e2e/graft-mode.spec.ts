@@ -4,13 +4,13 @@ import { createScenarioGame } from "../../src/game/simulation";
 import { encodeGame } from "../../src/game/persistence/saveCodec";
 
 const seededSave = (): string => {
-  const state = createScenarioGame("flash_point", ["flash_point"]);
+  const state = createScenarioGame("claim_8_delta", ["claim_8_delta"]);
   state.phase = "level_complete";
   state.matter = 100;
   return encodeGame(state, DEFAULT_GAME_DEFINITION);
 };
 
-test("grafts a module from a hull hardpoint through preview and confirm", async ({ page }) => {
+test("grafts a module from a hull graft slot through preview and confirm", async ({ page }) => {
   test.setTimeout(60_000);
   const save = seededSave();
   await page.addInitScript((serialized: string) => {
@@ -20,7 +20,7 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
         version: 2,
         savedAt: Date.now(),
         game: serialized,
-        dismissedGuideIds: ["flash_point:field_guidance:v5"],
+        dismissedGuideIds: ["claim_8_delta:field_guidance:v5"],
         guidanceEnabled: true,
       })
     );
@@ -33,7 +33,7 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   await page.getByTestId("logbook-hangar").click();
   await expect(page.getByTestId("graft-board")).toBeVisible();
   await expect(page.getByTestId("game-map")).toHaveCount(0);
-  await page.getByTestId("graft-hardpoint-forward").click();
+  await page.getByTestId("graft-slot-forward").click();
   await expect(page.getByTestId("graft-preview")).toBeVisible();
 
   const graftPod = page.getByTestId("graft-preview-build-utility_pod");
@@ -45,5 +45,5 @@ test("grafts a module from a hull hardpoint through preview and confirm", async 
   await expect(dismantle).toContainText("POD");
   await dismantle.click();
   await expect(page.locator('[data-testid^="graft-dismantle-"]')).toHaveCount(0);
-  await expect(page.getByTestId("graft-hardpoint-forward")).toBeVisible();
+  await expect(page.getByTestId("graft-slot-forward")).toBeVisible();
 });

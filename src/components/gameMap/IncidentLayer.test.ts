@@ -20,7 +20,7 @@ const incident = (
 ): CombatIncident => ({
   id,
   elapsed,
-  levelId: "flash_point",
+  levelId: "claim_8_delta",
   round: 1,
   phase: "assault",
   roomId,
@@ -49,7 +49,7 @@ describe("incident map aggregation", () => {
       {
         elapsed: 14,
         phase: "assault",
-        campaign: { levelId: "flash_point", roundIndex: 0 },
+        campaign: { levelId: "claim_8_delta", roundIndex: 0 },
         incidents: [
           incident(1, 12, 17, true),
           incident(2, 10, 9, false),
@@ -75,7 +75,7 @@ describe("incident map aggregation", () => {
       {
         elapsed: 14,
         phase: "round_result",
-        campaign: { levelId: "flash_point", roundIndex: 0 },
+        campaign: { levelId: "claim_8_delta", roundIndex: 0 },
         incidents: [incident(1, 13.5, 17, true)],
       },
       WORLD_MAP
@@ -88,8 +88,8 @@ describe("incident map aggregation", () => {
     const aggregates = incidentMapAggregates(
       {
         elapsed: 14,
-        phase: "prime",
-        campaign: { levelId: "flash_point", roundIndex: 1 },
+        phase: "assault",
+        campaign: { levelId: "claim_8_delta", roundIndex: 1 },
         incidents: [incident(1, 13.5, 17, true)],
       },
       WORLD_MAP

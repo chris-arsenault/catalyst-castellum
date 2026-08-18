@@ -1,3 +1,5 @@
+/* eslint-disable max-lines-per-function -- Hull adaptation keeps one atomic topology transaction. */
+
 import { cell, orthogonalGridPath } from "../spatial";
 import type { GridCell, RoomId } from "../types";
 import {
@@ -135,6 +137,26 @@ export interface AuthoredHullLayout {
   hull: HullFragment;
 }
 
+const unmaterializedRouteGraph = (): WorldMap["routeGraph"] => ({
+  coreNodeId: "core",
+  nodes: {},
+  edges: {},
+  routes: {},
+});
+
+const shiftedCoreMap = (source: WorldMap, offset: HullOffset): WorldMap => ({
+  ...source,
+  coreAnchor: {
+    column: source.coreAnchor.column + offset.columns,
+    elevation: source.coreAnchor.elevation + offset.elevations,
+  },
+  coreBreachCell: {
+    column: source.coreBreachCell.column + offset.columns,
+    elevation: source.coreBreachCell.elevation + offset.elevations,
+  },
+  routeGraph: unmaterializedRouteGraph(),
+});
+
 const expandedHullOffset = (
   source: WorldMap,
   hull: HullFragment,
@@ -161,8 +183,9 @@ export const layoutHullAtAuthoredSite = (
   offset: HullOffset
 ): AuthoredHullLayout => {
   if (!hullOverlapsSite(source, hull, offset)) {
+    const base = shiftedCoreMap(source, offset);
     return {
-      map: embedHullFragment(source, hull, offset),
+      map: embedHullFragment(base, hull, offset),
       hull: translateHullFragment(hull, offset),
     };
   }
@@ -187,19 +210,26 @@ export const layoutHullAtAuthoredSite = (
       ...Object.values(translated.rooms).map((room) => room.bounds.column + room.bounds.width + 1)
     ),
     coreAnchor: {
-      ...source.coreAnchor,
       column: source.coreAnchor.column + coreColumnShift,
+      elevation: source.coreAnchor.elevation + translation.elevations,
     },
     coreBreachCell: {
-      ...source.coreBreachCell,
       column: source.coreBreachCell.column + coreColumnShift,
+      elevation: source.coreBreachCell.elevation + translation.elevations,
     },
+    routeGraph: unmaterializedRouteGraph(),
     connections: siteConnections,
     utilityNodes: Object.fromEntries(
       Object.entries(source.utilityNodes).map(([id, node]) => [
         id,
         node && hullRoomIds.has(node.hostRoomId)
-          ? { ...node, cell: { ...node.cell, column: node.cell.column + coreColumnShift } }
+          ? {
+              ...node,
+              cell: {
+                column: node.cell.column + coreColumnShift,
+                elevation: node.cell.elevation + translation.elevations,
+              },
+            }
           : node,
       ])
     ),

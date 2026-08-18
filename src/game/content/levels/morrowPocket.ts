@@ -1,94 +1,102 @@
-import type { LevelDefinition } from "../../definitionTypes";
-import { MORROW_POCKET_WAVES } from "../enemies";
-import { ACT_I_AVAILABILITY } from "./fullPlant";
-import { emptyLoadout } from "./helpers";
-import {
-  BRINE_CHARGE,
-  GAS_RESERVOIR_ID,
-  LIQUID_RESERVOIR_A_ID,
-  LIQUID_RESERVOIR_B_ID,
-  WATER_CHARGE,
-  gasSupply,
-  liquidSupply,
-} from "../supplies";
-import { hazardPacketSupplies } from "./actTwoShared";
+import type { LevelDefinition, RouteIngressDefinition } from "../../definitionTypes";
+import type { WaveEntry } from "../../types";
+import { enemySequence } from "../enemies";
+import { availability, emptyLoadout } from "./helpers";
 
-const MORROW_POCKET_ROUND_IDS = [
-  "claim_entry",
-  "split_levels",
-  "armored_claim",
-  "support_wake",
-  "whole_pocket",
-] as const;
+const MORROW_ROUTES: readonly RouteIngressDefinition[] = [
+  {
+    id: "west_claim",
+    roomId: "west_intake",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1,
+    eligibility: "all",
+  },
+  {
+    id: "upper_cut",
+    roomId: "gallery",
+    offset: { column: 0, elevation: 0 },
+    movementCost: 1.08,
+    eligibility: "all",
+  },
+];
 
+const onRoute = (routeId: string, entries: readonly WaveEntry[]): WaveEntry[] =>
+  entries.map((entry) => ({ ...entry, routeId }));
+
+const mixed = (...groups: WaveEntry[][]): WaveEntry[] =>
+  groups.flat().sort((left, right) => left.at - right.at);
+
+const fullTowerAvailability = availability({
+  towers: [
+    "bolt_caster",
+    "repeater",
+    "line_projector",
+    "mortar",
+    "snare_emitter",
+    "flak_nest",
+    "relay",
+  ],
+});
+
+/** Morrow Pocket opens the campaign into two simultaneous routes and unrestricted tower choices. */
 export const MORROW_POCKET_LEVEL: LevelDefinition = {
   id: "morrow_pocket",
   number: 4,
-  palette: ["chlorine_sodium"],
+  palette: ["iron"],
   enemyLevel: 23,
-  focusRoomId: "lower_intake",
-  featuredReactionIds: [
-    "chlor_alkali_electrolysis",
-    "hydrogen_chlorine_recombination",
-    "hypochlorite_formation",
-    "acid_chlorine_release",
-  ],
-  startingMatter: 150,
+  focusRoomId: "gallery",
+  featuredReactionIds: [],
+  startingMatter: 192,
   startingCoreIntegrity: 100,
   assaultTheme: "boss",
-  supplies: [
-    gasSupply({
-      id: GAS_RESERVOIR_ID,
-      code: "G-1",
-      capacity: 450,
-      initial: { hydrogen: 300, oxygen: 150 },
-      availableFromRound: "claim_entry",
-      replenishment: {
-        kind: "matter",
-        contents: { hydrogen: 300, oxygen: 150 },
-        cost: 12,
-      },
-      accent: "#ed9a48",
-    }),
-    liquidSupply({
-      id: LIQUID_RESERVOIR_A_ID,
-      code: "L-1",
-      capacity: 180,
-      initial: { water: 140 },
-      availableFromRound: "claim_entry",
-      replenishment: { kind: "matter", contents: WATER_CHARGE, cost: 7 },
-      accent: "#41baf5",
-    }),
-    liquidSupply({
-      id: LIQUID_RESERVOIR_B_ID,
-      code: "L-2",
-      capacity: 180,
-      initial: { sodium_chloride: 140 },
-      availableFromRound: "claim_entry",
-      replenishment: { kind: "matter", contents: BRINE_CHARGE, cost: 10 },
-      accent: "#60cce4",
-    }),
-    ...hazardPacketSupplies({
-      gas: {
-        contents: { chlorine: 60 },
-        capacity: 90,
-        cost: 18,
-        availableFromRound: "claim_entry",
-      },
-      liquid: {
-        contents: { sodium_hypochlorite: 24 },
-        capacity: 36,
-        cost: 20,
-        availableFromRound: "armored_claim",
-      },
-    }),
-  ],
+  supplies: [],
   site: null,
   loadout: emptyLoadout(),
-  rounds: MORROW_POCKET_WAVES.map((wave, index) => ({
-    id: MORROW_POCKET_ROUND_IDS[index]!,
-    primeSeconds: 72,
-    wave,
-    availability: ACT_I_AVAILABILITY,
-  })),
+  routes: MORROW_ROUTES,
+  rounds: [
+    {
+      id: "claim_entry",
+      wave: mixed(
+        onRoute("west_claim", enemySequence(6, "deckmouth", 0.5, 2.4, -6)),
+        onRoute("upper_cut", enemySequence(4, "flintjack", 1.5, 2.5, -6))
+      ),
+      availability: fullTowerAvailability,
+    },
+    {
+      id: "split_levels",
+      wave: mixed(
+        onRoute("west_claim", enemySequence(7, "flintjack", 0.5, 1.8, -5)),
+        onRoute("upper_cut", enemySequence(5, "shear_jelly", 1, 2.4, -6))
+      ),
+      availability: fullTowerAvailability,
+    },
+    {
+      id: "armored_claim",
+      wave: mixed(
+        onRoute("west_claim", enemySequence(5, "splitback", 0.5, 2.8, -5)),
+        onRoute("upper_cut", enemySequence(5, "redlung", 1.5, 2.7, -6))
+      ),
+      availability: fullTowerAvailability,
+    },
+    {
+      id: "support_wake",
+      wave: mixed(
+        onRoute("west_claim", enemySequence(8, "clatter", 0.5, 1.7, -5)),
+        onRoute("upper_cut", enemySequence(6, "flintjack", 1, 1.8, -5)),
+        onRoute("upper_cut", enemySequence(1, "anchor", 2, 5, -6))
+      ),
+      availability: fullTowerAvailability,
+    },
+    {
+      id: "whole_pocket",
+      wave: mixed(
+        onRoute("west_claim", enemySequence(7, "splitback", 0.5, 2.2, -4)),
+        onRoute("west_claim", enemySequence(6, "clatter", 1, 1.9, -4)),
+        onRoute("upper_cut", enemySequence(7, "shear_jelly", 0.75, 2, -5)),
+        onRoute("upper_cut", enemySequence(3, "glowbag", 2, 3.2, -5)),
+        onRoute("upper_cut", enemySequence(1, "anchor", 2.5, 5, -5))
+      ),
+      availability: fullTowerAvailability,
+    },
+  ],
 };

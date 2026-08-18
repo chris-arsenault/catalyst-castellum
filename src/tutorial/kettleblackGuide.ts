@@ -1,48 +1,30 @@
-import { roomEquipmentIsActive } from "../game/queries";
 import type { GameState } from "../game/types";
-import { roomState } from "../game/world/instances";
 import { TUTORIAL_ANCHORS } from "./anchors";
-import type { GuideDefinition, GuideUiState, TutorialCopyKey } from "./guideModel";
+import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
 
-const equipmentRunning = (
-  game: GameState,
-  equipmentId: "gas_agitator" | "thermal_coil" | "packed_bed"
-) => roomEquipmentIsActive(roomState(game, "furnace"), equipmentId);
+const hullTowers = (game: GameState) =>
+  Object.values(game.towers).filter((tower) => tower.provenance === "hull");
 
-const bedCharged = (game: GameState): boolean =>
-  Object.values(roomState(game, "furnace").equipment).some(
-    (instance) =>
-      instance?.equipmentId === "packed_bed" &&
-      instance.enabled &&
-      instance.medium === "solid_carbon"
-  );
-
-const bedConditioned = (game: GameState): boolean =>
-  equipmentRunning(game, "thermal_coil") && bedCharged(game);
-
-const feedEnabled = (game: GameState): boolean =>
-  game.gasConduits["gas:core__furnace"]?.enabled ?? false;
-
-const reverseObserved = (game: GameState): boolean => {
-  const reading = roomState(game, "furnace").reactions.water_gas_reaction;
-  return reading.direction === "reverse" && reading.lastRate > 0.001;
-};
-
-const firstRoundResolved = (game: GameState): boolean =>
-  game.phase === "round_result" || game.campaign.roundIndex > 0;
+const hullTowerPlaced = (game: GameState): boolean => hullTowers(game).length > 0;
+const hullTowerUpgraded = (game: GameState): boolean =>
+  hullTowers(game).some((tower) => tower.upgrades.length > 0);
+const roundResolved = (game: GameState): boolean =>
+  game.phase === "round_result" ||
+  game.phase === "level_complete" ||
+  game.phase === "victory" ||
+  game.campaign.roundIndex > 0;
 
 const guide: GuideDefinition = {
+  id: "kettleblack:persistent_hull:v2",
+  dismissalId: "kettleblack:graft_defense:v2",
+  label: "tutorial.kettleblack.label",
+  showStageIntro: true,
+  gatesPhaseActions: true,
   completion: {
     title: "tutorial.kettleblack.completion.title",
     explanation: "tutorial.kettleblack.completion.explanation",
     instruction: "tutorial.kettleblack.completion.instruction",
   },
-  id: "kettleblack:grain_markers:v1",
-  dismissalId: "kettleblack:stationary_media:v1",
-  label: "tutorial.kettleblack.label",
-  firstFlashTeachingBreak: false,
-  showStageIntro: true,
-  gatesPhaseActions: true,
   story: {
     kicker: "tutorial.kettleblack.story.kicker",
     title: "tutorial.kettleblack.story.title",
@@ -50,122 +32,72 @@ const guide: GuideDefinition = {
       "tutorial.kettleblack.story.paragraph.0",
       "tutorial.kettleblack.story.paragraph.1",
     ],
-    model: null,
   },
   mission: {
     title: "tutorial.kettleblack.mission.title",
     summary: "tutorial.kettleblack.mission.summary",
     tasks: [
       {
-        id: "route-feed",
+        id: "mount-hull-defense",
         label: "tutorial.kettleblack.task.routeFeed",
-        completed: feedEnabled,
+        completed: hullTowerPlaced,
       },
       {
-        id: "condition-bed",
+        id: "upgrade-hull-defense",
         label: "tutorial.kettleblack.task.conditionBed",
-        completed: bedConditioned,
-      },
-      {
-        id: "read-direction",
-        label: "tutorial.kettleblack.task.readDirection",
-        completed: reverseObserved,
+        completed: hullTowerUpgraded,
       },
       {
         id: "hold-return",
         label: "tutorial.kettleblack.task.holdReturn",
-        completed: firstRoundResolved,
+        completed: roundResolved,
       },
     ],
   },
   steps: [
     {
-      id: "open-kettleblack-pipe-board",
-      kind: "action",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.pipeModeToggle,
+      id: "inspect-persistent-hull",
+      kind: "observe",
+      roomId: "washlock",
+      target: TUTORIAL_ANCHORS.gameMap,
       title: "tutorial.kettleblack.step.openPipeBoard.title",
       explanation: "tutorial.kettleblack.step.openPipeBoard.explanation",
       instruction: "tutorial.kettleblack.step.openPipeBoard.instruction",
       result: "tutorial.kettleblack.step.openPipeBoard.result",
-      completed: (_game, ui: GuideUiState) => ui.pipeMode,
+      completed: (game, ui) => ui.towerBuildChassisId !== null || hullTowerPlaced(game),
     },
     {
-      id: "route-kettleblack-feed",
+      id: "place-persistent-tower",
       kind: "action",
-      roomId: "furnace",
+      roomId: "washlock",
       target: TUTORIAL_ANCHORS.gameMap,
       title: "tutorial.kettleblack.step.routeFeed.title",
       explanation: "tutorial.kettleblack.step.routeFeed.explanation",
       instruction: "tutorial.kettleblack.step.routeFeed.instruction",
       result: "tutorial.kettleblack.step.routeFeed.result",
-      completed: feedEnabled,
+      completed: hullTowerPlaced,
     },
     {
-      id: "install-kettleblack-coil",
+      id: "upgrade-persistent-tower",
       kind: "action",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.furnaceThermalCoil,
+      roomId: "washlock",
+      target: TUTORIAL_ANCHORS.towerInspector,
       title: "tutorial.kettleblack.step.installCoil.title",
       explanation: "tutorial.kettleblack.step.installCoil.explanation",
       instruction: "tutorial.kettleblack.step.installCoil.instruction",
       result: "tutorial.kettleblack.step.installCoil.result",
-      completed: (game) => equipmentRunning(game, "thermal_coil"),
-    },
-    {
-      id: "install-kettleblack-bed",
-      kind: "action",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.furnaceAgitator,
-      title: "tutorial.kettleblack.step.installBed.title",
-      explanation: "tutorial.kettleblack.step.installBed.explanation",
-      instruction: "tutorial.kettleblack.step.installBed.instruction",
-      result: "tutorial.kettleblack.step.installBed.result",
-      completed: (game) => equipmentRunning(game, "packed_bed"),
-    },
-    {
-      id: "charge-kettleblack-bed",
-      kind: "action",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.furnaceMediumSelector,
-      title: "tutorial.kettleblack.step.loadCharge.title",
-      explanation: "tutorial.kettleblack.step.loadCharge.explanation",
-      instruction: "tutorial.kettleblack.step.loadCharge.instruction",
-      result: "tutorial.kettleblack.step.loadCharge.result",
-      completed: bedCharged,
-    },
-    {
-      id: "begin-kettleblack-prime",
-      kind: "action",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.beginPrime,
-      title: "tutorial.kettleblack.step.beginPrime.title",
-      explanation: "tutorial.kettleblack.step.beginPrime.explanation",
-      instruction: "tutorial.kettleblack.step.beginPrime.instruction",
-      result: "tutorial.kettleblack.step.beginPrime.result",
-      completed: (game) => game.phase !== "build",
-    },
-    {
-      id: "observe-kettleblack-direction",
-      kind: "observe",
-      roomId: "furnace",
-      target: TUTORIAL_ANCHORS.furnaceReactionReadout,
-      title: "tutorial.kettleblack.step.observeDirection.title",
-      explanation: "tutorial.kettleblack.step.observeDirection.explanation",
-      instruction: "tutorial.kettleblack.step.observeDirection.instruction",
-      result: "tutorial.kettleblack.step.observeDirection.result",
-      completed: reverseObserved,
+      completed: hullTowerUpgraded,
     },
     {
       id: "start-kettleblack-assault",
       kind: "action",
-      roomId: "furnace",
+      roomId: "washlock",
       target: TUTORIAL_ANCHORS.startAssault,
       title: "tutorial.kettleblack.step.startAssault.title",
       explanation: "tutorial.kettleblack.step.startAssault.explanation",
       instruction: "tutorial.kettleblack.step.startAssault.instruction",
       result: "tutorial.kettleblack.step.startAssault.result",
-      completed: (game) => game.phase === "assault" || firstRoundResolved(game),
+      completed: (game) => game.phase !== "build",
     },
   ],
 };
@@ -173,14 +105,8 @@ const guide: GuideDefinition = {
 export const kettleblackGuideFor = (game: GameState): GuideDefinition | null =>
   game.campaign.levelId === "kettleblack" && game.campaign.roundIndex === 0 ? guide : null;
 
-export const kettleblackPhaseActionReason = (
-  game: GameState,
-  action: "start_prime" | "start_assault"
-): TutorialCopyKey | null => {
-  if (!feedEnabled(game)) return "tutorial.kettleblack.reason.feed";
-  if (!equipmentRunning(game, "thermal_coil")) return "tutorial.kettleblack.reason.coil";
-  if (!bedCharged(game)) return "tutorial.kettleblack.reason.bed";
-  if (action === "start_assault" && !reverseObserved(game))
-    return "tutorial.kettleblack.reason.direction";
+export const kettleblackPhaseActionReason = (game: GameState): TutorialCopyKey | null => {
+  if (!hullTowerPlaced(game)) return "tutorial.kettleblack.reason.feed";
+  if (!hullTowerUpgraded(game)) return "tutorial.kettleblack.reason.coil";
   return null;
 };

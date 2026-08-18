@@ -105,7 +105,7 @@ const DebugLaunchConfirmation = ({
       </strong>
       <span>
         {translator.text("ui.save.debug.confirm.detail", {
-          level: LEVEL_IDS.indexOf(levelId) + 1,
+          level: LEVEL_IDS.indexOf(levelId as never) + 1,
           name: levelCopy.level({ id: levelId }).name,
         })}
       </span>

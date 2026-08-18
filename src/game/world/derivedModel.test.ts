@@ -5,13 +5,13 @@ import { createScenarioGame } from "../engine/scenarioState";
 import { decodeGame, encodeGame } from "../persistence/saveCodec";
 import { facilityModelFor } from "./derivedModel";
 
-const freshGame = () => createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
+const freshGame = () => createScenarioGame("claim_8_delta", [], DEFAULT_GAME_DEFINITION);
 
 describe("map-derived facility geometry", () => {
   it("carries only physical process topology on state at revision zero", () => {
     const state = freshGame();
     expect(state.map).not.toBe(DEFAULT_GAME_DEFINITION.map);
-    expect(Object.keys(state.gasConduits)).toEqual(["gas:core__furnace"]);
+    expect(Object.keys(state.gasConduits)).toEqual([]);
     expect(state.mapRevision).toBe(0);
   });
 

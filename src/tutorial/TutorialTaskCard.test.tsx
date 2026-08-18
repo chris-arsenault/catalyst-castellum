@@ -15,55 +15,48 @@ const command = (game: GameState, value: GameCommand): GameState => {
 };
 
 describe("tutorial task card", () => {
-  it("keeps the complete mission visible while marking state-driven progress", () => {
-    let game = command(createScenarioGame("flash_point"), { type: "begin_level" });
+  it("shows the complete direct-defense mission and state-driven progress", () => {
+    let game = command(createScenarioGame("claim_8_delta"), { type: "begin_level" });
     const guide = guideDefinitionFor(game);
-    if (!guide) throw new Error("Flash Point guide missing");
-    const installStep = guide.steps[0];
-    const runStep = guide.steps[1];
-    if (!installStep || !runStep) throw new Error("Flash Point guide steps missing");
-    const view = render(<TutorialTaskCard activeStep={installStep} guide={guide} game={game} />);
+    if (!guide) throw new Error("Claim 8-Delta guide missing");
+    const view = render(
+      <TutorialTaskCard activeStep={guide.steps[0] ?? null} guide={guide} game={game} />
+    );
 
     expect(screen.getByTestId("tutorial-task-card").textContent).toContain("0 / 4");
-    expect(screen.getByText("Install and run a Gas Agitator in R-02.")).toBeTruthy();
-    expect(screen.getByText("Open the Core → R-02 H₂/O₂ feed.")).toBeTruthy();
-    expect(screen.getByText("Prime at 2× until R-02 produces an OX-1 flash.")).toBeTruthy();
-    expect(screen.getByText("Start the assault and catch a deckmouth in the flash.")).toBeTruthy();
-    expect(screen.getByText("Prepare the flash chamber")).toBeTruthy();
-    expect(
-      screen.getByText("Select R-02, then install a Gas Agitator in either socket.")
-    ).toBeTruthy();
+    expect(screen.getByText("Mount a defense on a wall.")).toBeTruthy();
+    expect(screen.getByText("Record direct tower damage.")).toBeTruthy();
+    expect(screen.getByText("Establish route coverage")).toBeTruthy();
+    expect(screen.getByText("Read the approach")).toBeTruthy();
 
     fireEvent.click(screen.getByRole("button", { name: "Collapse tutorial tasks" }));
     expect(screen.getByTestId("tutorial-task-card").getAttribute("data-expanded")).toBe("false");
-    expect(screen.queryByText("Prepare the flash chamber")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Expand tutorial tasks" }));
-    expect(screen.getByTestId("tutorial-task-card").getAttribute("data-expanded")).toBe("true");
-    expect(screen.getByText("Prepare the flash chamber")).toBeTruthy();
 
     game = command(game, {
-      type: "install_equipment",
-      roomId: "furnace",
-      socketId: "socket_a",
-      equipmentId: "gas_agitator",
+      type: "place_tower",
+      chassisId: "bolt_caster",
+      anchor: { column: 6, elevation: 8 },
+      mountFace: "left_wall",
+      orientation: "right",
     });
-    view.rerender(<TutorialTaskCard activeStep={runStep} guide={guide} game={game} />);
+    view.rerender(
+      <TutorialTaskCard activeStep={guide.steps[3] ?? null} guide={guide} game={game} />
+    );
     expect(screen.getByTestId("tutorial-task-card").textContent).toContain("1 / 4");
-    expect(screen.getByText("Run the gas agitator")).toBeTruthy();
-    expect(screen.getByText("Switch the R-02 Gas Agitator ON.")).toBeTruthy();
+    expect(screen.getByText("Inspect the firing line")).toBeTruthy();
   });
 
-  it("keeps a completed lesson visible beside its result panel", () => {
-    const game = command(createScenarioGame("flash_point"), { type: "begin_level" });
+  it("shows the direct-defense completion copy", () => {
+    const game = command(createScenarioGame("claim_8_delta"), { type: "begin_level" });
     const guide = guideDefinitionFor(game);
-    if (!guide) throw new Error("Flash Point guide missing");
+    if (!guide) throw new Error("Claim 8-Delta guide missing");
 
     render(<TutorialTaskCard activeStep={null} guide={guide} game={game} />);
-
     expect(screen.getByText("Lesson complete")).toBeTruthy();
-    expect(screen.getByText("First cycle established")).toBeTruthy();
+    expect(screen.getByText("Direct defense commissioned")).toBeTruthy();
     expect(
-      screen.getByText("Continue into Stored Momentum with the chamber’s established state.")
+      screen.getByText("Apply the same coverage reading to the remaining waves.")
     ).toBeTruthy();
   });
 });

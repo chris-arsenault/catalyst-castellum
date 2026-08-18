@@ -126,11 +126,6 @@
   border-color: #9a4a3d;
   color: #ff967b;
 }
-.topbar-phase.phase-prime {
-  border-color: #4a8990;
-  color: #83d3dc;
-}
-
 .cycle-number span,
 .cycle-number strong {
   display: block;

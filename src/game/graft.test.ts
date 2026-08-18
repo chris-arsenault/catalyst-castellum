@@ -4,18 +4,18 @@ import { createScenarioGame } from "./engine/scenarioState";
 import { executeCommand } from "./engine/commands";
 import { findEnemyPath } from "./engine/navigation";
 import { graftedRoomId } from "./world/graft";
-import { processLineId, type Hardpoint, type WorldMap } from "./world/map";
+import { processLineId, type GraftSlot, type WorldMap } from "./world/map";
 import { roomState } from "./world/instances";
 import type { GameState } from "./types";
 import type { LevelDefinition } from "./definitionTypes";
 
 /**
- * Hull test content: the furnace is the player's chamber, with a hardpoint on its
+ * Hull test content: the furnace is the player's chamber, with a graft slot on its
  * left wall facing the open rock west of the room (columns 0-5 are unoccupied below
  * the switchyard band... the furnace spans columns 6-20, elevations 13-32; facing
  * "left" grafts into columns < 5, clear of every authored room).
  */
-const HARDPOINT: Hardpoint = {
+const GRAFT_SLOT: GraftSlot = {
   id: "west_wall",
   cell: { column: 6, elevation: 22 },
   facing: "left",
@@ -28,13 +28,13 @@ const hullMap: WorldMap = Object.freeze({
     furnace: {
       ...WORLD_MAP.rooms.furnace!,
       provenance: "hull" as const,
-      hardpoints: [HARDPOINT],
+      graftSlots: [GRAFT_SLOT],
     },
   },
 });
 
-const makeReagentWithoutGeneratedSite: LevelDefinition = {
-  ...DEFAULT_GAME_DEFINITION.levels.make_the_reagent,
+const harkersBraceWithoutGeneratedSite: LevelDefinition = {
+  ...DEFAULT_GAME_DEFINITION.levels.harkers_brace,
   site: null,
 };
 
@@ -42,25 +42,25 @@ const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
   map: hullMap,
   levels: {
     ...DEFAULT_GAME_DEFINITION.levels,
-    make_the_reagent: makeReagentWithoutGeneratedSite,
+    harkers_brace: harkersBraceWithoutGeneratedSite,
   },
 });
 
 const intermissionState = (): GameState => {
-  const state = createScenarioGame("flash_point", [], definition);
+  const state = createScenarioGame("claim_8_delta", [], definition);
   state.phase = "level_complete";
-  state.matter = 100;
+  state.matter = 200;
   return state;
 };
 
 const graft = (state: GameState, moduleId = "utility_pod") =>
   executeCommand(
     state,
-    { type: "graft_module", hostRoomId: "furnace", hardpointId: "west_wall", moduleId },
+    { type: "graft_module", hostRoomId: "furnace", graftSlotId: "west_wall", moduleId },
     definition
   );
 
-describe("grafting modules onto hull hardpoints", () => {
+describe("grafting modules onto hull graft slots", () => {
   it("grafts a module as a validated map edit with live records", () => {
     const state = intermissionState();
     const result = graft(state);
@@ -74,11 +74,11 @@ describe("grafting modules onto hull hardpoints", () => {
     expect(roomState(next, roomId).id).toBe(roomId);
     expect(next.gasJunctions[roomId]).toBeDefined();
     expect(next.portalStates["joint:furnace:west_wall"]?.open).toBe(true);
-    expect(next.matter).toBe(100 - definition.modules.utility_pod!.graftCost);
+    expect(next.matter).toBe(200 - definition.modules.utility_pod!.graftCost);
     expect(next.mapRevision).toBe(state.mapRevision + 1);
   });
 
-  it("is deterministic and rejects a second graft on the occupied hardpoint", () => {
+  it("is deterministic and rejects a second graft on the occupied graft slot", () => {
     const first = graft(intermissionState()).state;
     const second = graft(intermissionState()).state;
     expect(second.map.rooms[graftedRoomId("furnace", "west_wall")]).toEqual(
@@ -89,14 +89,14 @@ describe("grafting modules onto hull hardpoints", () => {
     expect(duplicate.code).toBe("placement");
   });
 
-  it("rejects grafts from non-hull rooms and unknown hardpoints", () => {
+  it("rejects grafts from non-hull rooms and unknown graft slots", () => {
     const state = intermissionState();
     const siteHost = executeCommand(
       state,
       {
         type: "graft_module",
         hostRoomId: "gallery",
-        hardpointId: "west_wall",
+        graftSlotId: "west_wall",
         moduleId: "utility_pod",
       },
       definition
@@ -107,7 +107,7 @@ describe("grafting modules onto hull hardpoints", () => {
       {
         type: "graft_module",
         hostRoomId: "furnace",
-        hardpointId: "east_wall",
+        graftSlotId: "east_wall",
         moduleId: "utility_pod",
       },
       definition
@@ -179,7 +179,7 @@ const dockAtNextSite = (state: GameState): GameState => {
 
 describe("the persistent hull route", () => {
   it("carries a useful graft, its machine, and its internal pipe through generated and authored sites", () => {
-    const source = createScenarioGame("flash_point", [], DEFAULT_GAME_DEFINITION);
+    const source = createScenarioGame("claim_8_delta", [], DEFAULT_GAME_DEFINITION);
     source.phase = "level_complete";
     source.matter = 200;
     const grafted = executeCommand(
@@ -187,7 +187,7 @@ describe("the persistent hull route", () => {
       {
         type: "graft_module",
         hostRoomId: "washlock",
-        hardpointId: "forward",
+        graftSlotId: "forward",
         moduleId: "process_chamber",
       },
       DEFAULT_GAME_DEFINITION
