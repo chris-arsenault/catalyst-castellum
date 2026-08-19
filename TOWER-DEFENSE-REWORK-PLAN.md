@@ -1,6 +1,6 @@
 # Vertical tower-defense rework plan
 
-Status: implementation complete; external playtest acceptance pending
+Status: chemical tower identity pass in verification; external playtest acceptance pending
 
 This record tracks the implementation that moved Catalyst Castellum to the fixed vertical
 tower-defense campaign defined in
@@ -12,7 +12,7 @@ remote tag `pre-tower-defense-rework`.
 
 - Build the replacement through the existing deterministic runtime, typed command policy, central
   damage resolver, map, save codec, presentation boundary, and tutorial framework.
-- Keep ordinary towers independent from room equipment sockets. Towers occupy free grid-snapped
+- Keep self-contained defenses independent from room equipment sockets. Towers occupy free grid-snapped
   floor, wall, and ceiling placements; process equipment continues to use purpose-specific slots.
 - Keep room attachment constrained to graft slots. A graft may add tower surfaces and internal
   process-equipment slots.
@@ -46,7 +46,7 @@ remote tag `pre-tower-defense-rework`.
 
 ### Completed
 
-- [x] Preserve the Deep Shear claim rig, remote cutter, foundry, Cthonic wake, cast, twelve-site
+- [x] Preserve the Deep Shear vessel, remote cutter, extraction method, Cthonic wake, cast, twelve-site
       route, three acts, five-wave structure, and Pell conclusion.
 - [x] Define direct towers as the primary combat system with free grid-snapped floor, wall, and
       ceiling placement.
@@ -76,7 +76,7 @@ decisions remain in the changelog and superseded ADRs.
 - [x] Author the first tower roster specification by combat role, mounting faces, footprint,
       attack geometry, targeting policies, upgrade effects, and visual silhouette. Claim 8-Delta
       needs reliable single-target fire and rapid target service; Harker's Brace adds one
-      orientation-sensitive projector.
+      orientation-sensitive Carbon Burner.
 - [x] Freeze the Claim 8-Delta and Harker's Brace cutaways, route graphs, starting Matter, tower
       availability, five-wave forecasts, and expected upgrade purchases.
 - [x] Record baseline performance, deterministic snapshots, current save size, and the complete
@@ -186,7 +186,7 @@ atmospheric manipulation, process equipment, or Prime.
 
 - [x] Author Harker's Brace with two elevations, occluding architecture, vertical traversal, and
       distinct wall and ceiling opportunities.
-- [x] Add the orientation-sensitive projector. A wall placement projects along a corridor; a ceiling
+- [x] Add the orientation-sensitive Carbon Burner. A wall placement burns along a corridor; a ceiling
       placement covers a shorter downward area with separately authored geometry and tuning.
 - [x] Complete line-of-sight intersection, projectile collision, target acquisition during climbs
       and falls, and upper-layer eligibility.
@@ -205,7 +205,7 @@ The first two replacement sites pass browser, deterministic, save/load, referenc
 idle-loss checks. Human playtesting confirms that wall and ceiling placement create different
 decisions and that target acquisition remains readable across elevation changes.
 
-## Phase 4: complete the ordinary tower vocabulary and open defense — complete
+## Phase 4: complete the tower vocabulary and open defense — complete
 
 ### Tower and upgrade systems
 
@@ -221,7 +221,7 @@ decisions and that target acquisition remains readable across elevation changes.
 ### Sites 3 and 4
 
 - [x] Author Twelve-Cask around finite firing capacity, bounded area damage, route control, and mixed
-      cadence. Keep chemistry optional and field guidance focused on ordinary towers.
+      cadence. Keep chemistry optional and field guidance focused on self-contained defenses.
 - [x] Author Morrow Pocket as the first open defense with multiple simultaneous ingress routes,
       splits and merges, target priorities, upgrade orders, and several useful surface choices.
 - [x] Give each site five waves, visible route forecasts, several distinct reference defenses, and
@@ -325,7 +325,7 @@ defense while leaving a viable direct-tower answer.
       and supported columns.
 - [x] Author Lane Six with compressed convoy cadence over a long multi-route approach.
 - [x] Author Pell Cordon with changing Near Voice formations, route pressure, support relationships,
-      and the foundry's explicit cadence-breaking operation.
+      and the vessel's explicit cadence-breaking operation.
 - [x] Connect every briefing, forecast, assault objective, report, intermission, dialogue, travel,
       reveal, and ending to the replacement mechanics while preserving the narrative script and
       three-act schedule.
@@ -380,6 +380,21 @@ The repository contains one campaign implementation matching the stable design. 
 the campaign with direct towers carrying ordinary combat. Vertical placement, multiple routes,
 persistent grafts, and explicit chemistry integration pass deterministic, browser, balance, and
 performance acceptance. External human playtests remain the release acceptance step.
+
+## Phase 9: chemical tower identities and bounded reactions — complete
+
+- [x] Replace the seven weapon-role names with Flash Chamber, Caustic Jet, Carbon Burner, Acid Pot,
+      Quench Coil, Wash Head, and Carbonyl Marker across content, saves, copy, and tests.
+- [x] Give every chassis a self-contained chemical operation, damage channel, upgrade vocabulary,
+      map silhouette, placement preview, and attack effect while retaining its familiar
+      tower-defense role.
+- [x] Add one target-local Acid-Caustic interaction that consumes both coatings and attributes a
+      bounded heat burst through the central damage resolver.
+- [x] Teach Flash Chamber coverage at Claim 8-Delta, Carbon Burner mount geometry at Harker's Brace,
+      and the optional coating reaction at Twelve-Cask. Keep the reaction guide from gating assault.
+- [x] Re-author campaign reference builds and deterministic identifiers around the chemical roster.
+- [x] Pass focused checks, campaign health, browser tower coverage, deterministic snapshot review,
+      and the complete local CI contract.
 
 ## Review checkpoints
 

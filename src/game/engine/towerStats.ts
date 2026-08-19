@@ -24,8 +24,8 @@ export const effectiveTowerStats = (
     const upgrade = chassis.upgrades.find((candidate) => candidate.id === upgradeId);
     return upgrade ? [upgrade] : [];
   });
-  const ceilingProjector =
-    tower.chassisId === "line_projector" && tower.placement.mountFace === "ceiling";
+  const ceilingBurner =
+    tower.chassisId === "carbon_burner" && tower.placement.mountFace === "ceiling";
   return {
     damageMultiplier: upgrades.reduce((value, upgrade) => value * upgrade.damageMultiplier, 1),
     cadence:
@@ -34,7 +34,7 @@ export const effectiveTowerStats = (
       (state ? environmentalTowerCadenceMultiplier(state, tower) : 1),
     range:
       (chassis.range + upgrades.reduce((value, upgrade) => value + upgrade.rangeDelta, 0)) *
-      (ceilingProjector ? 0.72 : 1) *
+      (ceilingBurner ? 0.72 : 1) *
       (state ? environmentalTowerRangeMultiplier(state, tower) : 1),
     minimumRange: chassis.minimumRange,
     targetCap:
@@ -42,6 +42,6 @@ export const effectiveTowerStats = (
     firingArc:
       chassis.firingArc +
       upgrades.reduce((value, upgrade) => value + upgrade.arcDelta, 0) +
-      (ceilingProjector ? 42 : 0),
+      (ceilingBurner ? 42 : 0),
   };
 };

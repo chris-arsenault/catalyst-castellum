@@ -463,7 +463,7 @@ const packIdentitySchema = z.object({
 });
 
 const gameSchema = gameSimulationSchema.extend({
-  version: z.literal(27),
+  version: z.literal(28),
   pack: packIdentitySchema,
   map: worldMapSaveSchema,
   mapRevision: z.number().int().min(0),

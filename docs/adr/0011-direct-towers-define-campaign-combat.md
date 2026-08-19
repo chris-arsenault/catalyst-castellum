@@ -11,7 +11,7 @@ tower-defense decision. Attempts to narrow the reaction catalog through vessel c
 palettes, and depth-one hazards reduced the search space without producing a clear primary combat
 loop.
 
-The setting, deterministic chemical simulation, vertical rig, campaign, and enemy roster remain
+The setting, deterministic chemical simulation, vertical vessel, campaign, and enemy roster remain
 valuable. They do not require reactions to own basic targeting and damage.
 
 ## Decision

@@ -12,14 +12,14 @@ const preparedDefense = () => {
   state.matter = 400;
   state = runtime.execute(state, {
     type: "place_tower",
-    chassisId: "bolt_caster",
+    chassisId: "flash_chamber",
     anchor: { column: 6, elevation: 8 },
     mountFace: "left_wall",
     orientation: "right",
   }).state;
   state = runtime.execute(state, {
     type: "place_tower",
-    chassisId: "bolt_caster",
+    chassisId: "flash_chamber",
     anchor: { column: 51, elevation: 8 },
     mountFace: "left_wall",
     orientation: "right",
@@ -31,7 +31,7 @@ const preparedDefense = () => {
   state = runtime.execute(state, {
     type: "upgrade_tower",
     towerId: hullTower.id,
-    upgradeId: "bolt_calibration",
+    upgradeId: "flash_calibration",
   }).state;
   return { state, siteTowerId: siteTower.id, hullTowerId: hullTower.id };
 };
@@ -47,7 +47,7 @@ describe("fixed-campaign operation state", () => {
     assault.paused = true;
     const added = runtime.execute(assault, {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 6, elevation: 9 },
       mountFace: "left_wall",
       orientation: "right",
@@ -78,7 +78,7 @@ describe("fixed-campaign operation state", () => {
     const traveling = runtime.execute(prepared.state, { type: "start_next_level" });
     expect(traveling.accepted).toBe(true);
     expect(traveling.state.towers[prepared.siteTowerId]).toBeUndefined();
-    expect(traveling.state.towers[prepared.hullTowerId]?.upgrades).toEqual(["bolt_calibration"]);
+    expect(traveling.state.towers[prepared.hullTowerId]?.upgrades).toEqual(["flash_calibration"]);
     expect(traveling.state.matter).toBe(matterBeforeDeparture + expectedRecovery);
 
     const docked = runtime.execute(traveling.state, { type: "dock_at_site" });
@@ -88,7 +88,7 @@ describe("fixed-campaign operation state", () => {
     expect(docked.state.matter).toBe(matterBeforeDeparture + expectedRecovery);
     expect(docked.state.towers[prepared.hullTowerId]).toMatchObject({
       provenance: "hull",
-      upgrades: ["bolt_calibration"],
+      upgrades: ["flash_calibration"],
     });
     expect(runtime.save.decode(runtime.save.encode(docked.state))).not.toBeNull();
   });

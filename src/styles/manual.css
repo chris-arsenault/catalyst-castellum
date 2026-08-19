@@ -1,4 +1,4 @@
-/* Facility manual */
+/* Vessel manual */
 
 .manual-backdrop {
   z-index: 100;
@@ -6,7 +6,7 @@
   background: rgba(2, 7, 5, 0.82);
   backdrop-filter: blur(7px);
 }
-.facility-manual {
+.vessel-manual {
   display: grid;
   grid-template-rows: auto auto minmax(0, 1fr) auto;
   width: min(1120px, 97vw);
@@ -923,7 +923,7 @@
 }
 
 @media (max-width: 820px) {
-  .facility-manual {
+  .vessel-manual {
     width: 98vw;
     height: 97vh;
   }
@@ -973,7 +973,7 @@
   .manual-backdrop {
     padding: 0;
   }
-  .facility-manual {
+  .vessel-manual {
     width: 100vw;
     height: 100vh;
     border-radius: 0;

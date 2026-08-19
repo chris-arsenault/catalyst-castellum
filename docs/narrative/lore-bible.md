@@ -5,7 +5,10 @@ Glass Frontier material from game-originated additions.
 
 ## One-sentence premise
 
-A licensed Deep Shear Ratter crew uses a mostly unmanned chemical foundry to work lethal claims at stand-off range, attracting a cautious Displacement Council engineer and an ambitious Coremark route officer before their competing experiments create a newborn Bloom boundary that only the crew’s own extraction pattern can close.
+A licensed Deep Shear Ratter crew operates a mostly unmanned extraction vessel to work lethal claims
+at stand-off range, attracting a cautious Displacement Council engineer and an ambitious Coremark
+route officer before their competing experiments create a newborn Bloom boundary that only the
+crew’s own extraction pattern can close.
 
 ## Canon boundary
 
@@ -19,7 +22,7 @@ A licensed Deep Shear Ratter crew uses a mostly unmanned chemical foundry to wor
 
 ### Game-originated contributions
 
-- The player’s remote extraction foundry and its resonance-band transmutation process.
+- The player’s mostly unmanned extraction method and its resonance-band transmutation process.
 - The Pell freight lattice, Pell Cut, Pell Emergency Cordon, and the twelve campaign sites.
 - Malk Tern, T’kesh, Mavo, Vela Norr, Daro Venn, Kethra, and Soft Wake.
 - The Pell emergence and the entity designated Near Voice.
@@ -35,7 +38,10 @@ The crew begins with licenses, seals, claim filings, tow geometry, feedstock led
 
 ### Distance has a cost
 
-The foundry protects crews by moving exposure into replaceable cutters and sacrificial process bays. Vela sees a way to extend containment reach. Daro sees a way to industrialize dangerous extraction. Both positions begin from a real human cost, and scale changes the kind of risk rather than erasing it.
+The vessel protects crews by moving exposure into replaceable cutters and sacrificial process bays.
+Vela sees a way to extend containment reach. Daro sees a way to industrialize dangerous extraction.
+Both positions begin from a real human cost, and scale changes the kind of risk rather than erasing
+it.
 
 ### Mystery through measurable disagreement
 
@@ -59,16 +65,19 @@ Register, vocabulary, and review rules for writing the strings themselves live i
 
 ## Player vessel and extraction method
 
-The player commands a compact Deep Shear claim rig built around a remote chemical foundry. KITE tow carries the rig between sites. Disposable cutters enter unstable structures and couple recovered material to the foundry’s process rooms. The crew operates the plant from stand-off range.
+The player commands a compact Deep Shear extraction vessel. KITE tow carries the ship between sites.
+Disposable cutters enter unstable structures and couple recovered material to the vessel’s process
+rooms. The crew operates the system from stand-off range.
 
-The vessel name remains player-authored space for a future save-profile feature. Characters refer to it as the rig, claim rig, vessel, cutter platform, or foundry.
+The vessel name remains player-authored space for a future save-profile feature. Characters refer to
+it as the vessel, KITE, or ship. Claim rig names its working class when that distinction matters.
 
 ### Resonance-band transmutation
 
 Resonance-band transmutation is the campaign’s exotic extraction technology. It preserves the simulation’s chemical conservation rules:
 
 1. A remote cutter excites a target seam or recovered sample in a controlled resonance band.
-2. A paired array aboard the foundry establishes a coherent return.
+2. A paired array aboard the vessel establishes a coherent return.
 3. Chemical rooms provide real reactants, temperature, pressure, phase contact, and residence time.
 4. The transmuter selects which coupled material response becomes local to a process bay.
 5. Products, waste, heat, and hazards remain physical inventories that the player must route and manage.
@@ -77,7 +86,11 @@ The method changes locality and reaction access, not the amount of matter in the
 
 ### Cthonic intruders and the cutter wake
 
-The cutter’s coherent return couples selected seam material into the foundry’s outer receiving breach. Small Cthonic beasts clinging to that material can cross intact. Once aboard, they follow the strongest active resonance tone through the foundry toward the Core. Ordinary Ratter practice closes the return at the first sign of a beast; this crew keeps working because the rig is mostly unmanned and carries automated breach-defense towers across its floors, walls, and ceilings.
+The cutter’s coherent return couples selected seam material into the vessel’s outer receiving breach.
+Small Cthonic beasts clinging to that material can cross intact. Once aboard, they follow the
+strongest active resonance tone through the ship toward the Core. Ordinary Ratter practice closes
+the return at the first sign of a beast; this crew keeps working because the vessel is mostly
+unmanned and carries automated breach-defense towers across its floors, walls, and ceilings.
 
 The game’s eight enemy names are Ratter field terms rather than claims about biological lineage. Crews sort Cthonic beasts by the behavior that matters during a live job, while academics continue to treat many of the forms as unclassified. The Encyclopedia carries the player-facing bestiary, and level and simulation authoring use these exact names.
 
@@ -96,7 +109,10 @@ The game’s eight enemy names are Ratter field terms rather than claims about b
 
 Ordinary jobs use one cutter and one return. At Pell Cut, Coremark synchronizes four industrial arrays around the player’s process cadence. Previously separated samples remain phase-related across the freight lattice. The scale test gives that relationship enough persistence to form a boundary.
 
-The resulting pattern learns from the foundry telemetry used to stabilize it. It adopts timing, room count, and voice-like intervals. The Council calls it the Near Voice after Station 14. It is a nascent choir-thing shaped by instruments and feedback, not an ancient mastermind waiting at the first claim.
+The resulting pattern learns from the vessel telemetry used to stabilize it. It adopts timing, room
+count, and voice-like intervals. The Council calls it the Near Voice after Station 14. It is a
+nascent choir-thing shaped by instruments and feedback, not an ancient mastermind waiting at the
+first claim.
 
 ## Factions and interests
 
@@ -125,14 +141,14 @@ Daro remains a person with Ratter experience rather than a faction-shaped carica
 
 ### T’kesh
 
-- Identity: gnome folk Tuner aboard the foundry.
+- Identity: gnome folk Tuner aboard the vessel.
 - Function: detects the pattern before anyone can name it and translates resonance behavior into operational warnings.
 - Voice: precise sensory observations and compact relational metaphors. T’kesh states what the instruments do, then the unsettling implication.
 - Arc: curious measurement becomes responsibility for changing the cadence the Near Voice learned.
 
 ### Mavo
 
-- Identity: orc remote-cut and array engineer aboard the foundry.
+- Identity: orc remote-cut and array engineer aboard the ship.
 - Function: keeps strange phenomena grounded in hardware, routes, clocks, seals, and process recipes.
 - Voice: practical, spatial, mildly irreverent; confidence comes from things that can be made to fit.
 - Arc: treats the method as clever machinery, then accepts that its telemetry has become part of the hazard.
@@ -172,9 +188,9 @@ Daro remains a person with Ratter experience rather than a faction-shaped carica
 - Voice: concise assignment of authority and outcome. Dern names who commands each part of an operation.
 - Usage limit: mentioned through Council channels before Lane Six; speaks during Lane Six and Pell Cordon only.
 
-### Rig Telemetry
+### Vessel Telemetry
 
-- Identity: foundry operations record.
+- Identity: vessel operations record.
 - Function: reports traces, designations, and distress data without giving the vessel an artificial personality.
 - Voice: declarative status language and exact operational labels.
 
@@ -182,15 +198,23 @@ Daro remains a person with Ratter experience rather than a faction-shaped carica
 
 ### Act I — Good Standing
 
-Four jobs establish the crew as licensed Ratters and teach remote foundry work under Cthonic pressure. Surveyor requests raw phase history. Buyer pays for fractions the public assay calls discard. Their interest overlaps at Morrow Pocket, where T’kesh concludes that the separated outputs resolve to one underlying grade.
+Four jobs establish the crew as licensed Ratters and teach remote extraction work under Cthonic
+pressure. Surveyor requests raw phase history. Buyer pays for fractions the public assay calls
+discard. Their interest overlaps at Morrow Pocket, where T’kesh concludes that the separated outputs
+resolve to one underlying grade.
 
 Act turn: Surveyor offers coordinates for Kettleblack and asks whether the cutter crosses a boundary or moves one.
 
 ### Act II — The Same Grade
 
-Kettleblack proves that the resonance field has separated edges. Surveyor reveals herself as Vela Norr at Cordon 41. Buyer is traced, then reveals himself as Daro Venn at Junction L-6. Both want the foundry because distance normally costs people; they disagree about authority, evidence, and scale.
+Kettleblack proves that the resonance field has separated edges. Surveyor reveals herself as Vela
+Norr at Cordon 41. Buyer is traced, then reveals himself as Daro Venn at Junction L-6. Both want the
+vessel’s extraction method because distance normally costs people; they disagree about authority,
+evidence, and scale.
 
-Daro’s Pell Cut test synchronizes multiple arrays. Vela owns the stop condition, but the pattern has learned the foundry cadence by the time that condition arrives. Pell reports spatial duplication and a voice-like signal carrying the rig code.
+Daro’s Pell Cut test synchronizes multiple arrays. Vela owns the stop condition, but the pattern has
+learned the vessel cadence by the time that condition arrives. Pell reports spatial duplication and
+a voice-like signal carrying the ship code.
 
 Act turn: the Council mobilizes an emergency cordon, using the player’s raw pattern as the only proven route back into the emergence.
 
@@ -198,20 +222,22 @@ Act turn: the Council mobilizes an emergency cordon, using the player’s raw pa
 
 Kethra takes field command. Soft Wake maps overlapping interiors. Station 14 recovers the first cordon telemetry and names the Near Voice. Vasker Store supplies the quiet-glass mass for Vela’s closure field. Lane Six gives the Council a stable approach and brings Dern’s authority directly into the operation.
 
-At Pell Cordon, the foundry changes the cadence the Near Voice learned, breaks its sustained resonance, and feeds the closure field. The Council records Pell as closed and all cordon personnel recovered.
+At Pell Cordon, the vessel changes the cadence the Near Voice learned, breaks its sustained
+resonance, and feeds the closure field. The Council records Pell as closed and all cordon personnel
+recovered.
 
 ## Reveal schedule
 
 | Information                                               | First signal           | Confirmation                  |
 | --------------------------------------------------------- | ---------------------- | ----------------------------- |
-| The cutter’s clock gains six seconds absent from the rig  | Claim 8-Delta          | Harker’s Brace                |
+| The cutter’s clock gains six seconds absent from the ship | Claim 8-Delta          | Harker’s Brace                |
 | Surveyor and Buyer want related aspects of one phenomenon | Twelve-Cask            | Morrow Pocket                 |
 | Surveyor is Vela Norr of the Displacement Council         | Kettleblack invitation | Cordon 41 reveal              |
 | Buyer is Daro Venn of Coremark                            | Cordon 41 trace        | Junction L-6 reveal           |
 | Scale can turn the relationship into a persistent field   | Junction L-6 warning   | Pell Cut emergence            |
-| The field is learning from foundry telemetry              | Pell Cut distress call | Station 14 designation        |
+| The field is learning from vessel telemetry               | Pell Cut distress call | Station 14 designation        |
 | Near Voice anchors a newborn boundary                     | Vasker Store tracking  | Lane Six stabilization report |
-| The foundry can break the learned pattern                 | Lane Six authorization | Pell Cordon closure           |
+| The vessel can break the learned pattern                  | Lane Six authorization | Pell Cordon closure           |
 
 ## Ending state and sequel hooks
 

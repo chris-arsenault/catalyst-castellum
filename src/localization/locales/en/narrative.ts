@@ -5,7 +5,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.acts.good_standing.introduction.1":
     "The Long Rake is a scatter of dead mines, gutted refineries, and freight wrecks strung along the edge of the Deep Shear. Nobody lives out here on purpose. The people who work it are Ratters — licensed salvage crews who cut into whatever the last owners walked away from, recover what still has value, and file an honest claim with the board before another crew does. The good ones are known by two things: a clean ledger, and a full roster at the end of the year.",
   "narrative.acts.good_standing.introduction.2":
-    "Your crew works the Rake from a converted claim rig with a chemical plant built through its hull. The rig holds at stand-off range; a remote cutter goes in alone. Mavo drives the cutter, T’kesh watches the resonance instruments, and you run the plant that turns recovered material into something worth selling. Malk Tern holds your paper and supplies the first contracts. Pay off the vessel, and the board will let you file claims in your own name.",
+    "Your crew works the Rake from a converted claim rig with a chemical plant built through its hull. The vessel holds at stand-off range; a remote cutter goes in alone. Mavo drives the cutter, T’kesh watches the resonance instruments, and you run the plant that turns recovered material into something worth selling. Malk Tern holds your paper and supplies the first contracts. Pay off the vessel, and the board will let you file claims in your own name.",
   "narrative.acts.same_grade.name": "Act II · The Same Grade",
   "narrative.acts.same_grade.summary":
     "The strangers on the comm want proof, and proof means working at scale.",
@@ -17,14 +17,14 @@ export const NARRATIVE_MESSAGES = {
   "narrative.acts.new_boundary.summary":
     "What the scale test opened, the cordon has to close before it takes root.",
   "narrative.acts.new_boundary.introduction.1":
-    "The scale test tore something open at Pell Cut. Rooms there stand in two positions at once, radio calls arrive in familiar voices from empty places, and the distortion grows stronger every time it plays the foundry’s rhythm back at it. The Displacement Council has sealed the surrounding lanes. Inside the cordon, its crews are still counting the people who didn’t get out.",
+    "The scale test tore something open at Pell Cut. Rooms there stand in two positions at once, radio calls arrive in familiar voices from empty places, and the distortion grows stronger every time it plays the vessel’s rhythm back at it. The Displacement Council has sealed the surrounding lanes. Inside the cordon, its crews are still counting the people who didn’t get out.",
   "narrative.acts.new_boundary.introduction.2":
-    "Captain Kethra commands the rescue. Vela Norr believes the process that helped make the breach is the only thing that can close it, because the foundry holds a complete record of the pattern the distortion learned. The work ahead is plain and hard: recover the material her plan needs, clear a route to Pell Cut, and break the signal the Council has started calling the Near Voice.",
+    "Captain Kethra commands the rescue. Vela Norr believes the process that helped make the breach is the only thing that can close it, because the vessel holds a complete record of the pattern the distortion learned. The work ahead is plain and hard: recover the material her plan needs, clear a route to Pell Cut, and break the signal the Council has started calling the Near Voice.",
 
   "narrative.speakers.malk_tern.name": "Malk Tern",
   "narrative.speakers.malk_tern.role": "Ratter contract broker",
   "narrative.speakers.tkesh.name": "T’kesh",
-  "narrative.speakers.tkesh.role": "Foundry tuner",
+  "narrative.speakers.tkesh.role": "Vessel tuner",
   "narrative.speakers.mavo.name": "Mavo",
   "narrative.speakers.mavo.role": "Remote-cut engineer",
   "narrative.speakers.surveyor.name": "Surveyor",
@@ -41,15 +41,15 @@ export const NARRATIVE_MESSAGES = {
   "narrative.speakers.soft_wake.role": "Council spatial surveyor",
   "narrative.speakers.dern_talish.name": "Dern Talish",
   "narrative.speakers.dern_talish.role": "First Threshold of the Displacement Council",
-  "narrative.speakers.rig_telemetry.name": "Rig Telemetry",
-  "narrative.speakers.rig_telemetry.role": "Foundry operations system",
+  "narrative.speakers.rig_telemetry.name": "Vessel Telemetry",
+  "narrative.speakers.rig_telemetry.role": "Vessel operations system",
 
   "narrative.sites.claim_8_delta.name": "Claim 8-Delta",
   "narrative.sites.claim_8_delta.code": "RAT-08D",
   "narrative.sites.claim_8_delta.region": "Long Rake Verge",
   "narrative.sites.claim_8_delta.contract": "Licensed fuel recovery",
   "narrative.sites.claim_8_delta.briefing":
-    "Claim 8-Delta is a dead gas-processing station with salable fuel still trapped in its tanks. The board has cleared it for remote work only: the crew stays aboard the rig, the cutter opens the station from inside, and whatever has been nesting in the dark follows it back toward the foundry’s defense rooms.",
+    "Claim 8-Delta is a dead gas-processing station with salable fuel still trapped in its tanks. The board has cleared it for remote work only: the crew stays aboard the ship, the cutter opens the station from inside, and whatever has been nesting in the dark follows it back toward the vessel’s defense rooms.",
   "narrative.sites.harkers_brace.name": "Harker’s Brace",
   "narrative.sites.harkers_brace.code": "RAT-HB4",
   "narrative.sites.harkers_brace.region": "Long Rake Verge",
@@ -67,7 +67,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.sites.morrow_pocket.region": "Morrow Spur",
   "narrative.sites.morrow_pocket.contract": "Independent processing claim",
   "narrative.sites.morrow_pocket.briefing":
-    "Morrow Pocket is the first claim filed in the crew’s own name — no broker, no employer, nobody else to answer for the result. A complete recovery here puts an independent record on the board and proves the foundry can carry a whole job from filing to sale.",
+    "Morrow Pocket is the first claim filed in the crew’s own name — no broker, no employer, nobody else to answer for the result. A complete recovery here puts an independent record on the board and proves the vessel can carry a whole job from filing to sale.",
   "narrative.sites.kettleblack.name": "Kettleblack",
   "narrative.sites.kettleblack.code": "IND-KB2",
   "narrative.sites.kettleblack.region": "Kettleblack Drifts",
@@ -85,13 +85,13 @@ export const NARRATIVE_MESSAGES = {
   "narrative.sites.junction_l6.region": "Pell Freight Lattice",
   "narrative.sites.junction_l6.contract": "Coremark equipment trial",
   "narrative.sites.junction_l6.briefing":
-    "Junction L-6 is a working Coremark freight station — crewed, lit, and loud, nothing like a wreck. Daro Venn has opened its pumps, storage tanks, and mining equipment for a qualification trial, and the fee on the table would clear the last of the claim rig’s debt.",
+    "Junction L-6 is a working Coremark freight station — crewed, lit, and loud, nothing like a wreck. Daro Venn has opened its pumps, storage tanks, and mining equipment for a qualification trial, and the fee on the table would clear the last of the vessel’s debt.",
   "narrative.sites.pell_cut.name": "Pell Cut",
   "narrative.sites.pell_cut.code": "CM-PC9",
   "narrative.sites.pell_cut.region": "Pell Freight Lattice",
   "narrative.sites.pell_cut.contract": "Full-scale extraction trial",
   "narrative.sites.pell_cut.briefing":
-    "Pell Cut is Coremark’s full-scale test: four industrial arrays working one deposit while the foundry processes their combined output. Daro calls it the future of extraction. Vela is on the channel with a shutdown order ready, and everyone has agreed her call is final.",
+    "Pell Cut is Coremark’s full-scale test: four industrial arrays working one deposit while the vessel processes their combined output. Daro calls it the future of extraction. Vela is on the channel with a shutdown order ready, and everyone has agreed her call is final.",
   "narrative.sites.station_14.name": "Station 14",
   "narrative.sites.station_14.code": "DC-S14",
   "narrative.sites.station_14.region": "Pell Emergency Cordon",
@@ -103,19 +103,19 @@ export const NARRATIVE_MESSAGES = {
   "narrative.sites.vasker_store.region": "Pell Emergency Cordon",
   "narrative.sites.vasker_store.contract": "Closure material recovery",
   "narrative.sites.vasker_store.briefing":
-    "Vasker Store holds the treated ringglass Vela needs for her closure device, in a building that no longer keeps one shape. The storerooms alternate between two layouts, so Soft Wake steers the cutter by the landmarks that stay true in both while the foundry takes the stock aboard.",
+    "Vasker Store holds the treated ringglass Vela needs for her closure device, in a building that no longer keeps one shape. The storerooms alternate between two layouts, so Soft Wake steers the cutter by the landmarks that stay true in both while the vessel takes the stock aboard.",
   "narrative.sites.lane_six.name": "Lane Six",
   "narrative.sites.lane_six.code": "DC-L06",
   "narrative.sites.lane_six.region": "Pell Inner Cordon",
   "narrative.sites.lane_six.contract": "Council approach clearance",
   "narrative.sites.lane_six.briefing":
-    "Lane Six is the last approach to Pell Cut that every map still agrees on, and the Council convoy moves the moment it is cleared. The foundry’s part is to hold the lane and give the Near Voice something to listen to that is not Kethra’s people.",
+    "Lane Six is the last approach to Pell Cut that every map still agrees on, and the Council convoy moves the moment it is cleared. The vessel’s part is to hold the lane and give the Near Voice something to listen to that is not Kethra’s people.",
   "narrative.sites.pell_cordon.name": "Pell Cordon",
   "narrative.sites.pell_cordon.code": "DC-PELL",
   "narrative.sites.pell_cordon.region": "Pell Emergence",
   "narrative.sites.pell_cordon.contract": "Council closure operation",
   "narrative.sites.pell_cordon.briefing":
-    "The Near Voice has settled into the center of Pell Cut and holds the distortion open around itself. Everything ends here: the foundry breaks the rhythm the signal learned, Vela’s device closes the breach behind it, and the cordon comes home across Lane Six.",
+    "The Near Voice has settled into the center of Pell Cut and holds the distortion open around itself. Everything ends here: the vessel breaks the rhythm the signal learned, Vela’s device closes the breach behind it, and the cordon comes home across Lane Six.",
 
   "narrative.dialogue.claim_8_delta.briefing.clean_ledger":
     "Morning. Eight-Delta is an abandoned gas plant about forty minutes from your berth. The tanks are still pressurized, so the board has cleared it for remote work only. Recover what you can, record what comes aboard, and I can have the payment waiting before you return.",
@@ -126,7 +126,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.claim_8_delta.debrief.license_stands":
     "The board accepted the recovery report and released full payment. One clean job on the record; the next contract comes easier.",
   "narrative.dialogue.claim_8_delta.debrief.mounts_carry_hush":
-    "There is one odd entry in the log. The cutter’s clock lost six seconds while it was inside the station, but our clock aboard the rig kept perfect time. I’ve saved both records so we can compare them after the next job.",
+    "There is one odd entry in the log. The cutter’s clock lost six seconds while it was inside the station, but our clock aboard the ship kept perfect time. I’ve saved both records so we can compare them after the next job.",
 
   "narrative.dialogue.harkers_brace.briefing.brace_terms":
     "Harker’s Brace is a broken salt refinery with a good brine reservoir and a short towing window. The owner pays the normal salvage rate, plus a respectable bonus if you finish before the wreck drifts away from the marked lane.",
@@ -137,7 +137,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.harkers_brace.debrief.coherent_timing":
     "I reviewed the public log from Eight-Delta. Your cutter recorded six seconds that are absent from the station record. Send me the original clock files from this job as well, and I’ll pay for the trouble.",
   "narrative.dialogue.harkers_brace.debrief.clock_disagreement":
-    "The same gap happened again. The cutter finished every command we sent, but it insists the job took longer than we observed from the rig. Whoever that caller is, they noticed the same thing from a public filing.",
+    "The same gap happened again. The cutter finished every command we sent, but it insists the job took longer than we observed from the vessel. Whoever that caller is, they noticed the same thing from a public filing.",
 
   "narrative.dialogue.twelve_cask.briefing.storage_claim":
     "Twelve-Cask stored industrial cleaners before the crew abandoned it. The useful stock is spread across a dozen small tanks, and several have leaked into the lower deck. Recover the chemicals and photograph each serial plate for the salvage board.",
@@ -166,7 +166,7 @@ export const NARRATIVE_MESSAGES = {
     "There is a sealed wreck called Kettleblack two days from your position. Its ringglass deposits are mapped well enough to make a controlled test. Accept the claim, mark every deposit before you touch it, and I’ll explain who I am when the work is done.",
 
   "narrative.dialogue.kettleblack.briefing.mark_dark_grains":
-    "Before the cutter removes anything, photograph each dark deposit and assign it a number. I need to know whether a sample remains connected to the place it came from after your foundry processes it.",
+    "Before the cutter removes anything, photograph each dark deposit and assign it a number. I need to know whether a sample remains connected to the place it came from after your vessel processes it.",
   "narrative.dialogue.kettleblack.briefing.premium_doubles":
     "Run the entire recovery in one continuous shift and I’ll double my offer. Small laboratory tests are interesting, but a process that survives hours of real production is worth building a business around.",
   "narrative.dialogue.kettleblack.briefing.field_has_edges":
@@ -185,7 +185,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.cordon_41.briefing.wall_is_working":
     "The damaged array is still transmitting, but it reports the same wall on both sides of the cordon. I can steer the cutter using the camera feed; the position display is useless. Tell me which room you want it to draw the animals through.",
   "narrative.dialogue.cordon_41.debrief.same_material":
-    "The sensor wall contains the same treated ringglass that you recovered at Kettleblack. When the cutter disturbed one, the other changed with it. Your foundry exposed the connection and gave us a way to observe it safely.",
+    "The sensor wall contains the same treated ringglass that you recovered at Kettleblack. When the cutter disturbed one, the other changed with it. Your vessel exposed the connection and gave us a way to observe it safely.",
   "narrative.dialogue.cordon_41.debrief.related_across_distance":
     "Distance weakens the reaction while leaving the connection intact. Processing the ringglass changes what each sample does while preserving the timing between them. That is useful, and it becomes dangerous very quickly at a larger scale.",
   "narrative.dialogue.cordon_41.debrief.buyer_trace":
@@ -205,7 +205,7 @@ export const NARRATIVE_MESSAGES = {
     "The connection grew stronger when the arrays started together. Daro sees proof that the method scales; Vela sees the beginning of a boundary. They are looking at the same result and choosing different risks.",
 
   "narrative.dialogue.pell_cut.briefing.parallel_arrays":
-    "The four mining arrays start on my mark and send their output directly to your foundry. Keep the plant running and route the finished material into Junction L-6 storage. Coremark handles the mine; your crew handles the process.",
+    "The four mining arrays start on my mark and send their output directly to your vessel. Keep the process running and route the finished material into Junction L-6 storage. Coremark handles the mine; your crew handles the extraction.",
   "narrative.dialogue.pell_cut.briefing.stop_condition":
     "I have a direct shutdown on every array. If the samples begin reacting beyond the marked work area, I end the test and close the feeds. Daro has agreed that my call is final.",
   "narrative.dialogue.pell_cut.briefing.pattern_listens":
@@ -213,9 +213,9 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.pell_cut.debrief.distress_call":
     "Emergency report from Pell Cut: several rooms now occupy overlapping positions, the outer work lane has disappeared from navigation, and an unidentified signal is transmitting through the extraction equipment.",
   "narrative.dialogue.pell_cut.debrief.call_counts":
-    "The signal is using our vessel code and a recording of T’kesh’s voice. It keeps counting the foundry rooms, then starting again from a different number. Everyone at the mine heard it before the channel went dead.",
+    "The signal is using our vessel code and a recording of T’kesh’s voice. It keeps counting the process rooms, then starting again from a different number. Everyone at the mine heard it before the channel went dead.",
   "narrative.dialogue.pell_cut.debrief.cordon_mobilizing":
-    "The Council is closing the Pell lanes and sending a rescue cordon. Keep every log from the scale test aboard your rig. The distortion copied your process, which means your records may be the only reliable map into it.",
+    "The Council is closing the Pell lanes and sending a rescue cordon. Keep every log from the scale test aboard your ship. The distortion copied your process, which means your records may be the only reliable map into it.",
 
   "narrative.dialogue.station_14.briefing.field_command":
     "I’m Captain Kethra, and every Council crew in this lane answers to me. Station 14 went silent with three navigation beacons still active inside. Your cutter retrieves them and marks a path before I send people across the cordon.",
@@ -226,7 +226,7 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.station_14.debrief.buoys_recovered":
     "We recovered the three missing beacons. A fourth signal followed the cutter back, although the station only carried three. I’ve isolated it in the same clock recorder that caught the first six-second gap.",
   "narrative.dialogue.station_14.debrief.new_voice":
-    "The extra signal has started assembling pieces of our old radio traffic. It repeats the foundry’s pump rhythm whenever it wants a reply, then tests fragments of our voices. Something inside Pell is learning how we communicate.",
+    "The extra signal has started assembling pieces of our old radio traffic. It repeats the ship’s pump rhythm whenever it wants a reply, then tests fragments of our voices. Something inside Pell is learning how we communicate.",
   "narrative.dialogue.station_14.debrief.near_voice_designation":
     "The Council has named the signal Near Voice. Its strongest transmission comes from the center of the original Pell Cut excavation.",
 
@@ -237,14 +237,14 @@ export const NARRATIVE_MESSAGES = {
   "narrative.dialogue.vasker_store.briefing.quiet_glass_recipe":
     "I can prepare the ringglass for Vela while you defend the plant. Keep the chemical feeds steady and give me time to check the batch numbers; mixing the wrong treatments would make her device amplify the breach.",
   "narrative.dialogue.vasker_store.debrief.closure_mass":
-    "We have enough treated ringglass for one attempt. The device can weaken the Pell distortion for as long as the foundry maintains a complete processing cycle. When the plant stops, the effect stops with it.",
-  "narrative.dialogue.vasker_store.debrief.voice_tracks_foundry":
+    "We have enough treated ringglass for one attempt. The device can weaken the Pell distortion for as long as the vessel maintains a complete processing cycle. When the process stops, the effect stops with it.",
+  "narrative.dialogue.vasker_store.debrief.voice_tracks_process":
     "The Near Voice followed every change in our process. It treats the order of our reactions like directions through the distortion. That is how it found the cutter again after we moved to Vasker.",
   "narrative.dialogue.vasker_store.debrief.lane_six_warning":
-    "Lane Six is still open, but the safe part of it is shrinking. My convoy moves on the next stable reading. Have the foundry ready to draw the signal away from us.",
+    "Lane Six is still open, but the safe part of it is shrinking. My convoy moves on the next stable reading. Have the vessel ready to draw the signal away from us.",
 
   "narrative.dialogue.lane_six.briefing.first_threshold_review":
-    "Dern Talish has approved Vela’s closure plan and placed the operation under Council authority. From this point forward, your rig is part of my cordon and follows the same withdrawal orders as every crewed vessel.",
+    "Dern Talish has approved Vela’s closure plan and placed the operation under Council authority. From this point forward, your vessel is part of my cordon and follows the same withdrawal orders as every crewed ship.",
   "narrative.dialogue.lane_six.briefing.mission_authority":
     "This is Dern Talish. Captain Kethra commands the cordon, and Vela Norr controls the closure attempt. Your crew has the final say over its own plant. If any of the three calls a withdrawal, the operation ends and every vessel comes home.",
   "narrative.dialogue.lane_six.briefing.hold_real_boundary":
@@ -257,12 +257,12 @@ export const NARRATIVE_MESSAGES = {
     "Proceed to Pell Cut. Break the signal, close the breach, and bring every person under this cordon back across Lane Six.",
 
   "narrative.dialogue.pell_cordon.briefing.council_mission":
-    "The Council has one objective: close the Pell breach before it becomes permanent. The Near Voice is holding it open, so your foundry must disrupt the signal while Vela activates the closure device.",
+    "The Council has one objective: close the Pell breach before it becomes permanent. The Near Voice is holding it open, so your vessel must disrupt the signal while Vela activates the closure device.",
   "narrative.dialogue.pell_cordon.briefing.cordon_ready":
-    "Every rescue team is in position and every return route ends at my vessel. We begin the withdrawal as soon as the Near Voice turns toward your rig. Keep it occupied until I report a complete count.",
+    "Every rescue team is in position and every return route ends at my vessel. We begin the withdrawal as soon as the Near Voice turns toward your ship. Keep it occupied until I report a complete count.",
   "narrative.dialogue.pell_cordon.briefing.voice_inside_route":
     "The Near Voice built this place from the timing of your pumps, valves, and reactions. Change that timing and the overlapping rooms begin to separate. Keep changing it, and the signal loses the structure it needs to remain here.",
-  "narrative.dialogue.pell_cordon.briefing.foundry_has_pattern":
+  "narrative.dialogue.pell_cordon.briefing.process_has_pattern":
     "We have every old process log, including the mistakes and shutdowns. I can use those variations to keep the Near Voice guessing. You keep the plant alive; I’ll feed it a new rhythm every time it adjusts.",
   "narrative.dialogue.pell_cordon.debrief.boundary_holds":
     "The breach is closed, and our instruments agree on where Pell Cut begins and ends. The Council is recording the event as a contained emergence.",
@@ -285,11 +285,11 @@ export const NARRATIVE_MESSAGES = {
   "narrative.ui.route.next": "Next filing",
   "narrative.ui.route.pending": "Route pending",
   "narrative.ui.route.hazardGrade": "Hazard grade {level}",
-  "narrative.ui.transit.label": "Remote extraction foundry under KITE tow",
-  "narrative.ui.transit.title": "Claim rig underway",
-  "narrative.ui.transit.detail": "KITE tow carries the foundry toward {site}.",
-  "narrative.ui.transit.holdTitle": "Claim rig holding",
-  "narrative.ui.transit.holdDetail": "The foundry holds station at {site}.",
+  "narrative.ui.transit.label": "Extraction vessel under KITE tow",
+  "narrative.ui.transit.title": "Vessel underway",
+  "narrative.ui.transit.detail": "KITE tow carries the vessel toward {site}.",
+  "narrative.ui.transit.holdTitle": "Vessel holding",
+  "narrative.ui.transit.holdDetail": "The vessel holds station at {site}.",
   "narrative.ui.progress.complete": "{site} secured",
   "narrative.ui.progress.next": "Next contract",
   "narrative.ui.progress.campaign": "The filed route ends here",

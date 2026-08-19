@@ -5,7 +5,7 @@ Status: accepted
 
 ## Context
 
-The rig is a vertical 2D cutaway. Floor, wall, and ceiling placement can create different firing
+The vessel is a vertical 2D cutaway. Floor, wall, and ceiling placement can create different firing
 arcs, line-of-sight relationships, and answers to climbing or flying enemies. Restricting ordinary
 towers to authored hardpoints would discard much of that spatial choice.
 

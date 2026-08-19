@@ -11,7 +11,7 @@ describe("locale validation", () => {
 
   it("reports missing, extra, and placeholder mismatches", () => {
     const messages = { ...TEST_LOCALE.messages } as Record<string, string>;
-    delete messages["ui.common.facility"];
+    delete messages["ui.common.vessel"];
     messages["events.flash.detail"] = "Reaction recorded.";
     messages["extra.key"] = "Extra";
     const issues = validateLocale(EN_LOCALE, {
@@ -20,7 +20,7 @@ describe("locale validation", () => {
     } as LocaleBundle);
     expect(issues).toEqual(
       expect.arrayContaining([
-        { key: "ui.common.facility", kind: "missing" },
+        { key: "ui.common.vessel", kind: "missing" },
         { key: "events.flash.detail", kind: "placeholder_mismatch" },
         { key: "extra.key", kind: "extra" },
       ])

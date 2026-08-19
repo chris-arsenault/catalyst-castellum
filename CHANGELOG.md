@@ -17,15 +17,20 @@ All notable user-visible changes are recorded here.
 ### Campaign and construction
 
 - Replaced the campaign's combat sites with twelve fixed five-wave tower-defense operations while
-  preserving the Deep Shear claim rig, three-act route, dialogue, reports, travel, and Pell ending.
+  preserving the Deep Shear vessel, three-act route, dialogue, reports, travel, and Pell ending.
 - Added save-backed operation checkpoints and retries. Hull-mounted towers and upgrades travel with
-  the rig; site-mounted defenses return their authored recovery value at departure.
+  the vessel; site-mounted defenses return their authored recovery value at departure.
 - Reworked room grafts as rare persistent hull purchases attached through authored graft slots.
   Grafted rooms add vertical tower surfaces and retain their purpose-specific process-equipment
   sockets.
 
 ### Chemistry and environment
 
+- Recast the seven tower chassis as Flash Chamber, Caustic Jet, Carbon Burner, Acid Pot, Quench
+  Coil, Wash Head, and Carbonyl Marker, each with chemical damage, apparatus rendering, attack
+  effects, and process-specific upgrades.
+- Added the optional Acid-Caustic neutralization reaction. Opposing target coatings consume each
+  other and release one separately attributed heat burst.
 - Kept conserved chemistry, finite inventories, process equipment, gas and liquid routing,
   temperature, pressure, and room atmospheres as deterministic world systems while direct towers
   supply the campaign's ordinary damage.
@@ -35,13 +40,15 @@ All notable user-visible changes are recorded here.
 
 ### Guidance and verification
 
-- Replaced reaction-combat lessons with tower placement, route coverage, wall and ceiling geometry,
-  targeting, upgrades, and graft guidance. The facility manual now includes the complete tower
+- Re-authored the opening guidance around Flash Chamber pressure fire, Carbon Burner wall and
+  ceiling geometry, and a non-gating Twelve-Cask coating-reaction demonstration.
+- Added tower placement, route coverage, wall and ceiling geometry, targeting, upgrades, and graft
+  guidance. The field manual now includes the complete tower
   catalog, and the control panel switches between defenses and room systems.
 - Added deterministic tower, route, campaign carryover, checkpoint, graft, chemistry-bridge,
   portfolio, and browser coverage plus a continuous save-backed reference run through all twelve
   sites.
-- Advanced saves to schema 27 and authored content to version 19. Current pre-release saves accept
+- Advanced saves to schema 28 and authored content to version 20. Current pre-release saves accept
   this format only.
 
 ## pre-tower-defense-rework - 2026-08-17

@@ -41,14 +41,14 @@ const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 6, elevation: 8 },
       mountFace: "left_wall",
       orientation: "right",
     },
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 6, elevation: 7 },
       mountFace: "left_wall",
       orientation: "right",
@@ -56,13 +56,13 @@ const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:1",
-      upgradeId: "bolt_calibration",
+      upgradeId: "flash_calibration",
     },
   ]),
   round([
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 15, elevation: 11 },
       mountFace: "ceiling",
       orientation: "down",
@@ -71,7 +71,7 @@ const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 27, elevation: 8 },
       mountFace: "right_wall",
       orientation: "left",
@@ -81,7 +81,7 @@ const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:2",
-      upgradeId: "repeater_feed",
+      upgradeId: "caustic_manifold",
     },
     {
       type: "set_tower_targeting",
@@ -93,7 +93,7 @@ const CLAIM_LONG_LINE: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:1",
-      upgradeId: "bolt_piercing",
+      upgradeId: "flash_breach",
     },
   ]),
 ];
@@ -102,14 +102,14 @@ const CLAIM_RAPID_CROSSING: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 6, elevation: 8 },
       mountFace: "left_wall",
       orientation: "right",
     },
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 27, elevation: 8 },
       mountFace: "right_wall",
       orientation: "left",
@@ -119,18 +119,18 @@ const CLAIM_RAPID_CROSSING: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:1",
-      upgradeId: "repeater_feed",
+      upgradeId: "caustic_manifold",
     },
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:2",
-      upgradeId: "repeater_feed",
+      upgradeId: "caustic_manifold",
     },
   ]),
   round([
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 15, elevation: 11 },
       mountFace: "ceiling",
       orientation: "down",
@@ -141,7 +141,7 @@ const CLAIM_RAPID_CROSSING: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:claim_8_delta:3",
-      upgradeId: "bolt_calibration",
+      upgradeId: "flash_calibration",
     },
   ]),
 ];
@@ -150,14 +150,14 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "line_projector",
-      anchor: { column: 39, elevation: 6 },
+      chassisId: "carbon_burner",
+      anchor: { column: 39, elevation: 7 },
       mountFace: "left_wall",
       orientation: "right",
     },
     {
       type: "place_tower",
-      chassisId: "line_projector",
+      chassisId: "carbon_burner",
       anchor: { column: 45, elevation: 9 },
       mountFace: "ceiling",
       orientation: "down",
@@ -170,12 +170,12 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:harkers_brace:1",
-      upgradeId: "projector_focus",
+      upgradeId: "burner_focus",
     },
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
-      anchor: { column: 58, elevation: 6 },
+      chassisId: "flash_chamber",
+      anchor: { column: 58, elevation: 7 },
       mountFace: "left_wall",
       orientation: "right",
     },
@@ -183,8 +183,8 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "line_projector",
-      anchor: { column: 73, elevation: 14 },
+      chassisId: "carbon_burner",
+      anchor: { column: 73, elevation: 15 },
       mountFace: "left_wall",
       orientation: "right",
     },
@@ -192,8 +192,8 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "repeater",
-      anchor: { column: 81, elevation: 10 },
+      chassisId: "caustic_jet",
+      anchor: { column: 82, elevation: 10 },
       mountFace: "ceiling",
       orientation: "down",
     },
@@ -201,8 +201,8 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "repeater",
-      anchor: { column: 88, elevation: 6 },
+      chassisId: "caustic_jet",
+      anchor: { column: 88, elevation: 7 },
       mountFace: "left_wall",
       orientation: "right",
     },
@@ -211,37 +211,37 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:harkers_brace:5",
-      upgradeId: "repeater_feed",
+      upgradeId: "caustic_manifold",
     },
   ]),
 ];
 
-const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
+const TWELVE_CASK_REACTION: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 6, elevation: 8 },
       mountFace: "left_wall",
       orientation: "right",
     },
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 27, elevation: 8 },
       mountFace: "right_wall",
       orientation: "left",
     },
     {
       type: "place_tower",
-      chassisId: "mortar",
-      anchor: { column: 9, elevation: 13 },
+      chassisId: "acid_pot",
+      anchor: { column: 10, elevation: 13 },
       mountFace: "floor",
       orientation: "right",
     },
     {
       type: "place_tower",
-      chassisId: "snare_emitter",
+      chassisId: "quench_coil",
       anchor: { column: 10, elevation: 11 },
       mountFace: "ceiling",
       orientation: "down",
@@ -249,18 +249,18 @@ const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:twelve_cask:3",
-      upgradeId: "mortar_payload",
+      upgradeId: "acid_charge",
     },
     {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 15, elevation: 11 },
       mountFace: "ceiling",
       orientation: "down",
     },
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 6, elevation: 20 },
       mountFace: "left_wall",
       orientation: "right",
@@ -269,7 +269,7 @@ const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
   round([
     {
       type: "place_tower",
-      chassisId: "mortar",
+      chassisId: "acid_pot",
       anchor: { column: 9, elevation: 23 },
       mountFace: "floor",
       orientation: "right",
@@ -279,11 +279,11 @@ const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:twelve_cask:4",
-      upgradeId: "snare_duration",
+      upgradeId: "quench_duration",
     },
     {
       type: "place_tower",
-      chassisId: "line_projector",
+      chassisId: "carbon_burner",
       anchor: { column: 36, elevation: 18 },
       mountFace: "left_wall",
       orientation: "right",
@@ -293,11 +293,11 @@ const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:twelve_cask:7",
-      upgradeId: "mortar_payload",
+      upgradeId: "acid_charge",
     },
     {
       type: "place_tower",
-      chassisId: "repeater",
+      chassisId: "caustic_jet",
       anchor: { column: 48, elevation: 8 },
       mountFace: "right_wall",
       orientation: "left",
@@ -307,7 +307,7 @@ const TWELVE_CASK_MIXED: readonly PlaytestRoundPlan[] = [
     {
       type: "upgrade_tower",
       towerId: "tower:twelve_cask:9",
-      upgradeId: "repeater_feed",
+      upgradeId: "caustic_manifold",
     },
   ]),
 ];
@@ -345,9 +345,9 @@ export const LEVEL_PLAYTEST_PORTFOLIOS = {
     requirements: guidedRequirements,
     referenceBuilds: [
       {
-        id: "mixed_service",
+        id: "neutralization_service",
         archetype: "hybrid",
-        rounds: TWELVE_CASK_MIXED,
+        rounds: TWELVE_CASK_REACTION,
       },
     ],
   },
@@ -402,14 +402,14 @@ export const LEVEL_PLAYTEST_PORTFOLIOS = {
 export const LEVEL_FAILURE_CONTROL_BUILDS = {
   claim_8_delta: [
     {
-      id: "single_wall_caster",
+      id: "single_wall_flash",
       archetype: "precise",
       rounds: [round(CLAIM_LONG_LINE[0]!.commands.slice(0, 1))],
     },
   ],
   harkers_brace: [
     {
-      id: "single_wall_projector",
+      id: "single_wall_burner",
       archetype: "area",
       rounds: [round(HARKER_VERTICAL_FIELDS[0]!.commands.slice(0, 1))],
     },

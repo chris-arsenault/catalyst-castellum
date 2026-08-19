@@ -5,7 +5,11 @@ import {
   LEVEL_PLAYTEST_PORTFOLIOS,
 } from "../content/playtestPortfolios";
 import { DAMAGE_SOURCE_IDS, type DamageSourceId } from "../types";
-import { evaluateDiversity } from "./runner";
+import { cellKey } from "../spatial";
+import { createScenarioGame } from "../simulation";
+import { architecturalConnections, portalOpeningCells } from "../world/map";
+import { referencePlans } from "./policies";
+import { evaluateDiversity, runPlan } from "./runner";
 import type { BuildArchetypeId, PlaytestResult } from "./types";
 
 const sourceTotals = (): Record<DamageSourceId, number> =>
@@ -85,6 +89,45 @@ describe("reference-build portfolios", () => {
       )
     ).toBe(true);
   });
+
+  it("keeps every reference tower outside architectural openings", () => {
+    for (const portfolio of Object.values(LEVEL_PLAYTEST_PORTFOLIOS)) {
+      const map = createScenarioGame(portfolio.levelId).map;
+      const openings = new Set(
+        architecturalConnections(map)
+          .flatMap((portal) => [
+            ...portalOpeningCells(map, portal, 0),
+            ...portalOpeningCells(map, portal, 1),
+          ])
+          .map(cellKey)
+      );
+      for (const build of portfolio.referenceBuilds) {
+        const placements = build.rounds.flatMap((round, roundIndex) =>
+          round.commands.flatMap((command) =>
+            command.type === "place_tower"
+              ? [{ anchor: command.anchor, roundNumber: roundIndex + 1 }]
+              : []
+          )
+        );
+        for (const placement of placements) {
+          expect(
+            openings.has(cellKey(placement.anchor)),
+            `${portfolio.levelId}.${build.id}.round-${placement.roundNumber}`
+          ).toBe(false);
+        }
+      }
+    }
+  });
+
+  it("exercises the optional Acid-Caustic reaction in Twelve-Cask", () => {
+    const plan = referencePlans("twelve_cask")[0];
+    if (!plan) throw new Error("Twelve-Cask reference plan is missing.");
+    const playtest = runPlan("twelve_cask", plan);
+    expect(playtest.success).toBe(true);
+    expect(playtest.damageBySource.tower_acid).toBeGreaterThan(0);
+    expect(playtest.damageBySource.tower_caustic).toBeGreaterThan(0);
+    expect(playtest.damageBySource.tower_neutralization).toBeGreaterThan(0);
+  }, 15_000);
 });
 
 describe("diversity evaluation", () => {

@@ -27,9 +27,9 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.kettleblack.story.kicker": "Permanent construction",
   "tutorial.kettleblack.story.title": "Defend through the room that travels",
   "tutorial.kettleblack.story.paragraph.0":
-    "The room graft bought between claims is part of the rig. Its walls, floor, and ceiling accept ordinary towers, and the enemy approach now crosses its geometry.",
+    "The room graft bought between claims is part of the vessel. Its walls, floor, and ceiling accept mounted defenses, and the enemy approach now crosses its geometry.",
   "tutorial.kettleblack.story.paragraph.1":
-    "Towers mounted on hull rooms travel with their upgrades. Towers mounted on Kettleblack’s wreck return their authored recovery value when the rig departs.",
+    "Towers mounted on hull rooms travel with their upgrades. Towers mounted on Kettleblack’s wreck return their authored recovery value when the vessel departs.",
   "tutorial.kettleblack.mission.title": "Commission one hull tower",
   "tutorial.kettleblack.mission.summary":
     "Mount and upgrade a tower on persistent hull geometry, then hold Kettleblack’s long approach.",
@@ -38,7 +38,7 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.kettleblack.task.holdReturn": "Hold the first Kettleblack return.",
   "tutorial.kettleblack.step.openPipeBoard.title": "Read the permanent approach",
   "tutorial.kettleblack.step.openPipeBoard.explanation":
-    "The final blue rooms belong to the rig. A purchased graft extends that approach and adds free tower surfaces.",
+    "The final blue rooms belong to the vessel. A purchased graft extends that approach and adds free tower surfaces.",
   "tutorial.kettleblack.step.openPipeBoard.instruction":
     "Inspect the enemy route and choose a tower chassis.",
   "tutorial.kettleblack.step.openPipeBoard.result": "Hull and site geometry are visible.",
@@ -60,7 +60,7 @@ export const TUTORIAL_MESSAGES = {
   "tutorial.kettleblack.step.startAssault.instruction":
     "Start the assault with the defense configuration you choose.",
   "tutorial.kettleblack.step.startAssault.result":
-    "Kettleblack’s first return is crossing the live foundry.",
+    "Kettleblack’s first return is crossing the live vessel.",
   "tutorial.kettleblack.reason.feed": "Mount one tower on blue hull geometry.",
   "tutorial.kettleblack.reason.coil": "Upgrade the hull-mounted tower.",
   ...TUTORIAL_TOWER_MESSAGES,

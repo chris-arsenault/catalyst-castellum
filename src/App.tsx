@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useState } from "react";
 import { EventLog } from "./components/EventLog";
 import { FeedstockStrip } from "./components/FeedstockStrip";
 import { CampaignProgressModal, NoticeToast, OutcomeModal } from "./components/Modals";
-import { FacilityManual } from "./components/manual/FacilityManual";
+import { VesselManual } from "./components/manual/VesselManual";
 import { PhaseBanner } from "./components/PhaseBanner";
 import { PipeBoard } from "./components/PipeBoard";
 import { Logbook } from "./components/logbook/Logbook";
@@ -131,7 +131,7 @@ const ActiveGame = () => {
       </main>
 
       <CampaignProgressModal />
-      <FacilityManual />
+      <VesselManual />
       <OutcomeModal />
       <NoticeToast />
       <Suspense fallback={null}>

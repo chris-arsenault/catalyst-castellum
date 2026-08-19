@@ -12,13 +12,13 @@ export const ALL_LIQUID_RUNS = LINES.filter(({ kind }) => kind === "liquid_line"
 );
 export const ALL_AVAILABILITY = availability({
   towers: [
-    "bolt_caster",
-    "repeater",
-    "line_projector",
-    "mortar",
-    "snare_emitter",
-    "flak_nest",
-    "relay",
+    "flash_chamber",
+    "caustic_jet",
+    "carbon_burner",
+    "acid_pot",
+    "quench_coil",
+    "wash_head",
+    "carbonyl_marker",
   ],
   equipment: [...EQUIPMENT_IDS],
   gasLines: ALL_GAS_RUNS,
@@ -29,13 +29,13 @@ export const ALL_AVAILABILITY = availability({
 export const paletteAvailability = (palette: readonly ProcessFamilyId[]): ScenarioAvailability =>
   availability({
     towers: [
-      "bolt_caster",
-      "repeater",
-      "line_projector",
-      "mortar",
-      "snare_emitter",
-      "flak_nest",
-      "relay",
+      "flash_chamber",
+      "caustic_jet",
+      "carbon_burner",
+      "acid_pot",
+      "quench_coil",
+      "wash_head",
+      "carbonyl_marker",
     ],
     equipment: paletteEquipment(palette),
     gasLines: ALL_GAS_RUNS,
@@ -44,7 +44,7 @@ export const paletteAvailability = (palette: readonly ProcessFamilyId[]): Scenar
 
 /** Every mechanism established by the end of Act I; later specialist cells stay campaign-gated. */
 export const ACT_I_AVAILABILITY = availability({
-  towers: ["bolt_caster", "repeater", "line_projector", "mortar", "snare_emitter"],
+  towers: ["flash_chamber", "caustic_jet", "carbon_burner", "acid_pot", "quench_coil"],
   equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell"],
   gasLines: ALL_GAS_RUNS,
   liquidLines: ALL_LIQUID_RUNS,
@@ -52,7 +52,7 @@ export const ACT_I_AVAILABILITY = availability({
 
 /** Kettleblack introduces the packed bed; the catalytic vessels stay campaign-gated. */
 export const KETTLEBLACK_AVAILABILITY = availability({
-  towers: ["bolt_caster", "repeater", "line_projector", "mortar", "snare_emitter", "flak_nest"],
+  towers: ["flash_chamber", "caustic_jet", "carbon_burner", "acid_pot", "quench_coil", "wash_head"],
   equipment: ["gas_agitator", "wet_contactor", "thermal_coil", "membrane_cell", "packed_bed"],
   gasLines: ALL_GAS_RUNS,
   liquidLines: ALL_LIQUID_RUNS,
@@ -61,13 +61,13 @@ export const KETTLEBLACK_AVAILABILITY = availability({
 /** Cordon 41 and Junction L-6 open the full catalytic vessel roster. */
 export const CATALYTIC_AVAILABILITY = availability({
   towers: [
-    "bolt_caster",
-    "repeater",
-    "line_projector",
-    "mortar",
-    "snare_emitter",
-    "flak_nest",
-    "relay",
+    "flash_chamber",
+    "caustic_jet",
+    "carbon_burner",
+    "acid_pot",
+    "quench_coil",
+    "wash_head",
+    "carbonyl_marker",
   ],
   equipment: [
     "gas_agitator",
@@ -86,13 +86,13 @@ export const CATALYTIC_AVAILABILITY = availability({
 /** Pell Cut adds the specialist fluorine cell after every ordinary process control is established. */
 export const ACT_II_AVAILABILITY = availability({
   towers: [
-    "bolt_caster",
-    "repeater",
-    "line_projector",
-    "mortar",
-    "snare_emitter",
-    "flak_nest",
-    "relay",
+    "flash_chamber",
+    "caustic_jet",
+    "carbon_burner",
+    "acid_pot",
+    "quench_coil",
+    "wash_head",
+    "carbonyl_marker",
   ],
   equipment: [
     "gas_agitator",

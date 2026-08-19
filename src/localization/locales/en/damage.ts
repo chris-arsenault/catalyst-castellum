@@ -10,22 +10,26 @@ export const DAMAGE_MESSAGES = {
   "damage.channel.pressure.detail": "A pressure load crushes the target throughout its body.",
   "damage.channel.radiation.label": "RADIATION",
   "damage.channel.radiation.detail": "A directed field applies radiation to the target.",
-  "damage.source.tower_bolt.label": "bolt caster",
-  "damage.source.tower_bolt.detail": "A calibrated bolt applies direct impact damage.",
-  "damage.source.tower_repeater.label": "repeater",
-  "damage.source.tower_repeater.detail": "Rapid projectiles apply repeated impact damage.",
-  "damage.source.tower_projector.label": "line projector",
-  "damage.source.tower_projector.detail":
-    "A mounted projector applies heat through its firing fan.",
-  "damage.source.tower_mortar.label": "mortar",
-  "damage.source.tower_mortar.detail":
-    "A lobbed charge applies pressure and heat in a bounded area.",
-  "damage.source.tower_snare.label": "snare emitter",
-  "damage.source.tower_snare.detail":
-    "A bounded field applies light damage and slows ground targets.",
-  "damage.source.tower_flak.label": "flak nest",
-  "damage.source.tower_flak.detail":
-    "Airburst projectiles apply pressure damage to flying targets.",
-  "damage.source.tower_relay.label": "relay",
-  "damage.source.tower_relay.detail": "A relay reveals targets and weakens their armor.",
+  "damage.source.tower_flash.label": "flash chamber",
+  "damage.source.tower_flash.detail":
+    "A metered hydrogen-oxygen flash applies focused pressure damage.",
+  "damage.source.tower_caustic.label": "caustic jet",
+  "damage.source.tower_caustic.detail":
+    "Rapid sodium-hydroxide droplets apply corrosion and a Caustic coating.",
+  "damage.source.tower_burner.label": "carbon burner",
+  "damage.source.tower_burner.detail": "A carbon-steam flame applies heat through its firing fan.",
+  "damage.source.tower_acid.label": "acid pot",
+  "damage.source.tower_acid.detail":
+    "A lobbed hydrochloric-acid charge applies corrosion and an Acid coating in a bounded area.",
+  "damage.source.tower_quench.label": "quench coil",
+  "damage.source.tower_quench.detail":
+    "A condensed cooling field disrupts respiration and slows ground targets.",
+  "damage.source.tower_wash.label": "wash head",
+  "damage.source.tower_wash.detail":
+    "A wet scrubber burst applies atmosphere and corrosion damage to upper targets.",
+  "damage.source.tower_marker.label": "carbonyl marker",
+  "damage.source.tower_marker.detail": "A nickel trace reveals targets and weakens their armor.",
+  "damage.source.tower_neutralization.label": "neutralization burst",
+  "damage.source.tower_neutralization.detail":
+    "Acid and Caustic coatings consume each other and release a bounded heat burst.",
 } as const;

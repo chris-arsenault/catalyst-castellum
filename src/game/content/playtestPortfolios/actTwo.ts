@@ -14,56 +14,78 @@ import {
 import { KETTLEBLACK_REFERENCE_BUILDS } from "./kettleblack";
 
 type WallPlacement = readonly [column: number, elevation: number];
-type SnarePlacement = readonly [column: number, elevation: number, face: "floor" | "ceiling"];
+type ControlPlacement = readonly [
+  column: number,
+  elevation: number,
+  face: "floor" | "left_wall" | "right_wall" | "ceiling",
+];
+type OrientedPlacement = readonly [
+  column: number,
+  elevation: number,
+  face: "floor" | "left_wall" | "right_wall" | "ceiling",
+  orientation: "left" | "right" | "up" | "down",
+];
 
 export interface SiteDefenseGeometry {
   levelId: CanonicalLevelId;
   walls: readonly WallPlacement[];
-  snares: readonly SnarePlacement[];
+  controlMounts: readonly ControlPlacement[];
+  upperMounts: readonly OrientedPlacement[];
+  controlDamageMounts: readonly OrientedPlacement[];
+  controlBurnerCount: 0 | 6;
 }
 
 const towerId = (levelId: CanonicalLevelId, sequence: number): string =>
   `tower:${levelId}:${sequence}`;
 
 const wallTower = (
-  chassisId: "bolt_caster" | "repeater" | "line_projector" | "relay",
+  chassisId: "flash_chamber" | "caustic_jet" | "carbon_burner" | "wash_head" | "carbonyl_marker",
   [column, elevation]: WallPlacement
 ) => place(chassisId, { column, elevation }, "right_wall", "left");
 
-const snareTower = ([column, elevation, face]: SnarePlacement) =>
-  place("snare_emitter", { column, elevation }, face, face === "ceiling" ? "down" : "right");
+const surfaceOrientation = (face: ControlPlacement[2]) => {
+  if (face === "ceiling") return "down";
+  if (face === "right_wall") return "left";
+  return "right";
+};
 
-const surfaceBolt = ([column, elevation, face]: SnarePlacement) =>
-  place("bolt_caster", { column, elevation }, face, face === "ceiling" ? "down" : "right");
+const quenchTower = ([column, elevation, face]: ControlPlacement) =>
+  place("quench_coil", { column, elevation }, face, surfaceOrientation(face));
+
+const surfaceFlash = ([column, elevation, face]: ControlPlacement) =>
+  place("flash_chamber", { column, elevation }, face, surfaceOrientation(face));
 
 export const directTowerBuilds = ({
   levelId,
   walls,
-  snares,
+  controlMounts,
+  upperMounts,
+  controlDamageMounts,
+  controlBurnerCount,
 }: SiteDefenseGeometry): ReferenceBuildDefinition[] => {
   const precise: ReferenceBuildDefinition = {
     id: `${levelId}_precise_line`,
     archetype: "precise",
     rounds: [
       round([
-        ...walls.slice(0, 14).map((placement) => wallTower("repeater", placement)),
-        ...snares.slice(0, 4).map(surfaceBolt),
+        ...walls.slice(0, 14).map((placement) => wallTower("caustic_jet", placement)),
+        ...controlMounts.slice(0, 4).map(surfaceFlash),
       ]),
       round([
-        ...walls.slice(14, 16).map((placement) => wallTower("repeater", placement)),
-        upgrade(towerId(levelId, 4), "repeater_feed"),
-        upgrade(towerId(levelId, 8), "repeater_feed"),
+        ...walls.slice(14, 16).map((placement) => wallTower("caustic_jet", placement)),
+        upgrade(towerId(levelId, 4), "caustic_manifold"),
+        upgrade(towerId(levelId, 8), "caustic_manifold"),
       ]),
       round([
-        upgrade(towerId(levelId, 11), "repeater_feed"),
-        upgrade(towerId(levelId, 14), "repeater_feed"),
+        upgrade(towerId(levelId, 11), "caustic_manifold"),
+        upgrade(towerId(levelId, 14), "caustic_manifold"),
       ]),
-      round([upgrade(towerId(levelId, 8), "repeater_tracking")]),
+      round([upgrade(towerId(levelId, 8), "caustic_split")]),
       round([
-        upgrade(towerId(levelId, 15), "bolt_calibration"),
-        upgrade(towerId(levelId, 16), "bolt_calibration"),
-        upgrade(towerId(levelId, 17), "bolt_calibration"),
-        upgrade(towerId(levelId, 18), "bolt_calibration"),
+        upgrade(towerId(levelId, 15), "flash_calibration"),
+        upgrade(towerId(levelId, 16), "flash_calibration"),
+        upgrade(towerId(levelId, 17), "flash_calibration"),
+        upgrade(towerId(levelId, 18), "flash_calibration"),
       ]),
     ],
   };
@@ -71,42 +93,40 @@ export const directTowerBuilds = ({
     id: `${levelId}_rapid_service`,
     archetype: "rapid",
     rounds: [
-      round(walls.slice(0, 14).map((placement) => wallTower("repeater", placement))),
+      round(walls.slice(0, 14).map((placement) => wallTower("caustic_jet", placement))),
       round([
-        ...walls.slice(14, 16).map((placement) => wallTower("repeater", placement)),
-        upgrade(towerId(levelId, 4), "repeater_feed"),
-        upgrade(towerId(levelId, 8), "repeater_feed"),
+        ...walls.slice(14, 16).map((placement) => wallTower("caustic_jet", placement)),
+        upgrade(towerId(levelId, 4), "caustic_manifold"),
+        upgrade(towerId(levelId, 8), "caustic_manifold"),
       ]),
       round([
-        upgrade(towerId(levelId, 11), "repeater_feed"),
-        upgrade(towerId(levelId, 15), "repeater_feed"),
+        upgrade(towerId(levelId, 11), "caustic_manifold"),
+        upgrade(towerId(levelId, 15), "caustic_manifold"),
       ]),
       round([
-        upgrade(towerId(levelId, 8), "repeater_tracking"),
-        ...(walls[15] ? [upgrade(towerId(levelId, 16), "repeater_tracking")] : []),
+        upgrade(towerId(levelId, 8), "caustic_split"),
+        ...(walls[15] ? [upgrade(towerId(levelId, 16), "caustic_split")] : []),
       ]),
       round(),
     ],
   };
-  const projectorCount = 6;
+  const burnerCount = 6;
   const area: ReferenceBuildDefinition = {
-    id: `${levelId}_projector_screen`,
+    id: `${levelId}_burner_screen`,
     archetype: "area",
     rounds: [
       round([
+        ...walls.slice(0, burnerCount).map((placement) => wallTower("carbon_burner", placement)),
         ...walls
-          .slice(0, projectorCount)
-          .map((placement) => wallTower("line_projector", placement)),
-        ...walls
-          .slice(projectorCount, projectorCount + 9)
-          .map((placement) => wallTower("repeater", placement)),
+          .slice(burnerCount, burnerCount + 9)
+          .map((placement) => wallTower("caustic_jet", placement)),
       ]),
       round([
-        upgrade(towerId(levelId, 2), "projector_focus"),
-        upgrade(towerId(levelId, 5), "projector_focus"),
+        upgrade(towerId(levelId, 2), "burner_focus"),
+        upgrade(towerId(levelId, 5), "burner_focus"),
       ]),
-      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
-      round([upgrade(towerId(levelId, 5), "projector_fan")]),
+      round([upgrade(towerId(levelId, 8), "caustic_manifold")]),
+      round([upgrade(towerId(levelId, 5), "burner_fan")]),
       round(),
     ],
   };
@@ -116,16 +136,47 @@ export const directTowerBuilds = ({
     archetype: "control",
     rounds: [
       round([
-        ...snares.slice(0, controlCount).map(snareTower),
-        ...walls.slice(0, 14).map((placement) => wallTower("repeater", placement)),
+        ...controlMounts.slice(0, controlCount).map(quenchTower),
+        ...walls
+          .slice(0, controlBurnerCount)
+          .map((placement) => wallTower("carbon_burner", placement)),
+        ...walls
+          .slice(controlBurnerCount, 14)
+          .map((placement) => wallTower("caustic_jet", placement)),
       ]),
       round([
-        upgrade(towerId(levelId, 2), "snare_duration"),
-        upgrade(towerId(levelId, 4), "snare_duration"),
+        ...upperMounts.map(([column, elevation, face, orientation]) =>
+          place("wash_head", { column, elevation }, face, orientation)
+        ),
+        ...controlDamageMounts.map(([column, elevation, face, orientation]) =>
+          place("carbon_burner", { column, elevation }, face, orientation)
+        ),
+        upgrade(towerId(levelId, 2), "quench_duration"),
+        upgrade(towerId(levelId, 4), "quench_duration"),
       ]),
-      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
-      round([upgrade(towerId(levelId, 4), "snare_field")]),
-      round(),
+      round([
+        ...(controlBurnerCount === 0
+          ? [
+              upgrade(towerId(levelId, 8), "caustic_manifold"),
+              upgrade(towerId(levelId, 10), "caustic_manifold"),
+            ]
+          : [
+              upgrade(towerId(levelId, 6), "burner_focus"),
+              upgrade(towerId(levelId, 9), "burner_focus"),
+            ]),
+        ...upperMounts.map((_, index) => upgrade(towerId(levelId, 19 + index), "wash_burst")),
+      ]),
+      round([
+        upgrade(towerId(levelId, 4), "quench_field"),
+        ...(controlBurnerCount === 0 ? [] : [upgrade(towerId(levelId, 6), "burner_fan")]),
+        ...upperMounts.map((_, index) => upgrade(towerId(levelId, 19 + index), "wash_column")),
+      ]),
+      round([
+        ...(controlBurnerCount === 0 ? [] : [upgrade(towerId(levelId, 8), "burner_focus")]),
+        ...controlDamageMounts.map((_, index) =>
+          upgrade(towerId(levelId, 19 + upperMounts.length + index), "burner_focus")
+        ),
+      ]),
     ],
   };
   const support: ReferenceBuildDefinition = {
@@ -133,13 +184,13 @@ export const directTowerBuilds = ({
     archetype: "support",
     rounds: [
       round([
-        ...walls.slice(0, 2).map((placement) => wallTower("relay", placement)),
-        ...walls.slice(2, 10).map((placement) => wallTower("repeater", placement)),
+        ...walls.slice(0, 2).map((placement) => wallTower("carbonyl_marker", placement)),
+        ...walls.slice(2, 10).map((placement) => wallTower("caustic_jet", placement)),
         ...walls
           .slice(10, 14)
           .map((placement) =>
             place(
-              "flak_nest",
+              "wash_head",
               { column: placement[0], elevation: placement[1] },
               "right_wall",
               "left"
@@ -148,10 +199,10 @@ export const directTowerBuilds = ({
       ]),
       round([target(towerId(levelId, 1), "support"), target(towerId(levelId, 2), "support")]),
       round([
-        upgrade(towerId(levelId, 4), "repeater_feed"),
-        upgrade(towerId(levelId, 7), "repeater_feed"),
+        upgrade(towerId(levelId, 4), "caustic_manifold"),
+        upgrade(towerId(levelId, 7), "caustic_manifold"),
       ]),
-      round([upgrade(towerId(levelId, 2), "relay_range")]),
+      round([upgrade(towerId(levelId, 2), "marker_range")]),
       round(),
     ],
   };
@@ -161,13 +212,13 @@ export const directTowerBuilds = ({
 const CORDON_GEOMETRY: SiteDefenseGeometry = {
   levelId: "cordon_41",
   walls: [
-    [55, 7],
-    [68, 7],
+    [55, 9],
+    [68, 9],
     [82, 7],
-    [82, 21],
+    [82, 23],
     [98, 21],
-    [98, 5],
-    [118, 5],
+    [98, 7],
+    [118, 7],
     [138, 5],
     [68, 11],
     [82, 11],
@@ -177,7 +228,7 @@ const CORDON_GEOMETRY: SiteDefenseGeometry = {
     [118, 9],
     [138, 9],
   ],
-  snares: [
+  controlMounts: [
     [52, 13, "ceiling"],
     [57, 17, "ceiling"],
     [77, 6, "floor"],
@@ -187,18 +238,21 @@ const CORDON_GEOMETRY: SiteDefenseGeometry = {
     [100, 12, "ceiling"],
     [121, 4, "floor"],
   ],
+  upperMounts: [],
+  controlDamageMounts: [],
+  controlBurnerCount: 0,
 };
 
 const JUNCTION_GEOMETRY: SiteDefenseGeometry = {
   levelId: "junction_l6",
   walls: [
-    [43, 5],
-    [66, 5],
+    [43, 7],
+    [66, 7],
     [87, 5],
-    [87, 15],
+    [87, 17],
     [106, 15],
-    [106, 5],
-    [126, 5],
+    [106, 7],
+    [126, 7],
     [146, 5],
     [66, 9],
     [87, 9],
@@ -208,7 +262,7 @@ const JUNCTION_GEOMETRY: SiteDefenseGeometry = {
     [126, 9],
     [146, 9],
   ],
-  snares: [
+  controlMounts: [
     [39, 12, "ceiling"],
     [45, 13, "ceiling"],
     [79, 4, "floor"],
@@ -218,18 +272,21 @@ const JUNCTION_GEOMETRY: SiteDefenseGeometry = {
     [108, 12, "ceiling"],
     [129, 4, "floor"],
   ],
+  upperMounts: [],
+  controlDamageMounts: [],
+  controlBurnerCount: 6,
 };
 
 const PELL_GEOMETRY: SiteDefenseGeometry = {
   levelId: "pell_cut",
   walls: [
-    [48, 5],
-    [66, 5],
+    [48, 7],
+    [66, 7],
     [84, 5],
-    [84, 18],
+    [84, 20],
     [102, 18],
-    [102, 5],
-    [122, 5],
+    [102, 7],
+    [122, 7],
     [142, 5],
     [66, 9],
     [84, 9],
@@ -239,7 +296,7 @@ const PELL_GEOMETRY: SiteDefenseGeometry = {
     [122, 9],
     [142, 9],
   ],
-  snares: [
+  controlMounts: [
     [45, 12, "ceiling"],
     [50, 15, "ceiling"],
     [77, 4, "floor"],
@@ -249,6 +306,9 @@ const PELL_GEOMETRY: SiteDefenseGeometry = {
     [104, 12, "ceiling"],
     [125, 4, "floor"],
   ],
+  upperMounts: [],
+  controlDamageMounts: [],
+  controlBurnerCount: 6,
 };
 
 export const processAssistedTowerBuild = (
@@ -263,21 +323,21 @@ export const processAssistedTowerBuild = (
     ...line("gas_line", "lower_intake", outputRoomId),
   ];
   return {
-    id: `${levelId}_prepared_projectors`,
+    id: `${levelId}_prepared_burners`,
     archetype: "hybrid",
     rounds: [
       round([
-        ...walls.slice(0, 6).map((placement) => wallTower("line_projector", placement)),
-        ...walls.slice(6, 12).map((placement) => wallTower("repeater", placement)),
+        ...walls.slice(0, 6).map((placement) => wallTower("carbon_burner", placement)),
+        ...walls.slice(6, 12).map((placement) => wallTower("caustic_jet", placement)),
         ...processCommands,
       ]),
       round([
         ...LIQUID_CHARGES,
-        upgrade(towerId(levelId, 5), "projector_focus"),
-        ...walls.slice(12, 15).map((placement) => wallTower("repeater", placement)),
+        upgrade(towerId(levelId, 5), "burner_focus"),
+        ...walls.slice(12, 15).map((placement) => wallTower("caustic_jet", placement)),
       ]),
-      round([upgrade(towerId(levelId, 8), "repeater_feed")]),
-      round([upgrade(towerId(levelId, 5), "projector_fan")]),
+      round([upgrade(towerId(levelId, 8), "caustic_manifold")]),
+      round([upgrade(towerId(levelId, 5), "burner_fan")]),
       round([...LIQUID_CHARGES]),
     ],
   };

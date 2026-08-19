@@ -14,7 +14,7 @@ Every string a player reads is written from inside the setting. The game present
 operations record of a licensed Ratter crew working the Deep Shear, and nothing on screen admits to
 being a game.
 
-- Copy addresses the player as the rig operator, never as someone playing software.
+- Copy addresses the player as the vessel operator, never as someone playing software.
 - Copy describes work, contracts, sites, and hazards, never difficulty, progression design, or
   teaching intent. A first job is a small licensed claim, never "an easy level to learn the basics."
 - Characters know their world and their jobs. They never explain a mechanic as a mechanic, reference
@@ -27,14 +27,14 @@ being a game.
 
 Curriculum language breaks the fiction. Use the in-world term everywhere a player can read it:
 
-| Write                        | Instead of                                  |
-| ---------------------------- | ------------------------------------------- |
-| site, claim, operation       | level, checkpoint, mission (as chrome)      |
-| contract, work order         | lesson, assignment, quest                   |
-| field drill                  | tutorial (the guided Claim 8-Delta opening) |
-| trial, commissioning run     | exam, test (of the player)                  |
-| assault, wave, column        | round (when narrating), encounter           |
-| the crew, the rig, the plant | you the player, the game                    |
+| Write                          | Instead of                                  |
+| ------------------------------ | ------------------------------------------- |
+| site, claim, operation         | level, checkpoint, mission (as chrome)      |
+| contract, work order           | lesson, assignment, quest                   |
+| field drill                    | tutorial (the guided Claim 8-Delta opening) |
+| trial, commissioning run       | exam, test (of the player)                  |
+| assault, wave, column          | round (when narrating), encounter           |
+| the crew, the vessel, the ship | you the player, the game                    |
 
 Mechanical identifiers stay stable regardless of display copy: level IDs, dialogue line IDs, and
 speaker IDs in `src/game/content/narrativeCampaign.ts` never rename for tone reasons.
@@ -62,7 +62,7 @@ Core"). Objectives are direct orders to the operator: "Mount a sentry on the eas
 the ladder mouth."
 
 **Interface copy** — labels, readouts, buttons, manual entries. Instrument voice: short, factual,
-present tense, governed by the AGENTS.md copy rules. The facility manual is an in-world works
+present tense, governed by the AGENTS.md copy rules. The vessel manual is an in-world works
 archive and may be instructional without being meta.
 
 ## Prose quality
@@ -84,8 +84,8 @@ Good plain English beats both sterile spec-sheet copy and decorated copy.
 - Enemy catalog names capitalize as proper entries ("Deckmouth", "Flintjack"); running prose uses
   them as lowercase common nouns ("a deckmouth column", "flintjacks slip through"). Hyphenated
   names keep the hyphen in both forms ("Shear-jelly", "a shear-jelly drifts").
-- The player vessel stays unnamed. Characters say the rig, claim rig, vessel, cutter platform, or
-  foundry.
+- The player vessel stays unnamed. Characters say the vessel, KITE, or ship. Claim rig names its
+  working class when that distinction matters.
 - Established setting terms (Deep Shear, Ratter, Bloom, ringglass, KITE, Coremark, Displacement
   Council, Near Voice) follow the lore bible's canon boundary and capitalization.
 - Room codes (R-02, CL-04), species formulas (Cl₂, NaOCl), and units appear verbatim in any

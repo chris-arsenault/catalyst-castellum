@@ -19,7 +19,7 @@ describe("Kettleblack persistent-hull guidance", () => {
 
     game = command(game, {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 102, elevation: 8 },
       mountFace: "left_wall",
       orientation: "right",
@@ -32,7 +32,7 @@ describe("Kettleblack persistent-hull guidance", () => {
     game = command(game, {
       type: "upgrade_tower",
       towerId: "tower:kettleblack:1",
-      upgradeId: "bolt_calibration",
+      upgradeId: "flash_calibration",
     });
     expect(guidedPhaseActionReason(game, "start_assault", [])).toBeNull();
   });

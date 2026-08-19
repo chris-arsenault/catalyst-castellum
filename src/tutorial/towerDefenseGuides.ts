@@ -73,7 +73,7 @@ const claimGuide: GuideDefinition = {
       completed: (game, ui) => ui.towerBuildChassisId !== null || towers(game).length > 0,
     },
     {
-      id: "select-caster",
+      id: "select-flash-chamber",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.towerPalette,
@@ -82,11 +82,11 @@ const claimGuide: GuideDefinition = {
       instruction: "tutorial.tower.claim.step.select.instruction",
       result: "tutorial.tower.claim.step.select.result",
       completed: (game, ui) =>
-        ui.towerBuildChassisId === "bolt_caster" ||
-        towers(game).some((tower) => tower.chassisId === "bolt_caster"),
+        ui.towerBuildChassisId === "flash_chamber" ||
+        towers(game).some((tower) => tower.chassisId === "flash_chamber"),
     },
     {
-      id: "mount-caster",
+      id: "mount-flash-chamber",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.gameMap,
@@ -130,7 +130,7 @@ const claimGuide: GuideDefinition = {
       completed: towerDamageRecorded,
     },
     {
-      id: "upgrade-caster",
+      id: "upgrade-flash-chamber",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.towerInspector,
@@ -143,14 +143,14 @@ const claimGuide: GuideDefinition = {
   ],
 };
 
-const projectors = (game: GameState) =>
-  towers(game).filter((tower) => tower.chassisId === "line_projector");
-const wallProjectorPlaced = (game: GameState): boolean =>
-  projectors(game).some((tower) => tower.placement.mountFace !== "ceiling");
-const ceilingProjectorPlaced = (game: GameState): boolean =>
-  projectors(game).some((tower) => tower.placement.mountFace === "ceiling");
+const carbonBurners = (game: GameState) =>
+  towers(game).filter((tower) => tower.chassisId === "carbon_burner");
+const wallBurnerPlaced = (game: GameState): boolean =>
+  carbonBurners(game).some((tower) => tower.placement.mountFace !== "ceiling");
+const ceilingBurnerPlaced = (game: GameState): boolean =>
+  carbonBurners(game).some((tower) => tower.placement.mountFace === "ceiling");
 const routePrioritySet = (game: GameState): boolean =>
-  projectors(game).some((tower) => tower.targetPolicy === "last");
+  carbonBurners(game).some((tower) => tower.targetPolicy === "last");
 
 const harkerGuide: GuideDefinition = {
   id: "harkers_brace:vertical_coverage:v1",
@@ -173,14 +173,14 @@ const harkerGuide: GuideDefinition = {
     summary: "tutorial.tower.harker.mission.summary",
     tasks: [
       {
-        id: "wall-projector",
+        id: "wall-burner",
         label: "tutorial.tower.harker.task.wall",
-        completed: wallProjectorPlaced,
+        completed: wallBurnerPlaced,
       },
       {
-        id: "ceiling-projector",
+        id: "ceiling-burner",
         label: "tutorial.tower.harker.task.ceiling",
-        completed: ceilingProjectorPlaced,
+        completed: ceilingBurnerPlaced,
       },
       {
         id: "route-priority",
@@ -196,7 +196,7 @@ const harkerGuide: GuideDefinition = {
   },
   steps: [
     {
-      id: "select-projector",
+      id: "select-carbon-burner",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.towerPalette,
@@ -205,10 +205,10 @@ const harkerGuide: GuideDefinition = {
       instruction: "tutorial.tower.harker.step.select.instruction",
       result: "tutorial.tower.harker.step.select.result",
       completed: (game, ui) =>
-        ui.towerBuildChassisId === "line_projector" || projectors(game).length > 0,
+        ui.towerBuildChassisId === "carbon_burner" || carbonBurners(game).length > 0,
     },
     {
-      id: "mount-wall-projector",
+      id: "mount-wall-burner",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.gameMap,
@@ -216,10 +216,10 @@ const harkerGuide: GuideDefinition = {
       explanation: "tutorial.tower.harker.step.wall.explanation",
       instruction: "tutorial.tower.harker.step.wall.instruction",
       result: "tutorial.tower.harker.step.wall.result",
-      completed: wallProjectorPlaced,
+      completed: wallBurnerPlaced,
     },
     {
-      id: "mount-ceiling-projector",
+      id: "mount-ceiling-burner",
       kind: "action",
       roomId: "switchyard",
       target: TUTORIAL_ANCHORS.towerPlacement,
@@ -227,7 +227,7 @@ const harkerGuide: GuideDefinition = {
       explanation: "tutorial.tower.harker.step.ceiling.explanation",
       instruction: "tutorial.tower.harker.step.ceiling.instruction",
       result: "tutorial.tower.harker.step.ceiling.result",
-      completed: ceilingProjectorPlaced,
+      completed: ceilingBurnerPlaced,
     },
     {
       id: "set-route-priority",
@@ -265,11 +265,133 @@ const harkerGuide: GuideDefinition = {
   ],
 };
 
+const acidPotPlaced = (game: GameState): boolean =>
+  towers(game).some((tower) => tower.chassisId === "acid_pot");
+const causticJetPlaced = (game: GameState): boolean =>
+  towers(game).some((tower) => tower.chassisId === "caustic_jet");
+const neutralizationRecorded = (game: GameState): boolean =>
+  game.stats.damageBySource.tower_neutralization > 0;
+
+const twelveCaskGuide: GuideDefinition = {
+  id: "twelve_cask:neutralization:v1",
+  dismissalId: "twelve_cask:reaction_guidance:v1",
+  label: "tutorial.tower.twelve.label",
+  showStageIntro: true,
+  gatesPhaseActions: false,
+  completion: {
+    title: "tutorial.tower.twelve.completion.title",
+    explanation: "tutorial.tower.twelve.completion.explanation",
+    instruction: "tutorial.tower.twelve.completion.instruction",
+  },
+  story: {
+    kicker: "tutorial.tower.twelve.story.kicker",
+    title: "tutorial.tower.twelve.story.title",
+    paragraphs: ["tutorial.tower.twelve.story.paragraph.0"],
+  },
+  mission: {
+    title: "tutorial.tower.twelve.mission.title",
+    summary: "tutorial.tower.twelve.mission.summary",
+    tasks: [
+      {
+        id: "mount-acid-pot",
+        label: "tutorial.tower.twelve.task.acid",
+        completed: acidPotPlaced,
+      },
+      {
+        id: "mount-caustic-jet",
+        label: "tutorial.tower.twelve.task.caustic",
+        completed: causticJetPlaced,
+      },
+      {
+        id: "record-neutralization",
+        label: "tutorial.tower.twelve.task.reaction",
+        completed: neutralizationRecorded,
+      },
+      {
+        id: "hold-wave",
+        label: "tutorial.tower.twelve.task.hold",
+        completed: roundResolved,
+      },
+    ],
+  },
+  steps: [
+    {
+      id: "select-acid-pot",
+      kind: "action",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.towerPalette,
+      title: "tutorial.tower.twelve.step.acidSelect.title",
+      explanation: "tutorial.tower.twelve.step.acidSelect.explanation",
+      instruction: "tutorial.tower.twelve.step.acidSelect.instruction",
+      result: "tutorial.tower.twelve.step.acidSelect.result",
+      completed: (game, ui) => ui.towerBuildChassisId === "acid_pot" || acidPotPlaced(game),
+    },
+    {
+      id: "mount-acid-pot",
+      kind: "action",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.gameMap,
+      title: "tutorial.tower.twelve.step.acidMount.title",
+      explanation: "tutorial.tower.twelve.step.acidMount.explanation",
+      instruction: "tutorial.tower.twelve.step.acidMount.instruction",
+      result: "tutorial.tower.twelve.step.acidMount.result",
+      completed: acidPotPlaced,
+    },
+    {
+      id: "select-caustic-jet",
+      kind: "action",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.towerPalette,
+      title: "tutorial.tower.twelve.step.causticSelect.title",
+      explanation: "tutorial.tower.twelve.step.causticSelect.explanation",
+      instruction: "tutorial.tower.twelve.step.causticSelect.instruction",
+      result: "tutorial.tower.twelve.step.causticSelect.result",
+      completed: (game, ui) => ui.towerBuildChassisId === "caustic_jet" || causticJetPlaced(game),
+    },
+    {
+      id: "mount-caustic-jet",
+      kind: "action",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.gameMap,
+      title: "tutorial.tower.twelve.step.causticMount.title",
+      explanation: "tutorial.tower.twelve.step.causticMount.explanation",
+      instruction: "tutorial.tower.twelve.step.causticMount.instruction",
+      result: "tutorial.tower.twelve.step.causticMount.result",
+      completed: causticJetPlaced,
+    },
+    {
+      id: "start-reaction-assault",
+      kind: "action",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.startAssault,
+      title: "tutorial.tower.twelve.step.assault.title",
+      explanation: "tutorial.tower.twelve.step.assault.explanation",
+      instruction: "tutorial.tower.twelve.step.assault.instruction",
+      result: "tutorial.tower.twelve.step.assault.result",
+      completed: (game) => game.phase !== "build",
+    },
+    {
+      id: "observe-neutralization",
+      kind: "observe",
+      roomId: "switchyard",
+      target: TUTORIAL_ANCHORS.gameMap,
+      title: "tutorial.tower.twelve.step.reaction.title",
+      explanation: "tutorial.tower.twelve.step.reaction.explanation",
+      instruction: "tutorial.tower.twelve.step.reaction.instruction",
+      result: "tutorial.tower.twelve.step.reaction.result",
+      completed: neutralizationRecorded,
+    },
+  ],
+};
+
 export const claimDefenseGuideFor = (game: GameState): GuideDefinition | null =>
   game.campaign.roundIndex === 0 ? claimGuide : null;
 
 export const harkerDefenseGuideFor = (game: GameState): GuideDefinition | null =>
   game.campaign.roundIndex === 0 ? harkerGuide : null;
+
+export const twelveCaskDefenseGuideFor = (game: GameState): GuideDefinition | null =>
+  game.campaign.roundIndex === 0 ? twelveCaskGuide : null;
 
 export const towerDefensePhaseActionReason = (
   game: GameState,
@@ -279,7 +401,7 @@ export const towerDefensePhaseActionReason = (
     return "tutorial.tower.reason.wall";
   if (
     game.campaign.levelId === "harkers_brace" &&
-    (!wallProjectorPlaced(game) || !ceilingProjectorPlaced(game))
+    (!wallBurnerPlaced(game) || !ceilingBurnerPlaced(game))
   )
     return "tutorial.tower.reason.vertical";
   return null;

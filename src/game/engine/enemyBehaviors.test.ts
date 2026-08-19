@@ -62,7 +62,7 @@ const stateFor = (enemies: EnemyState[]): GameState => {
 
 const towerPacket = (pressure: number): DamagePacket => ({
   key: "tower:test",
-  sourceId: "tower_mortar",
+  sourceId: "tower_acid",
   channels: { ...emptyHazardChannels(), pressure },
 });
 
@@ -84,7 +84,7 @@ describe("enemy behavior mechanics", () => {
     expect(first.damageTaken).toBe(0);
     expect(second.damageTaken).toBeGreaterThan(0);
     expect(state.stats.fieldDamageAbsorbed).toBeCloseTo(170, 8);
-    expect(state.stats.fieldDamageAbsorbedBySource.tower_mortar).toBeCloseTo(170, 8);
+    expect(state.stats.fieldDamageAbsorbedBySource.tower_acid).toBeCloseTo(170, 8);
     expect(anchor.behavior).toMatchObject({ kind: "shared_field", charge: 0, active: false });
   });
 

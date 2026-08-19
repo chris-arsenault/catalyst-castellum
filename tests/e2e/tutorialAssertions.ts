@@ -8,10 +8,10 @@ export const installEquipment = async (
   equipmentId: EquipmentId
 ): Promise<void> => {
   await page.getByTestId(`open-equipment-build-${roomId}-${socketId}`).click();
-  await expect(page.getByTestId("facility-manual")).toBeVisible();
+  await expect(page.getByTestId("vessel-manual")).toBeVisible();
   await page.getByTestId(`manual-equipment-choice-${equipmentId}`).click();
   await page.getByTestId(`install-${roomId}-${socketId}-${equipmentId}`).click();
-  await expect(page.getByTestId("facility-manual")).toHaveCount(0);
+  await expect(page.getByTestId("vessel-manual")).toHaveCount(0);
 };
 
 /** A new campaign opens in the captain's log before entering its first claim. */

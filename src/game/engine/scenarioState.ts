@@ -322,7 +322,7 @@ export const createScenarioGame = (
     retryCount: 0,
   };
   const state: GameState = {
-    version: 27,
+    version: 28,
     pack: { id: definition.packId, contentVersion: definition.contentVersion },
     phase: "level_briefing",
     campaign: {

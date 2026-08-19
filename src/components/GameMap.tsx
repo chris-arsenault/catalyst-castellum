@@ -1,8 +1,8 @@
 /* eslint-disable max-lines-per-function -- The map surface binds camera, hover, construction, and Pixi interaction state. */
 import { architecturalConnections } from "../game/world/map";
-import { useCallback, useEffect, useState, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type PointerEvent } from "react";
 import type { CameraTransform } from "./gameMap/mapGeometry";
-import type { GameState, RoomId, SpeciesId } from "../game/types";
+import type { GameState, RoomId, SpeciesId, WorldPoint } from "../game/types";
 import { cellOutletAssemblyModel } from "./gameMap/cellOutletRenderModel";
 import { MapChrome } from "./gameMap/MapChrome";
 import { MapScene } from "./gameMap/MapScene";
@@ -25,7 +25,12 @@ interface GameMapProps {
   pipeMode: boolean;
 }
 
-const mapTelemetry = (game: GameState, camera: CameraTransform, pipeMode: boolean) => ({
+const mapTelemetry = (
+  game: GameState,
+  camera: CameraTransform,
+  pipeMode: boolean,
+  towerPreview: TowerPlacementPreview | null
+) => ({
   "data-world-model": "cell-platform-v1",
   "data-grid": `${game.map.width}x${game.map.height}`,
   "data-portal-count": architecturalConnections(game.map).length,
@@ -34,6 +39,9 @@ const mapTelemetry = (game: GameState, camera: CameraTransform, pipeMode: boolea
   "data-camera-y": camera.y,
   "data-camera-zoom": camera.zoom,
   "data-pipe-mode": pipeMode,
+  "data-tower-preview-face": towerPreview?.mountFace ?? "",
+  "data-tower-preview-orientation": towerPreview?.orientation ?? "",
+  "data-tower-preview-allowed": towerPreview?.allowed ?? false,
   "data-installed-equipment-count": Object.values(game.rooms).reduce(
     (total, room) => total + Object.values(room.equipment).filter(Boolean).length,
     0
@@ -60,7 +68,7 @@ export const GameMap = ({
   const selectTower = useGameStore((state) => state.selectTower);
   const dispatch = useGameStore((state) => state.dispatch);
   const movingTowerId = useGameStore((state) => state.movingTowerId);
-  const [towerPreview, setTowerPreview] = useState<TowerPlacementPreview | null>(null);
+  const [towerPointer, setTowerPointer] = useState<WorldPoint | null>(null);
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
   const onHoverRun = usePipeRoomEffectHover(game, hover.onHoverRun);
@@ -76,12 +84,25 @@ export const GameMap = ({
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
   const towerMode = towerBuildSelection !== null;
+  const towerPreview = useMemo(
+    () =>
+      towerBuildSelection && towerPointer
+        ? towerPlanning.planPlacement(
+            game,
+            towerPointer,
+            towerBuildSelection.chassisId,
+            towerBuildSelection.orientation,
+            movingTowerId
+          )
+        : null,
+    [game, movingTowerId, towerBuildSelection, towerPlanning, towerPointer]
+  );
   useEffect(() => {
     if (!towerBuildSelection) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setTowerBuildSelection(null);
-        setTowerPreview(null);
+        setTowerPointer(null);
         return;
       }
       if (event.key.toLowerCase() !== "r") return;
@@ -107,16 +128,7 @@ export const GameMap = ({
         camera.camera,
         { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height }
       );
-      setTowerPreview(
-        towerPlanning.planPlacement(
-          game,
-          worldPoint,
-          towerBuildSelection.chassisId,
-          towerBuildSelection.mountFace,
-          towerBuildSelection.orientation,
-          movingTowerId
-        )
-      );
+      setTowerPointer(worldPoint);
     },
     clearPipeDrag
   );
@@ -127,21 +139,21 @@ export const GameMap = ({
       ? dispatch({
           type: "move_tower",
           towerId: movingTowerId,
-          mountFace: towerBuildSelection.mountFace,
-          orientation: towerBuildSelection.orientation,
+          mountFace: towerPreview.mountFace,
+          orientation: towerPreview.orientation,
           anchor: towerPreview.anchor,
         })
       : dispatch({
           type: "place_tower",
           chassisId: towerBuildSelection.chassisId,
-          mountFace: towerBuildSelection.mountFace,
-          orientation: towerBuildSelection.orientation,
+          mountFace: towerPreview.mountFace,
+          orientation: towerPreview.orientation,
           anchor: towerPreview.anchor,
         });
     if (accepted) {
       const placedId = Object.keys(useGameStore.getState().game.towers).at(-1) ?? null;
       selectTower(movingTowerId ?? placedId);
-      setTowerPreview(null);
+      setTowerPointer(null);
     }
   }, [dispatch, movingTowerId, selectTower, towerBuildSelection, towerPreview]);
 
@@ -154,7 +166,7 @@ export const GameMap = ({
       role="button"
       tabIndex={0}
       aria-label={translator.text("ui.map.interactionSurface")}
-      {...mapTelemetry(game, camera.camera, pipeMode)}
+      {...mapTelemetry(game, camera.camera, pipeMode, towerPreview)}
       {...mapInteractions}
       onClick={placeTower}
       onKeyDown={(event) => {
@@ -163,7 +175,6 @@ export const GameMap = ({
         placeTower();
       }}
       onPointerLeave={(event: PointerEvent<HTMLDivElement>) => {
-        if (towerMode) setTowerPreview(null);
         mapInteractions.onPointerCancel?.(event);
       }}
     >

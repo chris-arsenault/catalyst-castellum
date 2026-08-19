@@ -5,9 +5,9 @@ import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import type { TowerInstance } from "../game/types";
 import {
   chassisKey,
+  chassisProcessKey,
   defaultPlacement,
   idleKey,
-  mountKey,
   orientationKey,
   packetDamage,
   policyKey,
@@ -15,6 +15,7 @@ import {
   towerColorClass,
   upgradeKey,
 } from "../presentation/towerCopy";
+import { TowerAimControls } from "./towerPanel/TowerAimControls";
 
 const BuildPalette = () => {
   const { translator } = useGamePresentation();
@@ -39,6 +40,9 @@ const BuildPalette = () => {
               <span className={`tower-color ${towerColorClass(chassisId)}`} />
               <strong>{translator.text(chassisKey(chassisId))}</strong>
               <small>{translator.text(roleKey(tower.role))}</small>
+              <small className="tower-process">
+                {translator.text(chassisProcessKey(chassisId))}
+              </small>
               <b>{translator.text("tower.panel.buildAction", { cost: tower.buildCost })}</b>
             </button>
           );
@@ -70,18 +74,6 @@ const PlacementControls = () => {
         </button>
       </div>
       <p>{translator.text("tower.panel.placementHint")}</p>
-      <div className="tower-option-row">
-        {tower.mountFaces.map((mountFace) => (
-          <button
-            key={mountFace}
-            type="button"
-            className={selection.mountFace === mountFace ? "selected" : ""}
-            onClick={() => setSelection({ ...selection, mountFace })}
-          >
-            {translator.text(mountKey(mountFace))}
-          </button>
-        ))}
-      </div>
       <div className="tower-option-row">
         {tower.orientations.map((orientation) => (
           <button
@@ -324,6 +316,9 @@ const SelectedTower = () => {
         <div>
           <span>{translator.text("tower.panel.selected")}</span>
           <h3>{translator.text(chassisKey(tower.chassisId))}</h3>
+          <p className="tower-process-detail">
+            {translator.text(chassisProcessKey(tower.chassisId))}
+          </p>
         </div>
         <button
           type="button"
@@ -334,6 +329,7 @@ const SelectedTower = () => {
         </button>
       </div>
       <TowerSummary tower={tower} />
+      <TowerAimControls tower={tower} />
       <TowerTargetingControls tower={tower} />
       <TowerUpgradeControls tower={tower} />
       <TowerTelemetry tower={tower} />

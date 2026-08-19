@@ -9,6 +9,7 @@ import type {
   TowerPlacement,
 } from "../types";
 import { facilityModelForMap } from "../world/derivedModel";
+import { architecturalConnections, portalOpeningCells } from "../world/map";
 
 const cellKey = ({ column, elevation }: GridCell): string => `${column}:${elevation}`;
 
@@ -123,9 +124,11 @@ const placementClearanceCells = (state: GameState): Set<string> =>
       ...room.ladderCells.map((cell) => cellKey(cell)),
       ...room.graftSlots.map((graftSlot) => cellKey(graftSlot.cell)),
     ]),
-    ...Object.values(state.map.connections).flatMap((connection) =>
-      "connectorCells" in connection ? connection.connectorCells.map((cell) => cellKey(cell)) : []
-    ),
+    ...architecturalConnections(state.map).flatMap((portal) => [
+      ...portal.connectorCells.map((cell) => cellKey(cell)),
+      ...portalOpeningCells(state.map, portal, 0).map((cell) => cellKey(cell)),
+      ...portalOpeningCells(state.map, portal, 1).map((cell) => cellKey(cell)),
+    ]),
   ]);
 
 const placementBlocksRoute = (state: GameState, placement: TowerPlacement): boolean => {

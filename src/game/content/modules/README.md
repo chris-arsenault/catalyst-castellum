@@ -1,6 +1,6 @@
 # src/game/content/modules
 
-Authored room-graft templates for the persistent rig hull. A template defines footprint geometry,
+Authored room-graft templates for the persistent vessel hull. A template defines footprint geometry,
 the hull graft slots it can attach to, route and utility connections, tower-placement surfaces, any
 specific internal equipment positions, and Matter cost.
 

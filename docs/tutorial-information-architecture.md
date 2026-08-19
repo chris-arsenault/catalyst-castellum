@@ -55,13 +55,13 @@ current lesson can be replayed from the manual.
 
 ## Claim 8-Delta sequence
 
-The first wave teaches one complete tower-defense relationship while the rig starts with an exposed
-approach.
+The first wave teaches one complete tower-defense relationship while the vessel starts with an
+exposed approach.
 
 | Beat                   | Target                         | Completion evidence                                      |
 | ---------------------- | ------------------------------ | -------------------------------------------------------- |
 | Inspect the approach   | Route forecast                 | The first deckmouth path is displayed                    |
-| Select a tower         | Initial tower catalog entry    | Placement mode is active                                 |
+| Select a Flash Chamber | Initial tower catalog entry    | Placement mode is active                                 |
 | Place on the wall      | Compatible wall surface region | A legal tower covers the marked route segment            |
 | Inspect coverage       | Placed tower                   | Range and firing arc are visible                         |
 | Start the assault      | Assault control                | The phase enters assault                                 |
@@ -71,6 +71,20 @@ approach.
 
 The second wave removes click-by-click guidance and asks the player to reuse the same coverage. The
 later waves add cadence and target variation while keeping the taught tower useful.
+
+## Harker's Brace sequence
+
+The opening wave compares one Carbon Burner on a wall with one on a ceiling. The guide shows how the
+same combustion apparatus produces a long corridor field or a shorter downward fan, then teaches
+Last priority through remaining route distance.
+
+## Twelve-Cask sequence
+
+The opening wave demonstrates one optional chemical interaction. The guide asks the player to
+overlap an Acid Pot and Caustic Jet, then points to the separately attributed neutralization heat
+burst. The guide does not gate assault start. Acid Pot, Caustic Jet, Flash Chamber, Carbon Burner,
+and Quench Coil remain independently useful, and later waves test area coverage and route control
+without requiring the reaction pair.
 
 ## Copy limits
 

@@ -34,7 +34,7 @@ locale catalog -> translator -> presentation services ----------------> React/Pi
 
 ## World and campaign model
 
-The simulation consumes one `WorldMap`. It contains the rig hull, grafted rooms, site terrain,
+The simulation consumes one `WorldMap`. It contains the vessel hull, grafted rooms, site terrain,
 architectural connections, enemy route graphs, valid tower surfaces, and routed gas or liquid
 connections in one coordinate system. Geometry drives rendering, placement, line of sight, attack
 range, enemy movement, room volume, conduit length, and environmental exposure.
@@ -44,7 +44,7 @@ split, merge, climb, descend, and pass through rooms. Deterministic path selecti
 edges and movement costs. Remaining route distance gives towers stable first, last, and nearest-to-
 Core targeting without coupling combat to presentation coordinates.
 
-One save follows one fixed campaign and one persistent claim rig. Hull rooms, grafts, hull-mounted
+One save follows one fixed campaign and one persistent vessel. Hull rooms, grafts, hull-mounted
 towers, upgrades, Matter, Core state, and narrative progress travel between sites. Site terrain and
 temporary site placements belong to the current operation. Failed operations restore the same
 campaign state from the pre-assault checkpoint. See
@@ -52,7 +52,7 @@ campaign state from the pre-assault checkpoint. See
 
 ## Construction
 
-Ordinary towers use free surface placement. A placement command identifies a grid anchor, floor,
+Direct tower chassis use free surface placement. A placement command identifies a grid anchor, floor,
 wall, or ceiling face, footprint, and orientation. The same evaluator checks ownership, Matter,
 clearance, support, route obstruction, range, and line of sight before the command becomes
 available. Preview, execution, save validation, and rendering consume the same resolved placement.

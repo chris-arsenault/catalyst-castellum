@@ -18,7 +18,7 @@ describe("equipment map projection", () => {
       medium: null,
     };
     const socket = instance(FACILITY_MAP.rooms, "furnace", "map room").socketCells.socket_b;
-    if (!socket) throw new Error("R-02 socket B is absent from the facility map.");
+    if (!socket) throw new Error("R-02 socket B is absent from the vessel map.");
     const rect = mapViewFor(WORLD_MAP).gridCellMapRect(socket);
 
     const marker = equipmentRenderModels(game).find(

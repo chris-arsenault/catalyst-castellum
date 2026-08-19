@@ -25,7 +25,7 @@ const persistedEnemy = (game: GameState): EnemyState => {
     damageTaken: 53,
     damageBySource: emptyDamageLedger(),
     lastDamage: {
-      sourceId: "tower_projector",
+      sourceId: "tower_burner",
       channels: { ...emptyHazardChannels(), heat: 53 },
       amount: 53,
       elapsed: 11,
@@ -62,7 +62,7 @@ describe("current persistence", () => {
     game.rooms.furnace!.stationary.surface_nickel = 2.5;
     game.enemies.push(persistedEnemy(game));
     game.nextEnemyId = 10;
-    game.enemies[0]!.damageBySource.tower_projector.heat = 53;
+    game.enemies[0]!.damageBySource.tower_burner.heat = 53;
     game.incidents.push({
       id: 3,
       elapsed: 11,
@@ -83,9 +83,9 @@ describe("current persistence", () => {
     const decoded = decodeGame(encodeGame(game));
     expect(decoded).not.toBeNull();
     if (!decoded) throw new Error("Expected the current save to decode.");
-    expect(decoded.version).toBe(27);
+    expect(decoded.version).toBe(28);
     expect(decoded.map.routeGraph).toEqual(game.map.routeGraph);
-    expect(decoded.enemies[0]?.damageBySource.tower_projector.heat).toBe(53);
+    expect(decoded.enemies[0]?.damageBySource.tower_burner.heat).toBe(53);
     expect(decoded.enemies[0]?.path).toEqual(game.enemies[0]?.path);
     expect(decoded.enemies[0]).toMatchObject({
       level: 20,

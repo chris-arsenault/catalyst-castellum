@@ -1,6 +1,7 @@
 import type { FacilityPortalState, GridCell, RoomId } from "../../game/types";
 import {
   architecturalConnections,
+  portalOpeningCells,
   type ArchitecturalConnection,
   type MapRoom,
   type WorldMap,
@@ -161,29 +162,17 @@ const portalFrame = (
 };
 
 const consumePortalSlots = (
+  map: WorldMap,
   consumed: Set<string>,
   portal: ArchitecturalConnection,
-  boundary: PortalBoundary
+  boundary: PortalBoundary,
+  roomIndex: 0 | 1
 ): void => {
   if (boundary.room.structure === "core") return;
-  if (boundary.side === "left" || boundary.side === "right") {
-    for (let offset = 0; offset < 3; offset += 1) {
-      const elevation = boundary.endpoint.elevation + offset;
-      if (
-        elevation >= boundary.room.bounds.elevation &&
-        elevation < boundary.room.bounds.elevation + boundary.room.bounds.height
-      )
-        consumed.add(boundarySlotKey(boundary.roomId, boundary.side, elevation));
-    }
-    return;
-  }
-  for (let offset = -1; offset <= 1; offset += 1) {
-    const column = boundary.endpoint.column + offset;
-    if (
-      column >= boundary.room.bounds.column &&
-      column < boundary.room.bounds.column + boundary.room.bounds.width
-    )
-      consumed.add(boundarySlotKey(boundary.roomId, boundary.side, column));
+  for (const cell of portalOpeningCells(map, portal, roomIndex)) {
+    const slot =
+      boundary.side === "left" || boundary.side === "right" ? cell.elevation : cell.column;
+    consumed.add(boundarySlotKey(boundary.roomId, boundary.side, slot));
   }
 };
 
@@ -257,7 +246,7 @@ export const roomSectionAssembly = (map: WorldMap): RoomSectionAssembly => {
   for (const portal of architecturalConnections(map)) {
     for (const roomIndex of [0, 1] as const) {
       const boundary = portalBoundary(map, portal, roomIndex);
-      consumePortalSlots(consumed, portal, boundary);
+      consumePortalSlots(map, consumed, portal, boundary, roomIndex);
       const frame = portalFrame(map, portal, boundary);
       if (frame) frames.push(frame);
     }

@@ -237,7 +237,7 @@ export const NARRATIVE_SITES: readonly NarrativeSiteDefinition[] = [
     ),
     debriefDialogue: lines(
       ["closure_mass", "vela_norr"],
-      ["voice_tracks_foundry", "tkesh"],
+      ["voice_tracks_process", "tkesh"],
       ["lane_six_warning", "kethra"]
     ),
   },
@@ -270,7 +270,7 @@ export const NARRATIVE_SITES: readonly NarrativeSiteDefinition[] = [
       ["council_mission", "dern_talish"],
       ["cordon_ready", "kethra"],
       ["voice_inside_route", "soft_wake"],
-      ["foundry_has_pattern", "tkesh"]
+      ["process_has_pattern", "tkesh"]
     ),
     debriefDialogue: lines(
       ["boundary_holds", "dern_talish"],

@@ -207,19 +207,19 @@ export const MANUAL_MESSAGES = {
   "manual.enemies.deckmouth.classification": "Small Cthonic wreck-feeder",
   "manual.enemies.deckmouth.habitat": "Pressurized wrecks and freshly opened claims",
   "manual.enemies.deckmouth.blurb":
-    "Deckmouths arrive first when a cutter opens an old pressure pocket. They nose through warm scrap, breathing whatever air the wreck has kept, and follow the cutter’s return tone all the way back to the rig. Ratters use them as an early warning: one deckmouth means the claim has started answering.",
+    "Deckmouths arrive first when a cutter opens an old pressure pocket. They nose through warm scrap, breathing whatever air the wreck has kept, and follow the cutter’s return tone all the way back to the vessel. Ratters use them as an early warning: one deckmouth means the claim has started answering.",
   "manual.enemies.deckmouth.fieldNote":
     "Seal the cutter after the first mouth, or spend the shift clearing twenty. — Mavo",
   "manual.enemies.flintjack.classification": "Cut-wake pursuit scavenger",
   "manual.enemies.flintjack.habitat": "Live decks, power runs, and active seams",
   "manual.enemies.flintjack.blurb":
-    "Flintjacks hunt current and sprint along decks with mouths opening in sequence down one flank. Their name comes from the pale sparks around their feet when they cross a live seam. The remote cutter gives them a bright trail from claim to foundry, so a slow-tracking tower gives them room to run.",
+    "Flintjacks hunt current and sprint along decks with mouths opening in sequence down one flank. Their name comes from the pale sparks around their feet when they cross a live seam. The remote cutter gives them a bright trail from claim to vessel, so a slow-tracking tower gives them room to run.",
   "manual.enemies.flintjack.fieldNote":
     "Once a flintjack chooses a live tone, it runs straight at it. Put the trap in front. — T’kesh",
   "manual.enemies.shear_jelly.classification": "Small Shear-jelly",
   "manual.enemies.shear_jelly.habitat": "Open wreck bays and upper gas layers",
   "manual.enemies.shear_jelly.blurb":
-    "Shear-jellies drift through broken volumes on gas-filled bells, keeping their stinging filaments above pooled liquid. Their internal eyes turn toward pressure changes before their bodies move. A foundry intake feels like a current to them, and they ride its upper air toward the Core.",
+    "Shear-jellies drift through broken volumes on gas-filled bells, keeping their stinging filaments above pooled liquid. Their internal eyes turn toward pressure changes before their bodies move. A vessel intake feels like a current to them, and they ride its upper air toward the Core.",
   "manual.enemies.shear_jelly.fieldNote":
     "Track the bell; the hanging threads follow it. The bell turns first. — Long Rake safety circular",
   "manual.enemies.splitback.classification": "Shellback-form Cthonic grazer",
@@ -249,7 +249,7 @@ export const MANUAL_MESSAGES = {
   "manual.enemies.glowbag.classification": "Buoyant Cthonic gas-feeder",
   "manual.enemies.glowbag.habitat": "Airless cavities and upper wreck volumes",
   "manual.enemies.glowbag.blurb":
-    "Glowbags float on a pale hydrogen crop wrapped around a knot of mouths and internal eyes. They vent as they travel, leaving combustible gas in the upper air. Around the foundry, that hydrogen can feed a flash or consume a chlorine front.",
+    "Glowbags float on a pale hydrogen crop wrapped around a knot of mouths and internal eyes. They vent as they travel, leaving combustible gas in the upper air. Around the ship, that hydrogen can feed a flash or consume a chlorine front.",
   "manual.enemies.glowbag.fieldNote":
     "A glowbag carries part of your next reaction. Decide which one before it reaches the room. — T’kesh",
   "manual.mechanics.electrolysis.rate": "Live rate follows the installed Membrane Cell grade.",

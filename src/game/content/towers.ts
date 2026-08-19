@@ -39,8 +39,8 @@ const packet = (sourceId: DamageSourceId, values: Partial<HazardChannels>) => ({
 });
 
 export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
-  bolt_caster: {
-    id: "bolt_caster",
+  flash_chamber: {
+    id: "flash_chamber",
     role: "single_target",
     buildCost: 18,
     recoveryRatio: 0.75,
@@ -59,13 +59,13 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "hitscan",
       projectileSpeed: 0,
       radius: 0,
-      packets: [packet("tower_bolt", { pressure: 24 })],
+      packets: [packet("tower_flash", { pressure: 24 })],
       controlEffects: [],
     },
     upgrades: [
-      upgrade("bolt_calibration", 9, { damageMultiplier: 1.45 }),
-      upgrade("bolt_piercing", 12, {
-        requires: ["bolt_calibration"],
+      upgrade("flash_calibration", 9, { damageMultiplier: 1.45 }),
+      upgrade("flash_breach", 12, {
+        requires: ["flash_calibration"],
         damageMultiplier: 1.25,
         rangeDelta: 2,
       }),
@@ -73,8 +73,8 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     supply: null,
     color: "#f0c96a",
   },
-  repeater: {
-    id: "repeater",
+  caustic_jet: {
+    id: "caustic_jet",
     role: "rapid_service",
     buildCost: 16,
     recoveryRatio: 0.7,
@@ -93,13 +93,22 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "projectile",
       projectileSpeed: 18,
       radius: 0,
-      packets: [packet("tower_repeater", { pressure: 10 })],
-      controlEffects: [],
+      packets: [packet("tower_caustic", { corrosion: 10 })],
+      controlEffects: [
+        {
+          kind: "caustic",
+          magnitude: 1,
+          duration: 4,
+          stacking: "strongest",
+          refresh: "replace",
+          floor: 0,
+        },
+      ],
     },
     upgrades: [
-      upgrade("repeater_feed", 8, { cadenceMultiplier: 1.45 }),
-      upgrade("repeater_tracking", 11, {
-        requires: ["repeater_feed"],
+      upgrade("caustic_manifold", 8, { cadenceMultiplier: 1.45 }),
+      upgrade("caustic_split", 11, {
+        requires: ["caustic_manifold"],
         targetCapDelta: 1,
         rangeDelta: 1,
       }),
@@ -107,8 +116,8 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     supply: null,
     color: "#e88a52",
   },
-  line_projector: {
-    id: "line_projector",
+  carbon_burner: {
+    id: "carbon_burner",
     role: "area",
     buildCost: 25,
     recoveryRatio: 0.7,
@@ -127,13 +136,13 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "cone",
       projectileSpeed: 0,
       radius: 2.4,
-      packets: [packet("tower_projector", { heat: 22 })],
+      packets: [packet("tower_burner", { heat: 22 })],
       controlEffects: [],
     },
     upgrades: [
-      upgrade("projector_focus", 13, { damageMultiplier: 1.4, rangeDelta: 1.5 }),
-      upgrade("projector_fan", 14, {
-        requires: ["projector_focus"],
+      upgrade("burner_focus", 13, { damageMultiplier: 1.4, rangeDelta: 1.5 }),
+      upgrade("burner_fan", 14, {
+        requires: ["burner_focus"],
         targetCapDelta: 2,
         arcDelta: 24,
       }),
@@ -147,8 +156,8 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     },
     color: "#ff6b48",
   },
-  mortar: {
-    id: "mortar",
+  acid_pot: {
+    id: "acid_pot",
     role: "area",
     buildCost: 30,
     recoveryRatio: 0.7,
@@ -167,13 +176,22 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "lob",
       projectileSpeed: 9,
       radius: 2.2,
-      packets: [packet("tower_mortar", { pressure: 34, heat: 8 })],
-      controlEffects: [],
+      packets: [packet("tower_acid", { corrosion: 34, pressure: 8 })],
+      controlEffects: [
+        {
+          kind: "acid",
+          magnitude: 1,
+          duration: 6,
+          stacking: "strongest",
+          refresh: "replace",
+          floor: 0,
+        },
+      ],
     },
     upgrades: [
-      upgrade("mortar_payload", 15, { damageMultiplier: 1.5 }),
-      upgrade("mortar_radius", 16, {
-        requires: ["mortar_payload"],
+      upgrade("acid_charge", 15, { damageMultiplier: 1.5 }),
+      upgrade("acid_spread", 16, {
+        requires: ["acid_charge"],
         targetCapDelta: 3,
         rangeDelta: 2,
       }),
@@ -181,13 +199,13 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     supply: null,
     color: "#91a56c",
   },
-  snare_emitter: {
-    id: "snare_emitter",
+  quench_coil: {
+    id: "quench_coil",
     role: "control",
     buildCost: 22,
     recoveryRatio: 0.75,
     footprint: { width: 1, height: 1 },
-    mountFaces: ["floor", "ceiling"],
+    mountFaces: ["floor", "left_wall", "right_wall", "ceiling"],
     orientations: ["left", "right", "down"],
     range: 6,
     minimumRange: 0,
@@ -201,7 +219,7 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "area",
       projectileSpeed: 0,
       radius: 1.8,
-      packets: [packet("tower_snare", { radiation: 2 })],
+      packets: [packet("tower_quench", { atmosphere: 2 })],
       controlEffects: [
         {
           kind: "slow",
@@ -214,9 +232,9 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       ],
     },
     upgrades: [
-      upgrade("snare_duration", 11, { cadenceMultiplier: 1.2 }),
-      upgrade("snare_field", 13, {
-        requires: ["snare_duration"],
+      upgrade("quench_duration", 11, { cadenceMultiplier: 1.2 }),
+      upgrade("quench_field", 13, {
+        requires: ["quench_duration"],
         targetCapDelta: 2,
         rangeDelta: 1,
       }),
@@ -224,8 +242,8 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     supply: null,
     color: "#65c9b5",
   },
-  flak_nest: {
-    id: "flak_nest",
+  wash_head: {
+    id: "wash_head",
     role: "upper",
     buildCost: 24,
     recoveryRatio: 0.72,
@@ -244,13 +262,13 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "projectile",
       projectileSpeed: 15,
       radius: 1.2,
-      packets: [packet("tower_flak", { pressure: 17 })],
+      packets: [packet("tower_wash", { atmosphere: 12, corrosion: 5 })],
       controlEffects: [],
     },
     upgrades: [
-      upgrade("flak_burst", 12, { cadenceMultiplier: 1.3, targetCapDelta: 1 }),
-      upgrade("flak_ceiling", 14, {
-        requires: ["flak_burst"],
+      upgrade("wash_burst", 12, { cadenceMultiplier: 1.3, targetCapDelta: 1 }),
+      upgrade("wash_column", 14, {
+        requires: ["wash_burst"],
         damageMultiplier: 1.35,
         rangeDelta: 2,
       }),
@@ -258,8 +276,8 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
     supply: null,
     color: "#a886dc",
   },
-  relay: {
-    id: "relay",
+  carbonyl_marker: {
+    id: "carbonyl_marker",
     role: "support",
     buildCost: 28,
     recoveryRatio: 0.8,
@@ -278,7 +296,7 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       strategy: "hitscan",
       projectileSpeed: 0,
       radius: 0,
-      packets: [packet("tower_relay", { radiation: 8 })],
+      packets: [packet("tower_marker", { corrosion: 8 })],
       controlEffects: [
         {
           kind: "reveal",
@@ -299,9 +317,9 @@ export const TOWER_DEFINITIONS: Record<TowerChassisId, TowerDefinition> = {
       ],
     },
     upgrades: [
-      upgrade("relay_range", 14, { rangeDelta: 2 }),
-      upgrade("relay_service", 16, {
-        requires: ["relay_range"],
+      upgrade("marker_range", 14, { rangeDelta: 2 }),
+      upgrade("marker_service", 16, {
+        requires: ["marker_range"],
         cadenceMultiplier: 1.4,
         targetCapDelta: 1,
       }),

@@ -3,31 +3,31 @@
   cursor: crosshair;
 }
 
-.tower-color-bolt_caster {
+.tower-color-flash_chamber {
   --tower-color: #f0c96a;
 }
 
-.tower-color-repeater {
+.tower-color-caustic_jet {
   --tower-color: #e88a52;
 }
 
-.tower-color-line_projector {
+.tower-color-carbon_burner {
   --tower-color: #ff6b48;
 }
 
-.tower-color-mortar {
+.tower-color-acid_pot {
   --tower-color: #91a56c;
 }
 
-.tower-color-snare_emitter {
+.tower-color-quench_coil {
   --tower-color: #65c9b5;
 }
 
-.tower-color-flak_nest {
+.tower-color-wash_head {
   --tower-color: #a886dc;
 }
 
-.tower-color-relay {
+.tower-color-carbonyl_marker {
   --tower-color: #72d7e3;
 }
 
@@ -141,6 +141,11 @@
   font-size: 8.5px;
 }
 
+.tower-palette .tower-process {
+  color: #91aa9e;
+  line-height: 1.35;
+}
+
 .tower-upgrade-list small {
   color: #718d80;
   font: 500 8px/1.35 var(--mono);
@@ -195,6 +200,12 @@
   color: #88a99a;
   font: 700 9px/1 var(--mono);
   text-transform: uppercase;
+}
+
+.tower-process-detail {
+  color: #91aa9e;
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .tower-stat-row {

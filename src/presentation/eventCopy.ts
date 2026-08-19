@@ -26,13 +26,14 @@ interface EventCopyContext extends EventCopyServices {
 type EventCopyHandler = (event: GameEvent, context: EventCopyContext) => EventCopy | null;
 
 const DAMAGE_SOURCE_KEYS: Record<DamageSourceId, LocaleKey> = {
-  tower_bolt: "events.damage.tower_bolt",
-  tower_repeater: "events.damage.tower_repeater",
-  tower_projector: "events.damage.tower_projector",
-  tower_mortar: "events.damage.tower_mortar",
-  tower_snare: "events.damage.tower_snare",
-  tower_flak: "events.damage.tower_flak",
-  tower_relay: "events.damage.tower_relay",
+  tower_flash: "events.damage.tower_flash",
+  tower_caustic: "events.damage.tower_caustic",
+  tower_burner: "events.damage.tower_burner",
+  tower_acid: "events.damage.tower_acid",
+  tower_quench: "events.damage.tower_quench",
+  tower_wash: "events.damage.tower_wash",
+  tower_marker: "events.damage.tower_marker",
+  tower_neutralization: "events.damage.tower_neutralization",
 };
 
 const sourceLabel = (sourceId: string, translator: Translator): string =>
@@ -71,7 +72,7 @@ const infrastructureCopy: EventCopyHandler = (event, context) => {
   const { definition, formatters, translator } = context;
   const room = event.roomId
     ? definitionRoom(definition, event.roomId).code
-    : translator.text("events.common.facility");
+    : translator.text("events.common.vessel");
   if (event.code === "equipment_installed" || event.code === "equipment_upgraded") {
     const equipment = equipmentCopy(
       definition.equipment[event.parameters.equipmentId],
@@ -130,7 +131,7 @@ const processEventCopy: EventCopyHandler = (event, context) => {
   const { definition, translator } = context;
   const room = event.roomId
     ? definitionRoom(definition, event.roomId).code
-    : translator.text("events.common.facility");
+    : translator.text("events.common.vessel");
   switch (event.code) {
     case "separator_cross_leak":
       return {

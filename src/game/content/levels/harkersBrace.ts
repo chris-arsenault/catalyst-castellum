@@ -4,13 +4,13 @@ import { FIXED_CAMPAIGN_MAPS } from "../sites/fixedCampaignMaps";
 import { availability, DEFAULT_ROUTE_INGRESSES, emptyLoadout } from "./helpers";
 
 const braceAvailability = availability({
-  towers: ["bolt_caster", "repeater", "line_projector"],
+  towers: ["flash_chamber", "caustic_jet", "carbon_burner"],
 });
 
 const mixed = (...groups: ReturnType<typeof enemySequence>[]) =>
   groups.flat().sort((left, right) => left.at - right.at);
 
-/** Harker's Brace proves elevation, occlusion, and face-dependent projector geometry. */
+/** Harker's Brace proves elevation, occlusion, and face-dependent Carbon Burner geometry. */
 export const HARKERS_BRACE_LEVEL: LevelDefinition = {
   id: "harkers_brace",
   number: 2,

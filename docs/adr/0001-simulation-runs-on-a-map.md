@@ -5,7 +5,7 @@ Status: superseded by ADR-0014
 
 ## Context
 
-The campaign reused one static facility for every level while replacing player
+The campaign reused one static vessel for every level while replacing player
 constructions with authored loadouts, so transitions read as bugs. The engine also
 carried a parallel hand-authored node diagram (fixed room list, per-room junction
 definitions, a closed catalog of per-pair transport runs with authored blueprints)

@@ -66,14 +66,14 @@ describe("Morrow Pocket defense diversity acceptance", () => {
     const area = evaluation.references.find(({ archetype }) => archetype === "area")!;
     const control = evaluation.references.find(({ archetype }) => archetype === "control")!;
     const support = evaluation.references.find(({ archetype }) => archetype === "support")!;
-    expect(precise.damageBySource.tower_bolt).toBeGreaterThan(0);
-    expect(rapid.damageBySource.tower_repeater).toBeGreaterThan(0);
-    expect(area.damageBySource.tower_projector + area.damageBySource.tower_mortar).toBeGreaterThan(
-      area.damageBySource.tower_bolt
+    expect(precise.damageBySource.tower_flash).toBeGreaterThan(0);
+    expect(rapid.damageBySource.tower_caustic).toBeGreaterThan(0);
+    expect(area.damageBySource.tower_burner + area.damageBySource.tower_acid).toBeGreaterThan(
+      area.damageBySource.tower_flash
     );
-    expect(control.damageBySource.tower_snare).toBeGreaterThan(0);
-    expect(control.damageBySource.tower_repeater).toBeGreaterThan(0);
-    expect(support.damageBySource.tower_relay).toBeGreaterThan(0);
+    expect(control.damageBySource.tower_quench).toBeGreaterThan(0);
+    expect(control.damageBySource.tower_caustic).toBeGreaterThan(0);
+    expect(support.damageBySource.tower_marker).toBeGreaterThan(0);
     expect(support.buildProfile.activeDamageSources.length).toBeGreaterThanOrEqual(3);
   }, 480_000);
 });

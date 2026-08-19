@@ -16,3 +16,4 @@
 | [0012](0012-vertical-placement-routes-and-grafts.md)         | Vertical placement, routes, and graft slots       | Accepted               | 2026-08-17 |
 | [0013](0013-fixed-campaign-hull-and-checkpoints.md)          | Fixed campaign hull and operation checkpoints     | Accepted               | 2026-08-17 |
 | [0014](0014-fixed-campaign-world-instances.md)               | Fixed campaign maps use deterministic instances   | Accepted               | 2026-08-17 |
+| [0015](0015-chemical-process-tower-identities.md)            | Tower chassis use chemical process identities     | Accepted               | 2026-08-19 |

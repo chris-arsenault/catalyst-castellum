@@ -4,29 +4,29 @@ export const LEVEL_MESSAGES = {
   "levels.claim_8_delta.briefing":
     "Eight-Delta’s residents are following the remote cutter back toward the hull. The cutaway exposes a single Cthonic approach to the Catalyst Core and enough sound wall to establish the first mounted defense.",
   "levels.claim_8_delta.lesson":
-    "Read route coverage, mount direct defenses on the claim structure, and improve finite target service as each formation grows.",
+    "Read route coverage, mount a Flash Chamber or Caustic Jet on the claim structure, and improve finite target service as each formation grows.",
   "levels.harkers_brace.name": "Harker's Brace",
   "levels.harkers_brace.kicker": "Claim recovery · Stacked cuttings",
   "levels.harkers_brace.briefing":
     "Harker's Brace climbs through two elevations of broken claim structure. The intrusion route crosses walls, ceilings, ladders, and occluding partitions before it reaches the Core.",
   "levels.harkers_brace.lesson":
-    "Compare corridor and downward projector geometry, then use route-distance priority to hold formations across elevation changes.",
+    "Compare corridor and downward Carbon Burner geometry, then use route-distance priority to hold formations across elevation changes.",
   "levels.twelve_cask.name": "Twelve-Cask",
   "levels.twelve_cask.kicker": "Salvage contract · Cask galleries",
   "levels.twelve_cask.briefing":
-    "Twelve-Cask opens into broad salvage galleries where simultaneous arrivals exceed the service of one firing line. Stable structure supports precise, rapid, area, and control defenses.",
+    "Twelve-Cask opens into broad salvage galleries where simultaneous arrivals exceed one firing line. Stable floors support Acid Pots and Quench Coils beside the established wall apparatus.",
   "levels.twelve_cask.lesson":
-    "Combine finite firing capacity, bounded area damage, and route control while keeping each Matter purchase useful across five formations.",
+    "Combine finite firing capacity, acid rupture, and quench control. Overlapping Acid and Caustic coatings release an optional neutralization burst.",
   "levels.morrow_pocket.name": "Morrow Pocket",
   "levels.morrow_pocket.kicker": "Independent claim · Open defense",
   "levels.morrow_pocket.briefing":
     "Morrow Pocket returns mixed salvage through six exposed chambers before the cutter reaches the Core. The claim provides reactant gas, water, brine, open sockets, and route plans; the crew chooses where the defense takes shape.",
   "levels.morrow_pocket.lesson":
-    "Build a defense from the established foundry tools, then extend its damage, control, storage, and feed economy across five assaults.",
+    "Build from the established defensive tools, then extend damage, control, storage, and feed economy across five assaults.",
   "levels.kettleblack.name": "Kettleblack",
   "levels.kettleblack.kicker": "Independent survey · Ringglass wreck",
   "levels.kettleblack.briefing":
-    "Kettleblack is a long sealed wreck whose return crosses every coupled chamber before reaching the rig. The room graft bought after Morrow Pocket now lies on that final approach.",
+    "Kettleblack is a long sealed wreck whose return crosses every coupled chamber before reaching the vessel. The room graft bought after Morrow Pocket now lies on that final approach.",
   "levels.kettleblack.lesson":
     "Mount and upgrade a permanent hull tower, then combine it with recoverable site coverage across the wreck.",
   "levels.cordon_41.name": "Cordon 41",
@@ -56,7 +56,7 @@ export const LEVEL_MESSAGES = {
   "levels.vasker_store.name": "Vasker Store",
   "levels.vasker_store.kicker": "Council recovery · Ringglass stores",
   "levels.vasker_store.briefing":
-    "Vasker Store joins broad stock rooms, a tall furnace bay, and staggered galleries along one shifting-looking route. Its mixed service inventory supports combustion, nitrogen, nickel, uranium, chlorine, and liquid-control defenses from the full foundry catalog.",
+    "Vasker Store joins broad stock rooms, a tall furnace bay, and staggered galleries along one shifting-looking route. Its mixed service inventory supports combustion, nitrogen, nickel, uranium, chlorine, and liquid-control defenses from the full process catalog.",
   "levels.vasker_store.lesson":
     "Read each formation, choose the rooms that keep useful residence time in both heights, and adapt the established defense as the dominant composition changes.",
   "levels.lane_six.name": "Lane Six",
@@ -68,7 +68,7 @@ export const LEVEL_MESSAGES = {
   "levels.pell_cordon.name": "Pell Cordon",
   "levels.pell_cordon.kicker": "Council closure · Pell emergence",
   "levels.pell_cordon.briefing":
-    "The Pell cordon links the closure device to a stepped industrial route at the center of the emergence. The Near Voice returns every movement class, support behavior, and feed demand the foundry has already faced.",
+    "The Pell cordon links the closure device to a stepped industrial route at the center of the emergence. The Near Voice returns every movement class, support behavior, and feed demand the vessel has already faced.",
   "levels.pell_cordon.lesson":
     "Hold the complete processing cycle, change the defense as the copied formations change, and keep the Core standing until the closure load finishes.",
   "levels.station_14.rounds.first_beacon.title": "First beacon",
@@ -88,7 +88,7 @@ export const LEVEL_MESSAGES = {
     "Concentrate sustained damage and control where the protected column shares a room.",
   "levels.station_14.rounds.fourth_signal.title": "Fourth signal",
   "levels.station_14.rounds.fourth_signal.detail":
-    "A fast mixed return fills both mapped positions while the extra beacon repeats the foundry cadence.",
+    "A fast mixed return fills both mapped positions while the extra beacon repeats the vessel cadence.",
   "levels.station_14.rounds.fourth_signal.objective":
     "Keep each active chamber supplied through the compressed movement cycle.",
   "levels.station_14.rounds.near_echo.title": "Near echo",
@@ -153,7 +153,7 @@ export const LEVEL_MESSAGES = {
     "Establish the defense and preserve Matter for the closure sequence.",
   "levels.pell_cordon.rounds.copied_cadence.title": "Copied cadence",
   "levels.pell_cordon.rounds.copied_cadence.detail":
-    "Fast walkers and flyers repeat the timing of the foundry’s previous assault cadence.",
+    "Fast walkers and flyers repeat the timing of the ship’s previous assault cadence.",
   "levels.pell_cordon.rounds.copied_cadence.objective":
     "Change damage timing or add persistent coverage across the copied gaps.",
   "levels.pell_cordon.rounds.closure_load.title": "Closure load",
@@ -230,12 +230,12 @@ export const LEVEL_MESSAGES = {
   "levels.twelve_cask.rounds.bounded_area.detail":
     "A dense deckmouth group creates a useful but temporary area-damage window.",
   "levels.twelve_cask.rounds.bounded_area.objective":
-    "Place a mortar where its minimum range and burst radius fit the route.",
+    "Place an Acid Pot where its minimum range and rupture radius fit the route.",
   "levels.twelve_cask.rounds.route_control.title": "Route control",
   "levels.twelve_cask.rounds.route_control.detail":
     "Fast movement tests whether bounded slows extend useful coverage time.",
   "levels.twelve_cask.rounds.route_control.objective":
-    "Pair a snare field with damage that benefits from the longer engagement.",
+    "Pair a Quench Coil field with damage that benefits from the longer engagement.",
   "levels.twelve_cask.rounds.armored_casks.title": "Armored casks",
   "levels.twelve_cask.rounds.armored_casks.detail":
     "Splitback shells and redlung resistance demand sustained mixed damage.",
@@ -245,7 +245,7 @@ export const LEVEL_MESSAGES = {
   "levels.twelve_cask.rounds.cask_exam.detail":
     "A full mixed formation tests direct fire, area damage, and route control together.",
   "levels.twelve_cask.rounds.cask_exam.objective":
-    "Hold Twelve-Cask with a balanced ordinary tower defense.",
+    "Hold Twelve-Cask with complementary chemical defenses.",
   "levels.morrow_pocket.rounds.claim_entry.title": "Claim entry",
   "levels.morrow_pocket.rounds.claim_entry.detail":
     "A measured deckmouth return crosses every chamber and establishes the pocket’s full approach time.",
@@ -273,7 +273,7 @@ export const LEVEL_MESSAGES = {
     "Sustain your chosen defense, replenish its feeds, and hold the Core through the final return.",
   "levels.kettleblack.rounds.grain_markers.title": "Grain markers",
   "levels.kettleblack.rounds.grain_markers.detail":
-    "A measured deckmouth column crosses the complete wreck and the rig’s permanent final approach.",
+    "A measured deckmouth column crosses the complete wreck and the vessel’s permanent final approach.",
   "levels.kettleblack.rounds.grain_markers.objective":
     "Commission one hull-mounted tower and hold the first return.",
   "levels.kettleblack.rounds.paired_edges.title": "Paired edges",
@@ -345,7 +345,7 @@ export const LEVEL_MESSAGES = {
   "levels.junction_l6.rounds.qualification_run.detail":
     "The full freight manifest enters as one supported column across the long deck.",
   "levels.junction_l6.rounds.qualification_run.objective":
-    "Sustain the complete defense and qualify the foundry at industrial feed rate.",
+    "Sustain the complete defense and qualify the vessel’s extraction system at industrial feed rate.",
   "levels.pell_cut.rounds.array_one.title": "Array one",
   "levels.pell_cut.rounds.array_one.detail":
     "A deckmouth establishes the first array’s approach cadence.",

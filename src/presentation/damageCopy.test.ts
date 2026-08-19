@@ -19,7 +19,7 @@ describe("damage presentation", () => {
 
     expect(channel).toBe("heat");
     expect(damageChannelStyle[channel]).toEqual({ color: "#ff755c", label: "THERMAL" });
-    expect(damageSourceLabel.tower_projector).toBe("line projector");
+    expect(damageSourceLabel.tower_burner).toBe("carbon burner");
   });
 
   it("gives every damage channel a distinct color", () => {
@@ -31,6 +31,6 @@ describe("damage presentation", () => {
     expect(formatDamageAmount(0.36)).toBe("0.36");
     expect(formatDamageAmount(1.04)).toBe("1");
     expect(formatDamageAmount(18.8)).toBe("19");
-    expect(damageSourceDisplay.tower_bolt).toBe("impact");
+    expect(damageSourceDisplay.tower_flash).toBe("impact");
   });
 });

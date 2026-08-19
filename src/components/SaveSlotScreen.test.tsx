@@ -19,6 +19,6 @@ describe("debug campaign launcher", () => {
     ).toBe("LEVEL 2 · Harker's Brace · GUIDED");
     expect(
       [...siteSelect.options].find((option) => option.value === "twelve_cask")?.textContent
-    ).toBe("LEVEL 3 · Twelve-Cask · DEFENSE");
+    ).toBe("LEVEL 3 · Twelve-Cask · GUIDED");
   });
 });

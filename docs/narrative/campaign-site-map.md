@@ -48,11 +48,11 @@ while health and other level-derived attributes follow the campaign curve.
 
 ## Act pacing
 
-| Act            | Sites | Player status                                                          | Primary question                                                                 | Exit event                                                                        |
-| -------------- | ----- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Good Standing  | 1–4   | Licensed crew moving into independent claims                           | Why do two private patrons value different records from the same extraction?     | Kettleblack coordinates test whether the cutter crosses or moves a boundary.      |
-| The Same Grade | 5–8   | Independent operator caught between Council caution and Coremark scale | Can remote reach protect people when the process itself relates distant sites?   | Pell Cut stabilizes into an active emergence using the foundry’s learned cadence. |
-| A New Boundary | 9–12  | Contracted Council containment asset                                   | Can the crew turn the method that formed the boundary into a closure instrument? | Pell closes and the full cordon returns.                                          |
+| Act            | Sites | Player status                                                          | Primary question                                                                 | Exit event                                                                       |
+| -------------- | ----- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Good Standing  | 1–4   | Licensed crew moving into independent claims                           | Why do two private patrons value different records from the same extraction?     | Kettleblack coordinates test whether the cutter crosses or moves a boundary.     |
+| The Same Grade | 5–8   | Independent operator caught between Council caution and Coremark scale | Can remote reach protect people when the process itself relates distant sites?   | Pell Cut stabilizes into an active emergence using the vessel’s learned cadence. |
+| A New Boundary | 9–12  | Contracted Council containment asset                                   | Can the crew turn the method that formed the boundary into a closure instrument? | Pell closes and the full cordon returns.                                         |
 
 ## Briefing pattern
 
@@ -66,20 +66,20 @@ The intermission uses the same talking-head treatment for the after-action call.
 
 ## Dialogue allocation
 
-| Site           | Briefing speakers               | Debrief speakers               | Story movement                                                  |
-| -------------- | ------------------------------- | ------------------------------ | --------------------------------------------------------------- |
-| Claim 8-Delta  | Malk, Mavo, T’kesh              | Malk, T’kesh                   | Establish crew competence and anomaly.                          |
-| Harker’s Brace | Malk, Mavo, T’kesh              | Surveyor, T’kesh               | First mysterious request.                                       |
-| Twelve-Cask    | Malk, Surveyor, Buyer           | T’kesh, Buyer, Surveyor        | Establish competing interests in the same sample.               |
-| Morrow Pocket  | Malk, Surveyor, Buyer           | T’kesh, Mavo, Surveyor         | State the single-grade insight and point to Kettleblack.        |
-| Kettleblack    | Surveyor, Buyer, T’kesh         | Mavo, Rig Telemetry, Surveyor  | Prove split boundaries and earn Surveyor’s identity.            |
-| Cordon 41      | Vela, Vela, Mavo                | Vela, T’kesh, Rig Telemetry    | Reveal Council motive and trace Buyer.                          |
-| Junction L-6   | Daro, Daro, Malk                | Daro, Vela, T’kesh             | Reveal Coremark motive and commit to scale.                     |
-| Pell Cut       | Daro, Vela, T’kesh              | Rig Telemetry, Malk, Vela      | Create the emergency.                                           |
-| Station 14     | Kethra, Kethra, Soft Wake       | Mavo, Soft Wake, Rig Telemetry | Establish containment team and name Near Voice.                 |
-| Vasker Store   | Vela, Soft Wake, Mavo           | Vela, T’kesh, Kethra           | Build the closure method and expose Near Voice’s tracking rule. |
-| Lane Six       | Kethra, Dern, Soft Wake         | Kethra, Vela, Dern             | Assign final authority and stakes.                              |
-| Pell Cordon    | Dern, Kethra, Soft Wake, T’kesh | Dern, Kethra, Vela, Daro       | Close Pell and record consequences.                             |
+| Site           | Briefing speakers               | Debrief speakers                  | Story movement                                                  |
+| -------------- | ------------------------------- | --------------------------------- | --------------------------------------------------------------- |
+| Claim 8-Delta  | Malk, Mavo, T’kesh              | Malk, T’kesh                      | Establish crew competence and anomaly.                          |
+| Harker’s Brace | Malk, Mavo, T’kesh              | Surveyor, T’kesh                  | First mysterious request.                                       |
+| Twelve-Cask    | Malk, Surveyor, Buyer           | T’kesh, Buyer, Surveyor           | Establish competing interests in the same sample.               |
+| Morrow Pocket  | Malk, Surveyor, Buyer           | T’kesh, Mavo, Surveyor            | State the single-grade insight and point to Kettleblack.        |
+| Kettleblack    | Surveyor, Buyer, T’kesh         | Mavo, Vessel Telemetry, Surveyor  | Prove split boundaries and earn Surveyor’s identity.            |
+| Cordon 41      | Vela, Vela, Mavo                | Vela, T’kesh, Vessel Telemetry    | Reveal Council motive and trace Buyer.                          |
+| Junction L-6   | Daro, Daro, Malk                | Daro, Vela, T’kesh                | Reveal Coremark motive and commit to scale.                     |
+| Pell Cut       | Daro, Vela, T’kesh              | Vessel Telemetry, Malk, Vela      | Create the emergency.                                           |
+| Station 14     | Kethra, Kethra, Soft Wake       | Mavo, Soft Wake, Vessel Telemetry | Establish containment team and name Near Voice.                 |
+| Vasker Store   | Vela, Soft Wake, Mavo           | Vela, T’kesh, Kethra              | Build the closure method and expose Near Voice’s tracking rule. |
+| Lane Six       | Kethra, Dern, Soft Wake         | Kethra, Vela, Dern                | Assign final authority and stakes.                              |
+| Pell Cordon    | Dern, Kethra, Soft Wake, T’kesh | Dern, Kethra, Vela, Daro          | Close Pell and record consequences.                             |
 
 The canonical English script is [`src/localization/locales/en/narrative.ts`](../../src/localization/locales/en/narrative.ts). Dialogue definitions contain only stable speaker and line IDs in [`src/game/content/narrativeCampaign.ts`](../../src/game/content/narrativeCampaign.ts), allowing every locale to translate or reshape sentence rhythm without changing campaign state.
 
@@ -106,4 +106,4 @@ The canonical English script is [`src/localization/locales/en/narrative.ts`](../
 10. Vasker Store alternates fast, heavy, upper-lane, and supported columns through overlapping rooms.
 11. Lane Six compresses convoy cadence across a long multi-route approach.
 12. Pell Cordon combines placement, routing, targeting, graft, and support decisions while the
-    foundry breaks the Near Voice’s learned cadence.
+    vessel breaks the Near Voice’s learned cadence.

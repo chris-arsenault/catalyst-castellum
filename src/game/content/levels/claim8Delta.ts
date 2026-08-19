@@ -2,7 +2,7 @@ import type { LevelDefinition } from "../../definitionTypes";
 import { enemySequence } from "../enemies";
 import { availability, DEFAULT_ROUTE_INGRESSES, emptyLoadout } from "./helpers";
 
-const claimAvailability = availability({ towers: ["bolt_caster", "repeater"] });
+const claimAvailability = availability({ towers: ["flash_chamber", "caustic_jet"] });
 
 const mixed = (...groups: ReturnType<typeof enemySequence>[]) =>
   groups.flat().sort((left, right) => left.at - right.at);

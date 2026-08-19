@@ -184,6 +184,34 @@ export const isArchitectural = (connection: MapConnection): connection is Archit
 export const architecturalConnections = (map: WorldMap): ArchitecturalConnection[] =>
   Object.values(map.connections).filter(isArchitectural);
 
+/** Boundary cells occupied by one side of an architectural opening. */
+export const portalOpeningCells = (
+  map: WorldMap,
+  portal: ArchitecturalConnection,
+  roomIndex: 0 | 1
+): GridCell[] => {
+  const room = map.rooms[portal.rooms[roomIndex]];
+  if (!room) return [];
+  const endpoint = portal.endpoints[roomIndex];
+  const candidates =
+    portal.orientation === "horizontal"
+      ? Array.from({ length: 3 }, (_, offset) => ({
+          column: endpoint.column,
+          elevation: endpoint.elevation + offset,
+        }))
+      : Array.from({ length: 3 }, (_, offset) => ({
+          column: endpoint.column + offset - 1,
+          elevation: endpoint.elevation,
+        }));
+  return candidates.filter(
+    (cell) =>
+      cell.column >= room.bounds.column &&
+      cell.column < room.bounds.column + room.bounds.width &&
+      cell.elevation >= room.bounds.elevation &&
+      cell.elevation < room.bounds.elevation + room.bounds.height
+  );
+};
+
 /**
  * Canonical process-line id for a room pair. Sorted so authored lines and M3's
  * player-built lines mint the same id for the same pair, regardless of direction.

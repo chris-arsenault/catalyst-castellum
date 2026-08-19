@@ -3,7 +3,7 @@ import { enemySequence } from "../enemies";
 import { availability, DEFAULT_ROUTE_INGRESSES, emptyLoadout } from "./helpers";
 
 const caskAvailability = availability({
-  towers: ["bolt_caster", "repeater", "line_projector", "mortar", "snare_emitter"],
+  towers: ["flash_chamber", "caustic_jet", "carbon_burner", "acid_pot", "quench_coil"],
 });
 
 const mixed = (...groups: ReturnType<typeof enemySequence>[]) =>

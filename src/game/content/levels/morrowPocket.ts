@@ -28,13 +28,13 @@ const mixed = (...groups: WaveEntry[][]): WaveEntry[] =>
 
 const fullTowerAvailability = availability({
   towers: [
-    "bolt_caster",
-    "repeater",
-    "line_projector",
-    "mortar",
-    "snare_emitter",
-    "flak_nest",
-    "relay",
+    "flash_chamber",
+    "caustic_jet",
+    "carbon_burner",
+    "acid_pot",
+    "quench_coil",
+    "wash_head",
+    "carbonyl_marker",
   ],
 });
 

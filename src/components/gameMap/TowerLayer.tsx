@@ -3,8 +3,9 @@ import type { FederatedPointerEvent, Graphics } from "pixi.js";
 import { DEFAULT_GAME_RUNTIME } from "../../game/runtime";
 import { gridCellToWorldPoint, gridPathToWorldPath } from "../../game/spatial";
 import type { GameState, TowerInstance, TowerInstanceId } from "../../game/types";
-import type { TowerPlacementPreview } from "../../presentation/towerPlanning";
+import { towerMountWorldPoint, type TowerPlacementPreview } from "../../presentation/towerPlanning";
 import { colorNumber, mapViewFor } from "./mapGeometry";
+import { drawTowerApparatus, drawTowerAttack, towerDirection } from "./towerGraphics";
 
 const drawRouteGraph = (graphics: Graphics, game: GameState): void => {
   graphics.clear();
@@ -19,13 +20,6 @@ const drawRouteGraph = (graphics: Graphics, game: GameState): void => {
   }
 };
 
-const directionVector = (orientation: TowerInstance["placement"]["orientation"]) => {
-  if (orientation === "left") return { x: -1, y: 0 };
-  if (orientation === "right") return { x: 1, y: 0 };
-  if (orientation === "up") return { x: 0, y: -1 };
-  return { x: 0, y: 1 };
-};
-
 const drawCoverage = (
   graphics: Graphics,
   game: GameState,
@@ -35,7 +29,7 @@ const drawCoverage = (
   const view = mapViewFor(game.map);
   const stats = DEFAULT_GAME_RUNTIME.queries.effectiveTowerStats(tower, game);
   const origin = view.worldToMapPoint(tower.placement.firingOrigin);
-  const direction = directionVector(tower.placement.orientation);
+  const direction = towerDirection(tower.placement.orientation);
   const center = Math.atan2(direction.y, direction.x);
   const halfArc = (stats.firingArc * Math.PI) / 360;
   graphics
@@ -63,32 +57,46 @@ const drawTower = (
   selected: boolean
 ): void => {
   graphics.clear();
-  const view = mapViewFor(game.map);
-  const origin = view.worldToMapPoint(tower.placement.firingOrigin);
   const definition = DEFAULT_GAME_RUNTIME.definition.towers[tower.chassisId];
   const color = colorNumber(definition.color);
-  const direction = directionVector(tower.placement.orientation);
   if (selected) {
     drawCoverage(graphics, game, tower, color);
   }
+  drawTowerBody(graphics, game, tower, selected);
+};
+
+const drawTowerBody = (
+  graphics: Graphics,
+  game: GameState,
+  tower: TowerInstance,
+  selected: boolean,
+  alpha = 1
+): void => {
+  const view = mapViewFor(game.map);
+  const mount = view.worldToMapPoint(towerMountWorldPoint(tower.placement));
+  const origin = view.worldToMapPoint(tower.placement.firingOrigin);
+  const chassis = { x: (mount.x + origin.x) / 2, y: (mount.y + origin.y) / 2 };
+  const definition = DEFAULT_GAME_RUNTIME.definition.towers[tower.chassisId];
+  const color = colorNumber(definition.color);
+  const direction = towerDirection(tower.placement.orientation);
   graphics
-    .roundRect(origin.x - 10, origin.y - 10, 20, 20, 4)
-    .fill({ color: 0x0b1713, alpha: 0.98 })
-    .stroke({ color, width: selected ? 3 : 2, alpha: 0.96 });
-  graphics
-    .moveTo(origin.x, origin.y)
-    .lineTo(origin.x + direction.x * 19, origin.y + direction.y * 19)
-    .stroke({ color, width: 5, cap: "round" });
+    .moveTo(mount.x, mount.y)
+    .lineTo(chassis.x, chassis.y)
+    .stroke({ color, width: 5, alpha: 0.7 * alpha, cap: "round" });
+  if (selected) {
+    graphics.circle(chassis.x, chassis.y, 15).stroke({ color: 0xe7f1eb, width: 2, alpha: 0.82 });
+  }
+  drawTowerApparatus(graphics, tower.chassisId, chassis, origin, direction, color, selected, alpha);
   if (tower.cooldown > 0) {
     graphics
       .arc(
-        origin.x,
-        origin.y,
+        chassis.x,
+        chassis.y,
         14,
         -Math.PI / 2,
         -Math.PI / 2 + Math.PI * 2 * Math.min(1, tower.cooldown)
       )
-      .stroke({ color: 0xd9eadf, width: 2, alpha: 0.55 });
+      .stroke({ color: 0xd9eadf, width: 2, alpha: 0.55 * alpha });
   }
 };
 
@@ -170,6 +178,7 @@ const PlacementPreview = ({
           .rect(rect.left + 6, rect.top + 6, rect.width - 12, rect.height - 12)
           .stroke({ color, width: 1, alpha: 0.55 });
       }
+      drawTowerBody(graphics, game, previewTower, false, 0.78);
     },
     [game, preview]
   );
@@ -186,22 +195,9 @@ const AttackLayer = ({ game }: { game: GameState }) => {
         const alpha = Math.min(1, remaining * 8);
         const source = view.worldToMapPoint(attack.source);
         const target = view.worldToMapPoint(attack.target);
-        const color = colorNumber(
-          DEFAULT_GAME_RUNTIME.definition.towers[
-            game.towers[attack.towerId]?.chassisId ?? "bolt_caster"
-          ].color
-        );
-        graphics
-          .moveTo(source.x, source.y)
-          .lineTo(target.x, target.y)
-          .stroke({
-            color,
-            width: attack.strategy === "projectile" ? 3 : 5,
-            alpha,
-          });
-        if (attack.strategy === "lob" || attack.strategy === "area") {
-          graphics.circle(target.x, target.y, 18).stroke({ color, width: 2, alpha });
-        }
+        const chassisId = game.towers[attack.towerId]?.chassisId ?? "flash_chamber";
+        const color = colorNumber(DEFAULT_GAME_RUNTIME.definition.towers[chassisId].color);
+        drawTowerAttack(graphics, attack, chassisId, source, target, color, alpha, game.elapsed);
       }
     },
     [game]

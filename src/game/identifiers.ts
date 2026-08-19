@@ -53,30 +53,30 @@ export const ENEMY_TYPES = [
 ] as const;
 
 export const TOWER_CHASSIS_IDS = [
-  "bolt_caster",
-  "repeater",
-  "line_projector",
-  "mortar",
-  "snare_emitter",
-  "flak_nest",
-  "relay",
+  "flash_chamber",
+  "caustic_jet",
+  "carbon_burner",
+  "acid_pot",
+  "quench_coil",
+  "wash_head",
+  "carbonyl_marker",
 ] as const;
 
 export const TOWER_UPGRADE_IDS = [
-  "bolt_calibration",
-  "bolt_piercing",
-  "repeater_feed",
-  "repeater_tracking",
-  "projector_focus",
-  "projector_fan",
-  "mortar_payload",
-  "mortar_radius",
-  "snare_duration",
-  "snare_field",
-  "flak_burst",
-  "flak_ceiling",
-  "relay_range",
-  "relay_service",
+  "flash_calibration",
+  "flash_breach",
+  "caustic_manifold",
+  "caustic_split",
+  "burner_focus",
+  "burner_fan",
+  "acid_charge",
+  "acid_spread",
+  "quench_duration",
+  "quench_field",
+  "wash_burst",
+  "wash_column",
+  "marker_range",
+  "marker_service",
 ] as const;
 
 export const TOWER_ATTACK_STRATEGIES = ["hitscan", "projectile", "cone", "lob", "area"] as const;
@@ -98,6 +98,8 @@ export const CONTROL_EFFECT_KINDS = [
   "reveal",
   "armor_break",
   "route_displacement",
+  "acid",
+  "caustic",
 ] as const;
 
 export const EQUIPMENT_OUTPUT_IDS = ["anode_header", "cathode_header", "cell_liquor"] as const;
@@ -118,13 +120,14 @@ export const EQUIPMENT_SOCKET_IDS = ["socket_a", "socket_b"] as const;
 export const EQUIPMENT_LEVELS = [1, 2, 3] as const;
 
 export const DAMAGE_SOURCE_IDS = [
-  "tower_bolt",
-  "tower_repeater",
-  "tower_projector",
-  "tower_mortar",
-  "tower_snare",
-  "tower_flak",
-  "tower_relay",
+  "tower_flash",
+  "tower_caustic",
+  "tower_burner",
+  "tower_acid",
+  "tower_quench",
+  "tower_wash",
+  "tower_marker",
+  "tower_neutralization",
 ] as const;
 
 export const PROCESS_FAMILY_IDS = [

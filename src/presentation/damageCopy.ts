@@ -59,13 +59,14 @@ export const damageSourceLabel = DEFAULT_DAMAGE_COPY.sourceLabel;
 export const damageSourceDetail = DEFAULT_DAMAGE_COPY.sourceDetail;
 
 export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"> = {
-  tower_bolt: "impact",
-  tower_repeater: "impact",
-  tower_projector: "impact",
-  tower_mortar: "impact",
-  tower_snare: "impact",
-  tower_flak: "impact",
-  tower_relay: "impact",
+  tower_flash: "impact",
+  tower_caustic: "impact",
+  tower_burner: "impact",
+  tower_acid: "impact",
+  tower_quench: "impact",
+  tower_wash: "impact",
+  tower_marker: "impact",
+  tower_neutralization: "impact",
 };
 
 export const formatDamageAmount = (amount: number): string => {

@@ -9,7 +9,7 @@ import {
   reactionMechanics,
 } from "./manualContent";
 
-describe("facility manual content", () => {
+describe("vessel manual content", () => {
   it("covers every shipped enemy form with a field taxonomy and bestiary record", () => {
     expect(Object.keys(ENEMY_BESTIARY)).toEqual([...ENEMY_TYPES]);
     for (const enemyType of ENEMY_TYPES) {

@@ -41,7 +41,7 @@ test("the first tutorial teaches direct tower coverage", async ({ page }) => {
   await expect(page.getByTestId("start-assault")).toBeEnabled();
 });
 
-test("the facility manual exposes the complete tower catalog", async ({ page }) => {
+test("the vessel manual exposes the complete tower catalog", async ({ page }) => {
   await startNewGame(page, 1, false);
   await page.getByTestId("enter-control-room").click();
   await page.getByTestId("open-encyclopedia").click();
@@ -49,9 +49,9 @@ test("the facility manual exposes the complete tower catalog", async ({ page }) 
 
   await expect(page.getByTestId("manual-tower-page")).toBeVisible();
   await expect(page.locator('[data-testid^="manual-tower-choice-"]')).toHaveCount(7);
-  await page.getByTestId("manual-tower-choice-bolt_caster").click();
-  await expect(page.getByTestId("manual-place-tower-bolt_caster")).toBeEnabled();
-  await page.getByTestId("manual-place-tower-bolt_caster").click();
-  await expect(page.getByTestId("facility-manual")).toHaveCount(0);
+  await page.getByTestId("manual-tower-choice-flash_chamber").click();
+  await expect(page.getByTestId("manual-place-tower-flash_chamber")).toBeEnabled();
+  await page.getByTestId("manual-place-tower-flash_chamber").click();
+  await expect(page.getByTestId("vessel-manual")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Placement controls" })).toBeVisible();
 });

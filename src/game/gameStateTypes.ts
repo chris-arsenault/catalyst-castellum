@@ -185,7 +185,7 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 27;
+  version: 28;
   pack: {
     id: string;
     contentVersion: number;

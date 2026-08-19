@@ -71,7 +71,7 @@ const ManualShellHeader = () => {
     <header className="manual-shell-header">
       <div className="manual-title-block">
         <span>{translator.text("ui.manual.archive")}</span>
-        <h1 id="facility-manual-title">{translator.text("ui.manual.title")}</h1>
+        <h1 id="vessel-manual-title">{translator.text("ui.manual.title")}</h1>
       </div>
       <div className="manual-record-context">
         <small>{translator.text("ui.manual.currentRecord")}</small>
@@ -122,7 +122,7 @@ const ManualShellFooter = () => {
   );
 };
 
-export const FacilityManual = () => {
+export const VesselManual = () => {
   const [selectedEnemyType, setSelectedEnemyType] = useState<EnemyType>("deckmouth");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState<EquipmentId>("gas_agitator");
   const [selectedReactionId, setSelectedReactionId] = useState<ReactionId>(
@@ -167,11 +167,11 @@ export const FacilityManual = () => {
   return (
     <div className="modal-backdrop manual-backdrop">
       <section
-        className="facility-manual"
+        className="vessel-manual"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="facility-manual-title"
-        data-testid="facility-manual"
+        aria-labelledby="vessel-manual-title"
+        data-testid="vessel-manual"
       >
         <ManualShellHeader />
         <ManualNav active={section} onSelect={setSection} />

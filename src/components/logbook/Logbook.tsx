@@ -12,7 +12,7 @@ import {
 import { CampaignRouteMap } from "../CampaignRouteMap";
 import { ClaimRigGraphic } from "../ClaimRigGraphic";
 import { GraftBoard } from "../GraftBoard";
-import { FacilityManual } from "../manual/FacilityManual";
+import { VesselManual } from "../manual/VesselManual";
 import { NoticeToast } from "../Modals";
 import { AudioControls, BrandLockup, EncyclopediaButton, SaveSlotsButton } from "../ShellControls";
 import { ActEntry, SiteEntry } from "./LogbookEntries";
@@ -137,7 +137,7 @@ export const Logbook = () => {
       ) : (
         <LogbookBody key={`${game.campaign.levelId}:${game.phase}`} game={game} />
       )}
-      <FacilityManual />
+      <VesselManual />
       <NoticeToast />
     </div>
   );

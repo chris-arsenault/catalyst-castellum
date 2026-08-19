@@ -24,8 +24,8 @@ describe("tutorial task card", () => {
     );
 
     expect(screen.getByTestId("tutorial-task-card").textContent).toContain("0 / 4");
-    expect(screen.getByText("Mount a defense on a wall.")).toBeTruthy();
-    expect(screen.getByText("Record direct tower damage.")).toBeTruthy();
+    expect(screen.getByText("Mount a Flash Chamber on a wall.")).toBeTruthy();
+    expect(screen.getByText("Record pressure damage.")).toBeTruthy();
     expect(screen.getByText("Establish route coverage")).toBeTruthy();
     expect(screen.getByText("Read the approach")).toBeTruthy();
 
@@ -35,7 +35,7 @@ describe("tutorial task card", () => {
 
     game = command(game, {
       type: "place_tower",
-      chassisId: "bolt_caster",
+      chassisId: "flash_chamber",
       anchor: { column: 6, elevation: 8 },
       mountFace: "left_wall",
       orientation: "right",
@@ -54,7 +54,7 @@ describe("tutorial task card", () => {
 
     render(<TutorialTaskCard activeStep={null} guide={guide} game={game} />);
     expect(screen.getByText("Lesson complete")).toBeTruthy();
-    expect(screen.getByText("Direct defense commissioned")).toBeTruthy();
+    expect(screen.getByText("Pressure defense commissioned")).toBeTruthy();
     expect(
       screen.getByText("Apply the same coverage reading to the remaining waves.")
     ).toBeTruthy();

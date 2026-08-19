@@ -8,7 +8,7 @@ import {
 
 const towerId = (sequence: number): string => `tower:kettleblack:${sequence}`;
 
-const wallPairs = (chassisId: "bolt_caster" | "repeater"): ReturnType<typeof place>[] =>
+const wallPairs = (chassisId: "flash_chamber" | "caustic_jet"): ReturnType<typeof place>[] =>
   [
     [12, "left_wall", "right"],
     [27, "right_wall", "left"],
@@ -35,10 +35,10 @@ const preciseApproach: ReferenceBuildDefinition = {
   id: "kettleblack_precise_approach",
   archetype: "precise",
   rounds: [
-    round(wallPairs("bolt_caster")),
-    round([upgrade(towerId(3), "bolt_calibration"), upgrade(towerId(9), "bolt_calibration")]),
-    round([upgrade(towerId(5), "bolt_calibration"), target(towerId(11), "strongest")]),
-    round([upgrade(towerId(3), "bolt_piercing"), upgrade(towerId(9), "bolt_piercing")]),
+    round(wallPairs("flash_chamber")),
+    round([upgrade(towerId(3), "flash_calibration"), upgrade(towerId(9), "flash_calibration")]),
+    round([upgrade(towerId(5), "flash_calibration"), target(towerId(11), "strongest")]),
+    round([upgrade(towerId(3), "flash_breach"), upgrade(towerId(9), "flash_breach")]),
     round(),
   ],
 };
@@ -47,34 +47,34 @@ const rapidApproach: ReferenceBuildDefinition = {
   id: "kettleblack_rapid_approach",
   archetype: "rapid",
   rounds: [
-    round(wallPairs("repeater")),
-    round([upgrade(towerId(4), "repeater_feed"), upgrade(towerId(10), "repeater_feed")]),
-    round([upgrade(towerId(6), "repeater_feed"), upgrade(towerId(12), "repeater_feed")]),
-    round([upgrade(towerId(10), "repeater_tracking")]),
+    round(wallPairs("caustic_jet")),
+    round([upgrade(towerId(4), "caustic_manifold"), upgrade(towerId(10), "caustic_manifold")]),
+    round([upgrade(towerId(6), "caustic_manifold"), upgrade(towerId(12), "caustic_manifold")]),
+    round([upgrade(towerId(10), "caustic_split")]),
     round(),
   ],
 };
 
-const projectorPositions = [12, 29, 48, 69, 84, 102].map((column) =>
-  place("line_projector", { column, elevation: 8 }, "left_wall", "right")
+const burnerPositions = [12, 29, 48, 69, 84, 102].map((column) =>
+  place("carbon_burner", { column, elevation: 8 }, "left_wall", "right")
 );
-const rightRepeaters = [27, 46, 67, 82, 100, 120].map((column) =>
-  place("repeater", { column, elevation: 7 }, "right_wall", "left")
+const rightCausticJets = [27, 46, 67, 82, 100, 120].map((column) =>
+  place("caustic_jet", { column, elevation: 7 }, "right_wall", "left")
 );
 
 const areaApproach: ReferenceBuildDefinition = {
-  id: "kettleblack_projector_approach",
+  id: "kettleblack_burner_approach",
   archetype: "area",
   rounds: [
-    round([...projectorPositions, ...rightRepeaters]),
-    round([upgrade(towerId(2), "projector_focus"), upgrade(towerId(5), "projector_focus")]),
-    round([upgrade(towerId(8), "repeater_feed"), upgrade(towerId(11), "repeater_feed")]),
-    round([upgrade(towerId(5), "projector_fan")]),
+    round([...burnerPositions, ...rightCausticJets]),
+    round([upgrade(towerId(2), "burner_focus"), upgrade(towerId(5), "burner_focus")]),
+    round([upgrade(towerId(8), "caustic_manifold"), upgrade(towerId(11), "caustic_manifold")]),
+    round([upgrade(towerId(5), "burner_fan")]),
     round(),
   ],
 };
 
-const snarePositions = [
+const quenchPositions = [
   [18, 12],
   [38, 15],
   [57, 13],
@@ -82,17 +82,17 @@ const snarePositions = [
   [92, 12],
   [111, 12],
 ].map(([column, elevation]) =>
-  place("snare_emitter", { column: column!, elevation: elevation! }, "ceiling", "down")
+  place("quench_coil", { column: column!, elevation: elevation! }, "ceiling", "down")
 );
 
 const controlledApproach: ReferenceBuildDefinition = {
   id: "kettleblack_controlled_approach",
   archetype: "control",
   rounds: [
-    round([...snarePositions, ...rightRepeaters]),
-    round([upgrade(towerId(2), "snare_duration"), upgrade(towerId(5), "snare_duration")]),
-    round([upgrade(towerId(8), "repeater_feed"), upgrade(towerId(11), "repeater_feed")]),
-    round([upgrade(towerId(5), "snare_field")]),
+    round([...quenchPositions, ...rightCausticJets]),
+    round([upgrade(towerId(2), "quench_duration"), upgrade(towerId(5), "quench_duration")]),
+    round([upgrade(towerId(8), "caustic_manifold"), upgrade(towerId(11), "caustic_manifold")]),
+    round([upgrade(towerId(5), "quench_field")]),
     round(),
   ],
 };
@@ -103,15 +103,15 @@ const supportedApproach: ReferenceBuildDefinition = {
   rounds: [
     round([
       ...[12, 29, 48, 69, 84, 102].map((column) =>
-        place("relay", { column, elevation: 8 }, "left_wall", "right")
+        place("carbonyl_marker", { column, elevation: 8 }, "left_wall", "right")
       ),
       ...[27, 46, 67, 82, 100, 120].map((column) =>
-        place("bolt_caster", { column, elevation: 7 }, "right_wall", "left")
+        place("flash_chamber", { column, elevation: 7 }, "right_wall", "left")
       ),
     ]),
-    round([upgrade(towerId(8), "bolt_calibration"), upgrade(towerId(11), "bolt_calibration")]),
-    round([upgrade(towerId(2), "relay_range"), target(towerId(5), "support")]),
-    round([upgrade(towerId(11), "bolt_piercing")]),
+    round([upgrade(towerId(8), "flash_calibration"), upgrade(towerId(11), "flash_calibration")]),
+    round([upgrade(towerId(2), "marker_range"), target(towerId(5), "support")]),
+    round([upgrade(towerId(11), "flash_breach")]),
     round(),
   ],
 };

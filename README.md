@@ -2,9 +2,9 @@
 
 A browser-based vertical tower-defense campaign set in the Glass Frontier universe.
 
-The player commands a mostly unmanned Deep Shear claim rig. A remote cutter couples recovered
-material into the rig's foundry, and Cthonic intruders cross in the cutter wake. The player mounts
-automated defenses throughout the rig's side-view rooms and holds the Core until each extraction
+The player commands a mostly unmanned Deep Shear vessel. A remote cutter couples recovered
+material into the vessel's process rooms, and Cthonic intruders cross in the cutter wake. The player mounts
+automated defenses throughout the ship's side-view rooms and holds the Core until each extraction
 finishes.
 
 Play the current build at [catalyst.ahara.io](https://catalyst.ahara.io).

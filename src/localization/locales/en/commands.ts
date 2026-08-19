@@ -14,6 +14,6 @@ export const COMMAND_MESSAGES = {
   "commands.rejection.route_unavailable":
     "This route has an authored phase available for selection.",
   "commands.rejection.unavailable": "The current operation keeps this option sealed.",
-  "commands.rejection.unique_equipment": "The facility already contains this unique equipment.",
+  "commands.rejection.unique_equipment": "The vessel already contains this unique equipment.",
   "commands.rejection.fallback": "Command rejected.",
 } as const;

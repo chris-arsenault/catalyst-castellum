@@ -1,6 +1,6 @@
 # Chemical process model
 
-Chemistry remains part of the claim rig, its fiction, and its deterministic world simulation. Direct
+Chemistry remains part of the vessel, its fiction, and its deterministic world simulation. Direct
 towers carry the primary defense loop. Process systems enter campaign combat through explicit tower
 supply, atmospheric byproducts, environmental fields, and resource preparation.
 
@@ -8,7 +8,7 @@ supply, atmospheric byproducts, environmental fields, and resource preparation.
 
 The process model supports four kinds of play:
 
-- the remote foundry converts recovered material while the rig holds a claim;
+- the vessel converts recovered material while its remote cutter holds a claim;
 - pipes deliver finite feedstock, coolant, oxidizer, or prepared material to compatible equipment;
 - towers and enemies can change room atmosphere through conserved emissions;
 - environmental state can modify tower operation, enemy movement, visibility, or damage channels.
@@ -16,6 +16,30 @@ The process model supports four kinds of play:
 The first two campaign sites use self-contained towers and neutral environmental conditions. Later
 sites add one process relationship at a time, preserving a viable direct-tower defense while giving
 the chemical system strategic value.
+
+## Tower process identities
+
+Every chassis carries a self-contained, metered service charge whose name and attack explain a
+specific chemical operation. The Flash Chamber burns a small hydrogen-oxygen charge, the Caustic Jet
+sprays sodium hydroxide, the Carbon Burner oxidizes carbon-steam fuel, the Acid Pot throws a sealed
+hydrochloric-acid charge, the Quench Coil condenses a cooling field, the Wash Head discharges a wet
+scrubber burst, and the Carbonyl Marker deposits a nickel trace.
+
+These identities determine damage channels, geometry, effects, animation, and upgrade language.
+They do not require the player to synthesize ammunition. A neutral room supports each chassis at its
+published base stats.
+
+Three interfaces connect direct combat to the deeper process model:
+
+- Acid and Caustic coatings react on one enemy. The second coating consumes both and applies one
+  neutralization heat burst.
+- A later supplied Carbon Burner can ignite a declared hydrogen field, consuming its authored
+  amount and producing a bounded steam wake.
+- A later Wash Head connection can remove a declared airborne field and place its finite waste in
+  the named destination inventory.
+
+Each interface is binary at the decision point, visible before it resolves, and capped by its
+source. A reaction improves a useful direct defense; it does not create the only functional defense.
 
 ## Conservation boundary
 
@@ -47,7 +71,7 @@ accept.
 
 Equipment ports and process lines hold persistent inventories. Closing a line isolates its contents;
 opening it restores transport from the existing state. Saving and restoring a campaign preserves
-these inventories when they belong to the rig hull.
+these inventories when they belong to the vessel hull.
 
 ## Reaction execution
 
@@ -78,10 +102,10 @@ inventories.
 
 Examples of explicit combat connections:
 
-- a wall burner consumes fuel from one gas port and ambient or piped oxidizer;
-- a ceiling condenser requires coolant flow and creates a slowing liquid patch below;
+- a Carbon Burner consumes fuel from one gas port and ambient or piped oxidizer;
+- a Quench Coil accepts coolant flow and strengthens its slowing field below;
 - a launcher consumes prepared solid charges from an adjacent magazine;
-- a scrubber clears a named airborne field and produces a finite waste inventory.
+- a Wash Head clears a named airborne field and produces a finite waste inventory.
 
 Preview, command availability, and runtime execution use the same supply and capacity query.
 
@@ -108,7 +132,7 @@ affected entities, the responsible source, and the immediate consequence.
 The retained catalog groups species and operations into six process families. Families organize
 content and suggest later tower interactions; they do not prescribe a site's required defense.
 
-| Family           | Foundry role                                    | Tower-defense opportunities                          |
+| Family           | Process role                                    | Tower-defense opportunities                          |
 | ---------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | Chlorine-sodium  | Brine separation, chlorine handling, scrubbing  | Oxidizing feed, corrosion, gas clearing              |
 | Carbon-steam     | Fuel conversion, heat, reducing gases           | Burners, thermal fields, smoke or visibility control |

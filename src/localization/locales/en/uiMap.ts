@@ -95,7 +95,7 @@ export const UI_MAP_MESSAGES = {
   "ui.map.camera.hint": "drag · wheel",
   "ui.map.camera.zoomOut": "Zoom out",
   "ui.map.camera.zoomIn": "Zoom in",
-  "ui.map.camera.fit": "Fit facility",
+  "ui.map.camera.fit": "Fit cutaway",
   "ui.map.selectRoom": "Select a room",
   "ui.map.legend": "Map materials and damage legend",
   "ui.map.legend.upperGas": "upper gas",

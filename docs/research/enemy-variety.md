@@ -65,7 +65,7 @@ shared environment solver to determine later tower or process interactions.
 
 | Enemy       | Behavior axis            | Player question                                                       |
 | ----------- | ------------------------ | --------------------------------------------------------------------- |
-| Deckmouth   | Baseline route pressure  | Does this lane have enough ordinary tower coverage?                   |
+| Deckmouth   | Baseline route pressure  | Does this lane have enough tower coverage?                            |
 | Flintjack   | Fast low-health runner   | Can acquisition and cadence catch a short coverage window?            |
 | Shear-jelly | Upper-route flight       | Which wall or ceiling towers cover the airborne lane?                 |
 | Splitback   | Armored molt             | Which tower breaks the shell, and what catches the faster body?       |

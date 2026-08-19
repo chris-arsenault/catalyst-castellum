@@ -34,7 +34,7 @@ const furnaceDeckmouth = (): EnemyState => {
     damageTaken: 12.4,
     damageBySource: emptyDamageLedger(),
     lastDamage: {
-      sourceId: "tower_projector",
+      sourceId: "tower_burner",
       channels: { ...emptyHazardChannels(), heat: 0.41 },
       amount: 0.41,
       elapsed: 8,
@@ -57,7 +57,7 @@ describe("enemy map detail", () => {
     expect(tooltip.textContent).toContain("Level20");
     expect(tooltip.textContent).toContain("R-02 · lower gas");
     expect(tooltip.textContent).toContain("Last tick · −0.41 THERMAL");
-    expect(tooltip.textContent).toContain("line projector");
+    expect(tooltip.textContent).toContain("carbon burner");
   });
 
   it("shows the Anchor's live shared-field budget", () => {

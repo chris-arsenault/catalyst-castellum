@@ -16,12 +16,13 @@ Early sites follow one causal relationship at a time:
 
 ## Campaign teaching curve
 
-1. **Claim 8-Delta** teaches free surface placement, firing arcs, range, assault start, direct damage,
-   Matter income, and one tower upgrade on a readable route.
-2. **Harker's Brace** teaches wall and ceiling relationships, vertical line of sight, route progress
-   targeting, and coverage across two elevations.
-3. **Twelve-Cask** teaches finite firing capacity, area damage, route control, and mixed enemy
-   cadence.
+1. **Claim 8-Delta** teaches free surface placement with the Flash Chamber, firing arcs, range,
+   assault start, pressure damage, Matter income, and one apparatus upgrade on a readable route.
+   The Caustic Jet offers a faster second solution.
+2. **Harker's Brace** teaches wall and ceiling Carbon Burner geometry, vertical line of sight, route
+   progress targeting, and coverage across two elevations.
+3. **Twelve-Cask** teaches Acid Pot area damage, Quench Coil route control, finite firing capacity,
+   and the optional Acid-Caustic neutralization burst.
 4. **Morrow Pocket** is the first open defense. It combines tower classes, upgrades, target
    priorities, and multiple routes without click-by-click guidance.
 5. **Kettleblack** introduces the first permanent room-graft decision and tests how new hull geometry
@@ -37,7 +38,7 @@ Early sites follow one causal relationship at a time:
     overlapping rooms.
 11. **Lane Six** compresses convoy cadence across a long multi-route approach.
 12. **Pell Cordon** combines the campaign's route, placement, targeting, graft, and support
-    vocabulary while the foundry breaks the Near Voice's learned cadence.
+    vocabulary while the vessel breaks the Near Voice's learned cadence.
 
 Every site contains five waves. Field guidance concentrates on the first three sites and becomes
 observation and recall support afterward. The player can disable guidance while retaining every

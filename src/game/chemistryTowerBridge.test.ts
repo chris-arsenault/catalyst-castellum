@@ -19,7 +19,7 @@ import { processLineId } from "./world/map";
 
 const runtime = createGameRuntime(DEFAULT_GAME_DEFINITION);
 
-const projectorPlacementIn = (state: GameState, roomId: string): GameCommand => {
+const burnerPlacementIn = (state: GameState, roomId: string): GameCommand => {
   const room = state.map.rooms[roomId]!;
   const candidates: Extract<GameCommand, { type: "place_tower" }>[] = [];
   for (
@@ -29,14 +29,14 @@ const projectorPlacementIn = (state: GameState, roomId: string): GameCommand => 
   ) {
     candidates.push({
       type: "place_tower",
-      chassisId: "line_projector",
+      chassisId: "carbon_burner",
       anchor: { column: room.bounds.column, elevation },
       mountFace: "left_wall",
       orientation: "right",
     });
     candidates.push({
       type: "place_tower",
-      chassisId: "line_projector",
+      chassisId: "carbon_burner",
       anchor: { column: room.bounds.column + room.bounds.width - 1, elevation },
       mountFace: "right_wall",
       orientation: "left",
@@ -49,18 +49,18 @@ const projectorPlacementIn = (state: GameState, roomId: string): GameCommand => 
   ) {
     candidates.push({
       type: "place_tower",
-      chassisId: "line_projector",
+      chassisId: "carbon_burner",
       anchor: { column, elevation: room.bounds.elevation + room.bounds.height - 1 },
       mountFace: "ceiling",
       orientation: "down",
     });
   }
   const command = candidates.find((candidate) => runtime.evaluate(state, candidate).allowed);
-  if (!command) throw new Error(`No legal projector placement exists in ${roomId}.`);
+  if (!command) throw new Error(`No legal Carbon Burner placement exists in ${roomId}.`);
   return command;
 };
 
-const suppliedProjectorState = (): { state: GameState; towerId: string; connectionId: string } => {
+const suppliedBurnerState = (): { state: GameState; towerId: string; connectionId: string } => {
   let state = runtime.execute(runtime.createScenario("cordon_41"), { type: "begin_level" }).state;
   state.matter = 1_000;
   const blueprint = Object.values(runtime.definition.lineBlueprints).find(
@@ -85,7 +85,7 @@ const suppliedProjectorState = (): { state: GameState; towerId: string; connecti
   });
   expect(built.accepted, built.code ?? undefined).toBe(true);
   state = built.state;
-  const placed = runtime.execute(state, projectorPlacementIn(state, destinationRoomId));
+  const placed = runtime.execute(state, burnerPlacementIn(state, destinationRoomId));
   expect(placed.accepted, placed.code ?? undefined).toBe(true);
   state = placed.state;
   const towerId = Object.keys(state.towers)[0]!;
@@ -122,7 +122,7 @@ const roomElements = (state: GameState, roomId: string, towerId: string) => {
 
 describe("pipe-assisted towers", () => {
   it("uses delivered flow after conduit latency and reports the same supply contract", () => {
-    const { state, towerId, connectionId } = suppliedProjectorState();
+    const { state, towerId, connectionId } = suppliedBurnerState();
     const tower = state.towers[towerId]!;
     serviceTowerSupplies(state, 1, runtime.definition);
     expect(tower.localResources.gas.hydrogen ?? 0).toBe(0);
@@ -144,7 +144,7 @@ describe("pipe-assisted towers", () => {
   });
 
   it("conserves hydrogen and oxygen through local storage and steam exhaust", () => {
-    const { state, towerId, connectionId } = suppliedProjectorState();
+    const { state, towerId, connectionId } = suppliedBurnerState();
     const tower = state.towers[towerId]!;
     const roomId = towerRoomId(state, tower)!;
     state.gasConduits[connectionId]!.flowCause = "fan";
@@ -160,7 +160,7 @@ describe("pipe-assisted towers", () => {
   });
 
   it("allocates shared line flow independently of tower record insertion order", () => {
-    const fixture = suppliedProjectorState();
+    const fixture = suppliedBurnerState();
     fixture.state.gasConduits[fixture.connectionId]!.flowCause = "fan";
     const first = fixture.state.towers[fixture.towerId]!;
     const second = {
@@ -183,7 +183,7 @@ describe("pipe-assisted towers", () => {
 
 describe("environmental fields", () => {
   it("applies explicit strongest and additive stacking, then decays deterministically", () => {
-    const state = suppliedProjectorState().state;
+    const state = suppliedBurnerState().state;
     const base = {
       sourceId: "test",
       effect: "movement" as const,

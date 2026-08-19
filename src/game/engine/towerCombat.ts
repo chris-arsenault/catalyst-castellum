@@ -42,11 +42,24 @@ const tickEffects = (state: GameState, dt: number): void => {
 const effectKey = (effect: Pick<EnemyControlEffect, "sourceTowerId" | "kind">): string =>
   `${effect.sourceTowerId}:${effect.kind}`;
 
+const oppositeCoating = (kind: TowerControlEffectDefinition["kind"]): "acid" | "caustic" | null => {
+  if (kind === "acid") return "caustic";
+  if (kind === "caustic") return "acid";
+  return null;
+};
+
 const applyControlEffect = (
   enemy: EnemyState,
   tower: TowerInstance,
   definition: TowerControlEffectDefinition
-): void => {
+): boolean => {
+  const opposite = oppositeCoating(definition.kind);
+  if (opposite && enemy.effects.some((effect) => effect.kind === opposite)) {
+    enemy.effects = enemy.effects.filter(
+      (effect) => effect.kind !== "acid" && effect.kind !== "caustic"
+    );
+    return true;
+  }
   const incoming: EnemyControlEffect = {
     sourceTowerId: tower.id,
     kind: definition.kind,
@@ -69,7 +82,22 @@ const applyControlEffect = (
     enemy.pathIndex = Math.max(0, enemy.pathIndex - Math.max(1, Math.round(definition.magnitude)));
     enemy.progress = 0;
   }
+  return false;
 };
+
+const neutralizationPackets = (tower: TowerInstance): DamagePacket[] => [
+  {
+    key: `tower:${tower.id}:${tower.shots}:neutralization`,
+    sourceId: "tower_neutralization",
+    channels: {
+      atmosphere: 0,
+      corrosion: 0,
+      heat: 18,
+      pressure: 0,
+      radiation: 0,
+    },
+  },
+];
 
 const attackPackets = (
   state: GameState,
@@ -154,6 +182,51 @@ interface TowerHitResult {
   killedEnemyId: number | null;
 }
 
+type DamageApplication = ReturnType<typeof applyDamagePacketsWithScale>;
+
+const applyNeutralizationDamage = (
+  state: GameState,
+  tower: TowerInstance,
+  enemy: EnemyState,
+  current: DamageApplication,
+  channels: ReturnType<typeof emptyHazardChannels>,
+  definition: GameDefinition
+): DamageApplication => {
+  const packets = neutralizationPackets(tower);
+  const requested = requestedDamageForPackets(enemy, packets, definition);
+  const reaction = applyDamagePacketsWithScale(state, enemy, packets, 1, definition);
+  tower.telemetry.overkillDamage += Math.max(0, requested - reaction.healthBefore);
+  for (const packet of reaction.packets) addChannels(channels, packet.channels);
+  return {
+    healthBefore: current.healthBefore,
+    healthAfter: reaction.healthAfter,
+    amount: current.amount + reaction.amount,
+    killed: reaction.killed,
+    dominantSource: reaction.killed ? reaction.dominantSource : current.dominantSource,
+    dominantChannel: reaction.killed ? reaction.dominantChannel : current.dominantChannel,
+    packets: [...current.packets, ...reaction.packets],
+  };
+};
+
+const applyTowerControlEffects = (
+  state: GameState,
+  tower: TowerInstance,
+  enemy: EnemyState,
+  initial: DamageApplication,
+  channels: ReturnType<typeof emptyHazardChannels>,
+  definition: GameDefinition
+): DamageApplication => {
+  let result = initial;
+  for (const effect of definition.towers[tower.chassisId].attack.controlEffects) {
+    const reacted = applyControlEffect(enemy, tower, effect);
+    tower.telemetry.controlApplications += 1;
+    if (reacted && enemy.health > 0) {
+      result = applyNeutralizationDamage(state, tower, enemy, result, channels, definition);
+    }
+  }
+  return result;
+};
+
 const applyTowerHit = (
   state: GameState,
   tower: TowerInstance,
@@ -162,7 +235,6 @@ const applyTowerHit = (
   definition: GameDefinition
 ): TowerHitResult | null => {
   if (!state.enemies.includes(enemy) || enemy.health <= 0) return null;
-  const chassis = definition.towers[tower.chassisId];
   const fieldScale = towerFieldDamageScale(state, enemy, packets, definition);
   const requested = requestedDamageForPackets(enemy, packets, definition) * fieldScale;
   const application = applyDamagePacketsWithScale(state, enemy, packets, fieldScale, definition);
@@ -171,29 +243,33 @@ const applyTowerHit = (
     addChannels(total, packet.channels);
     return total;
   }, emptyHazardChannels());
-  for (const effect of chassis.attack.controlEffects) {
-    applyControlEffect(enemy, tower, effect);
-    tower.telemetry.controlApplications += 1;
-  }
+  const finalApplication = applyTowerControlEffects(
+    state,
+    tower,
+    enemy,
+    application,
+    channels,
+    definition
+  );
   const roomId = enemyRoomId(enemy, state.map);
-  transitionArmoredMolt(state, enemy, roomId, application.killed);
-  if (application.killed && roomId) {
-    neutralizeEnemy(state, enemy, roomId, application, definition);
+  transitionArmoredMolt(state, enemy, roomId, finalApplication.killed);
+  if (finalApplication.killed && roomId) {
+    neutralizeEnemy(state, enemy, roomId, finalApplication, definition);
     tower.kills += 1;
   }
   return {
-    amount: application.amount,
+    amount: finalApplication.amount,
     channels,
     incidentTarget: {
       enemyId: enemy.id,
       enemyType: enemy.type,
       worldPosition: enemyWorldPosition(enemy),
-      healthBefore: application.healthBefore,
-      healthAfter: application.healthAfter,
+      healthBefore: finalApplication.healthBefore,
+      healthAfter: finalApplication.healthAfter,
       damageByChannel: channels,
-      killed: application.killed,
+      killed: finalApplication.killed,
     },
-    killedEnemyId: application.killed && roomId ? enemy.id : null,
+    killedEnemyId: finalApplication.killed && roomId ? enemy.id : null,
   };
 };
 
@@ -237,7 +313,7 @@ const recordCombatIncident = (
     phase: state.phase,
     roomId,
     zone: null,
-    sourceId: definition.towers[tower.chassisId].attack.packets[0]?.sourceId ?? "tower_bolt",
+    sourceId: definition.towers[tower.chassisId].attack.packets[0]?.sourceId ?? "tower_flash",
     reactionExtent: 0,
     pressureImpulse: 0,
     heatDelta: 0,

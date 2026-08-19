@@ -24,7 +24,7 @@ export const ENTITY_MESSAGES = {
     "A low inner chamber on the final Core approach with two equipment sockets.",
   "entities.rooms.core.name": "Catalyst Core",
   "entities.rooms.core.description":
-    "The central keep houses feedstock, exhaust, recovery, and the structure the facility defends.",
+    "The central keep houses feedstock, exhaust, recovery, and the Catalyst Core the vessel defends.",
 
   "entities.families.chlorine_sodium.name": "Chlorine-sodium",
   "entities.families.carbon_steam.name": "Carbon-steam",

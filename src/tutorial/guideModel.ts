@@ -5,6 +5,7 @@ import type { TutorialCopyKey } from "./copyTypes";
 import {
   claimDefenseGuideFor,
   harkerDefenseGuideFor,
+  twelveCaskDefenseGuideFor,
   towerDefensePhaseActionReason,
 } from "./towerDefenseGuides";
 
@@ -93,6 +94,9 @@ export const GUIDE_REGISTRATIONS: GuideRegistry = {
   harkers_brace: {
     guideFor: harkerDefenseGuideFor,
     phaseActionReason: towerDefensePhaseActionReason,
+  },
+  twelve_cask: {
+    guideFor: twelveCaskDefenseGuideFor,
   },
   kettleblack: {
     guideFor: kettleblackGuideFor,

@@ -6,12 +6,12 @@ This document defines the campaign's durable game-design contract.
 
 ## Premise
 
-A licensed Deep Shear Ratter crew operates a mostly unmanned claim rig at stand-off range. Its
-remote cutter couples recovered material into the rig's foundry. Cthonic beasts caught in the
+A licensed Deep Shear Ratter crew operates a mostly unmanned vessel at stand-off range. Its
+remote cutter couples recovered material into the vessel's process rooms. Cthonic beasts caught in the
 cutter wake cross through the outer receiving breach and follow the strongest resonance tone toward
 the Core.
 
-The player installs automated defenses throughout the rig and coupled site rooms. The foundry
+The player installs automated defenses throughout the vessel and coupled site rooms. The ship
 continues the extraction while each hostile column crosses. Holding the Core through the operation
 completes the claim and advances the campaign.
 
@@ -21,9 +21,9 @@ The campaign follows twelve authored sites across three acts:
 
 - **Good Standing** establishes licensed Ratter work, the crew's competence, and the first measured
   disagreement in the cutter return.
-- **The Same Grade** places the foundry between Displacement Council caution and Coremark scale,
+- **The Same Grade** places the vessel's extraction method between Displacement Council caution and Coremark scale,
   ending with the Pell emergence.
-- **A New Boundary** turns the rig into a Council containment asset and closes the Near Voice's
+- **A New Boundary** turns the vessel into a Council containment asset and closes the Near Voice's
   newborn boundary.
 
 Each site contains five waves, an authored map and route graph, a visible forecast, a starting
@@ -62,7 +62,7 @@ When topology changes, route selection recomputes from the same authored graph a
 
 ## Tower placement
 
-Ordinary towers mount freely on compatible architectural surfaces and snap to the world grid. A
+Chemical defenses mount freely on compatible architectural surfaces and snap to the world grid. A
 placement consists of an anchor cell, a surface face, an occupied footprint, and an orientation.
 Floors, ceilings, left walls, and right walls provide distinct firing positions.
 
@@ -97,9 +97,31 @@ Direct tower attacks provide the campaign's primary combat output. Common target
 first, last, strongest, weakest, armored, flying, and support. First and last compare remaining
 route distance or travel time to the Core across every active lane.
 
-The initial vocabulary covers reliable single-target damage, rapid target service, area damage,
-route control, upper-space coverage, and support. Each later chassis changes a placement or target
-question rather than duplicating an existing tower with a new coefficient.
+The seven chassis are purpose-built chemical defenses. Each fires in
+a neutral room from a self-contained service charge; pipes and room chemistry can later improve or
+alter its output, but they never supply permission to attack.
+
+| Chassis         | Tower-defense role    | Process identity and map question                                 |
+| --------------- | --------------------- | ----------------------------------------------------------------- |
+| Flash Chamber   | Focused single target | Meters hydrogen and oxygen into a contained pressure flash.       |
+| Caustic Jet     | Rapid target service  | Sprays sodium-hydroxide droplets and leaves a short Caustic coat. |
+| Carbon Burner   | Short cone area       | Burns carbon-steam fuel through a wall or ceiling-mounted nozzle. |
+| Acid Pot        | Lobbed ground area    | Throws hydrochloric-acid charges over intervening architecture.   |
+| Quench Coil     | Route control         | Condenses a cooling field that slows clustered ground targets.    |
+| Wash Head       | Upper-space coverage  | Bursts scrubber wash through flying and elevated targets.         |
+| Carbonyl Marker | Support               | Deposits a nickel trace that reveals targets and weakens armor.   |
+
+The first two chassis teach direct coverage and target service. Harker's Brace adds the Carbon
+Burner and its mount-dependent cone. Twelve-Cask adds the Acid Pot and Quench Coil, including the
+first optional tower-to-tower reaction. Morrow Pocket completes the vocabulary with the Wash Head
+and Carbonyl Marker. Each addition changes a placement or target question rather than replacing an
+established chassis with a higher coefficient.
+
+Tower reactions stay target-local, bounded, and readable. Caustic and Acid are individually useful
+short coatings. Applying either coating to a target that carries the other consumes both and causes
+one neutralization heat burst. Later campaign content may let a supplied Carbon Burner ignite a
+declared hydrogen field and let a Wash Head scrub a declared airborne field. The interface names
+the pending combination and shows its finite result; reaction chains never replace normal firing.
 
 ## Enemies and waves
 
@@ -150,7 +172,7 @@ the system imposes no separate graft count.
 
 ## Chemistry and transport
 
-The foundry's chemistry, finite inventories, gas and liquid transport, temperature, pressure, and
+The vessel's finite chemical inventories, gas and liquid transport, temperature, pressure, and
 atmospheric state remain deterministic world systems. The first tower-defense sites use neutral
 rooms and self-contained towers so placement, targeting, routing, and upgrade decisions establish
 the combat foundation.
@@ -158,7 +180,8 @@ the combat foundation.
 Later sites connect the process systems to visible tower and battlefield effects. A pipe can supply
 an alternate firing mode or improved operation, a vent can move a visible cloud through an opening,
 a spill can alter a ground route, and a tower or enemy can produce a bounded atmospheric byproduct.
-Each effect states its source, destination, capacity, and combat consequence.
+The Carbon Burner's fuel connection and Wash Head's scrubbing connection are the first authored
+interfaces. Each effect states its source, destination, capacity, and combat consequence.
 
 ## Site authoring contract
 

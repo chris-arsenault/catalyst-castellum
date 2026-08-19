@@ -12,7 +12,7 @@ test("process equipment uses room sockets and the site catalog", async ({ page }
   await page.getByTestId("side-panel-room").click();
   await expect(page.getByTestId("room-inspector")).toBeVisible();
   await page.getByTestId("open-equipment-build-lower_intake-socket_a").click();
-  await expect(page.getByRole("dialog", { name: "Facility Manual" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Vessel Manual" })).toBeVisible();
   await expect(page.getByAltText("Membrane cell field plate").last()).toBeVisible();
 
   await page.getByTestId("manual-equipment-choice-membrane_cell").click();
