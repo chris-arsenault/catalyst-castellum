@@ -55,9 +55,9 @@ export const drawProcessNodes = (
   state: GameState,
   supplies: readonly SupplyCardCopy[]
 ): void => {
-  const view = mapViewFor(state.map);
+  const view = mapViewFor(state.encounter.map);
   const nodeWorldPoint = (nodeId: FacilityUtilityNodeId): WorldPoint =>
-    gridCellToWorldPoint(instance(state.map.utilityNodes, nodeId, "utility node").cell);
+    gridCellToWorldPoint(instance(state.encounter.map.utilityNodes, nodeId, "utility node").cell);
   graphics.clear();
   for (const supply of supplies) {
     drawTank(
@@ -73,7 +73,7 @@ export const drawProcessNodes = (
     view,
     nodeWorldPoint("gas_vent"),
     0x69c5cd,
-    Math.min(1, gasAmountTotal(state.gasVent) / 80),
+    Math.min(1, gasAmountTotal(state.encounter.process.gasVent) / 80),
     true
   );
   drawTerminal(
@@ -81,7 +81,7 @@ export const drawProcessNodes = (
     view,
     nodeWorldPoint("liquid_drain"),
     0x548ada,
-    Math.min(1, liquidAmountTotal(state.liquidDrain) / 80),
+    Math.min(1, liquidAmountTotal(state.encounter.process.liquidDrain) / 80),
     false
   );
 };

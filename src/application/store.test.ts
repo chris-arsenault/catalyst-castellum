@@ -23,6 +23,7 @@ const saveRecord = (overrides: Partial<SaveSlotRecord> = {}): SaveSlotRecord => 
   game: DEFAULT_GAME_RUNTIME.createScenario("harkers_brace"),
   dismissedGuideIds: ["guide-1"],
   guidanceEnabled: true,
+  guideEvidence: {},
   savedAt: 1234,
   ...overrides,
 });
@@ -103,7 +104,7 @@ describe("debug save-slot starts", () => {
 
     expect(store.getState().game.phase).toBe("level_briefing");
     expect(
-      Object.values(store.getState().game.rooms).flatMap((room) =>
+      Object.values(store.getState().game.encounter.process.rooms).flatMap((room) =>
         Object.values(room.equipment).filter((equipment) => equipment !== null)
       )
     ).toEqual([]);
@@ -141,6 +142,7 @@ describe("debug save-slot starts", () => {
     expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", game, {
       dismissedGuideIds: [],
       guidanceEnabled: true,
+      guideEvidence: {},
     });
   });
 });
@@ -161,6 +163,7 @@ describe("active save-slot lifecycle", () => {
     expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-2", store.getState().game, {
       dismissedGuideIds: [],
       guidanceEnabled: true,
+      guideEvidence: store.getState().guideEvidence,
     });
   });
 
@@ -180,6 +183,7 @@ describe("active save-slot lifecycle", () => {
     expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-1", store.getState().game, {
       dismissedGuideIds: [],
       guidanceEnabled: true,
+      guideEvidence: {},
     });
     expect(store.getState()).toMatchObject({
       activeSlotId: "slot-1",
@@ -188,7 +192,9 @@ describe("active save-slot lifecycle", () => {
       tutorialSessionRevision: revision + 1,
     });
   });
+});
 
+describe("run preferences and menu lifecycle", () => {
   it("carries the chosen guidance setting through a run, a reload, and a restart", () => {
     const adapters = dependencies();
     const store = createStore<GameStore>(createGameStoreState(adapters));
@@ -199,6 +205,7 @@ describe("active save-slot lifecycle", () => {
     expect(adapters.scheduleSave).toHaveBeenLastCalledWith("slot-1", store.getState().game, {
       dismissedGuideIds: [],
       guidanceEnabled: false,
+      guideEvidence: {},
     });
 
     // Restarting the same slot keeps the run's choice rather than re-asking.

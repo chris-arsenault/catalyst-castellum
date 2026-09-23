@@ -5,8 +5,12 @@ import { createScenarioGame, executeCommand } from "../game/simulation";
 import type { GameCommand, GameState } from "../game/types";
 import { guideDefinitionFor } from "./guideModel";
 import { TutorialTaskCard } from "./TutorialTaskCard";
+import { useGameStore } from "../application/store";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  useGameStore.setState({ guideEvidence: {} });
+});
 
 const command = (game: GameState, value: GameCommand): GameState => {
   const result = executeCommand(game, value);
@@ -58,5 +62,17 @@ describe("tutorial task card", () => {
     expect(
       screen.getByText("Apply the same coverage reading to the remaining waves.")
     ).toBeTruthy();
+  });
+
+  it("retains observed mission progress when the triggering tower is removed", () => {
+    const game = command(createScenarioGame("claim_8_delta"), { type: "begin_level" });
+    const guide = guideDefinitionFor(game);
+    if (!guide) throw new Error("Claim guide missing");
+    useGameStore.setState({
+      guideEvidence: { [guide.id]: { steps: ["mount-flash-chamber"], tasks: ["mount-defense"] } },
+    });
+    render(<TutorialTaskCard activeStep={guide.steps[3] ?? null} guide={guide} game={game} />);
+    expect(Object.keys(game.encounter.towers)).toHaveLength(0);
+    expect(screen.getByTestId("tutorial-task-card").textContent).toContain("1 / 4");
   });
 });

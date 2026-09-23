@@ -6,7 +6,7 @@ import type {
   LevelDefinition,
   RoundDefinition,
 } from "../definitionTypes";
-import type { ScenarioAvailability, SpeciesId, TowerDefinition } from "../types";
+import type { ScenarioAvailability, SpeciesId } from "../types";
 import { parseProcessLineId } from "../world/map";
 import type { WorldMap } from "../world/map";
 import { validateWorldMap } from "../world/mapValidation";
@@ -17,6 +17,7 @@ import { validateReactions } from "./reactionValidation";
 import { validateEquipmentOperations } from "./equipmentOperationValidation";
 import { validateLevelSupplies } from "./supplyValidation";
 import { validateLevelPalette } from "./paletteValidation";
+import { validateTowerDefinitions } from "./towerValidation";
 
 export type AuthoringIssue = EnemyAuthoringIssue;
 
@@ -333,66 +334,6 @@ const validateLevelDefinition = (
   validateRoundRoutes(level, validateLevelRoutes(map, level, path, issues), path, issues);
 };
 
-type TowerSource = TowerDefinition;
-
-const validateTowerUpgrade = (
-  towerId: string,
-  tower: TowerSource,
-  upgradeIndex: number,
-  upgradeOwners: Map<string, string>,
-  path: string,
-  issues: AuthoringIssue[]
-): void => {
-  const upgrade = tower.upgrades[upgradeIndex];
-  if (!upgrade) return;
-  const owner = upgradeOwners.get(upgrade.id);
-  if (owner && owner !== towerId)
-    push(issues, `${path}.upgrades.${upgradeIndex}.id`, `Upgrade is already owned by ${owner}.`);
-  upgradeOwners.set(upgrade.id, towerId);
-  const upgradeIds = tower.upgrades.map(({ id }) => id);
-  if (upgrade.requires.some((required) => !upgradeIds.includes(required)))
-    push(
-      issues,
-      `${path}.upgrades.${upgradeIndex}.requires`,
-      "Upgrade prerequisite is not in this tree."
-    );
-  if (upgrade.requires.includes(upgrade.id))
-    push(issues, `${path}.upgrades.${upgradeIndex}.requires`, "Upgrade cannot require itself.");
-};
-
-const validateTower = (
-  towerId: string,
-  tower: TowerSource,
-  upgradeOwners: Map<string, string>,
-  issues: AuthoringIssue[]
-): void => {
-  const path = `towers.${towerId}`;
-  validateIdentity(issues, `${path}.id`, towerId, tower.id);
-  if (!Number.isFinite(tower.buildCost) || tower.buildCost <= 0)
-    push(issues, `${path}.buildCost`, "Tower build cost must be positive.");
-  if (tower.footprint.width < 1 || tower.footprint.height < 1)
-    push(issues, `${path}.footprint`, "Tower footprint dimensions must be positive.");
-  if (tower.mountFaces.length === 0)
-    push(issues, `${path}.mountFaces`, "Tower requires at least one mounting face.");
-  if (tower.targetPolicies.length === 0)
-    push(issues, `${path}.targetPolicies`, "Tower requires at least one targeting policy.");
-  if (tower.attack.packets.length === 0)
-    push(issues, `${path}.attack.packets`, "Tower requires at least one damage packet.");
-  const upgradeIds = tower.upgrades.map(({ id }) => id);
-  if (new Set(upgradeIds).size !== upgradeIds.length)
-    push(issues, `${path}.upgrades`, "Tower upgrade identifiers must be unique.");
-  for (const index of tower.upgrades.keys()) {
-    validateTowerUpgrade(towerId, tower, index, upgradeOwners, path, issues);
-  }
-};
-
-const validateTowers = (source: GamePackSource, issues: AuthoringIssue[]): void => {
-  const upgradeOwners = new Map<string, string>();
-  for (const [towerId, tower] of Object.entries(source.towers)) {
-    validateTower(towerId, tower, upgradeOwners, issues);
-  }
-};
-
 const validateEquipmentLoadout = (
   source: GamePackSource,
   map: WorldMap,
@@ -508,7 +449,7 @@ export const validateGamePack = (source: GamePackSource): readonly AuthoringIssu
     push(issues, "contentVersion", "Content version must be a positive integer.");
   validateLevelOrder(source, issues);
   validateSpeciesHazards(source, issues);
-  validateTowers(source, issues);
+  issues.push(...validateTowerDefinitions(source));
   validateReactions(source, issues);
   validateEquipmentOperations(source, issues);
   validateMap(source, issues);

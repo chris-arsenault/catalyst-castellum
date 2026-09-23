@@ -49,8 +49,8 @@ export const PipePreviewPopup = () => {
     >
       <span className="pipe-confirm-title">
         {translator.text("ui.pipes.confirm.title", {
-          from: roomDefinition(game, preview.fromRoomId).code,
-          to: roomDefinition(game, preview.toRoomId).code,
+          from: roomDefinition(game.encounter, preview.fromRoomId).code,
+          to: roomDefinition(game.encounter, preview.toRoomId).code,
         })}
       </span>
       <div className="pipe-confirm-actions">

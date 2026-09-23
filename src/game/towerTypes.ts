@@ -169,6 +169,8 @@ export interface EnemyControlEffect {
 export interface TowerAttackEvent {
   id: number;
   towerId: TowerInstanceId;
+  sourceChassisId?: TowerChassisId;
+  sourceColor?: string;
   strategy: TowerAttackStrategy;
   source: WorldPoint;
   target: WorldPoint;

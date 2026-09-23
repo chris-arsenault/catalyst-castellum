@@ -1,4 +1,4 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessDefinition } from "../encounter/processTypes";
 import type { RoomId } from "../types";
 import { routeConnection } from "./autoRouter";
 import type { LineSpec, ProcessLineConnection, ProcessLineKind, WorldMap } from "./map";
@@ -8,20 +8,29 @@ import { validateWorldMap } from "./mapValidation";
 export const lineBuildCost = (spec: LineSpec, routeLength: number): number =>
   Math.round(spec.baseCost + spec.costPerCell * routeLength);
 
-const plannedCache = new WeakMap<WorldMap, Map<string, ProcessLineConnection | null>>();
+type LineDefinition = Pick<ProcessDefinition, "lineBlueprints" | "lineSpecs">;
+const plannedCache = new WeakMap<
+  LineDefinition,
+  WeakMap<WorldMap, Map<string, ProcessLineConnection | null>>
+>();
 
 /** One ordered construction request on one immutable map has one deterministic plan. */
 export const plannedLineConnection = (
-  definition: GameDefinition,
+  definition: LineDefinition,
   map: WorldMap,
   kind: ProcessLineKind,
   fromRoomId: RoomId,
   toRoomId: RoomId
 ): ProcessLineConnection | null => {
-  let plans = plannedCache.get(map);
+  let maps = plannedCache.get(definition);
+  if (!maps) {
+    maps = new WeakMap();
+    plannedCache.set(definition, maps);
+  }
+  let plans = maps.get(map);
   if (!plans) {
     plans = new Map();
-    plannedCache.set(map, plans);
+    maps.set(map, plans);
   }
   const key = `${kind}:${fromRoomId}>${toRoomId}`;
   if (!plans.has(key))
@@ -47,7 +56,7 @@ export const withoutConnection = (map: WorldMap, connectionId: string): WorldMap
 
 /** Route and parameterize a new player line; null when no legal route exists. */
 export const mintLineConnection = (
-  definition: GameDefinition,
+  definition: LineDefinition,
   map: WorldMap,
   kind: ProcessLineKind,
   fromRoomId: RoomId,

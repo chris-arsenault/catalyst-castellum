@@ -128,6 +128,7 @@ export const DAMAGE_SOURCE_IDS = [
   "tower_wash",
   "tower_marker",
   "tower_neutralization",
+  "tower_discharge",
 ] as const;
 
 export const PROCESS_FAMILY_IDS = [

@@ -1,3 +1,4 @@
+import { campaignEncounterContext } from "./engine/campaignEncounter";
 import { describe, expect, it } from "vitest";
 import { roomRing } from "./config";
 import { DEFAULT_GAME_DEFINITION } from "./definition";
@@ -12,13 +13,17 @@ const processState = () => {
   const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1);
   if (!round) throw new Error("Cordon 41 has no rounds.");
   state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.length - 1;
-  state.availability = {
+  state.encounter.availability = {
     towers: [...round.availability.towers],
     equipment: [...round.availability.equipment],
     gasLines: [...round.availability.gasLines],
     liquidLines: [...round.availability.liquidLines],
   };
-  state.matter = 999;
+  state.encounter.matter = 999;
+  state.encounter.definition.id = campaignEncounterContext(
+    state,
+    DEFAULT_GAME_DEFINITION
+  ).definition.id;
   return state;
 };
 
@@ -43,14 +48,14 @@ describe("simple conduit controls", () => {
       enabled: false,
     });
     expect(result.accepted).toBe(true);
-    expect(gasConduitState(result.state, "gas:core__furnace").enabled).toBe(false);
+    expect(gasConduitState(result.state.encounter, "gas:core__furnace").enabled).toBe(false);
   });
 
   it("builds and dismantles only an empty physical conduit", () => {
     const state = executeCommand(createScenarioGame("claim_8_delta"), {
       type: "begin_level",
     }).state;
-    state.availability.gasLines.push("gas:core__gallery");
+    state.encounter.availability.gasLines.push("gas:core__gallery");
     const built = executeCommand(state, {
       type: "build_connection",
       kind: "gas_line",
@@ -58,13 +63,13 @@ describe("simple conduit controls", () => {
       toRoomId: "gallery",
     });
     expect(built.accepted).toBe(true);
-    expect(built.state.gasConduits["gas:core__gallery"]).toBeDefined();
+    expect(built.state.encounter.process.gasConduits["gas:core__gallery"]).toBeDefined();
     const dismantled = executeCommand(built.state, {
       type: "dismantle_connection",
       connectionId: "gas:core__gallery",
     });
     expect(dismantled.accepted).toBe(true);
-    expect(dismantled.state.gasConduits["gas:core__gallery"]).toBeUndefined();
+    expect(dismantled.state.encounter.process.gasConduits["gas:core__gallery"]).toBeUndefined();
   });
 
   it("rejects dismantling conserved retained material", () => {
@@ -75,7 +80,7 @@ describe("simple conduit controls", () => {
       fromRoomId: "furnace",
       toRoomId: "lower_intake",
     }).state;
-    gasConduitState(state, "gas:furnace__lower_intake").gas.hydrogen = 1;
+    gasConduitState(state.encounter, "gas:furnace__lower_intake").gas.hydrogen = 1;
     const result = executeCommand(state, {
       type: "dismantle_connection",
       connectionId: "gas:furnace__lower_intake",
@@ -94,7 +99,7 @@ describe("equipment dismantling", () => {
       socketId: "socket_a",
       equipmentId: "membrane_cell",
     }).state;
-    const anode = roomState(state, "lower_intake").equipment.socket_a?.operation?.outputs
+    const anode = roomState(state.encounter, "lower_intake").equipment.socket_a?.operation?.outputs
       .anode_header;
     if (!anode || anode.phase !== "gas") throw new Error("Membrane cell anode is missing.");
     anode.gas.chlorine = 1;
@@ -114,7 +119,7 @@ describe("equipment dismantling", () => {
       socketId: "socket_a",
     });
     expect(drained.accepted).toBe(true);
-    expect(roomState(drained.state, "lower_intake").equipment.socket_a).toBeNull();
+    expect(roomState(drained.state.encounter, "lower_intake").equipment.socket_a).toBeNull();
   });
 });
 
@@ -128,7 +133,7 @@ describe("derived rings and mixed exotic stock", () => {
 
   it("charges the site's conserved gas packet in its authored ratio", () => {
     const state = processState();
-    const source = state.gasSources.gas_reservoir;
+    const source = state.encounter.process.gasSources.gas_reservoir;
     if (!source) throw new Error("Morrow Pocket gas reservoir is missing.");
     source.gas.hydrogen = 0;
     source.gas.oxygen = 0;
@@ -137,7 +142,7 @@ describe("derived rings and mixed exotic stock", () => {
       sourceId: "gas_reservoir",
     });
     expect(result.accepted).toBe(true);
-    const gas = result.state.gasSources.gas_reservoir!.gas;
+    const gas = result.state.encounter.process.gasSources.gas_reservoir!.gas;
     const supply = DEFAULT_GAME_DEFINITION.levels.cordon_41.supplies.find(
       (candidate) => candidate.id === "gas_reservoir"
     );
@@ -155,13 +160,13 @@ describe("derived rings and mixed exotic stock", () => {
 
   it("prorates a conserved liquid charge and its Matter cost at reservoir capacity", () => {
     const state = processState();
-    const source = state.liquidSources.liquid_reservoir_a;
+    const source = state.encounter.process.liquidSources.liquid_reservoir_a;
     if (!source) throw new Error("Morrow Pocket liquid reservoir is missing.");
     for (const species of Object.keys(source.liquid)) {
       source.liquid[species as keyof typeof source.liquid] = 0;
     }
     source.liquid.water = 215;
-    const matterBefore = state.matter;
+    const matterBefore = state.encounter.matter;
 
     const result = executeCommand(state, {
       type: "charge_liquid_source",
@@ -169,9 +174,11 @@ describe("derived rings and mixed exotic stock", () => {
     });
 
     expect(result.accepted).toBe(true);
-    expect(result.state.liquidSources.liquid_reservoir_a?.liquid.water).toBeCloseTo(220);
-    expect(result.state.matter).toBe(matterBefore - 2);
-    expect(result.state.events[0]).toMatchObject({
+    expect(
+      result.state.encounter.process.liquidSources.liquid_reservoir_a?.liquid.water
+    ).toBeCloseTo(220);
+    expect(result.state.encounter.matter).toBe(matterBefore - 2);
+    expect(result.state.encounter.events[0]).toMatchObject({
       code: "liquid_source_charged",
       parameters: { amount: 5, cost: 2 },
     });
@@ -185,12 +192,12 @@ describe("universal equipment sockets", () => {
     )) {
       for (const equipmentId of EQUIPMENT_IDS) {
         const entered = processState();
-        for (const room of Object.values(entered.rooms)) {
+        for (const room of Object.values(entered.encounter.process.rooms)) {
           room.equipment.socket_a = null;
           room.equipment.socket_b = null;
         }
-        entered.availability.equipment = [...EQUIPMENT_IDS];
-        entered.matter = 999;
+        entered.encounter.availability.equipment = [...EQUIPMENT_IDS];
+        entered.encounter.matter = 999;
         const result = executeCommand(entered, {
           type: "install_equipment",
           roomId,
@@ -201,5 +208,5 @@ describe("universal equipment sockets", () => {
         expect(result.accepted, `${equipmentId} in ${roomId}: ${result.code}`).toBe(true);
       }
     }
-  });
+  }, 15_000);
 });

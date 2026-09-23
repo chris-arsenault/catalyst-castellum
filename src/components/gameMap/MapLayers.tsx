@@ -20,7 +20,7 @@ export const GhostRouteLayer = ({ game, preview }: { game: GameState; preview: P
   const draw = useCallback(
     (graphics: Graphics) => {
       graphics.clear();
-      const view = mapViewFor(game.map);
+      const view = mapViewFor(game.encounter.map);
       const option =
         preview.options.find(({ kind }) => kind === preview.selectedKind) ?? preview.options[0];
       if (!option) return;
@@ -40,13 +40,16 @@ export const GhostRouteLayer = ({ game, preview }: { game: GameState; preview: P
       const last = points.at(-1);
       if (last) graphics.circle(last.x, last.y, 5).stroke({ color, width: 2, alpha: 0.9 });
     },
-    [game.map, preview]
+    [game.encounter.map, preview]
   );
   return <pixiGraphics draw={draw} eventMode="none" />;
 };
 
 export const MapBackdrop = ({ game }: { game: GameState }) => {
-  const draw = useCallback((graphics: Graphics) => drawBackdrop(graphics, game.map), [game.map]);
+  const draw = useCallback(
+    (graphics: Graphics) => drawBackdrop(graphics, game.encounter.map),
+    [game.encounter.map]
+  );
   return <pixiGraphics draw={draw} eventMode="none" />;
 };
 
@@ -54,19 +57,20 @@ export const FacilityCorridors = ({ game }: { game: GameState }) => {
   return (
     <>
       <FacilityStructureLayer game={game} />
-      <RoomBoundaryLayer map={game.map} />
+      <RoomBoundaryLayer map={game.encounter.map} />
     </>
   );
 };
 
 export const FacilityDoors = ({ game }: { game: GameState }) => {
   const draw = useCallback(
-    (graphics: Graphics) => drawFacilityPortalFlows(graphics, game.map, game.portalStates),
-    [game.map, game.portalStates]
+    (graphics: Graphics) =>
+      drawFacilityPortalFlows(graphics, game.encounter.map, game.encounter.portalStates),
+    [game.encounter.map, game.encounter.portalStates]
   );
   return (
     <>
-      <RoomClosureLayer map={game.map} portalStates={game.portalStates} />
+      <RoomClosureLayer map={game.encounter.map} portalStates={game.encounter.portalStates} />
       <pixiGraphics draw={draw} eventMode="none" />
     </>
   );
@@ -99,9 +103,12 @@ const TransportRunNode = ({
 };
 
 const installedPipePaths = (game: GameState, runId: ConnectionId): number[][] => {
-  const view = mapViewFor(game.map);
+  const view = mapViewFor(game.encounter.map);
   const paths: number[][] = [];
-  for (const conduit of [game.gasConduits[runId], game.liquidConduits[runId]]) {
+  for (const conduit of [
+    game.encounter.process.gasConduits[runId],
+    game.encounter.process.liquidConduits[runId],
+  ]) {
     if (!conduit || conduit.route.length < 2) continue;
     paths.push(view.worldPathToMap(gridPathToWorldPath(conduit.route)).flatMap((p) => [p.x, p.y]));
   }
@@ -129,12 +136,12 @@ const PipeHitNode = ({
     [game, runId]
   );
   const toggle = useCallback(() => {
-    const gas = game.gasConduits[runId];
-    const liquid = game.liquidConduits[runId];
+    const gas = game.encounter.process.gasConduits[runId];
+    const liquid = game.encounter.process.liquidConduits[runId];
     const anyOn = Boolean(gas?.enabled || liquid?.enabled);
     if (gas) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
     if (liquid) dispatch({ type: "set_conduit", connectionId: runId, enabled: !anyOn });
-  }, [dispatch, game.gasConduits, game.liquidConduits, runId]);
+  }, [dispatch, game.encounter.process.gasConduits, game.encounter.process.liquidConduits, runId]);
   return (
     <pixiGraphics
       draw={draw}
@@ -148,8 +155,9 @@ const PipeHitNode = ({
 };
 
 const physicalConnectionIds = (game: GameState): ConnectionId[] =>
-  game.world.connections.filter(
-    (runId) => runId in game.gasConduits || runId in game.liquidConduits
+  game.encounter.world.connections.filter(
+    (runId) =>
+      runId in game.encounter.process.gasConduits || runId in game.encounter.process.liquidConduits
   );
 
 export const PipeHitLayer = ({
@@ -190,7 +198,7 @@ export const TransportNetwork = ({
         hovered={
           hoveredRunId === runId ||
           (pipeDragSourceRoomId !== null &&
-            connectionRoomPair(game, runId).includes(pipeDragSourceRoomId))
+            connectionRoomPair(game.encounter, runId).includes(pipeDragSourceRoomId))
         }
         runId={runId}
         selectedSpecies={selectedSpecies}

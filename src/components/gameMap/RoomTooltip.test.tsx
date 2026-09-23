@@ -12,9 +12,9 @@ describe("room map detail", () => {
   it("shows complete layered composition and distinguishes static pressure from a flash pulse", () => {
     const initial = createScenarioGame("cordon_41");
     initial.phase = "build";
-    initial.matter = 999;
+    initial.encounter.matter = 999;
     const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1)!;
-    initial.availability = {
+    initial.encounter.availability = {
       towers: [...round.availability.towers],
       equipment: [...round.availability.equipment],
       gasLines: [...round.availability.gasLines],
@@ -28,13 +28,13 @@ describe("room map detail", () => {
     });
     expect(built.accepted, built.code ?? undefined).toBe(true);
     const game = built.state;
-    roomState(game, "furnace").gas.upper.hydrogen = 18;
-    roomState(game, "furnace").gas.upper.oxygen = 9;
-    roomState(game, "furnace").gas.lower.hydrogen = 7;
-    roomState(game, "furnace").gasTemperature.lower = 72;
-    roomState(game, "furnace").pressurePulse = 38;
-    gasConduitState(game, "gas:core__furnace").flowCause = "fan";
-    gasConduitState(game, "gas:core__furnace").lastFlow = 1.4;
+    roomState(game.encounter, "furnace").gas.upper.hydrogen = 18;
+    roomState(game.encounter, "furnace").gas.upper.oxygen = 9;
+    roomState(game.encounter, "furnace").gas.lower.hydrogen = 7;
+    roomState(game.encounter, "furnace").gasTemperature.lower = 72;
+    roomState(game.encounter, "furnace").pressurePulse = 38;
+    gasConduitState(game.encounter, "gas:core__furnace").flowCause = "fan";
+    gasConduitState(game.encounter, "gas:core__furnace").lastFlow = 1.4;
 
     render(<RoomTooltip game={game} roomId="furnace" />);
 

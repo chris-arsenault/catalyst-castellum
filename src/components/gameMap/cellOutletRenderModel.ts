@@ -45,10 +45,10 @@ export const cellOutletAssemblyModel = (
   );
   if (!installation) return null;
 
-  const room = mapViewFor(game.map).roomMapRect(installation.roomId);
+  const room = mapViewFor(game.encounter.map).roomMapRect(installation.roomId);
   const centerX = clamp(installation.x, room.left + 45, room.left + room.width - 45);
   const rowY = clamp(installation.y - 54, room.top + 31, room.top + room.height - 39);
-  const instance = roomState(game, installation.roomId).equipment[installation.socketId];
+  const instance = roomState(game.encounter, installation.roomId).equipment[installation.socketId];
   const operation = EQUIPMENT_DEFINITIONS.membrane_cell.operation;
   if (!instance?.operation || !operation) return null;
   const definitions = operation.outputs.flatMap((definition) => {
@@ -68,7 +68,7 @@ export const cellOutletAssemblyModel = (
 
   return {
     header: translator.text("ui.map.outlet.header", {
-      room: roomDefinition(game, installation.roomId).code,
+      room: roomDefinition(game.encounter, installation.roomId).code,
     }),
     installationX: installation.x,
     installationY: installation.y,

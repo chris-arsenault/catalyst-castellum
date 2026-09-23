@@ -18,6 +18,10 @@ import type { StateValidationCode, StateValidationIssue } from "./stateValidatio
 import { validateEquipmentStates } from "./equipmentStateValidation";
 import { validateSupplyStates } from "./supplyStateValidation";
 import { validateTowerStates } from "./towerStateValidation";
+import { campaignEncounterContext } from "./campaignEncounter";
+import { validateCampaignOwnership } from "./campaignStateValidation";
+import { validateEncounterState } from "../encounter/validation";
+import { processDefinitionForMap } from "../encounter/processDefinition";
 
 export type { StateValidationCode, StateValidationIssue } from "./stateValidationTypes";
 
@@ -48,7 +52,7 @@ const validateAvailability = (
 ): void => {
   const fields = ["towers", "equipment", "gasLines", "liquidLines"] as const;
   for (const field of fields) {
-    if (!sameIdentifiers(state.availability[field], expected[field])) {
+    if (!sameIdentifiers(state.encounter.availability[field], expected[field])) {
       issue(
         issues,
         "availability_mismatch",
@@ -154,9 +158,11 @@ const validateRoute = (
   issues: StateValidationIssue[],
   gameDefinition: GameDefinition
 ): void => {
-  const definition = maybeLineDefinition(state, runId, phase);
+  const definition = maybeLineDefinition(state.encounter, runId, phase);
   const conduit =
-    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
+    phase === "gas"
+      ? gasConduitState(state.encounter, runId)
+      : liquidConduitState(state.encounter, runId);
   const path = `${phase}Conduits.${runId}`;
   if (!definition) return;
   if (conduit.route.length < 2) {
@@ -177,14 +183,14 @@ const validateTopology = (
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {
-  for (const runId of processLineIds(state, "gas_line")) {
+  for (const runId of processLineIds(state.encounter, "gas_line")) {
     validateRoute(state, runId, "gas", issues, definition);
   }
-  for (const runId of processLineIds(state, "liquid_line")) {
+  for (const runId of processLineIds(state.encounter, "liquid_line")) {
     validateRoute(state, runId, "liquid", issues, definition);
   }
-  for (const roomId of state.world.rooms) {
-    if (roomState(state, roomId).id !== roomId) {
+  for (const roomId of state.encounter.world.rooms) {
+    if (roomState(state.encounter, roomId).id !== roomId) {
       issue(
         issues,
         "identity_mismatch",
@@ -193,8 +199,8 @@ const validateTopology = (
       );
     }
   }
-  const expectedPortals = architecturalConnections(state.map).map(({ id }) => id);
-  if (!sameIdentifiers(Object.keys(state.portalStates), expectedPortals)) {
+  const expectedPortals = architecturalConnections(state.encounter.map).map(({ id }) => id);
+  if (!sameIdentifiers(Object.keys(state.encounter.portalStates), expectedPortals)) {
     issue(
       issues,
       "portal_identity_mismatch",
@@ -205,22 +211,22 @@ const validateTopology = (
 };
 
 const validatePhaseOwnership = (state: GameState, issues: StateValidationIssue[]): void => {
-  if (state.paused && state.phase !== "assault") {
-    issue(issues, "phase_invariant_invalid", "paused", "Only a live assault may be paused.");
-  }
   if (
     ["level_briefing", "build", "round_result", "level_complete", "victory"].includes(
       state.phase
     ) &&
-    state.enemies.length > 0
+    state.encounter.enemies.length > 0
   ) {
     issue(issues, "phase_invariant_invalid", "enemies", `${state.phase} must not retain enemies.`);
   }
 };
 
 const validateNextIdentifiers = (state: GameState, issues: StateValidationIssue[]): void => {
-  const maximumEnemyId = state.enemies.reduce((maximum, enemy) => Math.max(maximum, enemy.id), 0);
-  if (state.nextEnemyId <= maximumEnemyId) {
+  const maximumEnemyId = state.encounter.enemies.reduce(
+    (maximum, enemy) => Math.max(maximum, enemy.id),
+    0
+  );
+  if (state.encounter.nextEnemyId <= maximumEnemyId) {
     issue(
       issues,
       "identifier_sequence_invalid",
@@ -228,8 +234,11 @@ const validateNextIdentifiers = (state: GameState, issues: StateValidationIssue[
       "Next enemy identity must be greater than all recorded enemies."
     );
   }
-  const maximumEventId = state.events.reduce((maximum, event) => Math.max(maximum, event.id), 0);
-  if (state.nextEventId <= maximumEventId) {
+  const maximumEventId = [...state.events, ...state.encounter.events].reduce(
+    (maximum, event) => Math.max(maximum, event.id),
+    0
+  );
+  if (state.encounter.nextEventId <= maximumEventId) {
     issue(
       issues,
       "identifier_sequence_invalid",
@@ -237,11 +246,11 @@ const validateNextIdentifiers = (state: GameState, issues: StateValidationIssue[
       "Next event identity must be greater than all recorded events."
     );
   }
-  const maximumIncidentId = state.incidents.reduce(
+  const maximumIncidentId = state.encounter.incidents.reduce(
     (maximum, incident) => Math.max(maximum, incident.id),
     0
   );
-  if (state.nextIncidentId <= maximumIncidentId) {
+  if (state.encounter.nextIncidentId <= maximumIncidentId) {
     issue(
       issues,
       "identifier_sequence_invalid",
@@ -259,7 +268,7 @@ const validatePhase = (
   validatePhaseOwnership(state, issues);
   const waveLength =
     definition.levels[state.campaign.levelId].rounds[state.campaign.roundIndex]?.wave.length;
-  if (waveLength !== undefined && state.spawnCursor > waveLength) {
+  if (waveLength !== undefined && state.encounter.spawnCursor > waveLength) {
     issue(
       issues,
       "phase_invariant_invalid",
@@ -271,7 +280,7 @@ const validatePhase = (
 };
 
 const validateEnemyLevels = (state: GameState, issues: StateValidationIssue[]): void => {
-  state.enemies.forEach((enemy, index) => {
+  state.encounter.enemies.forEach((enemy, index) => {
     if (
       !Number.isInteger(enemy.level) ||
       enemy.level < MIN_ENEMY_LEVEL ||
@@ -292,7 +301,7 @@ const validateEnemyBehaviors = (
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {
-  state.enemies.forEach((enemy, index) => {
+  state.encounter.enemies.forEach((enemy, index) => {
     for (const behaviorIssue of validateEnemyBehaviorState(
       enemy,
       definition,
@@ -303,17 +312,21 @@ const validateEnemyBehaviors = (
   });
 };
 
-const validateWorldCatalogs = (
-  state: GameState,
-  issues: StateValidationIssue[],
-  _definition: GameDefinition
-): void => {
+const validateWorldCatalogs = (state: GameState, issues: StateValidationIssue[]): void => {
   const expectations: readonly [string, readonly string[], Record<string, unknown>][] = [
-    ["rooms", state.world.rooms, state.rooms],
-    ["gasJunctions", state.world.rooms, state.gasJunctions],
-    ["liquidJunctions", state.world.rooms, state.liquidJunctions],
-    ["gasConduits", processLineIds(state, "gas_line"), state.gasConduits],
-    ["liquidConduits", processLineIds(state, "liquid_line"), state.liquidConduits],
+    ["rooms", state.encounter.world.rooms, state.encounter.process.rooms],
+    ["gasJunctions", state.encounter.world.rooms, state.encounter.process.gasJunctions],
+    ["liquidJunctions", state.encounter.world.rooms, state.encounter.process.liquidJunctions],
+    [
+      "gasConduits",
+      processLineIds(state.encounter, "gas_line"),
+      state.encounter.process.gasConduits,
+    ],
+    [
+      "liquidConduits",
+      processLineIds(state.encounter, "liquid_line"),
+      state.encounter.process.liquidConduits,
+    ],
   ];
   for (const [field, catalog, record] of expectations) {
     if (!sameIdentifiers(Object.keys(record), catalog)) {
@@ -325,7 +338,7 @@ const validateWorldCatalogs = (
       );
     }
   }
-  if (!sameIdentifiers([...state.world.rooms], Object.keys(state.map.rooms))) {
+  if (!sameIdentifiers([...state.encounter.world.rooms], Object.keys(state.encounter.map.rooms))) {
     issue(
       issues,
       "world_catalog_mismatch",
@@ -333,7 +346,12 @@ const validateWorldCatalogs = (
       "World room catalog does not match the pack."
     );
   }
-  if (!sameIdentifiers([...state.world.connections], Object.keys(state.map.connections))) {
+  if (
+    !sameIdentifiers(
+      [...state.encounter.world.connections],
+      Object.keys(state.encounter.map.connections)
+    )
+  ) {
     issue(
       issues,
       "world_catalog_mismatch",
@@ -347,9 +365,14 @@ export const validateGameState = (
   state: GameState,
   definition: GameDefinition
 ): StateValidationIssue[] => {
-  const activeDefinition = definitionForMap(definition, state.map);
+  const activeDefinition = definitionForMap(definition, state.encounter.map);
+  const context = campaignEncounterContext(state, definition);
+  const processDefinition = processDefinitionForMap(
+    context.definition.process,
+    state.encounter.map
+  );
   const issues: StateValidationIssue[] = [];
-  validateWorldCatalogs(state, issues, activeDefinition);
+  validateWorldCatalogs(state, issues);
   if (
     state.pack.id !== definition.packId ||
     state.pack.contentVersion !== definition.contentVersion
@@ -362,11 +385,12 @@ export const validateGameState = (
     );
   }
   validateCampaign(state, issues, activeDefinition);
-  issues.push(...validateSupplyStates(state, activeDefinition));
+  issues.push(...validateCampaignOwnership(state, definition));
+  issues.push(...validateSupplyStates(state.encounter, processDefinition));
   validateTopology(state, issues, activeDefinition);
-  validateEnemyNavigation(state, issues, activeDefinition);
-  for (const [index, enemy] of state.enemies.entries()) {
-    if (!(enemy.routeId in state.map.routeGraph.routes)) {
+  validateEnemyNavigation(state.encounter, issues, activeDefinition);
+  for (const [index, enemy] of state.encounter.enemies.entries()) {
+    if (!(enemy.routeId in state.encounter.map.routeGraph.routes)) {
       issue(
         issues,
         "route_state_invalid",
@@ -377,9 +401,11 @@ export const validateGameState = (
   }
   validateEnemyLevels(state, issues);
   validateEnemyBehaviors(state, issues, activeDefinition);
-  issues.push(...validateEquipmentStates(state, activeDefinition));
+  issues.push(...validateEquipmentStates(state.encounter, processDefinition));
   issues.push(...validateTowerStates(state, activeDefinition));
   validatePhase(state, issues, activeDefinition);
+  for (const message of validateEncounterState(state.encounter, context))
+    issue(issues, "encounter_state_invalid", "encounter", message);
   return issues;
 };
 

@@ -1,4 +1,5 @@
-export { attachAudioDirector } from "./bindings";
+export { attachAudioDirector, attachMusicCueInputs } from "./bindings";
+export type { MusicCueInputs } from "./cue";
 export { getMusicDirector } from "./director";
 export { getAudioEngine } from "./engine";
 export { selectMusicCue, DANGER_INTEGRITY_FRACTION, STRAIN_INTEGRITY_FRACTION } from "./cue";

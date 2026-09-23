@@ -24,14 +24,14 @@ const clearRoom = (target: RoomState): void => {
 
 beforeEach(() => {
   state = createScenarioGame("claim_8_delta");
-  room = roomState(state, "furnace");
+  room = roomState(state.encounter, "furnace");
   clearRoom(room);
 });
 
 describe("advanced electrolysis", () => {
   it("executes UF-3 through its authored recovery cell and leaves both gases in the host room", () => {
     const processState = createScenarioGame("claim_8_delta");
-    const processRoom = roomState(processState, "furnace");
+    const processRoom = roomState(processState.encounter, "furnace");
     clearRoom(processRoom);
     processRoom.equipment.socket_a = createEquipmentInstance(
       { equipmentId: "fluorine_cell", level: 1, enabled: true },
@@ -39,7 +39,7 @@ describe("advanced electrolysis", () => {
     );
     processRoom.gas.lower.hydrogen_fluoride = 4;
 
-    simulateEquipmentOperations(processState, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(processState.encounter, 1, DEFAULT_GAME_DEFINITION);
 
     expect(processRoom.gas.lower.hydrogen_fluoride).toBeCloseTo(3.4, 8);
     expect(processRoom.gas.lower.hydrogen).toBeCloseTo(0.3, 8);
@@ -49,8 +49,8 @@ describe("advanced electrolysis", () => {
 
   it("executes every installed powered machine with independent feed and telemetry", () => {
     const processState = createScenarioGame("claim_8_delta");
-    const furnace = roomState(processState, "furnace");
-    const gallery = roomState(processState, "gallery");
+    const furnace = roomState(processState.encounter, "furnace");
+    const gallery = roomState(processState.encounter, "gallery");
     clearRoom(furnace);
     clearRoom(gallery);
     furnace.equipment.socket_a = createEquipmentInstance(
@@ -64,7 +64,7 @@ describe("advanced electrolysis", () => {
     furnace.gas.lower.hydrogen_fluoride = 4;
     gallery.gas.lower.hydrogen_fluoride = 4;
 
-    simulateEquipmentOperations(processState, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(processState.encounter, 1, DEFAULT_GAME_DEFINITION);
 
     expect(furnace.equipment.socket_a.operation?.totalProcessed).toBeCloseTo(0.3, 8);
     expect(gallery.equipment.socket_a.operation?.totalProcessed).toBeCloseTo(0.46, 8);
@@ -94,7 +94,7 @@ describe("vessel-hosted mass-action chemistry", () => {
     room.stationary.solid_carbon = 5;
     room.gas.lower.steam = 5;
 
-    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state.encounter, 1, DEFAULT_GAME_DEFINITION);
 
     expect(room.equipment.socket_a?.operation?.totalProcessed).toBeGreaterThan(0);
     expect(room.stationary.solid_carbon).toBeLessThan(5);
@@ -109,7 +109,7 @@ describe("vessel-hosted mass-action chemistry", () => {
     room.gas.lower.carbon_dioxide = 5;
     room.gas.lower.hydrogen = 5;
 
-    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state.encounter, 1, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.carbon_monoxide).toBeGreaterThan(0);
     expect(room.gas.lower.steam).toBeGreaterThan(0);
@@ -123,7 +123,7 @@ describe("vessel-hosted mass-action chemistry", () => {
     room.stationary.nickel_oxide = 8;
     room.gas.lower.hydrogen = 0.08;
 
-    simulateEquipmentOperations(state, 10, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state.encounter, 10, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.hydrogen).toBeGreaterThanOrEqual(-1e-10);
     expect(room.stationary.magnetite).toBeGreaterThan(0);
@@ -137,7 +137,7 @@ describe("vessel-hosted mass-action chemistry", () => {
     room.gas.lower.hydrogen = 24;
     const catalystBefore = room.stationary.surface_nickel;
 
-    simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
+    simulateEquipmentOperations(state.encounter, 1, DEFAULT_GAME_DEFINITION);
 
     expect(room.gas.lower.methane).toBeGreaterThan(0);
     expect(room.stationary.surface_nickel).toBeCloseTo(catalystBefore, 8);
@@ -173,7 +173,7 @@ describe("authored kinetics response", () => {
       room.stationary.uranyl_fluoride = 4;
       room.gas.lower.fluorine = 8;
       room.liquid.water = water;
-      simulateEquipmentOperations(state, 1, DEFAULT_GAME_DEFINITION);
+      simulateEquipmentOperations(state.encounter, 1, DEFAULT_GAME_DEFINITION);
       return room.gas.lower.uranium_hexafluoride;
     };
 

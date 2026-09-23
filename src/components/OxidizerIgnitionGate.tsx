@@ -77,7 +77,7 @@ const IgnitionLayer = ({ status }: { status: ReturnType<typeof hydrogenOxygenFla
 export const OxidizerIgnitionGate = ({ roomId }: { roomId: RoomId }) => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const room = roomState(game, roomId);
+  const room = roomState(game.encounter, roomId);
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenOxygenFlashStatus(room, zone)
   );

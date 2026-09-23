@@ -1,10 +1,5 @@
-import type { GameDefinition } from "../definitionTypes";
-import {
-  EQUIPMENT_OUTPUT_IDS,
-  type EquipmentInstance,
-  type EquipmentOutputId,
-  type GameState,
-} from "../types";
+import type { ProcessEncounterState, ProcessPhysicsDefinition } from "../encounter/processTypes";
+import { EQUIPMENT_OUTPUT_IDS, type EquipmentInstance, type EquipmentOutputId } from "../types";
 import { roomState } from "../world/instances";
 import type { StateValidationIssue } from "./stateValidationTypes";
 
@@ -17,7 +12,7 @@ const operationIssue = (path: string, message: string): StateValidationIssue => 
 const outputMatches = (
   outputId: EquipmentOutputId,
   instance: EquipmentInstance,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): boolean => {
   const operationDefinition = definition.equipment[instance.equipmentId].operation;
   const expected = operationDefinition?.outputs.find(({ id }) => id === outputId);
@@ -27,7 +22,7 @@ const outputMatches = (
 
 const validateInstanceOperation = (
   instance: EquipmentInstance,
-  definition: GameDefinition,
+  definition: ProcessPhysicsDefinition,
   path: string
 ): StateValidationIssue[] => {
   const operationDefinition = definition.equipment[instance.equipmentId].operation;
@@ -48,8 +43,8 @@ const validateInstanceOperation = (
 };
 
 export const validateEquipmentStates = (
-  state: GameState,
-  definition: GameDefinition
+  state: ProcessEncounterState,
+  definition: ProcessPhysicsDefinition
 ): StateValidationIssue[] =>
   state.world.rooms.flatMap((roomId) =>
     Object.entries(roomState(state, roomId).equipment).flatMap(([socketId, instance]) =>

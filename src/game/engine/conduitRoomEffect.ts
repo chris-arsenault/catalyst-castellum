@@ -1,15 +1,15 @@
-import type { GameDefinition } from "../definitionTypes";
+import { processDefinitionForMap } from "../encounter/processDefinition";
+import type { ProcessEncounterState, ProcessSimulationDefinition } from "../encounter/processTypes";
+import { cloneEncounter } from "../encounter/clone";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
   type ConnectionId,
-  type GameState,
   type GasAmounts,
   type LiquidAmounts,
   type RoomId,
 } from "../types";
-import { definitionForMap } from "../world/activeDefinition";
-import { facilityModelFor } from "../world/derivedModel";
+import { facilityModelForMap } from "../world/derivedModel";
 import { conduitState, gasJunctionState, liquidJunctionState, roomState } from "../world/instances";
 import { channelTotal } from "./damage";
 import { simulateInstalledEquipment } from "./equipment";
@@ -23,7 +23,7 @@ import {
   roomUsableVolume,
 } from "./physics";
 import { simulateReactions } from "./reactions";
-import { addGas, addLiquid, analyzeRoom, cloneGame, takeGas, takeLiquid } from "./roomState";
+import { addGas, addLiquid, analyzeRoom, takeGas, takeLiquid } from "./roomState";
 
 const GAS_SAMPLE_FILL = 0.18;
 const LIQUID_SAMPLE_FILL = 0.12;
@@ -55,7 +55,7 @@ const scaledLiquid = (mixture: LiquidAmounts, amount: number): LiquidAmounts => 
 };
 
 const targetRoomId = (
-  game: GameState,
+  game: ProcessEncounterState,
   connectionId: ConnectionId
 ): { roomId: RoomId; external: boolean } => {
   const line = game.map.connections[connectionId];
@@ -67,32 +67,32 @@ const targetRoomId = (
 };
 
 const sourceSample = (
-  game: GameState,
+  game: ProcessEncounterState,
   connectionId: ConnectionId,
-  definition: GameDefinition
-): GameState => {
-  const sample = cloneGame(game);
+  definition: ProcessSimulationDefinition
+): ProcessEncounterState => {
+  const sample = cloneEncounter(game);
   conduitState(sample, connectionId).enabled = true;
   refillLocalJunctions(sample, RESPONSE_SECONDS, definition);
   return sample;
 };
 
 const gasPortZone = (
-  game: GameState,
+  game: ProcessEncounterState,
   connectionId: ConnectionId,
   roomId: RoomId,
   endpoint: "from" | "to"
 ) => {
   const port = conduitEndpoint(game, connectionId, "gas", endpoint);
-  return gasZoneForPort(facilityModelFor(game).roomPortHeight(roomId, port.elevation));
+  return gasZoneForPort(facilityModelForMap(game.map).roomPortHeight(roomId, port.elevation));
 };
 
 const addRepresentativeGas = (
-  game: GameState,
-  sample: GameState,
+  game: ProcessEncounterState,
+  sample: ProcessEncounterState,
   connectionId: ConnectionId,
   roomId: RoomId,
-  definition: GameDefinition
+  definition: ProcessSimulationDefinition
 ): void => {
   const line = game.map.connections[connectionId];
   if (!line || line.kind !== "gas_line") return;
@@ -112,11 +112,11 @@ const addRepresentativeGas = (
 };
 
 const addRepresentativeLiquid = (
-  game: GameState,
-  sample: GameState,
+  game: ProcessEncounterState,
+  sample: ProcessEncounterState,
   connectionId: ConnectionId,
   roomId: RoomId,
-  definition: GameDefinition
+  definition: ProcessSimulationDefinition
 ): void => {
   const line = game.map.connections[connectionId];
   if (!line || line.kind !== "liquid_line") return;
@@ -127,10 +127,10 @@ const addRepresentativeLiquid = (
 };
 
 const removeRepresentativeMaterial = (
-  game: GameState,
+  game: ProcessEncounterState,
   connectionId: ConnectionId,
   roomId: RoomId,
-  definition: GameDefinition
+  definition: ProcessSimulationDefinition
 ): void => {
   const line = game.map.connections[connectionId];
   if (!line || (line.kind !== "gas_line" && line.kind !== "liquid_line")) return;
@@ -146,12 +146,12 @@ const removeRepresentativeMaterial = (
 };
 
 const applyRepresentativeTransfer = (
-  game: GameState,
-  sample: GameState,
+  game: ProcessEncounterState,
+  sample: ProcessEncounterState,
   connectionId: ConnectionId,
   roomId: RoomId,
   external: boolean,
-  definition: GameDefinition
+  definition: ProcessSimulationDefinition
 ): void => {
   if (external) return removeRepresentativeMaterial(game, connectionId, roomId, definition);
   const line = game.map.connections[connectionId];
@@ -160,7 +160,11 @@ const applyRepresentativeTransfer = (
   addRepresentativeLiquid(game, sample, connectionId, roomId, definition);
 };
 
-const roomEffectiveness = (game: GameState, roomId: RoomId, definition: GameDefinition): number => {
+const roomEffectiveness = (
+  game: ProcessEncounterState,
+  roomId: RoomId,
+  definition: ProcessSimulationDefinition
+): number => {
   simulateInstalledEquipment(game, RESPONSE_SECONDS, definition);
   const bursts = simulateReactions(game, RESPONSE_SECONDS, definition);
   const analysis = analyzeRoom(roomState(game, roomId), definition);
@@ -195,16 +199,16 @@ const effectTone = (scoreDelta: number, baseline: number): ConduitRoomEffectTone
 
 /** First-order target-room response to one representative packet, independent of wave survival. */
 export const conduitRoomEffect = (
-  source: GameState,
+  source: ProcessEncounterState,
   connectionId: ConnectionId,
   enabled: boolean,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessSimulationDefinition
 ): ConduitRoomEffect => {
-  const definition = definitionForMap(gameDefinition, source.map);
+  const definition = processDefinitionForMap(gameDefinition, source.map);
   const target = targetRoomId(source, connectionId);
   const sample = sourceSample(source, connectionId, definition);
-  const baseline = cloneGame(source);
-  const changed = cloneGame(source);
+  const baseline = cloneEncounter(source);
+  const changed = cloneEncounter(source);
   applyRepresentativeTransfer(
     changed,
     sample,

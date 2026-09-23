@@ -1,4 +1,4 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import type {
   EquipmentDutyDefinition,
   EquipmentInstance,
@@ -7,7 +7,6 @@ import type {
   EquipmentOutputState,
   EquipmentReactionOperationDefinition,
   EquipmentSeparatorBackflowDefinition,
-  GameState,
   GasAmounts,
   GasType,
   LimitingFactor,
@@ -18,7 +17,7 @@ import type {
   StationaryType,
 } from "../types";
 import { installedEquipment, operationPowerDraw, operationProcessRate } from "./equipment";
-import { addEvent } from "./events";
+import { addEncounterEvent } from "../encounter/events";
 import { clamp } from "./math";
 import { simulateMassActionSet, type MassActionReaction } from "./massActionReactions";
 import {
@@ -60,7 +59,7 @@ const operationInventory = (
   room: RoomState,
   instance: EquipmentInstance,
   operation: EquipmentReactionOperationDefinition,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): MutableReactionInventory => ({
   amount: (speciesId) => {
     const output = operation.outputs.find((candidate) => candidate.speciesId === speciesId);
@@ -111,7 +110,7 @@ const separatorFlow = (
     : { source: right, target: left, species: policy.rightSpeciesId };
 
 const simulateSeparatorBackflow = (
-  state: GameState,
+  state: ProcessEncounterState,
   room: RoomState,
   dt: number,
   instance: EquipmentInstance,
@@ -141,7 +140,7 @@ const simulateSeparatorBackflow = (
   target[species] += leaked;
   operationState.separatorLeakTotal += leaked;
   if (previousLeak === 0 && operationState.separatorLeakTotal > 0)
-    addEvent(state, "danger", "separator_cross_leak", {}, room.id);
+    addEncounterEvent(state, "danger", "separator_cross_leak", {}, room.id);
 };
 
 const outputCandidates = (
@@ -174,7 +173,7 @@ const runElectrolysisDuty = (
   reactions: readonly ReactionDefinition[],
   rateCap: number,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   let total = 0;
   let limitingCandidates: Array<[LimitingFactor, number]> | null = null;
@@ -213,7 +212,7 @@ const runVesselDuty = (
   reactions: readonly ReactionDefinition[],
   rateCap: number,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const massAction = reactions.filter(
     (reaction): reaction is MassActionReaction => reaction.behavior.kind === "mass_action"
@@ -241,11 +240,11 @@ const setOffline = (operation: EquipmentOperationState): void => {
 };
 
 const simulateReactionOperation = (
-  state: GameState,
+  state: ProcessEncounterState,
   room: RoomState,
   instance: EquipmentInstance,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const equipment = definition.equipment[instance.equipmentId];
   const operationDefinition = equipment.operation;
@@ -280,7 +279,7 @@ const simulateReactionOperation = (
   operation.powerDraw =
     total > 0 ? operationPowerDraw(instance.equipmentId, instance.level, definition) : 0;
   if (total > 0 && operation.totalProcessed === 0)
-    addEvent(
+    addEncounterEvent(
       state,
       "reaction",
       "equipment_operation_started",
@@ -294,9 +293,9 @@ const simulateReactionOperation = (
 };
 
 export const simulateEquipmentOperations = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   for (const roomId of state.world.rooms) {
     const room = roomState(state, roomId);

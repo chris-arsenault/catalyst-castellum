@@ -20,11 +20,11 @@ export const ProcessControls = () => {
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
   const setPipeMode = useGameStore((state) => state.setPipeMode);
-  const room = roomState(game, roomId);
-  const socketIds = roomSocketIds(roomId, game);
-  const connectedRuns = game.world.connections.filter(
+  const room = roomState(game.encounter, roomId);
+  const socketIds = roomSocketIds(roomId, game.encounter);
+  const connectedRuns = game.encounter.world.connections.filter(
     (runId) =>
-      connectionRoomPair(game, runId).includes(roomId) &&
+      connectionRoomPair(game.encounter, runId).includes(roomId) &&
       (transportPhaseAvailable(game, runId, "gas") ||
         transportPhaseAvailable(game, runId, "liquid"))
   );

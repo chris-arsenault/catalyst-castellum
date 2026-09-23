@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Texture } from "pixi.js";
 import type { GameState } from "../../game/types";
+import type { WorldMap } from "../../game/world/map";
 import { loadArchitectureSpriteTextures, type ArchitectureSpriteId } from "./architectureSprites";
 import { staticArchitectureModels, type ArchitectureSpriteModel } from "./architectureRenderModel";
 
@@ -38,8 +39,8 @@ const StaticArchitectureSprite = ({ model }: { model: ArchitectureSpriteModel })
   );
 };
 
-export const FacilityStructureLayer = ({ game }: { game: GameState }) => {
-  const models = useMemo(() => staticArchitectureModels(game.map), [game.map]);
+export const ArchitectureLayer = ({ map }: { map: WorldMap }) => {
+  const models = useMemo(() => staticArchitectureModels(map), [map]);
   return (
     <>
       {models.map((model) => (
@@ -48,3 +49,7 @@ export const FacilityStructureLayer = ({ game }: { game: GameState }) => {
     </>
   );
 };
+
+export const FacilityStructureLayer = ({ game }: { game: GameState }) => (
+  <ArchitectureLayer map={game.encounter.map} />
+);

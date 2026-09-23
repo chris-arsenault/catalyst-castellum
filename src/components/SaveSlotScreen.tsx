@@ -2,7 +2,13 @@ import { Compass, Database, FlaskConical, Play, Plus, RotateCcw, Trash2 } from "
 import { useCallback, useState } from "react";
 import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
-import { SAVE_SLOT_IDS, type SaveSlotId, type SaveSlotRecord } from "../application/saveSlots";
+import {
+  SAVE_SLOT_IDS,
+  isReadySaveSlot,
+  type SaveSlotId,
+  type SaveSlotRecord,
+  type SavedSlot,
+} from "../application/saveSlots";
 import { levelDefinitionFor } from "../game/queries";
 import type { Translator } from "../localization/translator";
 import { DebugCampaignLauncher } from "./DebugCampaignLauncher";
@@ -180,7 +186,7 @@ const OccupiedSlotSummary = ({ record }: { record: SaveSlotRecord }) => {
         </div>
         <div>
           <dt>{translator.text("ui.save.core")}</dt>
-          <dd>{formatters.percent(record.game.coreIntegrity / 100, 0)}</dd>
+          <dd>{formatters.percent(record.game.encounter.coreIntegrity / 100, 0)}</dd>
         </div>
       </dl>
       <small className="save-slot-updated">
@@ -190,12 +196,13 @@ const OccupiedSlotSummary = ({ record }: { record: SaveSlotRecord }) => {
   );
 };
 
-const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
+const OccupiedSlot = ({ record }: { record: SavedSlot }) => {
   const { translator } = useGamePresentation();
   const selectSaveSlot = useGameStore((state) => state.selectSaveSlot);
   const startNewGame = useGameStore((state) => state.startNewGame);
   const deleteSaveSlot = useGameStore((state) => state.deleteSaveSlot);
   const number = slotNumber(record.id);
+  const ready = isReadySaveSlot(record);
   const [pendingAction, setPendingAction] = useState<PendingSlotAction | null>(null);
   const [guidance, setGuidance] = useState(true);
   const confirmPendingAction = useCallback(() => {
@@ -208,17 +215,23 @@ const OccupiedSlot = ({ record }: { record: SaveSlotRecord }) => {
     <article className="save-slot-card occupied" data-testid={`save-slot-${number}`}>
       <header>
         <span>{translator.text("ui.save.slot", { number: number.padStart(2, "0") })}</span>
-        <strong>{translator.text("ui.save.ready")}</strong>
+        <strong>{translator.text(ready ? "ui.save.ready" : `ui.save.${record.status}`)}</strong>
       </header>
-      <OccupiedSlotSummary record={record} />
-      <button
-        className="save-slot-primary"
-        type="button"
-        data-testid={`load-save-${record.id}`}
-        onClick={() => selectSaveSlot(record.id)}
-      >
-        {translator.text("ui.save.load")} <Play size={16} />
-      </button>
+      {ready ? (
+        <OccupiedSlotSummary record={record} />
+      ) : (
+        <p>{translator.text(`ui.save.${record.status}.detail`)}</p>
+      )}
+      {ready && (
+        <button
+          className="save-slot-primary"
+          type="button"
+          data-testid={`load-save-${record.id}`}
+          onClick={() => selectSaveSlot(record.id)}
+        >
+          {translator.text("ui.save.load")} <Play size={16} />
+        </button>
+      )}
       {pendingAction ? (
         <SlotInlineConfirmation
           action={pendingAction}

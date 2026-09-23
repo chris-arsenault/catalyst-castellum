@@ -26,18 +26,18 @@ export const roundReportStats = (
 ): ReportStatEntry[] => [
   {
     label: translator.text("ui.progress.neutralized"),
-    value: String(game.lastReport?.killed ?? 0),
+    value: String(game.encounter.result?.report.killed ?? 0),
   },
   {
     label: translator.text("ui.progress.breaches"),
-    value: String(game.lastReport?.breached ?? 0),
+    value: String(game.encounter.result?.report.breached ?? 0),
   },
   {
     label: translator.text("ui.progress.core"),
-    value: formatters.percent(game.coreIntegrity / 100, 0),
+    value: formatters.percent(game.encounter.coreIntegrity / 100, 0),
   },
   {
     label: translator.text("ui.progress.reactions"),
-    value: formatters.number(game.lastReport?.reactions ?? 0, 1),
+    value: formatters.number(game.encounter.result?.report.reactions ?? 0, 1),
   },
 ];

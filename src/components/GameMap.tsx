@@ -13,8 +13,8 @@ import { useMapHover, usePointerProbe } from "./gameMap/useMapHover";
 import { usePipeRoomEffectHover } from "./gameMap/usePipeRoomEffectHover";
 import { mapViewFor } from "./gameMap/mapGeometry";
 import type { TowerPlacementPreview } from "../presentation/towerPlanning";
-import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import { useGamePresentation } from "../application/presentationContext";
+import { TowerPlacementFeedback } from "./gameMap/TowerPlacementFeedback";
 
 interface GameMapProps {
   game: GameState;
@@ -32,9 +32,9 @@ const mapTelemetry = (
   towerPreview: TowerPlacementPreview | null
 ) => ({
   "data-world-model": "cell-platform-v1",
-  "data-grid": `${game.map.width}x${game.map.height}`,
-  "data-portal-count": architecturalConnections(game.map).length,
-  "data-enemy-modes": [...new Set(game.enemies.map((enemy) => enemy.mode))].join(","),
+  "data-grid": `${game.encounter.map.width}x${game.encounter.map.height}`,
+  "data-portal-count": architecturalConnections(game.encounter.map).length,
+  "data-enemy-modes": [...new Set(game.encounter.enemies.map((enemy) => enemy.mode))].join(","),
   "data-camera-x": camera.x,
   "data-camera-y": camera.y,
   "data-camera-zoom": camera.zoom,
@@ -42,7 +42,7 @@ const mapTelemetry = (
   "data-tower-preview-face": towerPreview?.mountFace ?? "",
   "data-tower-preview-orientation": towerPreview?.orientation ?? "",
   "data-tower-preview-allowed": towerPreview?.allowed ?? false,
-  "data-installed-equipment-count": Object.values(game.rooms).reduce(
+  "data-installed-equipment-count": Object.values(game.encounter.process.rooms).reduce(
     (total, room) => total + Object.values(room.equipment).filter(Boolean).length,
     0
   ),
@@ -57,7 +57,7 @@ export const GameMap = ({
   onTogglePipeMode,
   pipeMode,
 }: GameMapProps) => {
-  const { towerPlanning, translator } = useGamePresentation();
+  const { towerPlanning, towers, translator } = useGamePresentation();
   const [selectedSpecies, setSelectedSpecies] = useState<SpeciesId | null>(null);
   const [pipeDragSourceRoomId, setPipeDragSourceRoomId] = useState<RoomId | null>(null);
   const pipePreview = useGameStore((state) => state.pipePreview);
@@ -72,15 +72,15 @@ export const GameMap = ({
   const { wrapperRef, trackPointer, probePointer } = usePointerProbe();
   const hover = useMapHover(pipeMode, probePointer);
   const onHoverRun = usePipeRoomEffectHover(game, hover.onHoverRun);
-  const camera = useMapCamera(game.map);
+  const camera = useMapCamera(game.encounter.map);
   const completePipeDrag = useCallback(
-    (roomId: RoomId) =>
-      setPipeDragSourceRoomId((source) => {
-        const anchor = probePointer();
-        if (source && source !== roomId) onConnectRooms(source, roomId, anchor ?? { x: 0, y: 0 });
-        return null;
-      }),
-    [onConnectRooms, probePointer]
+    (roomId: RoomId) => {
+      const source = pipeDragSourceRoomId;
+      setPipeDragSourceRoomId(null);
+      const anchor = probePointer();
+      if (source && source !== roomId) onConnectRooms(source, roomId, anchor ?? { x: 0, y: 0 });
+    },
+    [onConnectRooms, pipeDragSourceRoomId, probePointer]
   );
   const clearPipeDrag = useCallback(() => setPipeDragSourceRoomId(null), []);
   const towerMode = towerBuildSelection !== null;
@@ -100,62 +100,72 @@ export const GameMap = ({
   useEffect(() => {
     if (!towerBuildSelection) return;
     const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.target instanceof HTMLElement &&
+        event.target.closest("input, select, textarea, [contenteditable=true]")
+      )
+        return;
       if (event.key === "Escape") {
         setTowerBuildSelection(null);
         setTowerPointer(null);
         return;
       }
       if (event.key.toLowerCase() !== "r") return;
-      const orientations =
-        DEFAULT_GAME_RUNTIME.definition.towers[towerBuildSelection.chassisId].orientations;
+      const orientations = towers.definition(towerBuildSelection.chassisId).orientations;
       const current = orientations.indexOf(towerBuildSelection.orientation);
       const orientation = orientations[(current + 1) % orientations.length];
       if (orientation) setTowerBuildSelection({ ...towerBuildSelection, orientation });
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [setTowerBuildSelection, towerBuildSelection]);
+  }, [setTowerBuildSelection, towerBuildSelection, towers]);
+  const pointerWorldPoint = (event: {
+    currentTarget: HTMLDivElement;
+    clientX: number;
+    clientY: number;
+  }): WorldPoint => {
+    const canvas = event.currentTarget.querySelector("canvas");
+    const bounds = canvas?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect();
+    return mapViewFor(game.encounter.map).clientToWorldPoint(
+      { x: event.clientX, y: event.clientY },
+      camera.camera,
+      { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height }
+    );
+  };
   const mapInteractions = useMapInteractions(
     pipeMode || towerMode,
     camera,
     (event) => {
       trackPointer(event);
       if (!towerBuildSelection) return;
-      const canvas = event.currentTarget.querySelector("canvas");
-      const bounds = canvas?.getBoundingClientRect() ?? event.currentTarget.getBoundingClientRect();
-      const worldPoint = mapViewFor(game.map).clientToWorldPoint(
-        { x: event.clientX, y: event.clientY },
-        camera.camera,
-        { x: bounds.left, y: bounds.top, width: bounds.width, height: bounds.height }
-      );
-      setTowerPointer(worldPoint);
+      if (!(event.target instanceof HTMLCanvasElement)) return;
+      setTowerPointer(pointerWorldPoint(event));
     },
     clearPipeDrag
   );
-  const placeTower = useCallback(() => {
-    if (!towerBuildSelection || !towerPreview) return;
-    if (!towerPreview.allowed) return;
+  const placeTower = (preview: TowerPlacementPreview | null) => {
+    if (pipeMode || !useGameStore.getState().towerBuildSelection || !preview?.allowed) return;
     const accepted = movingTowerId
       ? dispatch({
           type: "move_tower",
           towerId: movingTowerId,
-          mountFace: towerPreview.mountFace,
-          orientation: towerPreview.orientation,
-          anchor: towerPreview.anchor,
+          mountFace: preview.mountFace,
+          orientation: preview.orientation,
+          anchor: preview.anchor,
         })
       : dispatch({
           type: "place_tower",
-          chassisId: towerBuildSelection.chassisId,
-          mountFace: towerPreview.mountFace,
-          orientation: towerPreview.orientation,
-          anchor: towerPreview.anchor,
+          chassisId: preview.chassisId,
+          mountFace: preview.mountFace,
+          orientation: preview.orientation,
+          anchor: preview.anchor,
         });
     if (accepted) {
-      const placedId = Object.keys(useGameStore.getState().game.towers).at(-1) ?? null;
+      const placedId = Object.keys(useGameStore.getState().game.encounter.towers).at(-1) ?? null;
       selectTower(movingTowerId ?? placedId);
       setTowerPointer(null);
     }
-  }, [dispatch, movingTowerId, selectTower, towerBuildSelection, towerPreview]);
+  };
 
   return (
     <div
@@ -168,11 +178,25 @@ export const GameMap = ({
       aria-label={translator.text("ui.map.interactionSurface")}
       {...mapTelemetry(game, camera.camera, pipeMode, towerPreview)}
       {...mapInteractions}
-      onClick={placeTower}
+      onClick={(event) => {
+        if (!(event.target instanceof HTMLCanvasElement) || !towerBuildSelection) return;
+        const point = pointerWorldPoint(event);
+        setTowerPointer(point);
+        placeTower(
+          towerPlanning.planPlacement(
+            game,
+            point,
+            towerBuildSelection.chassisId,
+            towerBuildSelection.orientation,
+            movingTowerId
+          )
+        );
+      }}
       onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
         if (!towerMode || (event.key !== "Enter" && event.key !== " ")) return;
         event.preventDefault();
-        placeTower();
+        placeTower(towerPreview);
       }}
       onPointerLeave={(event: PointerEvent<HTMLDivElement>) => {
         mapInteractions.onPointerCancel?.(event);
@@ -201,6 +225,7 @@ export const GameMap = ({
         onSelectTower={selectTower}
       />
       <PipePreviewPopup />
+      <TowerPlacementFeedback preview={towerPreview} />
       <MapChrome
         game={game}
         hoveredCellOutletId={hover.hoveredCellOutletId}

@@ -1,7 +1,9 @@
 import { facilityModelForMap } from "../world/derivedModel";
-import type { GameDefinition } from "../definitionTypes";
-import type { EnemyState, GameState, RoomId, RoomState } from "../types";
-import { levelDefinitionFor, roundDefinitionFor } from "./campaign";
+import type { EncounterContext, EncounterState } from "../encounter/types";
+import { enemyDefinition } from "../encounter/catalogs";
+import { configuredProcess } from "../encounter/processContext";
+import type { WorldMap } from "../world/map";
+import type { EnemyState, RoomId } from "../types";
 import {
   dominantLedgerSource,
   emptyDamageLedger,
@@ -9,34 +11,37 @@ import {
   type DamageApplication,
   type HazardBurst,
 } from "./damage";
-import { addCombatIncident, addEvent } from "./events";
-import { clamp } from "./math";
+import {
+  addEncounterIncident as addCombatIncident,
+  addEncounterEvent as addEvent,
+} from "../encounter/events";
 import { findEnemyPathBetween } from "./navigation";
-import { roomMovementMultiplier } from "./roomState";
 import { enemyRoomId } from "./enemyPosition";
 import {
   enemyBehaviorSpeedMultiplier,
   ENEMY_WORLD_SPEED_SCALE,
   LOCOMOTION_SPEED,
 } from "./enemyMovementRules";
-import { enemyStatsAtLevel, resolveEnemyLevel } from "./enemyLevel";
-import { roomState } from "../world/instances";
+import { enemyStatsAtLevel } from "./enemyLevel";
 import { initialEnemyBehaviorState } from "./enemyBehaviors";
 import { routePathForEnemy } from "../world/routes";
 import { environmentalEnemyMovementMultiplier } from "./environmentalFields";
+import { clearEnemyCharge } from "../encounter/catalystCharge";
+import { projectCatalystMovement } from "../encounter/catalystFields";
+import type { CatalystFieldSample } from "../encounter/catalystTypes";
 
 export { enemyRoomId, enemyWorldPosition } from "./enemyPosition";
 
-export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): void => {
-  const level = levelDefinitionFor(state, gameDefinition);
-  const wave = roundDefinitionFor(state, gameDefinition).wave;
+export const spawnEnemies = (state: EncounterState, gameDefinition: EncounterContext): void => {
+  const wave = gameDefinition.definition.wave;
   while (state.spawnCursor < wave.length) {
     const entry = wave[state.spawnCursor];
-    if (!entry || entry.at > state.phaseTime) break;
-    const definition = gameDefinition.enemies[entry.type];
-    const path = routePathForEnemy(entry, state.map, state.portalStates, gameDefinition);
+    if (!entry || entry.tick > Math.round(state.phaseTime / gameDefinition.combat.tickSeconds))
+      break;
+    const definition = enemyDefinition(gameDefinition.combat, entry.type);
+    const path = routePathForEnemy(entry, state.map, state.portalStates, gameDefinition.combat);
     if (path.length === 0) throw new Error(`No cell route reaches Core for ${entry.type}.`);
-    const enemyLevel = resolveEnemyLevel(level.enemyLevel, entry.levelOffset);
+    const enemyLevel = entry.level;
     const health = enemyStatsAtLevel(definition, enemyLevel).health;
     state.enemies.push({
       id: state.nextEnemyId,
@@ -64,13 +69,13 @@ export const spawnEnemies = (state: GameState, gameDefinition: GameDefinition): 
 };
 
 export const neutralizeEnemy = (
-  state: GameState,
+  state: EncounterState,
   enemy: EnemyState,
   roomId: RoomId,
   application: DamageApplication,
-  gameDefinition: GameDefinition
+  gameDefinition: EncounterContext
 ): void => {
-  const definition = gameDefinition.enemies[enemy.type];
+  const definition = enemyDefinition(gameDefinition.combat, enemy.type);
   const leveled = enemyStatsAtLevel(definition, enemy.level);
   const finalSource = application.dominantSource ?? dominantLedgerSource(enemy.damageBySource);
   const lifetimeSource = dominantLedgerSource(enemy.damageBySource);
@@ -79,11 +84,9 @@ export const neutralizeEnemy = (
   if (finalSource) state.stats.killsBySource[finalSource] += 1;
   state.stats.matterHarvested += leveled.matterYield;
   state.pendingMatter += leveled.matterYield;
-  roomState(state, roomId).residue = clamp(
-    roomState(state, roomId).residue + leveled.residueOnDeath,
-    0,
-    100
-  );
+  clearEnemyCharge(state, enemy.id, "death");
+  const process = configuredProcess(state, gameDefinition);
+  process?.bridge.enemyDeath(process.state, enemy, roomId, process.context);
 
   addEvent(
     state,
@@ -101,12 +104,11 @@ export const neutralizeEnemy = (
   );
 };
 
-const recordBurstIncidents = (state: GameState, bursts: HazardBurst[]): void => {
+const recordBurstIncidents = (state: EncounterState, bursts: readonly HazardBurst[]): void => {
   for (const burst of bursts) {
     const incident = addCombatIncident(state, {
       elapsed: state.elapsed,
-      levelId: state.campaign.levelId,
-      round: state.campaign.roundIndex + 1,
+      encounterId: state.definition.id,
       phase: state.phase,
       roomId: burst.roomId,
       zone: burst.zone,
@@ -134,22 +136,26 @@ const recordBurstIncidents = (state: GameState, bursts: HazardBurst[]): void => 
 
 /** Records process bursts as environmental telemetry. */
 export const resolveEnemyCombat = (
-  state: GameState,
+  state: EncounterState,
   dt: number,
-  bursts: HazardBurst[],
-  _definition: GameDefinition
+  bursts: readonly HazardBurst[],
+  _definition: EncounterContext
 ): void => {
   for (const enemy of state.enemies) enemy.spawnAge += dt;
   recordBurstIncidents(state, bursts);
 };
 
-const repathEnemy = (state: GameState, enemy: EnemyState, definition: GameDefinition): boolean => {
+const repathEnemy = (
+  state: EncounterState,
+  enemy: EnemyState,
+  definition: EncounterContext
+): boolean => {
   const current = enemy.path[Math.min(enemy.pathIndex, enemy.path.length - 1)];
   if (!current) return false;
-  const enemyDefinition = definition.enemies[enemy.type];
+  const species = enemyDefinition(definition.combat, enemy.type);
   const path = findEnemyPathBetween(
     {
-      flying: enemyDefinition.flying,
+      flying: species.flying,
       portalStates: state.portalStates,
       start: current.cell,
       goal: state.map.coreBreachCell,
@@ -164,29 +170,25 @@ const repathEnemy = (state: GameState, enemy: EnemyState, definition: GameDefini
   return true;
 };
 
-const isClosedCoreThresholdStep = (
-  step: EnemyState["path"][number],
-  definition: GameDefinition
-): boolean =>
+const isClosedCoreThresholdStep = (step: EnemyState["path"][number], map: WorldMap): boolean =>
   step.mode === "door" &&
-  step.cell.column === definition.map.coreBreachCell.column &&
-  step.cell.elevation === definition.map.coreBreachCell.elevation &&
+  step.cell.column === map.coreBreachCell.column &&
+  step.cell.elevation === map.coreBreachCell.elevation &&
   step.portalId !== null &&
-  step.portalId ===
-    facilityModelForMap(definition.map).cellDefinition(definition.map.coreBreachCell).portalId &&
-  facilityModelForMap(definition.map).cellDefinition(step.cell).terrain === "door";
+  step.portalId === facilityModelForMap(map).cellDefinition(map.coreBreachCell).portalId &&
+  facilityModelForMap(map).cellDefinition(step.cell).terrain === "door";
 
 const nextEnemySegment = (
-  state: GameState,
+  state: EncounterState,
   enemy: EnemyState,
-  definition: GameDefinition
+  definition: EncounterContext
 ): readonly [EnemyState["path"][number], EnemyState["path"][number]] | null => {
   let current = enemy.path[enemy.pathIndex];
   let next = enemy.path[enemy.pathIndex + 1];
   if (!current || !next) return null;
   if (
-    facilityModelForMap(definition.map).cellIsTraversable(next.cell, state.portalStates) ||
-    isClosedCoreThresholdStep(next, definition)
+    facilityModelForMap(state.map).cellIsTraversable(next.cell, state.portalStates) ||
+    isClosedCoreThresholdStep(next, state.map)
   )
     return [current, next];
   if (!repathEnemy(state, enemy, definition)) return null;
@@ -211,13 +213,13 @@ const prepareEnemySegment = (
 };
 
 const moveEnemy = (
-  state: GameState,
+  state: EncounterState,
   enemy: EnemyState,
-  room: RoomState | null,
+  roomMultiplier: number,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: EncounterContext
 ): boolean => {
-  const definition = gameDefinition.enemies[enemy.type];
+  const definition = enemyDefinition(gameDefinition.combat, enemy.type);
   const slow = enemy.effects
     .filter((effect) => effect.kind === "slow")
     .reduce((strongest, effect) => Math.max(strongest, effect.magnitude), 0);
@@ -228,7 +230,7 @@ const moveEnemy = (
     enemyBehaviorSpeedMultiplier(enemy, definition) *
     ENEMY_WORLD_SPEED_SCALE *
     controlMultiplier *
-    (room ? roomMovementMultiplier(room, definition.flying, gameDefinition) : 1) *
+    roomMultiplier *
     environmentalEnemyMovementMultiplier(state, enemy) *
     dt;
   while (travel > 0 && enemy.pathIndex < enemy.path.length - 1) {
@@ -248,8 +250,13 @@ const moveEnemy = (
   return enemy.pathIndex >= enemy.path.length - 1;
 };
 
-const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDefinition): void => {
-  const definition = gameDefinition.enemies[enemy.type];
+const breachCore = (
+  state: EncounterState,
+  enemy: EnemyState,
+  gameDefinition: EncounterContext
+): void => {
+  clearEnemyCharge(state, enemy.id, "breach");
+  const definition = enemyDefinition(gameDefinition.combat, enemy.type);
   const coreDamage = enemyStatsAtLevel(definition, enemy.level).coreDamage;
   state.coreIntegrity = Math.max(0, state.coreIntegrity - coreDamage);
   state.stats.breached += 1;
@@ -259,17 +266,93 @@ const breachCore = (state: GameState, enemy: EnemyState, gameDefinition: GameDef
   addEvent(state, "danger", "core_breached", { enemyType: enemy.type, coreDamage }, "core");
 };
 
-export const moveEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
+export const moveEnemies = (
+  state: EncounterState,
+  dt: number,
+  definition: EncounterContext,
+  fields: CatalystFieldSample = { byEnemy: {}, servicedByDevice: {} }
+): void => {
   state.enemies = state.enemies.filter((enemy) => {
+    if (definition.combat.mechanics.kind === "catalyst" && state.coreIntegrity <= 0) return true;
     const roomId = enemyRoomId(enemy, state.map);
-    const room = roomId ? roomState(state, roomId) : null;
-    if (!moveEnemy(state, enemy, room, dt, definition)) return true;
+    const process = configuredProcess(state, definition);
+    const multiplier =
+      roomId && process
+        ? process.bridge.movementMultiplier(process.state, enemy, roomId, process.context)
+        : 1;
+    const arrived =
+      definition.combat.mechanics.kind === "catalyst"
+        ? moveCatalystEnemy(state, enemy, multiplier, dt, definition, fields)
+        : moveEnemy(state, enemy, multiplier, dt, definition);
+    if (!arrived) return true;
     breachCore(state, enemy, definition);
     return false;
   });
 };
 
-export const simulateEnemies = (state: GameState, dt: number, definition: GameDefinition): void => {
+const playerMovementMultiplier = (
+  state: EncounterState,
+  enemy: EnemyState,
+  roomMultiplier: number
+): number => {
+  const slow = enemy.effects
+    .filter((effect) => effect.kind === "slow")
+    .reduce((strongest, effect) => Math.max(strongest, effect.magnitude), 0);
+  const control = enemy.effects.some((effect) => effect.kind === "stun")
+    ? 0
+    : Math.max(0, 1 - slow);
+  return control * roomMultiplier * environmentalEnemyMovementMultiplier(state, enemy);
+};
+
+const moveCatalystEnemy = (
+  state: EncounterState,
+  enemy: EnemyState,
+  roomMultiplier: number,
+  dt: number,
+  context: EncounterContext,
+  fields: CatalystFieldSample
+): boolean => {
+  const mechanics = context.combat.mechanics;
+  if (mechanics.kind !== "catalyst") return false;
+  const definition = enemyDefinition(context.combat, enemy.type);
+  const playerMultiplier = playerMovementMultiplier(state, enemy, roomMultiplier);
+  let remainingTime = dt;
+  while (remainingTime > 0 && enemy.pathIndex < enemy.path.length - 1) {
+    const segment = nextEnemySegment(state, enemy, context);
+    if (!segment) return false;
+    const length = prepareEnemySegment(enemy, ...segment);
+    const [from, to] = segment;
+    const multiplier = projectCatalystMovement(
+      fields,
+      enemy.id,
+      { x: from.cell.column, elevation: from.cell.elevation },
+      { x: to.cell.column, elevation: to.cell.elevation },
+      playerMultiplier,
+      mechanics.rules
+    );
+    const speed =
+      definition.speed *
+      enemyBehaviorSpeedMultiplier(enemy, definition) *
+      ENEMY_WORLD_SPEED_SCALE *
+      LOCOMOTION_SPEED[enemy.mode] *
+      multiplier;
+    const distance = length * (1 - enemy.progress);
+    if (speed * remainingTime < distance) {
+      enemy.progress += (speed * remainingTime) / length;
+      return false;
+    }
+    remainingTime -= distance / speed;
+    enemy.pathIndex += 1;
+    enemy.progress = 0;
+  }
+  return enemy.pathIndex >= enemy.path.length - 1;
+};
+
+export const simulateEnemies = (
+  state: EncounterState,
+  dt: number,
+  definition: EncounterContext
+): void => {
   resolveEnemyCombat(state, dt, [], definition);
   moveEnemies(state, dt, definition);
 };

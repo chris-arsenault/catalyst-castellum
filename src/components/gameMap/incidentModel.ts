@@ -1,4 +1,5 @@
-import type { CombatIncident, GameState, RoomId } from "../../game/types";
+import type { GameState, RoomId } from "../../game/types";
+import type { EncounterIncident, EncounterState } from "../../game/encounter/types";
 import { mapViewFor } from "./mapGeometry";
 import type { WorldMap } from "../../game/world/map";
 
@@ -19,29 +20,27 @@ export interface IncidentAggregate {
   y: number;
 }
 
-type IncidentTimeline = Pick<GameState, "elapsed" | "incidents" | "phase"> & {
-  campaign: Pick<GameState["campaign"], "levelId" | "roundIndex">;
-};
+type IncidentTimeline = Pick<EncounterState, "elapsed" | "incidents" | "phase" | "definition">;
 
-export const transientCombatIndicatorsVisible = (game: Pick<GameState, "phase">): boolean =>
-  game.phase === "assault";
+export const transientCombatIndicatorsVisible = (
+  game: Pick<GameState | EncounterState, "phase">
+): boolean => game.phase === "assault";
 
 export const transientIncidentVisible = (
   game: IncidentTimeline,
-  incident: CombatIncident,
+  incident: EncounterIncident,
   visibleSeconds: number
 ): boolean => {
   const age = game.elapsed - incident.elapsed;
   return (
     transientCombatIndicatorsVisible(game) &&
-    incident.levelId === game.campaign.levelId &&
-    incident.round === game.campaign.roundIndex + 1 &&
+    incident.encounterId === game.definition.id &&
     age >= 0 &&
     age <= visibleSeconds
   );
 };
 
-const recentCombustionIncidents = (game: IncidentTimeline): CombatIncident[] =>
+const recentCombustionIncidents = (game: IncidentTimeline): EncounterIncident[] =>
   game.incidents.filter(
     (incident) =>
       incident.sourceId === "hydrogen_oxygen_combustion" &&
@@ -52,7 +51,7 @@ export const incidentMapAggregates = (
   game: IncidentTimeline,
   map: WorldMap
 ): IncidentAggregate[] => {
-  const grouped = new Map<RoomId, CombatIncident[]>();
+  const grouped = new Map<RoomId, EncounterIncident[]>();
   for (const incident of recentCombustionIncidents(game)) {
     const incidents = grouped.get(incident.roomId) ?? [];
     incidents.push(incident);

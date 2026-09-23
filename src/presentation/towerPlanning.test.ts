@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
-import { defaultPlacement } from "./towerCopy";
+import { createTowerPresentation } from "./towers";
 import { createTowerPlanning, towerMountWorldPoint } from "./towerPlanning";
 
 const enteredScenario = (scenarioId: Parameters<typeof DEFAULT_GAME_RUNTIME.createScenario>[0]) =>
@@ -10,15 +10,17 @@ const enteredScenario = (scenarioId: Parameters<typeof DEFAULT_GAME_RUNTIME.crea
 
 describe("tower surface planning", () => {
   it("defaults wall-mounted defenses toward the room", () => {
-    expect(defaultPlacement("carbon_burner")).toEqual({
-      chassisId: "carbon_burner",
-      mountFace: "left_wall",
-      orientation: "right",
-    });
+    expect(createTowerPresentation(DEFAULT_GAME_RUNTIME).defaultPlacement("carbon_burner")).toEqual(
+      {
+        chassisId: "carbon_burner",
+        mountFace: "left_wall",
+        orientation: "right",
+      }
+    );
   });
   it("infers the physical wall and inward aim from wall placement mode", () => {
     const entered = enteredScenario("harkers_brace");
-    const room = entered.map.rooms.switchyard;
+    const room = entered.encounter.map.rooms.switchyard;
     if (!room) throw new Error("Harker's Brace has no switchyard.");
     const preview = createTowerPlanning(DEFAULT_GAME_RUNTIME).planPlacement(
       entered,
@@ -41,7 +43,7 @@ describe("tower surface planning", () => {
   });
   it("infers a wall for a chassis whose default mount is the floor", () => {
     const entered = enteredScenario("claim_8_delta");
-    const room = entered.map.rooms.switchyard;
+    const room = entered.encounter.map.rooms.switchyard;
     if (!room) throw new Error("Claim 8-Delta has no switchyard.");
     const preview = createTowerPlanning(DEFAULT_GAME_RUNTIME).planPlacement(
       entered,
@@ -59,7 +61,7 @@ describe("tower surface planning", () => {
   });
   it("does not draw a fallback floor mount in open room space", () => {
     const entered = enteredScenario("harkers_brace");
-    const room = entered.map.rooms.switchyard;
+    const room = entered.encounter.map.rooms.switchyard;
     if (!room) throw new Error("Harker's Brace has no switchyard.");
     const preview = createTowerPlanning(DEFAULT_GAME_RUNTIME).planPlacement(
       entered,

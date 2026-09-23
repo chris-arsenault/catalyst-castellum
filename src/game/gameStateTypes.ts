@@ -1,41 +1,27 @@
-import type { ProcessLineKind, WorldMap } from "./world/map";
+import type { ProcessLineKind } from "./world/map";
+import type { ProcessEncounterState } from "./encounter/processTypes";
 import type {
   DamageSourceId,
-  EnemyState,
   EnemyType,
-  GasAmounts,
-  GasConduitState,
-  GasJunctionState,
   GasSourceId,
-  GasSourceState,
   GasType,
   GasZone,
   GridCell,
-  LiquidAmounts,
-  LiquidConduitState,
-  LiquidJunctionState,
   LiquidSourceId,
-  LiquidSourceState,
   LiquidType,
   StationaryType,
   EquipmentId,
   EquipmentSocketId,
   RoomId,
-  RoomState,
   ConnectionId,
   LevelId,
   WorldPoint,
-  FacilityPortalState,
-  TowerAttackEvent,
   TowerChassisId,
-  TowerInstance,
   TowerInstanceId,
   TowerMountFace,
   TowerOrientation,
   TowerTargetPolicy,
   TowerUpgradeId,
-  EnvironmentalField,
-  TowerSupplyStatus,
   TowerRoundReport,
 } from "./types";
 import { EVENT_TONES, GAME_EVENT_CODES, GAME_PHASES } from "./identifiers";
@@ -77,6 +63,8 @@ export interface CampaignProgress {
   /** Normal encoded save captured immediately before the current assault. */
   operationCheckpoint: string | null;
   retryCount: number;
+  /** Completed tactical settlements already applied to the active economy. */
+  settledEncounterIds: string[];
 }
 
 export interface ScenarioAvailability {
@@ -185,53 +173,14 @@ export interface WorldCatalogs {
 }
 
 export interface GameState {
-  version: 28;
-  pack: {
-    id: string;
-    contentVersion: number;
-  };
-  /**
-   * The world the simulation runs on (ADR-0001). Frozen until a map edit replaces the
-   * object and bumps the revision; derived geometry is cached per map object.
-   */
-  map: WorldMap;
-  mapRevision: number;
-  world: WorldCatalogs;
+  version: 30;
+  pack: { id: string; contentVersion: number };
   phase: GamePhase;
   campaign: CampaignProgress;
-  availability: ScenarioAvailability;
-  phaseTime: number;
-  elapsed: number;
-  rooms: Record<RoomId, RoomState>;
-  gasSources: Record<GasSourceId, GasSourceState>;
-  liquidSources: Record<LiquidSourceId, LiquidSourceState>;
-  gasJunctions: Record<RoomId, GasJunctionState>;
-  liquidJunctions: Record<RoomId, LiquidJunctionState>;
-  gasConduits: Record<ConnectionId, GasConduitState>;
-  liquidConduits: Record<ConnectionId, LiquidConduitState>;
-  portalStates: Record<string, FacilityPortalState>;
-  gasVent: GasAmounts;
-  liquidDrain: LiquidAmounts;
-  enemies: EnemyState[];
-  towers: Record<TowerInstanceId, TowerInstance>;
-  towerAttacks: TowerAttackEvent[];
-  environmentalFields: EnvironmentalField[];
-  towerSupply: Record<TowerInstanceId, TowerSupplyStatus>;
-  spawnCursor: number;
-  nextEnemyId: number;
-  nextTowerSequence: number;
-  nextTowerAttackId: number;
-  nextEventId: number;
-  nextIncidentId: number;
-  coreIntegrity: number;
-  matter: number;
-  pendingMatter: number;
-  paused: boolean;
-  speed: 1 | 2;
-  stats: RoundStats;
-  lastReport: RoundReport | null;
+  /** Lifecycle records only; combat records live exclusively in the encounter. */
   events: GameEvent[];
-  incidents: CombatIncident[];
+  /** The campaign configures chemistry; standalone encounters can have process: null. */
+  encounter: ProcessEncounterState;
 }
 
 export interface HazardChannels {
@@ -312,6 +261,7 @@ export type GameCommand =
     }
   | { type: "upgrade_tower"; towerId: TowerInstanceId; upgradeId: TowerUpgradeId }
   | { type: "dismantle_tower"; towerId: TowerInstanceId }
+  | { type: "set_field_mode"; towerId: TowerInstanceId; mode: "attract" | "repel" }
   | {
       type: "edit_hull_cell";
       roomId: RoomId;

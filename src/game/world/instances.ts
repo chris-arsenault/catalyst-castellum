@@ -1,6 +1,5 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessEncounterState } from "../encounter/processTypes";
 import type {
-  GameState,
   GasConduitState,
   GasJunctionState,
   LiquidConduitState,
@@ -33,30 +32,35 @@ export const instance = <Value>(
   return value;
 };
 
-export const roomState = (state: GameState, roomId: string): RoomState =>
-  instance(state.rooms, roomId, "room");
+export const roomState = (state: ProcessEncounterState, roomId: string): RoomState =>
+  instance(state.process.rooms, roomId, "room");
 
-export const gasConduitState = (state: GameState, runId: string): GasConduitState =>
-  instance(state.gasConduits, runId, "gas conduit");
+export const gasConduitState = (state: ProcessEncounterState, runId: string): GasConduitState =>
+  instance(state.process.gasConduits, runId, "gas conduit");
 
-export const liquidConduitState = (state: GameState, runId: string): LiquidConduitState =>
-  instance(state.liquidConduits, runId, "liquid conduit");
+export const liquidConduitState = (
+  state: ProcessEncounterState,
+  runId: string
+): LiquidConduitState => instance(state.process.liquidConduits, runId, "liquid conduit");
 
 /** Per-kind line ids are disjoint, so one lookup serves both conduit records. */
 export const conduitState = (
-  state: GameState,
+  state: ProcessEncounterState,
   connectionId: string
 ): GasConduitState | LiquidConduitState => {
-  const conduit = state.gasConduits[connectionId] ?? state.liquidConduits[connectionId];
+  const conduit =
+    state.process.gasConduits[connectionId] ?? state.process.liquidConduits[connectionId];
   if (!conduit) throw new Error(`Unknown conduit instance: ${connectionId}`);
   return conduit;
 };
 
-export const gasJunctionState = (state: GameState, roomId: string): GasJunctionState =>
-  instance(state.gasJunctions, roomId, "gas junction");
+export const gasJunctionState = (state: ProcessEncounterState, roomId: string): GasJunctionState =>
+  instance(state.process.gasJunctions, roomId, "gas junction");
 
-export const liquidJunctionState = (state: GameState, roomId: string): LiquidJunctionState =>
-  instance(state.liquidJunctions, roomId, "liquid junction");
+export const liquidJunctionState = (
+  state: ProcessEncounterState,
+  roomId: string
+): LiquidJunctionState => instance(state.process.liquidJunctions, roomId, "liquid junction");
 
 export const definitionRoom = (carrier: MapCarrier, roomId: string): RoomDefinition =>
   instance(carrier.map.rooms, roomId, "room definition");
@@ -67,7 +71,7 @@ export const definitionRoom = (carrier: MapCarrier, roomId: string): RoomDefinit
  */
 export type ProcessLineView = ProcessLineConnection;
 
-/** Anything carrying a WorldMap — GameState during play, GameDefinition at creation. */
+/** Anything carrying a WorldMap — ProcessEncounterState during play, MapCarrier at creation. */
 export interface MapCarrier {
   readonly map: WorldMap;
 }
@@ -113,12 +117,10 @@ export const processLineIds = (carrier: MapCarrier, kind: ProcessLineKind): read
   return cached[kind];
 };
 
-export const definitionGasJunction = (
-  definition: GameDefinition,
-  roomId: string
-): GasTapDefinition => instance(definition.map.rooms, roomId, "map room").taps.gas;
+export const definitionGasJunction = (definition: MapCarrier, roomId: string): GasTapDefinition =>
+  instance(definition.map.rooms, roomId, "map room").taps.gas;
 
 export const definitionLiquidJunction = (
-  definition: GameDefinition,
+  definition: MapCarrier,
   roomId: string
 ): LiquidTapDefinition => instance(definition.map.rooms, roomId, "map room").taps.liquid;

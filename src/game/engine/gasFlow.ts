@@ -1,10 +1,9 @@
-import { facilityModelFor } from "../world/derivedModel";
+import { facilityModelForMap } from "../world/derivedModel";
 import { emptyGas } from "../materials";
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import {
   GAS_TYPES,
   type FlowCause,
-  type GameState,
   type GasAmounts,
   type GasConduitState,
   type RoomId,
@@ -38,9 +37,9 @@ const FULL_CONDUIT_EPSILON = 1e-6;
 type GasPlan = TransportPlan;
 
 const gasLinePressureRatio = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const conduit = gasConduitState(state, runId);
   const capacity = conduitCapacity(state, runId, "gas", definition);
@@ -51,15 +50,15 @@ const gasLinePressureRatio = (
 };
 
 export const gasConduitPressure = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => gasLinePressureRatio(state, runId, definition) * STANDARD_PRESSURE;
 
 const destinationHeadroom = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const definition = gasLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "gas_vent") return Number.POSITIVE_INFINITY;
@@ -67,9 +66,9 @@ const destinationHeadroom = (
 };
 
 const destinationPressureRatio = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const definition = gasLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "gas_vent") return 0;
@@ -79,18 +78,18 @@ const destinationPressureRatio = (
 };
 
 const sourcePressureRatio = (
-  state: GameState,
+  state: ProcessEncounterState,
   roomId: RoomId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number =>
   gasAmountTotal(gasJunctionState(state, roomId).gas) /
   definitionGasJunction(definition, roomId).capacity;
 
 const desiredThroughput = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const definition = gasLineDefinition(state, runId);
   if (!definition) return 0;
@@ -112,10 +111,10 @@ const desiredThroughput = (
 };
 
 const initialPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): GasPlan | null => {
   const definition = gasLineDefinition(state, runId);
   const conduit = gasConduitState(state, runId);
@@ -143,21 +142,23 @@ const initialPlan = (
 };
 
 const deliverGas = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   packet: GasAmounts,
   packetTemperature: number,
-  _gameDefinition: GameDefinition
+  _gameDefinition: ProcessPhysicsDefinition
 ): void => {
   const definition = gasLineDefinition(state, runId);
   if (!definition) return;
   if (definition.destinationKind === "gas_vent") {
-    addGas(state.gasVent, packet);
+    addGas(state.process.gasVent, packet);
     return;
   }
   const roomId = definition.direction[1];
   const endpoint = conduitEndpoint(state, runId, "gas", "to");
-  const zone = gasZoneForPort(facilityModelFor(state).roomPortHeight(roomId, endpoint.elevation));
+  const zone = gasZoneForPort(
+    facilityModelForMap(state.map).roomPortHeight(roomId, endpoint.elevation)
+  );
   const target = roomState(state, roomId).gas[zone];
   const existing = totalGas(target);
   addGas(target, packet);
@@ -169,7 +170,7 @@ const deliverGas = (
   );
 };
 
-const clearReadout = (state: GameState, runId: ConnectionId): void => {
+const clearReadout = (state: ProcessEncounterState, runId: ConnectionId): void => {
   const conduit = gasConduitState(state, runId);
   conduit.lastFlow = 0;
   conduit.blocked = false;
@@ -207,11 +208,11 @@ const updateReadout = (
 };
 
 const isBlockedAfterPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   plan: GasPlan,
   incomingAmount: number,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): boolean =>
   transportPlanIsBlocked(
     gasConduitState(state, plan.runId).enabled,
@@ -221,10 +222,10 @@ const isBlockedAfterPlan = (
   );
 
 const applyPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   plan: GasPlan,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const conduit = gasConduitState(state, plan.runId);
   const before = gasAmountTotal(conduit.gas);
@@ -245,9 +246,9 @@ const applyPlan = (
 };
 
 export const simulateGasConduits = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const lineIds = processLineIds(state, "gas_line");
   for (const runId of lineIds) clearReadout(state, runId);

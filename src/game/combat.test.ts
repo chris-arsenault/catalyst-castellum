@@ -1,18 +1,18 @@
 import { describe, expect, it } from "vitest";
-import {
-  applyDamagePackets,
-  createScenarioGame,
-  resolveEnemyCombat,
-  spawnEnemies,
-} from "./simulation";
+import { createScenarioGame } from "./simulation";
+import { resolveEnemyCombat, spawnEnemies } from "./engine/combat";
+import { applyDamagePackets } from "./engine/damage";
+import { DEFAULT_GAME_DEFINITION } from "./definition";
+import { campaignEncounterContext } from "./engine/campaignEncounter";
 import { emptyHazardChannels, type HazardBurst } from "./engine/damage";
 
 const assaultWithEnemy = () => {
   const state = createScenarioGame("claim_8_delta");
   state.phase = "assault";
-  state.phaseTime = 1;
-  spawnEnemies(state);
-  const enemy = state.enemies[0];
+  state.encounter.phaseTime = 1;
+  state.encounter.phase = "assault";
+  spawnEnemies(state.encounter, campaignEncounterContext(state, DEFAULT_GAME_DEFINITION));
+  const enemy = state.encounter.enemies[0];
   if (!enemy) throw new Error("Claim wave produced no enemy.");
   return { state, enemy };
 };
@@ -32,12 +32,22 @@ describe("central damage resolution", () => {
       sourceId: "tower_acid" as const,
       channels: { ...emptyHazardChannels(), pressure: 80 },
     };
-    applyDamagePackets(forward.state, forward.enemy, [flash, acid]);
+    applyDamagePackets(
+      forward.state.encounter,
+      forward.enemy,
+      [flash, acid],
+      DEFAULT_GAME_DEFINITION
+    );
 
     const reverse = assaultWithEnemy();
     reverse.enemy.health = 100;
     reverse.enemy.maxHealth = 100;
-    applyDamagePackets(reverse.state, reverse.enemy, [acid, flash]);
+    applyDamagePackets(
+      reverse.state.encounter,
+      reverse.enemy,
+      [acid, flash],
+      DEFAULT_GAME_DEFINITION
+    );
 
     expect(forward.enemy.damageTaken).toBeCloseTo(100, 8);
     expect(forward.enemy.damageBySource.tower_flash.corrosion).toBeCloseTo(50, 8);
@@ -59,11 +69,16 @@ describe("process telemetry outside the weapon model", () => {
     };
     const health = enemy.health;
 
-    resolveEnemyCombat(state, 0.1, [burst]);
+    resolveEnemyCombat(
+      state.encounter,
+      0.1,
+      [burst],
+      campaignEncounterContext(state, DEFAULT_GAME_DEFINITION)
+    );
 
     expect(enemy.health).toBe(health);
     expect(enemy.damageTaken).toBe(0);
-    expect(state.incidents[0]).toMatchObject({
+    expect(state.encounter.incidents[0]).toMatchObject({
       sourceId: "hydrogen_oxygen_combustion",
       targets: [],
       reactionExtent: 6,

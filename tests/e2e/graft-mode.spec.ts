@@ -6,7 +6,7 @@ import { encodeGame } from "../../src/game/persistence/saveCodec";
 const seededSave = (): string => {
   const state = createScenarioGame("claim_8_delta", ["claim_8_delta"]);
   state.phase = "level_complete";
-  state.matter = 100;
+  state.encounter.matter = 100;
   return encodeGame(state, DEFAULT_GAME_DEFINITION);
 };
 

@@ -4,6 +4,9 @@ import type { EnemyState } from "../../game/types";
 import type { WorldMap } from "../../game/world/map";
 import { drawEnemyOverlay } from "./enemyGraphics";
 import { enemyRenderModel } from "./enemyRenderModel";
+import { useOptionalEncounterSurface } from "../../application/encounterSurface";
+import { createEnemyRenderModel } from "./enemyRenderModel";
+import { ChargeMeter } from "./ChargeMeter";
 import {
   ENEMY_SPRITE_DISPLAY_SIZE,
   enemyAnimationSpeed,
@@ -23,7 +26,11 @@ export const EnemyNode = ({
   fieldProtected: boolean;
   onHover: (enemyId: number | null) => void;
 }) => {
-  const model = enemyRenderModel(enemy, map);
+  const surface = useOptionalEncounterSurface();
+  const reducedMotion = surface?.reducedMotion ?? false;
+  const model = surface
+    ? createEnemyRenderModel(surface.presentation.context.combat)(enemy, map)
+    : enemyRenderModel(enemy, map);
   const variant = enemySpriteVariant(model.appearance, model.behavior);
   const [loaded, setLoaded] = useState<{ textures: Texture[]; variant: typeof variant } | null>(
     null
@@ -45,9 +52,11 @@ export const EnemyNode = ({
   );
   const seedAnimation = useCallback(
     (sprite: AnimatedSprite | null) => {
-      if (sprite) sprite.gotoAndPlay(enemy.id % 8);
+      if (!sprite) return;
+      if (reducedMotion) sprite.gotoAndStop(enemy.id % 8);
+      else sprite.gotoAndPlay(enemy.id % 8);
     },
-    [enemy.id]
+    [enemy.id, reducedMotion]
   );
   const pose = enemySpritePose(model.mode);
   return (
@@ -56,7 +65,7 @@ export const EnemyNode = ({
         <pixiAnimatedSprite
           ref={seedAnimation}
           textures={textures}
-          autoPlay
+          autoPlay={!reducedMotion}
           loop
           animationSpeed={enemyAnimationSpeed(model.appearance, model.mode, model.behavior)}
           anchor={0.5}
@@ -74,6 +83,7 @@ export const EnemyNode = ({
         onPointerOver={() => onHover(enemy.id)}
         onPointerOut={() => onHover(null)}
       />
+      <ChargeMeter enemyId={enemy.id} facing={model.facing} />
     </pixiContainer>
   );
 };

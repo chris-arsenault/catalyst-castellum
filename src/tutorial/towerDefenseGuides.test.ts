@@ -12,7 +12,7 @@ const command = (game: GameState, value: GameCommand): GameState => {
 describe("chemical defense guidance", () => {
   it("offers Twelve-Cask neutralization guidance without gating the assault", () => {
     let game = command(createScenarioGame("twelve_cask"), { type: "begin_level" });
-    game.matter = 500;
+    game.encounter.matter = 500;
     const guide = guideDefinitionFor(game);
     expect(guide?.id).toBe("twelve_cask:neutralization:v1");
     expect(guide?.gatesPhaseActions).toBe(false);
@@ -39,7 +39,7 @@ describe("chemical defense guidance", () => {
       false,
       false,
     ]);
-    game.stats.damageBySource.tower_neutralization = 18;
+    game.encounter.stats.damageBySource.tower_neutralization = 18;
     expect(guide?.mission.tasks[2]?.completed(game)).toBe(true);
   });
 });

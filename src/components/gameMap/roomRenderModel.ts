@@ -70,18 +70,18 @@ export const roomRenderModel = (
   occupied: number,
   supplies: readonly SupplyCardCopy[] = []
 ): RoomDrawModel => {
-  const definition = roomDefinition(game, roomId);
-  const facility = facilityModelForMap(game.map);
-  const view = mapViewFor(game.map);
-  const room = roomState(game, roomId);
-  const analysis = roomAnalysis(room, game);
+  const definition = roomDefinition(game.encounter, roomId);
+  const facility = facilityModelForMap(game.encounter.map);
+  const view = mapViewFor(game.encounter.map);
+  const room = roomState(game.encounter, roomId);
+  const analysis = roomAnalysis(room, game.encounter);
   const dimensions = view.roomMapRect(roomId);
   const gasColor = (zone: GasZone): number => weightedGasColor(room.gas[zone]);
   const liquidColor = analysis.dominantLiquid
     ? colorNumber(LIQUID_COLORS[analysis.dominantLiquid])
     : 0x41baf5;
   const center = view.worldToMapPoint(facility.roomCenterWorld(roomId));
-  const bounds = instance(game.map.rooms, roomId, "map room").bounds;
+  const bounds = instance(game.encounter.map.rooms, roomId, "map room").bounds;
   const zoneSplit = bounds.elevation + bounds.height / 2;
   const zoneCapacity = Math.max(1, facility.roomVolume(roomId) / 2);
   const gasFill = (amount: number): number =>
@@ -118,12 +118,12 @@ export const roomRenderModel = (
     }),
     reactionIntensity: room.reactionIntensity,
     pressurePulse: room.pressurePulse,
-    elapsed: game.elapsed,
+    elapsed: game.encounter.elapsed,
     gasInflowRate: gasInflow.rate,
     gasInflowColors,
     liquidInflowRate: roomLiquidInflowRate(game, roomId),
     occupied,
-    coreIntegrity: game.coreIntegrity,
+    coreIntegrity: game.encounter.coreIntegrity,
     coreReservoirs: definition.structure === "core" ? coreReservoirs(supplies, roomId) : [],
   };
 };

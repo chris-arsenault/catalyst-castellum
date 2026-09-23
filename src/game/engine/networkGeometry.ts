@@ -1,6 +1,6 @@
 import { gridCellToWorldPoint } from "../spatial";
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState, GridCell, TransportPhase, ConnectionId, WorldPoint } from "../types";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
+import type { GridCell, TransportPhase, ConnectionId, WorldPoint } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
 import { maybeLineDefinition, type ProcessLineView } from "../world/instances";
 
@@ -9,22 +9,25 @@ const MINIMUM_LENGTH_FACTOR = 0.68;
 const MAXIMUM_LENGTH_FACTOR = 1.3;
 
 export const conduitDefinition = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): ProcessLineView | null => maybeLineDefinition(state, runId, phase);
 
-export const conduitState = (state: GameState, runId: ConnectionId, phase: TransportPhase) =>
-  phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
+export const conduitState = (
+  state: ProcessEncounterState,
+  runId: ConnectionId,
+  phase: TransportPhase
+) => (phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId));
 
 export const conduitRoute = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): readonly GridCell[] => conduitState(state, runId, phase).route;
 
 export const conduitWorldRoute = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): WorldPoint[] => conduitRoute(state, runId, phase).map(gridCellToWorldPoint);
@@ -40,7 +43,7 @@ export const gridRouteLength = (route: readonly GridCell[]): number => {
 };
 
 export const conduitLength = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): number => gridRouteLength(conduitRoute(state, runId, phase));
@@ -52,27 +55,27 @@ const lengthFactor = (length: number): number =>
   );
 
 export const conduitCapacity = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase,
-  _definition: GameDefinition
+  _definition: ProcessPhysicsDefinition
 ): number => {
   const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduitLength(state, runId, phase) * conduit.volumePerCell : 0;
 };
 
 export const conduitMaxFlow = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase,
-  _definition: GameDefinition
+  _definition: ProcessPhysicsDefinition
 ): number => {
   const conduit = conduitDefinition(state, runId, phase);
   return conduit ? conduit.maxFlow * lengthFactor(conduitLength(state, runId, phase)) : 0;
 };
 
 export const conduitEndpoint = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase,
   endpoint: "from" | "to"
@@ -84,7 +87,7 @@ export const conduitEndpoint = (
 };
 
 export const conduitCrestElevation = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): number =>

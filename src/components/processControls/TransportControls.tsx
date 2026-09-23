@@ -17,9 +17,12 @@ const phaseModel = (
   runId: ConnectionId,
   phase: TransportPhase
 ): PhaseModel | null => {
-  const definition = lineDefinition(game, runId, phase);
+  const definition = lineDefinition(game.encounter, runId, phase);
   if (!definition) return null;
-  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
+  const conduit =
+    phase === "gas"
+      ? gasConduitState(game.encounter, runId)
+      : liquidConduitState(game.encounter, runId);
   return { enabled: conduit.enabled };
 };
 
@@ -90,18 +93,19 @@ const TransportPhasePanel = ({ phase, runId }: { phase: TransportPhase; runId: C
 export const TransportRunPanel = ({ runId }: { runId: ConnectionId }) => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const [leftRoom, rightRoom] = connectionRoomPair(game, runId);
+  const [leftRoom, rightRoom] = connectionRoomPair(game.encounter, runId);
   return (
     <article className="transport-run-control" data-testid={`pipe-run-${runId}`}>
       <div className="transport-run-heading">
         <ArrowRightLeft size={14} />
         <div>
           <strong>
-            {roomDefinition(game, leftRoom).code} ⇄ {roomDefinition(game, rightRoom).code}
+            {roomDefinition(game.encounter, leftRoom).code} ⇄{" "}
+            {roomDefinition(game.encounter, rightRoom).code}
           </strong>
           <small>
-            {roomCopy(roomDefinition(game, leftRoom), translator).name} ·{" "}
-            {roomCopy(roomDefinition(game, rightRoom), translator).name}
+            {roomCopy(roomDefinition(game.encounter, leftRoom), translator).name} ·{" "}
+            {roomCopy(roomDefinition(game.encounter, rightRoom), translator).name}
           </small>
         </div>
       </div>

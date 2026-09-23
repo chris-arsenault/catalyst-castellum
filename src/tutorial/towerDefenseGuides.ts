@@ -2,7 +2,7 @@ import type { GameState } from "../game/types";
 import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
 
-const towers = (game: GameState) => Object.values(game.towers);
+const towers = (game: GameState) => Object.values(game.encounter.towers);
 const wallTowerPlaced = (game: GameState): boolean =>
   towers(game).some(
     (tower) =>
@@ -105,7 +105,8 @@ const claimGuide: GuideDefinition = {
       explanation: "tutorial.tower.claim.step.coverage.explanation",
       instruction: "tutorial.tower.claim.step.coverage.instruction",
       result: "tutorial.tower.claim.step.coverage.result",
-      completed: (game, ui) => Boolean(ui.selectedTowerId && game.towers[ui.selectedTowerId]),
+      completed: (game, ui) =>
+        Boolean(ui.selectedTowerId && game.encounter.towers[ui.selectedTowerId]),
     },
     {
       id: "start-assault",
@@ -270,7 +271,7 @@ const acidPotPlaced = (game: GameState): boolean =>
 const causticJetPlaced = (game: GameState): boolean =>
   towers(game).some((tower) => tower.chassisId === "caustic_jet");
 const neutralizationRecorded = (game: GameState): boolean =>
-  game.stats.damageBySource.tower_neutralization > 0;
+  game.encounter.stats.damageBySource.tower_neutralization > 0;
 
 const twelveCaskGuide: GuideDefinition = {
   id: "twelve_cask:neutralization:v1",

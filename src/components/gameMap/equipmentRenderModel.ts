@@ -35,12 +35,14 @@ export interface EquipmentRenderModel {
 }
 
 export const equipmentRenderModels = (game: GameState): EquipmentRenderModel[] =>
-  game.world.rooms.flatMap((roomId) =>
+  game.encounter.world.rooms.flatMap((roomId) =>
     EQUIPMENT_SOCKET_IDS.flatMap((socketId) => {
-      const instance = roomState(game, roomId).equipment[socketId];
-      const cell = worldInstance(game.map.rooms, roomId, "map room").socketCells[socketId];
+      const instance = roomState(game.encounter, roomId).equipment[socketId];
+      const cell = worldInstance(game.encounter.map.rooms, roomId, "map room").socketCells[
+        socketId
+      ];
       if (!instance || !cell) return [];
-      const rect = mapViewFor(game.map).gridCellMapRect(cell);
+      const rect = mapViewFor(game.encounter.map).gridCellMapRect(cell);
       return [
         {
           accent: colorNumber(EQUIPMENT_DEFINITIONS[instance.equipmentId].accent),

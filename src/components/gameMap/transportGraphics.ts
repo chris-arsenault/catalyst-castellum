@@ -190,11 +190,11 @@ const mixedPhaseColor = (
     phase === "gas"
       ? GAS_TYPES.map((species) => ({
           color: colorNumber(SPECIES_DEFINITIONS[species].color),
-          rate: Math.abs(gasConduitState(state, runId).lastSpeciesFlow[species]),
+          rate: Math.abs(gasConduitState(state.encounter, runId).lastSpeciesFlow[species]),
         }))
       : LIQUID_TYPES.map((species) => ({
           color: colorNumber(SPECIES_DEFINITIONS[species].color),
-          rate: Math.abs(liquidConduitState(state, runId).lastSpeciesFlow[species]),
+          rate: Math.abs(liquidConduitState(state.encounter, runId).lastSpeciesFlow[species]),
         }));
   const total = rates.reduce((sum, entry) => sum + entry.rate, 0);
   if (total <= FLOW_EPSILON) return fallback;
@@ -213,13 +213,13 @@ const drawPhaseLane = (graphics: Graphics, model: PhaseLaneModel): void => {
   const points = offsetPath(model.basePath, model.offset);
   const conduit =
     model.phase === "gas"
-      ? gasConduitState(model.state, model.runId)
-      : liquidConduitState(model.state, model.runId);
+      ? gasConduitState(model.state.encounter, model.runId)
+      : liquidConduitState(model.state.encounter, model.runId);
   let color = mixedPhaseColor(model.state, model.runId, model.phase, model.baseColor);
   let flow: MaterialRunFlow | null = null;
-  let status = transportRunPhaseStatus(model.state, model.runId, model.phase);
+  let status = transportRunPhaseStatus(model.state.encounter, model.runId, model.phase);
   if (model.selectedSpecies && SPECIES_DEFINITIONS[model.selectedSpecies].phase === model.phase) {
-    flow = transportRunMaterialFlow(model.state, model.runId, model.selectedSpecies);
+    flow = transportRunMaterialFlow(model.state.encounter, model.runId, model.selectedSpecies);
     const selectedRate = flow.forward + flow.reverse;
     if (selectedRate > FLOW_EPSILON) {
       color = colorNumber(SPECIES_DEFINITIONS[model.selectedSpecies].color);
@@ -258,10 +258,12 @@ const phaseRouteCells = (
   runId: ConnectionId,
   phase: TransportPhase
 ): readonly GridCell[] | null => {
-  const definition = lineDefinition(state, runId, phase);
+  const definition = lineDefinition(state.encounter, runId, phase);
   if (!definition) return null;
   const conduit =
-    phase === "gas" ? gasConduitState(state, runId) : liquidConduitState(state, runId);
+    phase === "gas"
+      ? gasConduitState(state.encounter, runId)
+      : liquidConduitState(state.encounter, runId);
   return conduit.route.length > 0 ? conduit.route : definition.route;
 };
 
@@ -306,7 +308,7 @@ export const drawTransportRun = (
   const liquidCells = phaseRouteCells(state, runId, "liquid");
   const hasGas = gasCells !== null;
   const hasLiquid = liquidCells !== null;
-  const view = mapViewFor(state.map);
+  const view = mapViewFor(state.encounter.map);
   const gasPath = view.worldPathToMap(gridCellsToWorldPath(gasCells ?? []));
   const liquidPath = view.worldPathToMap(gridCellsToWorldPath(liquidCells ?? []));
   const laneOffsets = coincidentLaneOffsets(gasCells, liquidCells);
@@ -314,7 +316,7 @@ export const drawTransportRun = (
     drawPhaseLane(graphics, {
       baseColor: GAS_RUN_COLOR,
       basePath: gasPath,
-      elapsed: state.elapsed,
+      elapsed: state.encounter.elapsed,
       emphasized,
       hovered,
       offset: laneOffsets.gas,
@@ -328,7 +330,7 @@ export const drawTransportRun = (
     drawPhaseLane(graphics, {
       baseColor: LIQUID_RUN_COLOR,
       basePath: liquidPath,
-      elapsed: state.elapsed,
+      elapsed: state.encounter.elapsed,
       emphasized,
       hovered,
       offset: laneOffsets.liquid,

@@ -1,5 +1,10 @@
 import type { GamePackSource } from "../definitionTypes";
-import { ENEMY_LOCOMOTION_MODES, type EnemyLocomotionMode } from "../types";
+import { ENEMY_LOCOMOTION_MODES, GAS_TYPES, type EnemyLocomotionMode } from "../types";
+
+interface EnemyAuthoringSource {
+  enemies: Readonly<Partial<GamePackSource["enemies"]>>;
+  species: Readonly<Partial<GamePackSource["species"]>> | null;
+}
 
 export interface EnemyAuthoringIssue {
   path: string;
@@ -70,20 +75,24 @@ const validateField = (
 };
 
 const validateEmitter = (
-  source: GamePackSource,
+  source: EnemyAuthoringSource,
   enemy: GamePackSource["enemies"][keyof GamePackSource["enemies"]],
   path: string,
   issues: EnemyAuthoringIssue[]
 ): void => {
   if (enemy.behavior.kind !== "gas_emitter") return;
-  if (source.species[enemy.behavior.species]?.phase !== "gas") {
+  if (
+    source.species
+      ? source.species[enemy.behavior.species]?.phase !== "gas"
+      : !GAS_TYPES.includes(enemy.behavior.species)
+  ) {
     add(issues, `${path}.species`, "Emitted species must identify an authored gas.");
   }
   positive(enemy.behavior.reservoir, `${path}.reservoir`, "Emitter reservoir", issues);
   positive(enemy.behavior.emissionRate, `${path}.emissionRate`, "Emission rate", issues);
 };
 
-export const validateEnemyDefinitions = (source: GamePackSource): EnemyAuthoringIssue[] => {
+export const validateEnemyDefinitions = (source: EnemyAuthoringSource): EnemyAuthoringIssue[] => {
   const issues: EnemyAuthoringIssue[] = [];
   for (const [enemyType, enemy] of Object.entries(source.enemies)) {
     const path = `enemies.${enemyType}`;

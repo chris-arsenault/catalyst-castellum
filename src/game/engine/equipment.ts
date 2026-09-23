@@ -1,4 +1,4 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import {
   EQUIPMENT_SOCKET_IDS,
   EQUIPMENT_OUTPUT_IDS,
@@ -8,7 +8,6 @@ import {
   type EquipmentLoadout,
   type EquipmentLevel,
   type EquipmentSocketId,
-  type GameState,
   type RoomEquipment,
   type RoomId,
   type RoomState,
@@ -23,7 +22,7 @@ export const emptyRoomEquipment = (): RoomEquipment => ({ socket_a: null, socket
 
 export const createEquipmentInstance = (
   loadout: EquipmentLoadout,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): EquipmentInstance => {
   const operationDefinition = definition.equipment[loadout.equipmentId].operation;
   const outputs = Object.fromEntries(EQUIPMENT_OUTPUT_IDS.map((id) => [id, null])) as NonNullable<
@@ -72,11 +71,11 @@ export const findRoomEquipment = (
   installedEquipment(room).find((instance) => instance.equipmentId === equipmentId) ?? null;
 
 export const findEquipmentInstallation = (
-  state: GameState,
+  state: ProcessEncounterState,
   equipmentId: EquipmentId,
-  _definition: GameDefinition
+  _definition: ProcessPhysicsDefinition
 ): { roomId: RoomId; socketId: EquipmentSocketId; instance: EquipmentInstance } | null => {
-  for (const [roomId, room] of Object.entries(state.rooms) as [RoomId, RoomState][]) {
+  for (const [roomId, room] of Object.entries(state.process.rooms) as [RoomId, RoomState][]) {
     for (const socketId of roomSocketIds(roomId, state)) {
       const instance = room.equipment[socketId];
       if (instance?.equipmentId === equipmentId) return { roomId, socketId, instance };
@@ -93,7 +92,7 @@ const activeLevel = (room: RoomState, equipmentId: EquipmentId): EquipmentLevel 
 const gradeFor = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): EquipmentGradeDefinition => {
   const grade = definition.equipment[equipmentId].grades.find(
     (candidate) => candidate.level === level
@@ -105,7 +104,7 @@ const gradeFor = (
 const activeGrade = (
   room: RoomState,
   equipmentId: EquipmentId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): EquipmentGradeDefinition | null => {
   const level = activeLevel(room, equipmentId);
   return level ? gradeFor(equipmentId, level, definition) : null;
@@ -114,12 +113,18 @@ const activeGrade = (
 export const roomEquipmentIsActive = (room: RoomState, equipmentId: EquipmentId): boolean =>
   activeLevel(room, equipmentId) !== null;
 
-export const roomGasMixingRate = (room: RoomState, definition: GameDefinition): number => {
+export const roomGasMixingRate = (
+  room: RoomState,
+  definition: ProcessPhysicsDefinition
+): number => {
   const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
   return behavior?.kind === "gas_agitator" ? behavior.layerExchangeRate : 0;
 };
 
-export const roomGasReactionMultiplier = (room: RoomState, definition: GameDefinition): number => {
+export const roomGasReactionMultiplier = (
+  room: RoomState,
+  definition: ProcessPhysicsDefinition
+): number => {
   const behavior = activeGrade(room, "gas_agitator", definition)?.behavior;
   return behavior?.kind === "gas_agitator"
     ? behavior.reactionMultiplier
@@ -128,7 +133,7 @@ export const roomGasReactionMultiplier = (room: RoomState, definition: GameDefin
 
 export const roomContactReactionMultiplier = (
   room: RoomState,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const behavior = activeGrade(room, "wet_contactor", definition)?.behavior;
   return behavior?.kind === "wet_contactor"
@@ -138,7 +143,7 @@ export const roomContactReactionMultiplier = (
 
 export const roomEquipmentVolume = (
   room: Pick<RoomState, "equipment">,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number =>
   installedEquipment(room).reduce(
     (total, instance) =>
@@ -148,7 +153,7 @@ export const roomEquipmentVolume = (
 
 export const equipmentInvestedMatter = (
   instance: EquipmentInstance,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const equipment = gameDefinition.equipment[instance.equipmentId];
   let total = equipment.buildCost;
@@ -158,20 +163,19 @@ export const equipmentInvestedMatter = (
 };
 
 /** Dismantling before the wave refunds everything; after the wave starts, salvage recovers 75%. */
-export const dismantleRefundRatio = (phase: GameState["phase"]): number =>
-  phase === "build" ? 1 : 0.75;
+export const dismantleRefundRatio = (phase: string): number => (phase === "build" ? 1 : 0.75);
 
 export const equipmentDismantleRefund = (
   instance: EquipmentInstance,
-  phase: GameState["phase"],
-  definition: GameDefinition
+  phase: string,
+  definition: ProcessPhysicsDefinition
 ): number =>
   Math.floor(equipmentInvestedMatter(instance, definition) * dismantleRefundRatio(phase));
 
 const operationGradeBehavior = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ) => {
   const behavior = gradeFor(equipmentId, level, definition).behavior;
   if (behavior.kind !== "electrolyzer" && behavior.kind !== "vessel")
@@ -182,12 +186,12 @@ const operationGradeBehavior = (
 export const operationProcessRate = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => operationGradeBehavior(equipmentId, level, definition).processRate;
 export const operationPowerDraw = (
   equipmentId: EquipmentId,
   level: EquipmentLevel,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => operationGradeBehavior(equipmentId, level, definition).powerDraw;
 
 const heatRoom = (room: RoomState, target: number, dt: number): void => {
@@ -200,11 +204,11 @@ const heatRoom = (room: RoomState, target: number, dt: number): void => {
 };
 
 export const simulateInstalledEquipment = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
-  for (const room of Object.values(state.rooms)) {
+  for (const room of Object.values(state.process.rooms)) {
     const behavior = activeGrade(room, "thermal_coil", definition)?.behavior;
     if (behavior?.kind === "thermal_coil") heatRoom(room, behavior.targetTemperature, dt);
   }

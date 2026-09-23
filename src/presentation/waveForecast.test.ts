@@ -59,7 +59,15 @@ describe("wave forecast presentation", () => {
         const forecast = DEFAULT_GAME_PRESENTATION.waveForecast(game);
         expect(forecast.total).toBe(round.wave.length);
         expect(forecast.entryRoomId).not.toBe(forecast.coreRoomId);
-        expect(forecast.approachLabel).toContain("→");
+        expect(forecast.routes.reduce((total, route) => total + route.total, 0)).toBe(
+          round.wave.length
+        );
+        for (const route of forecast.routes) {
+          expect(route.approachLabel).toContain("→");
+          expect(route.total).toBe(
+            round.wave.filter((entry) => entry.routeId === route.routeId).length
+          );
+        }
       }
     }
   });
@@ -91,6 +99,37 @@ describe("wave forecast presentation", () => {
 });
 
 describe("authored wave formations", () => {
+  it("adds Pell Cut's active approaches per wave with separate composition and clocks", () => {
+    const game = DEFAULT_GAME_RUNTIME.createScenario("pell_cut");
+    expect(
+      DEFAULT_GAME_PRESENTATION.waveForecast(game).routes.map((route) => route.routeId)
+    ).toEqual(["array_one"]);
+    game.campaign.roundIndex = 1;
+    const second = DEFAULT_GAME_PRESENTATION.waveForecast(game);
+    expect(
+      second.routes.map((route) => ({
+        id: route.routeId,
+        entry: route.entryRoomId,
+        total: route.total,
+        first: route.firstArrivalSeconds,
+        types: route.composition.map((enemy) => enemy.type),
+      }))
+    ).toEqual([
+      { id: "array_one", entry: "west_intake", total: 8, first: 0.5, types: ["flintjack"] },
+      { id: "array_two", entry: "switchyard", total: 11, first: 1, types: ["clatter", "glowbag"] },
+    ]);
+    game.campaign.roundIndex = 3;
+    const fourth = DEFAULT_GAME_PRESENTATION.waveForecast(game);
+    expect(fourth.routes.map((route) => route.entryRoomId)).toEqual([
+      "west_intake",
+      "switchyard",
+      "furnace",
+      "reservoir",
+    ]);
+    expect(fourth.routes[3]?.arrivalWindowLabel).toBe("Arrivals 2–12.4 s after assault starts");
+    expect(fourth.approachLabel).toBe("4 active approaches");
+  });
+
   it("separates arrivals when their authored timing leaves a meaningful gap", () => {
     const flashPoint = DEFAULT_GAME_DEFINITION.levels.claim_8_delta;
     const firstRound = flashPoint.rounds[0]!;

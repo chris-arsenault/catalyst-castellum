@@ -1,12 +1,7 @@
-import type { GameDefinition } from "../definitionTypes";
-import type {
-  EnemyControlEffect,
-  EnemyState,
-  GameState,
-  TowerControlEffectDefinition,
-  TowerInstance,
-  WorldPoint,
-} from "../types";
+import type { EncounterContext, EncounterState, EncounterTower } from "../encounter/types";
+import { towerDefinition } from "../encounter/catalogs";
+import { configuredProcess } from "../encounter/processContext";
+import type { EnemyControlEffect, EnemyState, TowerControlEffectDefinition } from "../types";
 import { enemyRoomId, enemyWorldPosition, neutralizeEnemy } from "./combat";
 import {
   addChannels,
@@ -17,27 +12,14 @@ import {
 } from "./damage";
 import { transitionArmoredMolt } from "./enemyBehaviors";
 import { towerFieldDamageScale } from "./enemyField";
-import { addCombatIncident } from "./events";
-import { acquireTowerTargets } from "./towerTargeting";
+import { addEncounterIncident as addCombatIncident } from "../encounter/events";
+import { acquireTowerTargets, resolveTowerAttackTargets } from "./towerTargeting";
 import { effectiveTowerStats } from "./towerStats";
-import { consumeTowerSupplyForShot, releaseTowerByproducts, towerSupplyQuery } from "./towerSupply";
-import { upsertEnvironmentalField } from "./environmentalFields";
-import { towerRoomId } from "./towerPlacement";
+import { firePhysicalTower } from "./towerLaunch";
+import { expireTowerAttacks, tickTowerEffects, recordLegacyAttack } from "./towerImpact";
+import type { CatalystFieldSample } from "../encounter/catalystTypes";
 
-const distance = (left: WorldPoint, right: WorldPoint): number =>
-  Math.hypot(right.x - left.x, right.elevation - left.elevation);
-
-const expireAttacks = (state: GameState): void => {
-  state.towerAttacks = state.towerAttacks.filter((attack) => attack.expiresAt >= state.elapsed);
-};
-
-const tickEffects = (state: GameState, dt: number): void => {
-  for (const enemy of state.enemies) {
-    enemy.effects = enemy.effects
-      .map((effect) => ({ ...effect, remaining: Math.max(0, effect.remaining - dt) }))
-      .filter((effect) => effect.remaining > 0);
-  }
-};
+type TowerTickContext = EncounterContext & { fieldSample: CatalystFieldSample };
 
 const effectKey = (effect: Pick<EnemyControlEffect, "sourceTowerId" | "kind">): string =>
   `${effect.sourceTowerId}:${effect.kind}`;
@@ -50,7 +32,7 @@ const oppositeCoating = (kind: TowerControlEffectDefinition["kind"]): "acid" | "
 
 const applyControlEffect = (
   enemy: EnemyState,
-  tower: TowerInstance,
+  tower: EncounterTower,
   definition: TowerControlEffectDefinition
 ): boolean => {
   const opposite = oppositeCoating(definition.kind);
@@ -85,7 +67,7 @@ const applyControlEffect = (
   return false;
 };
 
-const neutralizationPackets = (tower: TowerInstance): DamagePacket[] => [
+const neutralizationPackets = (tower: EncounterTower): DamagePacket[] => [
   {
     key: `tower:${tower.id}:${tower.shots}:neutralization`,
     sourceId: "tower_neutralization",
@@ -100,14 +82,14 @@ const neutralizationPackets = (tower: TowerInstance): DamagePacket[] => [
 ];
 
 const attackPackets = (
-  state: GameState,
-  tower: TowerInstance,
-  definition: GameDefinition,
+  state: EncounterState,
+  tower: EncounterTower,
+  definition: EncounterContext,
   supplyMultiplier: number
 ): DamagePacket[] => {
-  const chassis = definition.towers[tower.chassisId];
+  const chassis = towerDefinition(definition.combat, tower.chassisId);
   const multiplier =
-    effectiveTowerStats(tower, definition, state).damageMultiplier * supplyMultiplier;
+    effectiveTowerStats(tower, definition.combat, state).damageMultiplier * supplyMultiplier;
   return chassis.attack.packets.map((packet, index) => ({
     key: `tower:${tower.id}:${tower.shots}:${index}`,
     sourceId: packet.sourceId,
@@ -119,58 +101,6 @@ const attackPackets = (
       radiation: packet.channels.radiation * multiplier,
     },
   }));
-};
-
-const areaTargets = (
-  state: GameState,
-  tower: TowerInstance,
-  primary: readonly EnemyState[],
-  definition: GameDefinition
-): EnemyState[] => {
-  const chassis = definition.towers[tower.chassisId];
-  const first = primary[0];
-  if (!first || chassis.attack.radius <= 0) return [...primary];
-  const center = enemyWorldPosition(first);
-  const cap = effectiveTowerStats(tower, definition, state).targetCap;
-  return state.enemies
-    .filter(
-      (enemy) =>
-        enemy.health > 0 && distance(center, enemyWorldPosition(enemy)) <= chassis.attack.radius
-    )
-    .sort((left, right) => left.id - right.id)
-    .slice(0, cap);
-};
-
-const recordAttack = (
-  state: GameState,
-  tower: TowerInstance,
-  targets: readonly EnemyState[],
-  killedEnemyIds: number[],
-  damage: number,
-  definition: GameDefinition
-): void => {
-  const target = targets[0];
-  if (!target) return;
-  const chassis = definition.towers[tower.chassisId];
-  const travel =
-    chassis.attack.projectileSpeed > 0
-      ? distance(tower.placement.firingOrigin, enemyWorldPosition(target)) /
-        chassis.attack.projectileSpeed
-      : 0.12;
-  state.towerAttacks.push({
-    id: state.nextTowerAttackId,
-    towerId: tower.id,
-    strategy: chassis.attack.strategy,
-    source: { ...tower.placement.firingOrigin },
-    target: enemyWorldPosition(target),
-    targetEnemyIds: targets.map((enemy) => enemy.id),
-    startedAt: state.elapsed,
-    expiresAt: state.elapsed + Math.max(0.12, travel),
-    damage,
-    killedEnemyIds,
-  });
-  state.nextTowerAttackId += 1;
-  if (state.towerAttacks.length > 96) state.towerAttacks.splice(0, state.towerAttacks.length - 96);
 };
 
 type CombatIncidentTarget = Parameters<typeof addCombatIncident>[1]["targets"][number];
@@ -185,16 +115,16 @@ interface TowerHitResult {
 type DamageApplication = ReturnType<typeof applyDamagePacketsWithScale>;
 
 const applyNeutralizationDamage = (
-  state: GameState,
-  tower: TowerInstance,
+  state: EncounterState,
+  tower: EncounterTower,
   enemy: EnemyState,
   current: DamageApplication,
   channels: ReturnType<typeof emptyHazardChannels>,
-  definition: GameDefinition
+  definition: EncounterContext
 ): DamageApplication => {
   const packets = neutralizationPackets(tower);
-  const requested = requestedDamageForPackets(enemy, packets, definition);
-  const reaction = applyDamagePacketsWithScale(state, enemy, packets, 1, definition);
+  const requested = requestedDamageForPackets(enemy, packets, definition.combat);
+  const reaction = applyDamagePacketsWithScale(state, enemy, packets, 1, definition.combat);
   tower.telemetry.overkillDamage += Math.max(0, requested - reaction.healthBefore);
   for (const packet of reaction.packets) addChannels(channels, packet.channels);
   return {
@@ -209,15 +139,15 @@ const applyNeutralizationDamage = (
 };
 
 const applyTowerControlEffects = (
-  state: GameState,
-  tower: TowerInstance,
+  state: EncounterState,
+  tower: EncounterTower,
   enemy: EnemyState,
   initial: DamageApplication,
   channels: ReturnType<typeof emptyHazardChannels>,
-  definition: GameDefinition
+  definition: EncounterContext
 ): DamageApplication => {
   let result = initial;
-  for (const effect of definition.towers[tower.chassisId].attack.controlEffects) {
+  for (const effect of towerDefinition(definition.combat, tower.chassisId).attack.controlEffects) {
     const reacted = applyControlEffect(enemy, tower, effect);
     tower.telemetry.controlApplications += 1;
     if (reacted && enemy.health > 0) {
@@ -228,16 +158,22 @@ const applyTowerControlEffects = (
 };
 
 const applyTowerHit = (
-  state: GameState,
-  tower: TowerInstance,
+  state: EncounterState,
+  tower: EncounterTower,
   enemy: EnemyState,
   packets: DamagePacket[],
-  definition: GameDefinition
+  definition: EncounterContext
 ): TowerHitResult | null => {
   if (!state.enemies.includes(enemy) || enemy.health <= 0) return null;
-  const fieldScale = towerFieldDamageScale(state, enemy, packets, definition);
-  const requested = requestedDamageForPackets(enemy, packets, definition) * fieldScale;
-  const application = applyDamagePacketsWithScale(state, enemy, packets, fieldScale, definition);
+  const fieldScale = towerFieldDamageScale(state, enemy, packets, definition.combat);
+  const requested = requestedDamageForPackets(enemy, packets, definition.combat) * fieldScale;
+  const application = applyDamagePacketsWithScale(
+    state,
+    enemy,
+    packets,
+    fieldScale,
+    definition.combat
+  );
   tower.telemetry.overkillDamage += Math.max(0, requested - application.healthBefore);
   const channels = application.packets.reduce((total, packet) => {
     addChannels(total, packet.channels);
@@ -273,34 +209,13 @@ const applyTowerHit = (
   };
 };
 
-const releaseSteamWake = (
-  state: GameState,
-  tower: TowerInstance,
-  reactedHydrogen: number
-): void => {
-  const roomId = towerRoomId(state, tower);
-  if (reactedHydrogen <= 0 || !roomId) return;
-  upsertEnvironmentalField(state, {
-    id: `tower:${tower.id}:steam-wake`,
-    sourceId: tower.id,
-    effect: "movement",
-    roomId,
-    zone: "both",
-    intensity: Math.min(0.28, 0.12 + reactedHydrogen * 0.14),
-    duration: 3.2,
-    decayPerSecond: 0.025,
-    stacking: "strongest",
-    species: "steam",
-  });
-};
-
 const recordCombatIncident = (
-  state: GameState,
-  tower: TowerInstance,
+  state: EncounterState,
+  tower: EncounterTower,
   targets: readonly EnemyState[],
   incidentTargets: CombatIncidentTarget[],
   incidentChannels: ReturnType<typeof emptyHazardChannels>,
-  definition: GameDefinition
+  definition: EncounterContext
 ): void => {
   const roomId =
     targets
@@ -308,12 +223,13 @@ const recordCombatIncident = (
       .find((candidate): candidate is string => Boolean(candidate)) ?? "core";
   addCombatIncident(state, {
     elapsed: state.elapsed,
-    levelId: state.campaign.levelId,
-    round: state.campaign.roundIndex + 1,
+    encounterId: state.definition.id,
     phase: state.phase,
     roomId,
     zone: null,
-    sourceId: definition.towers[tower.chassisId].attack.packets[0]?.sourceId ?? "tower_flash",
+    sourceId:
+      towerDefinition(definition.combat, tower.chassisId).attack.packets[0]?.sourceId ??
+      "tower_flash",
     reactionExtent: 0,
     pressureImpulse: 0,
     heatDelta: 0,
@@ -323,14 +239,30 @@ const recordCombatIncident = (
 };
 
 const fireTower = (
-  state: GameState,
-  tower: TowerInstance,
+  state: EncounterState,
+  tower: EncounterTower,
   primaryTargets: readonly EnemyState[],
-  definition: GameDefinition
+  definition: TowerTickContext
 ): void => {
-  const targets = areaTargets(state, tower, primaryTargets, definition);
-  const supplyUse = consumeTowerSupplyForShot(state, tower, definition);
+  const targets = resolveTowerAttackTargets(state, tower, primaryTargets, definition.combat);
+  const process = configuredProcess(state, definition);
+  const supplyUse = process
+    ? process.bridge.consumeTowerSupply(process.state, tower, process.context)
+    : { damageMultiplier: 1, consumed: {} };
   const packets = attackPackets(state, tower, definition, supplyUse.damageMultiplier);
+  if (definition.combat.mechanics.kind === "catalyst") {
+    firePhysicalTower(
+      state,
+      tower,
+      primaryTargets,
+      targets,
+      packets,
+      definition,
+      definition.fieldSample
+    );
+    process?.bridge.afterTowerShot(process.state, tower, supplyUse, process.context);
+    return;
+  }
   const hits = targets.flatMap((enemy) => {
     const hit = applyTowerHit(state, tower, enemy, packets, definition);
     return hit ? [hit] : [];
@@ -350,9 +282,8 @@ const fireTower = (
   tower.damageDealt += damage;
   tower.currentTargetIds = targets.map((enemy) => enemy.id);
   tower.downtimeReason = "none";
-  const reactedHydrogen = releaseTowerByproducts(state, tower, supplyUse.consumed, definition);
-  releaseSteamWake(state, tower, reactedHydrogen);
-  recordAttack(state, tower, targets, killedEnemyIds, damage, definition);
+  process?.bridge.afterTowerShot(process.state, tower, supplyUse, process.context);
+  recordLegacyAttack(state, tower, targets, killedEnemyIds, damage, definition);
   recordCombatIncident(
     state,
     tower,
@@ -363,47 +294,97 @@ const fireTower = (
   );
 };
 
-const simulateTower = (
-  state: GameState,
-  tower: TowerInstance,
+const currentTowerCadence = (
+  state: EncounterState,
+  tower: EncounterTower,
+  definition: EncounterContext
+): number | null => {
+  const supplyStatus = currentSupply(state, tower, definition);
+  if (supplyStatus?.mode === "paused") return null;
+  const cadence =
+    effectiveTowerStats(tower, definition.combat, state).cadence *
+    (supplyStatus?.mode === "reduced" ? supplyStatus.modifier : 1);
+  // Authored service is at most 10/s; environmental fields multiply it by at most 1.9.
+  if (!Number.isFinite(1 / cadence) || cadence <= 0 || cadence > 19)
+    throw new Error("Tower cadence exceeds the supported finite service bounds.");
+  return cadence;
+};
+
+const currentSupply = (state: EncounterState, tower: EncounterTower, context: EncounterContext) => {
+  const process = configuredProcess(state, context);
+  if (!process) return null;
+  const status = process.bridge.towerSupply(process.state, tower, process.context);
+  if (status) process.state.process.towerSupply[tower.id] = status;
+  return status;
+};
+
+const fireReadyAttacks = (
+  state: EncounterState,
+  tower: EncounterTower,
   dt: number,
-  definition: GameDefinition
+  definition: TowerTickContext,
+  remainingCooldown: number,
+  cadence: number | null
+): number => {
+  let fired = 0;
+  while (remainingCooldown <= 1e-9) {
+    if (fired > 0) cadence = currentTowerCadence(state, tower, definition);
+    const targets = cadence === null ? [] : acquireTowerTargets(state, tower, definition.combat);
+    if (cadence === null || targets.length === 0) {
+      tower.cooldown = 0;
+      tower.currentTargetIds = [];
+      tower.downtimeReason = cadence === null ? "supply" : "no_target";
+      if (fired === 0) tower.telemetry.downtime.noTarget += dt;
+      return fired;
+    }
+    if (fired >= 2) throw new Error("A fixed tower tick supports at most two ready attacks.");
+    fireTower(state, tower, targets, definition);
+    fired += 1;
+    remainingCooldown += 1 / cadence;
+  }
+  // Carry every ready deadline within this tick; idle and supply waits discard firing debt.
+  tower.cooldown = Math.max(0, remainingCooldown);
+  return fired;
+};
+
+const simulateTower = (
+  state: EncounterState,
+  tower: EncounterTower,
+  dt: number,
+  definition: TowerTickContext
 ): void => {
-  const supplyStatus = towerSupplyQuery(state, tower, definition);
-  if (supplyStatus) state.towerSupply[tower.id] = supplyStatus;
-  if (supplyStatus?.mode === "paused") {
+  const cadence = currentTowerCadence(state, tower, definition);
+  if (cadence === null) {
     tower.currentTargetIds = [];
     tower.downtimeReason = "supply";
     tower.telemetry.downtime.supply += dt;
     return;
   }
-  const cadence =
-    effectiveTowerStats(tower, definition, state).cadence *
-    (supplyStatus?.mode === "reduced" ? supplyStatus.modifier : 1);
-  tower.cooldown = Math.max(0, tower.cooldown - dt);
-  if (tower.cooldown > 0) {
+  const remainingCooldown = tower.cooldown > 0 ? tower.cooldown - dt : 0;
+  tower.cooldown = Math.max(0, remainingCooldown);
+  if (remainingCooldown > 1e-9) {
     tower.downtimeReason = "cooldown";
     tower.telemetry.downtime.cooldown += dt;
     return;
   }
-  const targets = acquireTowerTargets(state, tower, definition);
-  if (targets.length === 0) {
-    tower.currentTargetIds = [];
-    tower.downtimeReason = "no_target";
-    tower.telemetry.downtime.noTarget += dt;
-    return;
-  }
-  tower.telemetry.engagedSeconds += dt;
-  fireTower(state, tower, targets, definition);
-  tower.cooldown = cadence > 0 ? 1 / cadence : 1;
+  if (fireReadyAttacks(state, tower, dt, definition, remainingCooldown, cadence) > 0)
+    tower.telemetry.engagedSeconds += dt;
 };
 
-export const simulateTowers = (state: GameState, dt: number, definition: GameDefinition): void => {
-  expireAttacks(state);
-  tickEffects(state, dt);
+export const simulateTowers = (
+  state: EncounterState,
+  dt: number,
+  definition: EncounterContext,
+  fieldSample: CatalystFieldSample = { byEnemy: {}, servicedByDevice: {} }
+): void => {
+  expireTowerAttacks(state);
+  if (definition.combat.mechanics.kind === "legacy") tickTowerEffects(state, dt);
   for (const tower of Object.values(state.towers).sort((left, right) =>
     left.id.localeCompare(right.id)
   )) {
-    simulateTower(state, tower, dt, definition);
+    const mechanics = definition.combat.mechanics;
+    const device = mechanics.kind === "catalyst" ? mechanics.devices[tower.chassisId] : undefined;
+    if (device && device.kind !== "weapon") continue;
+    simulateTower(state, tower, dt, { ...definition, fieldSample });
   }
 };

@@ -12,13 +12,13 @@ const processSiteWithAgitator = () => {
   const rounds = DEFAULT_GAME_RUNTIME.definition.levels.cordon_41.rounds;
   const round = rounds.at(-1)!;
   game.campaign.roundIndex = rounds.length - 1;
-  game.availability = {
+  game.encounter.availability = {
     towers: [...round.availability.towers],
     equipment: [...round.availability.equipment],
     gasLines: [...round.availability.gasLines],
     liquidLines: [...round.availability.liquidLines],
   };
-  game.matter = 999;
+  game.encounter.matter = 999;
   game = DEFAULT_GAME_RUNTIME.execute(game, {
     type: "build_connection",
     kind: "gas_line",

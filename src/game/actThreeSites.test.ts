@@ -21,23 +21,23 @@ describe("Act III mechanical sites", () => {
 
   it("produces four distinct blank sites with optional process inventories", () => {
     const games = ACT_THREE_LEVEL_IDS.map((levelId) => createScenarioGame(levelId));
-    expect(new Set(games.map(({ map }) => JSON.stringify(map.rooms))).size).toBe(4);
+    expect(new Set(games.map(({ encounter }) => JSON.stringify(encounter.map.rooms))).size).toBe(4);
     for (const game of games) {
-      const equipment = Object.values(game.rooms).flatMap((room) =>
+      const equipment = Object.values(game.encounter.process.rooms).flatMap((room) =>
         Object.values(room.equipment).filter((instance) => instance !== null)
       );
-      const stationary = Object.values(game.rooms).reduce(
+      const stationary = Object.values(game.encounter.process.rooms).reduce(
         (total, room) =>
           total +
           Object.values(room.stationary).reduce((roomTotal, amount) => roomTotal + amount, 0),
         0
       );
       expect(equipment).toEqual([]);
-      expect(processLineIds(game, "gas_line")).toEqual([]);
-      expect(processLineIds(game, "liquid_line")).toEqual([]);
+      expect(processLineIds(game.encounter, "gas_line")).toEqual([]);
+      expect(processLineIds(game.encounter, "liquid_line")).toEqual([]);
       expect(stationary).toBeGreaterThan(0);
       const palette = LEVEL_DEFINITIONS[game.campaign.levelId].palette;
-      expect(game.availability.equipment.includes("fluorine_cell")).toBe(
+      expect(game.encounter.availability.equipment.includes("fluorine_cell")).toBe(
         palette.includes("uranium_fluorine")
       );
     }
@@ -46,7 +46,7 @@ describe("Act III mechanical sites", () => {
   it("introduces room-bound uranium at Station 14 and keeps it available on uranium-palette sites", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const game = createScenarioGame(levelId);
-      const uranium = Object.values(game.rooms).reduce(
+      const uranium = Object.values(game.encounter.process.rooms).reduce(
         (total, room) => total + room.stationary.uranyl_fluoride,
         0
       );
@@ -64,22 +64,24 @@ describe("Act III mechanical sites", () => {
   it("keeps specialist HF feed out of the common gas header", () => {
     for (const levelId of ACT_THREE_LEVEL_IDS) {
       const game = createScenarioGame(levelId);
-      expect(game.gasSources.gas_reservoir?.gas.hydrogen_fluoride, levelId).toBe(0);
-      expect(game.map.rooms.core?.taps.gas.sourceIds, levelId).toEqual(["gas_reservoir"]);
-      expect(game.map.rooms.furnace?.taps.gas.sourceIds, levelId).toEqual([]);
+      expect(game.encounter.process.gasSources.gas_reservoir?.gas.hydrogen_fluoride, levelId).toBe(
+        0
+      );
+      expect(game.encounter.map.rooms.core?.taps.gas.sourceIds, levelId).toEqual(["gas_reservoir"]);
+      expect(game.encounter.map.rooms.furnace?.taps.gas.sourceIds, levelId).toEqual([]);
       if (LEVEL_DEFINITIONS[levelId].palette.includes("uranium_fluorine")) {
         expect(
-          game.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride,
+          game.encounter.process.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride,
           levelId
         ).toBeGreaterThan(0);
-        expect(game.map.rooms.reservoir?.taps.gas.sourceIds, levelId).toEqual([
+        expect(game.encounter.map.rooms.reservoir?.taps.gas.sourceIds, levelId).toEqual([
           "specialty_gas_reservoir",
         ]);
-        expect(game.map.utilityNodes.specialty_gas_reservoir?.hostRoomId, levelId).toBe(
+        expect(game.encounter.map.utilityNodes.specialty_gas_reservoir?.hostRoomId, levelId).toBe(
           "reservoir"
         );
       } else {
-        expect(game.gasSources.specialty_gas_reservoir, levelId).toBeUndefined();
+        expect(game.encounter.process.gasSources.specialty_gas_reservoir, levelId).toBeUndefined();
       }
     }
   });

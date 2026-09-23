@@ -8,7 +8,7 @@ export const COMMAND_MESSAGES = {
   "commands.rejection.not_installed": "Build this conduit to activate its controls.",
   "commands.rejection.occupied_socket": "Dismantle the installed equipment to reuse this socket.",
   "commands.rejection.unsupported_medium": "Load a medium listed on this vessel's spec plate.",
-  "commands.rejection.placement": "Choose a compatible equipment socket.",
+  "commands.rejection.placement": "Choose a compatible mounting surface or equipment socket.",
   "commands.rejection.retained_inventory":
     "Drain the installed equipment's output ports before dismantling.",
   "commands.rejection.route_unavailable":

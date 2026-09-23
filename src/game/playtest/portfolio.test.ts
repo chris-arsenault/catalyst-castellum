@@ -92,7 +92,7 @@ describe("reference-build portfolios", () => {
 
   it("keeps every reference tower outside architectural openings", () => {
     for (const portfolio of Object.values(LEVEL_PLAYTEST_PORTFOLIOS)) {
-      const map = createScenarioGame(portfolio.levelId).map;
+      const map = createScenarioGame(portfolio.levelId).encounter.map;
       const openings = new Set(
         architecturalConnections(map)
           .flatMap((portal) => [

@@ -55,11 +55,11 @@ export interface GraftSlotRef {
 
 export const hullGraftSlots = (game: GameState): GraftSlotRef[] => {
   const refs: GraftSlotRef[] = [];
-  for (const room of Object.values(game.map.rooms)) {
+  for (const room of Object.values(game.encounter.map.rooms)) {
     if (room.provenance !== "hull") continue;
     for (const graftSlot of room.graftSlots) {
       const jointId = `joint:${room.id}:${graftSlot.id}`;
-      const joint = game.map.connections[jointId];
+      const joint = game.encounter.map.connections[jointId];
       const occupied = joint?.rooms.find((roomId) => roomId !== room.id) ?? null;
       refs.push({
         hostRoomId: room.id,

@@ -30,6 +30,7 @@ const GuidedTutorial = lazy(async () => ({
 const MapStage = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
+  const paused = useGameStore((state) => state.paused);
   const selectedRoomId = useGameStore((state) => state.selectedRoomId);
   const selectRoom = useGameStore((state) => state.selectRoom);
   const pipeMode = useGameStore((state) => state.pipeMode);
@@ -43,8 +44,8 @@ const MapStage = () => {
       if (!preview) {
         showNotice(
           translator.text("ui.pipes.noRoute", {
-            from: roomDefinition(game, from).code,
-            to: roomDefinition(game, to).code,
+            from: roomDefinition(game.encounter, from).code,
+            to: roomDefinition(game.encounter, to).code,
           })
         );
         return;
@@ -65,7 +66,7 @@ const MapStage = () => {
       />
       <FeedstockStrip />
       <EventLog />
-      {game.paused && (
+      {paused && (
         <div className="paused-overlay">
           <Pause size={20} />
           <strong>{translator.text("ui.app.paused.title")}</strong>

@@ -4,8 +4,8 @@ import { mapViewFor, type CameraTransform } from "../../src/components/gameMap/m
 import type { WorldPoint } from "../../src/game/types";
 import { startNewGame } from "./tutorialAssertions";
 
-const claimMap = createScenarioGame("claim_8_delta").map;
-const harkerMap = createScenarioGame("harkers_brace").map;
+const claimMap = createScenarioGame("claim_8_delta").encounter.map;
+const harkerMap = createScenarioGame("harkers_brace").encounter.map;
 
 const mapCamera = async (page: Page): Promise<CameraTransform> => {
   const map = page.getByTestId("game-map");

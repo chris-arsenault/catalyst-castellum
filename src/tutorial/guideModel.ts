@@ -16,7 +16,7 @@ export type GuideStepKind = "action" | "observe" | "complete";
 /** UI-owned state a guided step may read; steps never mutate it. */
 export interface GuideUiState {
   pipeMode: boolean;
-  towerBuildChassisId: GameState["availability"]["towers"][number] | null;
+  towerBuildChassisId: GameState["encounter"]["availability"]["towers"][number] | null;
   selectedTowerId: string | null;
 }
 
@@ -25,6 +25,17 @@ export const IDLE_GUIDE_UI: GuideUiState = {
   towerBuildChassisId: null,
   selectedTowerId: null,
 };
+
+/** Run-owned observations survive selection changes, retries, and save/load. */
+export interface GuideProgress {
+  steps: readonly string[];
+  tasks: readonly string[];
+}
+
+export type GuideEvidence = Readonly<Record<string, GuideProgress>>;
+
+export const EMPTY_GUIDE_EVIDENCE: GuideEvidence = {};
+const EMPTY_GUIDE_PROGRESS: GuideProgress = { steps: [], tasks: [] };
 
 export interface GuideStepDefinition {
   id: string;
@@ -107,10 +118,52 @@ export const GUIDE_REGISTRATIONS: GuideRegistry = {
 export const guideStepIndexFor = (
   game: GameState,
   guide: GuideDefinition,
-  ui: GuideUiState = IDLE_GUIDE_UI
+  ui: GuideUiState = IDLE_GUIDE_UI,
+  evidence: GuideEvidence = EMPTY_GUIDE_EVIDENCE
 ): number => {
-  const index = guide.steps.findIndex((step) => !step.completed(game, ui));
+  const index = guide.steps.findIndex(
+    (step) => !evidence[guide.id]?.steps.includes(step.id) && !step.completed(game, ui)
+  );
   return index < 0 ? guide.steps.length : index;
+};
+
+export const guideTaskCompleted = (
+  task: GuideTaskDefinition,
+  guide: GuideDefinition,
+  game: GameState,
+  evidence: GuideEvidence
+): boolean => evidence[guide.id]?.tasks.includes(task.id) === true || task.completed(game);
+
+/** Accumulate observed facts; active defense requirements still use live command predicates. */
+export const recordGuideEvidence = (
+  game: GameState,
+  ui: GuideUiState,
+  evidence: GuideEvidence
+): GuideEvidence => {
+  const guide = guideDefinitionFor(game);
+  if (
+    !guide ||
+    !(guideCanRun(game) || game.phase === "round_result" || game.phase === "level_complete")
+  ) {
+    return evidence;
+  }
+  const before = evidence[guide.id] ?? EMPTY_GUIDE_PROGRESS;
+  const steps = [
+    ...new Set([
+      ...before.steps,
+      ...guide.steps.filter((step) => step.completed(game, ui)).map((step) => step.id),
+    ]),
+  ];
+  const tasks = [
+    ...new Set([
+      ...before.tasks,
+      ...guide.mission.tasks.filter((task) => task.completed(game)).map((task) => task.id),
+    ]),
+  ];
+  if (steps.length === before.steps.length && tasks.length === before.tasks.length) {
+    return evidence;
+  }
+  return { ...evidence, [guide.id]: { steps, tasks } };
 };
 
 export const guidedPhaseActionReason = (

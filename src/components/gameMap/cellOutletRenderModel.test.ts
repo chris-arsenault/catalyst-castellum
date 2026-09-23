@@ -10,13 +10,13 @@ describe("membrane-cell outlet rendering", () => {
     }).state;
     const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1)!;
     initial.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.length - 1;
-    initial.availability = {
+    initial.encounter.availability = {
       towers: [...round.availability.towers],
       equipment: [...round.availability.equipment],
       gasLines: [...round.availability.gasLines],
       liquidLines: [...round.availability.liquidLines],
     };
-    initial.matter = 999;
+    initial.encounter.matter = 999;
     expect(cellOutletAssemblyModel(initial)).toBeNull();
 
     const installed = executeCommand(initial, {

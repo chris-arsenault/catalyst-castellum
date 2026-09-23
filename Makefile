@@ -1,4 +1,4 @@
-.PHONY: quick-ci ci architecture-check copy-check performance-check lint lint-fix format format-check typecheck test-fast test build campaign-health terraform-fmt-check deploy
+.PHONY: quick-ci ci architecture-check copy-check performance-check lint lint-fix format format-check typecheck test-fast test-campaign test build campaign-health terraform-fmt-check deploy
 
 quick-ci: architecture-check copy-check lint format-check typecheck test-fast
 
@@ -29,7 +29,10 @@ typecheck:
 	pnpm exec tsc --noEmit
 
 test-fast:
-	pnpm exec vitest run
+	pnpm run test:fast
+
+test-campaign:
+	pnpm run test:campaign
 
 test:
 	pnpm exec vitest run --coverage

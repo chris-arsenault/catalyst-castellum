@@ -18,7 +18,7 @@ const portalKindLabel = (kind: FacilityPortalDefinition["kind"], translator: Tra
   })[kind];
 
 const portalStateLabel = (
-  state: GameState["portalStates"][string],
+  state: GameState["encounter"]["portalStates"][string],
   translator: Translator
 ): string => {
   if (state.sealed) return translator.text("ui.architecture.state.sealed");
@@ -31,7 +31,7 @@ interface ArchitecturalConnectionModel {
   gasFlow: number;
   liquidFlow: number;
   otherRoomId: RoomId;
-  state: GameState["portalStates"][string];
+  state: GameState["encounter"]["portalStates"][string];
 }
 
 const architecturalConnectionModel = (
@@ -39,7 +39,7 @@ const architecturalConnectionModel = (
   roomId: RoomId,
   portal: FacilityPortalDefinition
 ): ArchitecturalConnectionModel => {
-  const state = game.portalStates[portal.id];
+  const state = game.encounter.portalStates[portal.id];
   if (!state) throw new Error(`Missing state for architectural portal ${portal.id}.`);
   const roomIsFirst = portal.rooms[0] === roomId;
   const otherRoomId = roomIsFirst ? portal.rooms[1] : portal.rooms[0];
@@ -81,7 +81,8 @@ const ArchitecturalConnection = ({
     >
       <strong>{portalKindLabel(portal.kind, translator)}</strong>
       <span>
-        {roomDefinition(game, model.otherRoomId).code} · {portalStateLabel(model.state, translator)}
+        {roomDefinition(game.encounter, model.otherRoomId).code} ·{" "}
+        {portalStateLabel(model.state, translator)}
       </span>
       <small>
         {translator.text("ui.architecture.flow", {
@@ -113,7 +114,7 @@ export const ArchitecturalConnections = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const portals = architecturalConnections(game.map).filter((portal) =>
+  const portals = architecturalConnections(game.encounter.map).filter((portal) =>
     portal.rooms.includes(roomId)
   );
   if (portals.length === 0) return null;

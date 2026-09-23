@@ -6,6 +6,9 @@
  */
 import { DEFAULT_GAME_DEFINITION } from "./definition";
 import type { GameDefinition } from "./definitionTypes";
+import type { GameState } from "./types";
+import { campaignEncounterContext } from "./engine/campaignEncounter";
+import { processDefinitionForMap } from "./encounter/processDefinition";
 import * as campaign from "./engine/campaign";
 import * as architecturalFlow from "./engine/architecturalFlow";
 import * as combat from "./engine/combat";
@@ -42,7 +45,15 @@ export const roomSocketIds = bindDefinition(equipment.roomSocketIds);
 export const gasConduitPressure = bindDefinition(flow.gasConduitPressure);
 export const liquidConduitCrestElevation = flow.liquidConduitCrestElevation;
 export const liquidConduitFillRatio = bindDefinition(flow.liquidConduitFillRatio);
-export const simulateNetworks = bindDefinition(flow.simulateNetworks);
+export const simulateNetworks = (state: GameState, dt: number) =>
+  flow.simulateNetworks(
+    state.encounter,
+    dt,
+    processDefinitionForMap(
+      campaignEncounterContext(state, DEFAULT_GAME_DEFINITION).definition.process,
+      state.encounter.map
+    )
+  );
 export const simulateArchitecturalGas = bindDefinition(architecturalFlow.simulateArchitecturalGas);
 export const simulateArchitecturalLiquid = bindDefinition(
   architecturalFlow.simulateArchitecturalLiquid
@@ -62,9 +73,21 @@ export const simulateHydrogenOxygenFlash = bindDefinition(
 export const applyDamagePackets = bindDefinition(damage.applyDamagePackets);
 export const enemyRoomId = (enemy: Parameters<typeof combat.enemyRoomId>[0]) =>
   combat.enemyRoomId(enemy, DEFAULT_GAME_DEFINITION.map);
-export const moveEnemies = bindDefinition(combat.moveEnemies);
-export const resolveEnemyCombat = bindDefinition(combat.resolveEnemyCombat);
-export const spawnEnemies = bindDefinition(combat.spawnEnemies);
+export const moveEnemies = (state: GameState, dt: number) =>
+  combat.moveEnemies(state.encounter, dt, campaignEncounterContext(state, DEFAULT_GAME_DEFINITION));
+export const resolveEnemyCombat = (
+  state: GameState,
+  dt: number,
+  bursts: Parameters<typeof combat.resolveEnemyCombat>[2]
+) =>
+  combat.resolveEnemyCombat(
+    state.encounter,
+    dt,
+    bursts,
+    campaignEncounterContext(state, DEFAULT_GAME_DEFINITION)
+  );
+export const spawnEnemies = (state: GameState) =>
+  combat.spawnEnemies(state.encounter, campaignEncounterContext(state, DEFAULT_GAME_DEFINITION));
 export const findEnemyPath = (options: Parameters<typeof navigation.findEnemyPath>[0]) =>
   navigation.findEnemyPath(options, DEFAULT_GAME_DEFINITION.map);
 export const findEnemyPathOnMap = navigation.findEnemyPath;
@@ -89,7 +112,7 @@ export const stepGame = bindDefinition(step.stepGame);
 export const validateGameState = bindDefinition(validation.validateGameState);
 export const assertValidGameState = bindDefinition(validation.assertValidGameState);
 
-export const cloneGame = roomState.cloneGame;
+export { cloneGame } from "./engine/gameState";
 export const installedEquipment = equipment.installedEquipment;
 export const gridRouteLength = networkGeometry.gridRouteLength;
 export const transportPhaseEnabled = routing.transportPhaseEnabled;

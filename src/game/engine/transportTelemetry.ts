@@ -1,9 +1,8 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
   type FlowCause,
-  type GameState,
   type GasType,
   type LiquidType,
   type RoomId,
@@ -50,10 +49,10 @@ export interface TransportPhaseStatus {
 }
 
 const phaseChannel = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase,
-  _gameDefinition: GameDefinition
+  _gameDefinition: ProcessPhysicsDefinition
 ): TransportChannelTelemetry | null => {
   const definition = maybeLineDefinition(state, runId, phase);
   if (!definition) return null;
@@ -89,9 +88,9 @@ const phaseChannel = (
 };
 
 export const transportRunChannels = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): TransportChannelTelemetry[] =>
   (["gas", "liquid"] as const).flatMap((phase) => {
     const channel = phaseChannel(state, runId, phase, definition);
@@ -99,10 +98,10 @@ export const transportRunChannels = (
   });
 
 export const transportRunMaterialFlow = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   species: SpeciesId,
-  _gameDefinition: GameDefinition
+  _gameDefinition: ProcessPhysicsDefinition
 ): MaterialRunFlow => {
   const phase: TransportPhase = GAS_TYPES.includes(species as GasType) ? "gas" : "liquid";
   const definition = maybeLineDefinition(state, runId, phase);
@@ -126,10 +125,10 @@ export const transportRunMaterialFlow = (
 };
 
 export const transportRunPhaseStatus = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase,
-  _definition: GameDefinition
+  _definition: ProcessPhysicsDefinition
 ): TransportPhaseStatus => {
   const exists = maybeLineDefinition(state, runId, phase) !== null;
   if (!exists) {

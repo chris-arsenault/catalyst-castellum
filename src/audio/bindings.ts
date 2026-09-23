@@ -11,13 +11,15 @@ export const cueInputsFromStore = (state: GameStore): MusicCueInputs => {
     phase: state.game.phase,
     assaultTheme: level.assaultTheme,
     coreIntegrityFraction:
-      level.startingCoreIntegrity > 0 ? state.game.coreIntegrity / level.startingCoreIntegrity : 1,
+      level.startingCoreIntegrity > 0
+        ? state.game.encounter.coreIntegrity / level.startingCoreIntegrity
+        : 1,
   };
 };
 
-interface StoreLike {
-  getState: () => GameStore;
-  subscribe: (listener: (state: GameStore) => void) => () => void;
+interface StoreLike<State> {
+  getState: () => State;
+  subscribe: (listener: (state: State) => void) => () => void;
 }
 
 /**
@@ -26,12 +28,12 @@ interface StoreLike {
  * gesture, at which point the currently desired cue starts and the rest of
  * the soundtrack preloads. Returns a cleanup function.
  */
-export const attachAudioDirector = (store: StoreLike): (() => void) => {
+export const attachMusicCueInputs = (store: StoreLike<MusicCueInputs>): (() => void) => {
   const engine = getAudioEngine();
   const director = getMusicDirector();
 
-  const apply = (state: GameStore): void => {
-    director.setCue(selectMusicCue(cueInputsFromStore(state)));
+  const apply = (state: MusicCueInputs): void => {
+    director.setCue(selectMusicCue(state));
   };
 
   const unsubscribe = store.subscribe(apply);
@@ -63,3 +65,9 @@ export const attachAudioDirector = (store: StoreLike): (() => void) => {
     director.setCue(null);
   };
 };
+
+export const attachAudioDirector = (store: StoreLike<GameStore>): (() => void) =>
+  attachMusicCueInputs({
+    getState: () => cueInputsFromStore(store.getState()),
+    subscribe: (listener) => store.subscribe((state) => listener(cueInputsFromStore(state))),
+  });

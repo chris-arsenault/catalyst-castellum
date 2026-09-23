@@ -2,6 +2,7 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { extname, join, posix, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import ts from "typescript";
 
 const CODE_EXTENSIONS = new Set([".ts", ".tsx"]);
 const DOMAIN_FORBIDDEN_PACKAGES = [
@@ -58,7 +59,7 @@ const IMPORT_BOUNDARY_RULES: readonly ImportBoundaryRule[] = [
   },
   {
     matches: (path, dependency) =>
-      path.startsWith("src/game/engine/") &&
+      /^src\/game\/(engine|encounter)\//.test(path) &&
       /(\.\.\/)+(config|content|definition)(\/|$)/.test(dependency),
     message: "engine imports a default definition or authored content",
   },
@@ -163,7 +164,43 @@ export const analyzeArchitecture = (
     }
     return messages.map((message) => ({ path: module.path, message }));
   });
-  return [...violations, ...cycleViolations(modules)];
+  return [...violations, ...cycleViolations(modules), ...encounterDependencyViolations(modules)];
+};
+
+/** Follow emitted imports: type-only campaign vocabulary does not load campaign content. */
+const encounterDependencyViolations = (
+  modules: readonly ArchitectureModule[]
+): ArchitectureViolation[] => {
+  const sources = new Map(modules.map((module) => [module.path, module.source]));
+  const paths = new Set(sources.keys());
+  const seen = new Set<string>();
+  const violations: ArchitectureViolation[] = [];
+  const visit = (path: string, trail: readonly string[]): void => {
+    if (seen.has(path) || !sources.has(path)) return;
+    seen.add(path);
+    if (
+      /^src\/game\/(content\/|config\.ts|definition\.ts|runtime\.ts|simulation\.ts|engine\/campaign)/.test(
+        path
+      )
+    ) {
+      violations.push({
+        path,
+        message: `standalone encounter loads campaign/default content: ${[...trail, path].join(" -> ")}`,
+      });
+      return;
+    }
+    const emitted = ts.transpileModule(sources.get(path)!, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+      fileName: path,
+    }).outputText;
+    for (const specifier of moduleSpecifiers(emitted)) {
+      const dependency = resolveLocalDependency(path, specifier, paths);
+      if (dependency) visit(dependency, [...trail, path]);
+    }
+  };
+  for (const entry of ["create", "runtime", "validation"])
+    visit(`src/game/encounter/${entry}.ts`, []);
+  return violations;
 };
 
 const sourceFiles = (directory: string): string[] =>

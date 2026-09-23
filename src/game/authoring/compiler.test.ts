@@ -9,7 +9,7 @@ describe("game pack compiler", () => {
   it("freezes a compiled definition and validates its identity", () => {
     expect(Object.isFrozen(DEFAULT_GAME_DEFINITION)).toBe(true);
     expect(DEFAULT_GAME_DEFINITION.packId).toBe("catalyst-castellum");
-    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(20);
+    expect(DEFAULT_GAME_DEFINITION.contentVersion).toBe(22);
   });
 
   it("rejects an unknown wave enemy before a scenario starts", () => {
@@ -92,7 +92,9 @@ describe("game pack extension", () => {
     const game = createGameRuntime(definition).createScenario("claim_8_delta");
 
     expect(definition.reactions[fixtureId].behavior.kind).toBe("mixed_contact");
-    expect(roomState(game, "furnace").reactions[fixtureId as RoomReactionId]).toMatchObject({
+    expect(
+      roomState(game.encounter, "furnace").reactions[fixtureId as RoomReactionId]
+    ).toMatchObject({
       lastRate: 0,
       limitingFactor: { kind: "condition", code: "conditions", zone: null },
     });

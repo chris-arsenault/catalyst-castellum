@@ -146,44 +146,52 @@ const phaseReadout = (
   game: GameState,
   runId: ConnectionId,
   phase: TransportPhase,
-  sourceRoomId: keyof GameState["rooms"],
+  sourceRoomId: keyof GameState["encounter"]["process"]["rooms"],
   translator: Translator,
   formatters: LocaleFormatters
 ): PhaseReadout => {
   if (phase === "gas") {
     return {
-      amount: gasAmountTotal(gasConduitState(game, runId).gas),
+      amount: gasAmountTotal(gasConduitState(game.encounter, runId).gas),
       junctionMixture: gasMixtureSummary(
-        gasJunctionState(game, sourceRoomId).gas,
+        gasJunctionState(game.encounter, sourceRoomId).gas,
         translator,
         formatters
       ),
       measuredSpecies: gasFlowSummary(
-        gasConduitState(game, runId).lastSpeciesFlow,
+        gasConduitState(game.encounter, runId).lastSpeciesFlow,
         translator,
         formatters
       ),
-      mixture: gasMixtureSummary(gasConduitState(game, runId).gas, translator, formatters),
+      mixture: gasMixtureSummary(
+        gasConduitState(game.encounter, runId).gas,
+        translator,
+        formatters
+      ),
       noun: translator.text("ui.process.duct"),
-      physical: formatters.measurement(gasConduitPressure(game, runId), "kPa", 0),
+      physical: formatters.measurement(gasConduitPressure(game.encounter, runId), "kPa", 0),
     };
   }
   return {
-    amount: liquidAmountTotal(liquidConduitState(game, runId).liquid),
+    amount: liquidAmountTotal(liquidConduitState(game.encounter, runId).liquid),
     junctionMixture: liquidMixtureSummary(
-      liquidJunctionState(game, sourceRoomId).liquid,
+      liquidJunctionState(game.encounter, sourceRoomId).liquid,
       translator,
       formatters
     ),
     measuredSpecies: liquidFlowSummary(
-      liquidConduitState(game, runId).lastSpeciesFlow,
+      liquidConduitState(game.encounter, runId).lastSpeciesFlow,
       translator,
       formatters
     ),
-    mixture: liquidMixtureSummary(liquidConduitState(game, runId).liquid, translator, formatters),
+    mixture: liquidMixtureSummary(
+      liquidConduitState(game.encounter, runId).liquid,
+      translator,
+      formatters
+    ),
     noun: translator.text("ui.process.pipe"),
     physical: translator.text("ui.process.primed", {
-      percent: formatters.number(liquidConduitFillRatio(game, runId) * 100, 0),
+      percent: formatters.number(liquidConduitFillRatio(game.encounter, runId) * 100, 0),
     }),
   };
 };
@@ -243,7 +251,7 @@ export const ConduitActuator = ({
   runId: ConnectionId;
 }) => {
   const game = useGameStore((state) => state.game);
-  const definition = lineDefinition(game, runId, phase);
+  const definition = lineDefinition(game.encounter, runId, phase);
   if (!definition) return null;
   return <InstalledConduitActuator definition={definition} phase={phase} runId={runId} />;
 };
@@ -259,15 +267,18 @@ const ConduitTelemetry = ({
 }) => {
   const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
+  const conduit =
+    phase === "gas"
+      ? gasConduitState(game.encounter, runId)
+      : liquidConduitState(game.encounter, runId);
   const readout = phaseReadout(game, runId, phase, definition.direction[0], translator, formatters);
   return (
     <details className="conduit-telemetry">
       <summary>{translator.text("ui.process.telemetry")}</summary>
       <small>
         {translator.text("ui.process.conduitSummary", {
-          from: roomDefinition(game, definition.direction[0]).code,
-          to: roomDefinition(game, definition.direction[1]).code,
+          from: roomDefinition(game.encounter, definition.direction[0]).code,
+          to: roomDefinition(game.encounter, definition.direction[1]).code,
           noun: readout.noun,
           rate: formatters.measurement(definition.maxFlow, "mol-eq/s", 2),
         })}
@@ -276,7 +287,7 @@ const ConduitTelemetry = ({
         {translator.text("ui.process.conduitReading", {
           flow: flowReading(conduit.lastFlow, formatters),
           amount: formatters.number(readout.amount, 1),
-          capacity: formatters.number(conduitCapacity(game, runId, phase), 1),
+          capacity: formatters.number(conduitCapacity(game.encounter, runId, phase), 1),
           physical: readout.physical,
           state: conduit.blocked
             ? translator.text("ui.process.stalled")
@@ -305,7 +316,10 @@ const InstalledConduitActuator = ({
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const setRoomEffectPreview = useGameStore((state) => state.setRoomEffectPreview);
-  const conduit = phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
+  const conduit =
+    phase === "gas"
+      ? gasConduitState(game.encounter, runId)
+      : liquidConduitState(game.encounter, runId);
   const active = conduit.enabled;
   const command = { type: "set_conduit", connectionId: runId, enabled: !active } as const;
   const decision = selectors.commandDecision(game, command);
@@ -338,7 +352,7 @@ const InstalledConduitActuator = ({
       onPointerLeave={clearRoomEffect}
     >
       <div className="actuator-copy">
-        <strong>{transportCopy(game, runId, translator).name}</strong>
+        <strong>{transportCopy(game.encounter, runId, translator).name}</strong>
         <ConduitRoomEffect effect={roomEffectEstimate} />
         <ConduitTelemetry definition={definition} phase={phase} runId={runId} />
       </div>

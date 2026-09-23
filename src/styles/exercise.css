@@ -1,0 +1,105 @@
+.exercise-shell {
+  min-height: 100vh;
+}
+.exercise-header {
+  flex-wrap: wrap;
+  gap: 1rem;
+  position: relative;
+}
+.exercise-header p {
+  margin: 0.25rem 0 0;
+  color: #9fb4aa;
+}
+.exercise-forecast,
+.exercise-report {
+  padding: 1rem;
+  border: 1px solid #354f44;
+  background: #101c17;
+}
+.exercise-forecast h2,
+.exercise-report h2 {
+  margin: 0 0 0.5rem;
+}
+.exercise-forecast ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.5rem;
+  padding-left: 1.2rem;
+}
+.exercise-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+}
+.exercise-actions label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.exercise-guidance {
+  padding: 0.75rem 1rem;
+  border-left: 3px solid #8dc9ff;
+  background: #12212b;
+}
+.exercise-save-status {
+  padding: 0.5rem 1rem;
+  color: #9fb4aa;
+  font-size: 0.8rem;
+}
+.exercise-notice {
+  padding: 1rem;
+  background: #38221d;
+  border: 1px solid #c87d63;
+}
+.exercise-restart {
+  padding: 1rem;
+  border: 1px solid #c87d63;
+  background: #241b17;
+}
+.tactical-enemy-inspection {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  max-width: 20rem;
+}
+.tactical-enemy-inspection meter {
+  display: block;
+  width: 100%;
+}
+.encounter-keyboard-hint {
+  position: absolute;
+  bottom: 0.5rem;
+  right: 0.75rem;
+  max-width: 24rem;
+  padding: 0.5rem;
+  background: #07100ded;
+  font-size: 0.75rem;
+}
+.catalyst-device-status {
+  padding: 0.6rem;
+  border: 1px solid #678fa4;
+  margin: 0.75rem 0;
+}
+.catalyst-device-status button[aria-pressed="true"] {
+  background: #24435c;
+  border-color: #8dc9ff;
+}
+.exercise-report ul {
+  margin: 0.5rem 0;
+  padding-left: 1.3rem;
+}
+@media (max-width: 800px) {
+  .exercise-shell .workspace {
+    display: flex;
+    flex-direction: column;
+  }
+  .exercise-shell .tower-panel {
+    max-height: none;
+    width: 100%;
+  }
+  .tactical-enemy-inspection {
+    max-width: 15rem;
+  }
+}

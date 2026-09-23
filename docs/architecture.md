@@ -22,6 +22,11 @@ locale catalog -> translator -> presentation services ----------------> React/Pi
   variants for tests and alternate rulesets.
 - `src/game/runtime.ts` binds creation, command evaluation, command execution, stepping, queries,
   validation, and persistence to one definition.
+- `src/game/encounter/**` owns standalone combat definitions, state, ordered commands, exact tick
+  advancement, snapshots, results, and optional process participation. A one-wave fixture supplies
+  its own map and catalogs; it loads no default campaign.
+- `src/game/engine/campaignEncounter.ts` materializes the current campaign wave for that same
+  engine. Campaign commands own travel, grafts, checkpoints, and one-time reward settlement.
 - `src/game/queries.ts` is the read-only application facade. Application and presentation modules
   consume runtime and query contracts rather than internal engine mutators.
 - `src/presentation/**` binds a runtime and translator into localized copy, catalogs, formatters,
@@ -30,7 +35,51 @@ locale catalog -> translator -> presentation services ----------------> React/Pi
   notices, and UI-session state.
 - `src/components/**` and `src/tutorial/**` render view models and dispatch semantic commands.
 
-`pnpm architecture:check` enforces this direction and rejects cross-layer cycles.
+`pnpm architecture:check` enforces this direction, rejects cross-layer cycles, and follows emitted
+imports from standalone encounter entrypoints to reject indirect campaign/default dependencies.
+
+## Encounter boundary
+
+`GameState.encounter` is the sole owner of active geometry, enemies, defenses, Matter, Core, and
+combat records. Campaign progress and lifecycle records remain outside it. Retained inventories,
+rooms, equipment, conduits, and tower feedstock belong to `encounter.process`; process-free fixtures
+set that field to `null`.
+
+`createEncounterRuntime(context)` evaluates and executes ordered `{ tick, sequence, command }`
+transactions and advances exact integer tick counts at 0.1 seconds per tick. Rejected commands
+consume their input position. Snapshots preserve the ordering cursor; repeated or past commands
+fail explicitly. Results distinguish completion, defeat, and timeout.
+
+The process bridge runs transport, equipment, supply, and stratification before spawn/combat, then
+reactions after tower fire. Named hooks also handle enemy emissions, residues, movement modifiers,
+and finite shot supply. These are the existing chemistry functions used by the campaign.
+
+The browser owns pause, speed, and fractional wall-clock accumulation. Headless advancement has
+no browser catch-up clamp. Campaign settlement banks pending Matter once using a durable encounter
+receipt; the tactical result retains the earned reward independently of later spending.
+
+### Catalyst exercise
+
+`CombatDefinition.mechanics` selects legacy campaign attacks or the catalyst ruleset. Catalyst state
+owns capped per-enemy charge, immutable installation identities, proportional source ledgers,
+field activation, discharge readiness, and recent pulse visuals. `pendingAttacks` owns launch-time
+damage, effects, geometry, and source snapshots. The central impact resolver records actual damage
+once and keeps charge assistance separate. Source removal preserves launched attacks and credit.
+
+Field inputs freeze before impacts and project onto each traversed route segment. Projectiles use
+fixed launch-time aim and swept collision; they begin traveling on the following tick. Charge,
+discharge and projectile snapshots have semantic validators in addition to the strict save schema.
+The campaign currently binds legacy mechanics while the isolated exercise binds catalyst mechanics.
+
+`src/game/exercise.ts` exposes five-wave progression, pre-assault retry, ordered commands, per-wave
+reports and exact saves around the same encounter runtime. It carries paid towers, cooldowns,
+remaining Matter and Core; it resets wave counters and accounting after settlement. Charged retries
+and restarts retain bounded cleanup reports. Its browser storage is separate from campaign slots.
+The application supplies `EncounterScene` and tower controls through a runtime-bound tactical
+surface; configured campaign process layers remain an explicit composition.
+
+Run the local headless entry through [exercise tooling](exercise-tooling.md). The browser entry is
+`?fixture=harker-catalyst` on an explicitly started development server or an approved existing target.
 
 ## World and campaign model
 
@@ -119,9 +168,9 @@ defenses prove multiple viable layouts; idle controls prove that each operation 
 
 ## State and persistence
 
-`GameState` is the durable domain snapshot. Construction, explicit cloning, validation, and save
-encoding cover every reference-valued field; deep-independence and round-trip tests guard that
-contract. UI state remains in the application layer.
+`GameState` is the schema-29 durable campaign snapshot. Cloning shares immutable map geometry and
+copies mutable state; deep-independence and round-trip tests guard that contract. Ordered tactical
+snapshots also have a standalone codec. UI controls remain in the application layer.
 
 The current schema is the only accepted pre-release schema. Each save identifies its pack and
 content version, carries its campaign, hull, map, and domain state, and passes this boundary:
@@ -132,7 +181,9 @@ untrusted JSON -> structural decode -> semantic state validation -> GameState
 
 Durable tower placements, upgrades, grafts, route state, or campaign checkpoints require a schema
 and content-version increment. The application exposes three named local slots. Browser restoration
-is explicit initialization; the pure codec and scheduler remain separate concerns.
+is explicit initialization; the pure codec and scheduler remain separate concerns. Incompatible or
+damaged records remain visible for explicit replacement. A retry checkpoint must identify the same
+site and wave and contain the pre-assault build.
 
 ## Localization and copy
 
@@ -186,5 +237,7 @@ placeholder parity.
 | `make quick-ci`             | Architecture, copy, lint, format, typecheck, and fast unit suite       |
 | `make ci`                   | Full coverage, build, performance, campaign health, and Terraform gate |
 | `pnpm test:e2e`             | Complete Chromium browser behavior                                     |
+| `pnpm test:fast`            | Unit, encounter, persistence, and component contracts                  |
+| `pnpm test:campaign`        | Long campaign and authored portfolio integration                       |
 | `pnpm performance:baseline` | Representative clone, step, codec, query, and render timings           |
 | `pnpm balance:combat`       | Tower, route, economy, and transient combat workbook                   |

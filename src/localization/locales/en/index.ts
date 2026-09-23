@@ -12,6 +12,7 @@ import { DEBUG_MESSAGES } from "./debug";
 import { PROCESS_FEEDBACK_MESSAGES } from "./processFeedback";
 import { LOGBOOK_MESSAGES } from "./logbook";
 import { TOWER_MESSAGES } from "./towers";
+import { CATALYST_MESSAGES } from "./catalyst";
 
 export const EN_LOCALE = {
   locale: "en",
@@ -30,5 +31,6 @@ export const EN_LOCALE = {
     ...PROCESS_FEEDBACK_MESSAGES,
     ...LOGBOOK_MESSAGES,
     ...TOWER_MESSAGES,
+    ...CATALYST_MESSAGES,
   },
 } as const;

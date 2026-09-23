@@ -45,8 +45,8 @@ const syntheticEnemy = (
 ): EnemyState => {
   const enemyDefinition = definition.enemies[type];
   const path = findEnemyPath(
-    { flying: enemyDefinition.flying, portalStates: state.portalStates },
-    state.map
+    { flying: enemyDefinition.flying, portalStates: state.encounter.portalStates },
+    state.encounter.map
   );
   return {
     id: -1,
@@ -72,7 +72,7 @@ const syntheticEnemy = (
 const roomForSegment = (enemy: EnemyState, index: number, state: GameState): RoomId | null => {
   enemy.pathIndex = index;
   enemy.progress = 0.5;
-  return enemyRoomId(enemy, state.map);
+  return enemyRoomId(enemy, state.encounter.map);
 };
 
 const segmentSeconds = (
@@ -107,9 +107,9 @@ const hypotheticalMovement = (
   liquidFillScale: number,
   definition: GameDefinition
 ): number | null => {
-  const room = structuredClone(state.rooms[roomId]);
+  const room = structuredClone(state.encounter.process.rooms[roomId]);
   if (!room) return null;
-  const usableVolume = facilityModelForMap(state.map).roomVolume(roomId);
+  const usableVolume = facilityModelForMap(state.encounter.map).roomVolume(roomId);
   if (liquidFillScale > 0) room.liquid.water = usableVolume * liquidFillScale;
   const remainingGasFraction = Math.max(0.08, 1 - liquidFillScale);
   for (const zone of ["lower", "upper"] as const) {
@@ -153,7 +153,7 @@ const segmentMovement = (
     };
   }
   const currentMultiplier = roomMovementMultiplier(
-    state.rooms[roomId]!,
+    state.encounter.process.rooms[roomId]!,
     enemyDefinition.flying,
     definition
   );
@@ -225,7 +225,7 @@ export const routeProfile = (
       perRoom.set(segment.roomId, existing);
     }
   }
-  const model = facilityModelForMap(state.map);
+  const model = facilityModelForMap(state.encounter.map);
   const rooms = [...perRoom.entries()].map(([roomId, times]) => ({
     roomId,
     volume: model.roomVolume(roomId),
@@ -263,17 +263,17 @@ export const conduitProfiles = (
   definition: GameDefinition
 ): ConduitFeedProfile[] => {
   const state = createGameRuntime(definition).createScenario(levelId);
-  return Object.values(state.map.connections).flatMap((connection) => {
+  return Object.values(state.encounter.map.connections).flatMap((connection) => {
     if (!isProcessLine(connection)) return [];
     const phase = connection.kind === "gas_line" ? "gas" : "liquid";
-    const capacity = conduitCapacity(state, connection.id, phase, definition);
-    const maximumFlow = conduitMaxFlow(state, connection.id, phase, definition);
+    const capacity = conduitCapacity(state.encounter, connection.id, phase, definition);
+    const maximumFlow = conduitMaxFlow(state.encounter, connection.id, phase, definition);
     return [
       {
         levelId,
         connectionId: connection.id,
         phase,
-        routeLength: conduitLength(state, connection.id, phase),
+        routeLength: conduitLength(state.encounter, connection.id, phase),
         capacity,
         maximumFlow,
         idealFillSeconds: maximumFlow > 0 ? capacity / maximumFlow : Number.POSITIVE_INFINITY,
@@ -302,8 +302,8 @@ export const routePositionSample = (
   enemy.progress = progress;
   const position = enemyWorldPosition(enemy);
   return {
-    roomId: enemyRoomId(enemy, state.map),
-    zone: enemyGasZone(enemy, state.map),
+    roomId: enemyRoomId(enemy, state.encounter.map),
+    zone: enemyGasZone(enemy, state.encounter.map),
     x: position.x,
     elevation: position.elevation,
   };

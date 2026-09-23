@@ -4,15 +4,12 @@ import type {
   EnemyType,
   EquipmentDefinition,
   EquipmentId,
-  EquipmentLoadout,
-  EquipmentSocketId,
   FacilityPortalState,
   FacilityRing,
   FacilityTerrainKind,
   GasAmounts,
   GridCell,
   LevelId,
-  LiquidAmounts,
   ReactionDefinition,
   ProcessFamilyId,
   ReactionId,
@@ -21,7 +18,6 @@ import type {
   ScenarioAvailability,
   SpeciesDefinition,
   SpeciesId,
-  StationaryAmounts,
   SiteSupplyDefinition,
   WaveEntry,
   WorldPoint,
@@ -37,29 +33,14 @@ import type {
 import type { ModuleId, ModuleTemplate } from "./world/modules";
 import type { FixedLevelSite } from "./world/fixedLevelSite";
 
-export type ScenarioRoomEquipment = Partial<
-  Record<RoomId, Partial<Record<EquipmentSocketId, EquipmentLoadout>>>
->;
-
-export interface GasConduitLoadout {
-  enabled: boolean;
-  gas: Partial<GasAmounts> | null;
-}
-
-export interface LiquidConduitLoadout {
-  enabled: boolean;
-  liquid: Partial<LiquidAmounts> | null;
-}
-
-export interface FacilityLoadout {
-  equipment: ScenarioRoomEquipment;
-  initialTemperatures: Partial<Record<RoomId, number>>;
-  /** Presence in either conduit record means the physical line begins installed. */
-  gasConduits: Partial<Record<ConnectionId, GasConduitLoadout>>;
-  liquidConduits: Partial<Record<ConnectionId, LiquidConduitLoadout>>;
-  /** Room-bound solids seeded into authored rooms. */
-  stationary: Partial<Record<RoomId, Partial<StationaryAmounts>>>;
-}
+import type { FacilityLoadout, EnvironmentHazardRules } from "./encounter/processTypes";
+export type {
+  FacilityLoadout,
+  EnvironmentHazardRules,
+  ScenarioRoomEquipment,
+  GasConduitLoadout,
+  LiquidConduitLoadout,
+} from "./encounter/processTypes";
 
 export interface RoundDefinition {
   id: string;
@@ -94,11 +75,6 @@ export interface LevelDefinition {
   routes: readonly RouteIngressDefinition[];
   /** Null levels use the pack map; fixed sites embed the traveling hull into authored geometry. */
   site: FixedLevelSite | null;
-}
-
-export interface EnvironmentHazardRules {
-  gasTemperature: { threshold: number; rate: number };
-  staticPressure: { ratioThreshold: number; rate: number };
 }
 
 export interface FacilityModel {

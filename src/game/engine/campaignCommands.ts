@@ -3,7 +3,7 @@ import type { CommandResult, GameState } from "../types";
 import { acceptCommand } from "./commandResult";
 import { addEvent } from "./events";
 import { advanceRound } from "./phases";
-import { cloneGame } from "./roomState";
+import { cloneGame } from "./gameState";
 import { createScenarioGame } from "./scenarioState";
 import { nextLevelIdFor } from "./campaign";
 import { extractHullFragment } from "../world/hullFragment";
@@ -12,13 +12,17 @@ import { transitionPhase } from "./phaseModel";
 import { restoreOperationCheckpoint } from "../persistence/operationCheckpoint";
 
 const recoverSiteTowers = (state: GameState, definition: GameDefinition): void => {
-  for (const [towerId, tower] of Object.entries(state.towers)) {
+  for (const [towerId, tower] of Object.entries(state.encounter.towers)) {
     if (tower.provenance !== "site") continue;
-    state.matter += Math.floor(
+    state.encounter.matter += Math.floor(
       tower.totalMatterSpent * definition.towers[tower.chassisId].recoveryRatio
     );
-    delete state.towers[towerId];
-    delete state.towerSupply[towerId];
+    delete state.encounter.towers[towerId];
+    delete state.encounter.process.towerSupply[towerId];
+    delete state.encounter.process.towerResources[towerId];
+    state.encounter.towerAttacks = state.encounter.towerAttacks.filter(
+      (attack) => attack.towerId !== towerId
+    );
   }
 };
 
@@ -61,9 +65,10 @@ export const dockAtSiteCommand = (source: GameState, definition: GameDefinition)
   const site = materializeLevelSite(definition, next, hull);
   return acceptCommand(
     createScenarioGame(next, source.campaign.completedLevelIds, definition, site, {
-      matter: source.matter,
-      coreIntegrity: source.coreIntegrity,
+      matter: source.encounter.matter,
+      coreIntegrity: source.encounter.coreIntegrity,
       retryCount: source.campaign.retryCount,
+      settledEncounterIds: source.campaign.settledEncounterIds,
     })
   );
 };
@@ -73,6 +78,13 @@ export const retryLevelCommand = (source: GameState, definition: GameDefinition)
   if (!checkpoint) throw new Error("Retry command was applied without an operation checkpoint.");
   const restored = restoreOperationCheckpoint(checkpoint, definition);
   if (!restored) throw new Error("Operation checkpoint failed save validation.");
+  if (
+    restored.phase !== "build" ||
+    restored.campaign.levelId !== source.campaign.levelId ||
+    restored.campaign.roundIndex !== source.campaign.roundIndex ||
+    restored.encounter.definition.id !== source.encounter.definition.id
+  )
+    throw new Error("Operation checkpoint belongs to a different encounter.");
   restored.campaign.operationCheckpoint = checkpoint;
   restored.campaign.retryCount = source.campaign.retryCount + 1;
   return acceptCommand(restored);

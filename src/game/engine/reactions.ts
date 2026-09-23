@@ -1,7 +1,6 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import {
   GAS_ZONES,
-  type GameState,
   type GasZone,
   type LimitingFactor,
   type ReactionBehaviorDefinition,
@@ -11,7 +10,7 @@ import {
 } from "../types";
 import type { HazardBurst } from "./damage";
 import { roomContactReactionMultiplier, roomGasReactionMultiplier } from "./equipment";
-import { addEvent } from "./events";
+import { addEncounterEvent } from "../encounter/events";
 import { simulateHydrogenOxygenFlash } from "./flashReaction";
 import { clamp } from "./math";
 import { simulateEquipmentOperations } from "./equipmentOperations";
@@ -65,10 +64,11 @@ const roomReactionInventory = (room: RoomState, zone: GasZone): MutableReactionI
 });
 
 const maybeRecordEvent = (
-  state: GameState,
+  state: ProcessEncounterState,
   room: RoomState,
   amount: number,
-  event: { code: GameState["events"][number]["code"]; roomId: RoomState["id"] } | undefined
+  event:
+    { code: ProcessEncounterState["events"][number]["code"]; roomId: RoomState["id"] } | undefined
 ): void => {
   if (
     amount > 0 &&
@@ -76,7 +76,7 @@ const maybeRecordEvent = (
     room.id === event.roomId &&
     !state.events.some(({ code }) => code === event.code)
   ) {
-    addEvent(state, "reaction", event.code, {}, event.roomId);
+    addEncounterEvent(state, "reaction", event.code, {}, event.roomId);
   }
 };
 
@@ -99,7 +99,7 @@ export interface HydrogenChlorineReactionStatus {
 export const hydrogenChlorineReactionStatus = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): HydrogenChlorineReactionStatus => {
   const behavior = definition.reactions.hydrogen_chlorine_recombination.behavior;
   if (behavior.kind !== "gas_recombination")
@@ -131,12 +131,12 @@ export const hydrogenChlorineReactionStatus = (
 };
 
 interface StrategyContext {
-  state: GameState;
+  state: ProcessEncounterState;
   room: RoomState;
   reaction: ReactionDefinition;
   dt: number;
   bursts: HazardBurst[];
-  definition: GameDefinition;
+  definition: ProcessPhysicsDefinition;
 }
 
 type RoomReactionStrategy = (context: StrategyContext) => void;
@@ -259,7 +259,11 @@ export const ROOM_REACTION_STRATEGIES: Readonly<Record<RoomBehaviorKind, RoomRea
     mixed_contact: simulateMixedContact,
   });
 
-const simulatePhaseChanges = (room: RoomState, dt: number, definition: GameDefinition): void => {
+const simulatePhaseChanges = (
+  room: RoomState,
+  dt: number,
+  definition: ProcessPhysicsDefinition
+): void => {
   if (room.temperature > 100 && room.liquid.water > 0.05) {
     const vaporized = Math.min(
       room.liquid.water,
@@ -283,11 +287,11 @@ const simulatePhaseChanges = (room: RoomState, dt: number, definition: GameDefin
 };
 
 const simulateRoomChemistry = (
-  state: GameState,
+  state: ProcessEncounterState,
   room: RoomState,
   dt: number,
   bursts: HazardBurst[],
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   room.pressurePulse = Math.max(0, room.pressurePulse - PRESSURE_PULSE_DECAY_PER_SECOND * dt);
   for (const reaction of Object.values(definition.reactions)) {
@@ -312,9 +316,9 @@ const simulateRoomChemistry = (
 };
 
 export const simulateReactions = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): HazardBurst[] => {
   const bursts: HazardBurst[] = [];
   for (const roomId of state.world.rooms) {

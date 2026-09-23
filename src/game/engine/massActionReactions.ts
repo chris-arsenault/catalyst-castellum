@@ -1,4 +1,4 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition as ReactionCatalog } from "../encounter/processTypes";
 import {
   GAS_ZONES,
   type GasZone,
@@ -53,7 +53,7 @@ const inventoryAmount = (
   snapshot: RoomSnapshot,
   speciesId: SpeciesId,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number => {
   const phase = definition.species[speciesId].phase;
   if (phase === "gas") return snapshot.gas[zone][speciesId as keyof RoomSnapshot["gas"][GasZone]];
@@ -61,7 +61,7 @@ const inventoryAmount = (
   return snapshot.stationary[speciesId as keyof RoomSnapshot["stationary"]];
 };
 
-const inventoryKey = (speciesId: SpeciesId, zone: GasZone, definition: GameDefinition): string => {
+const inventoryKey = (speciesId: SpeciesId, zone: GasZone, definition: ReactionCatalog): string => {
   const phase = definition.species[speciesId].phase;
   return phase === "gas" ? `gas:${zone}:${speciesId}` : `${phase}:${speciesId}`;
 };
@@ -71,7 +71,7 @@ const rateOrderActivity = (
   reaction: MassActionReaction,
   snapshot: RoomSnapshot,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number =>
   direction.rateOrders.reduce((activity, order) => {
     const amount = inventoryAmount(snapshot, order.species, zone, definition);
@@ -83,7 +83,7 @@ const catalystFactor = (
   reaction: MassActionReaction,
   snapshot: RoomSnapshot,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number => {
   const catalyst = reaction.behavior.catalyst;
   if (!catalyst) return 1;
@@ -95,7 +95,7 @@ const inhibitorFactor = (
   reaction: MassActionReaction,
   snapshot: RoomSnapshot,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number =>
   (reaction.behavior.inhibitors ?? []).reduce((factor, inhibitor) => {
     const amount = inventoryAmount(snapshot, inhibitor.species, zone, definition);
@@ -105,7 +105,7 @@ const inhibitorFactor = (
 const ambientEquipmentMultiplier = (
   reaction: MassActionReaction,
   room: RoomState,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number =>
   reaction.behavior.contact === "liquid"
     ? roomContactReactionMultiplier(room, definition)
@@ -126,7 +126,7 @@ const directionRate = (
   snapshot: RoomSnapshot,
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition,
+  definition: ReactionCatalog,
   overrides: MassActionOverrides | null
 ): DirectionRate => {
   if (!direction)
@@ -183,7 +183,7 @@ const proposalLimit = (
   metrics: DirectionRate,
   snapshot: RoomSnapshot,
   zone: GasZone,
-  definition: GameDefinition,
+  definition: ReactionCatalog,
   requestedExtent: number
 ): LimitingFactor => {
   const speciesLimits = directionParticipants(reaction, direction).map((participant) => ({
@@ -234,7 +234,7 @@ const makeProposal = (
   room: RoomState,
   zone: GasZone,
   dt: number,
-  definition: GameDefinition,
+  definition: ReactionCatalog,
   overrides: MassActionOverrides | null
 ): Proposal | null => {
   const forward = directionRate(
@@ -298,7 +298,7 @@ const makeProposal = (
 const availableByKey = (
   snapshot: RoomSnapshot,
   proposals: readonly Proposal[],
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): Map<string, number> => {
   const available = new Map<string, number>();
   for (const proposal of proposals) {
@@ -318,7 +318,7 @@ const changeInventory = (
   speciesId: SpeciesId,
   zone: GasZone,
   delta: number,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): void => {
   const phase = definition.species[speciesId].phase;
   if (phase === "gas") room.gas[zone][speciesId as keyof RoomState["gas"][GasZone]] += delta;
@@ -330,7 +330,7 @@ const applyProposal = (
   room: RoomState,
   proposal: Proposal,
   dt: number,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number => {
   const signedExtent = proposal.signedExtent * proposal.scale;
   if (Math.abs(signedExtent) <= 1e-12) return 0;
@@ -374,7 +374,7 @@ const applyProposal = (
 export const simulateMassActionSet = (
   room: RoomState,
   dt: number,
-  definition: GameDefinition,
+  definition: ReactionCatalog,
   reactions: readonly MassActionReaction[],
   overrides: MassActionOverrides | null
 ): number => {
@@ -402,9 +402,9 @@ export const simulateMassActionSet = (
   return total;
 };
 
-const wildMassActionCache = new WeakMap<GameDefinition, readonly MassActionReaction[]>();
+const wildMassActionCache = new WeakMap<ReactionCatalog, readonly MassActionReaction[]>();
 
-const wildMassActionReactions = (definition: GameDefinition): readonly MassActionReaction[] => {
+const wildMassActionReactions = (definition: ReactionCatalog): readonly MassActionReaction[] => {
   const cached = wildMassActionCache.get(definition);
   if (cached) return cached;
   const wild = Object.values(definition.reactions).filter(
@@ -418,5 +418,5 @@ const wildMassActionReactions = (definition: GameDefinition): readonly MassActio
 export const simulateMassActionNetwork = (
   room: RoomState,
   dt: number,
-  definition: GameDefinition
+  definition: ReactionCatalog
 ): number => simulateMassActionSet(room, dt, definition, wildMassActionReactions(definition), null);

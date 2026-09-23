@@ -1,7 +1,12 @@
 import { Bug, Play } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useGamePresentation } from "../application/presentationContext";
-import { SAVE_SLOT_IDS, type SaveSlotCatalog, type SaveSlotId } from "../application/saveSlots";
+import {
+  SAVE_SLOT_IDS,
+  isReadySaveSlot,
+  type SaveSlotCatalog,
+  type SaveSlotId,
+} from "../application/saveSlots";
 import { useGameStore } from "../application/store";
 import { LEVEL_IDS, type LevelId } from "../game/types";
 import { GUIDE_REGISTRATIONS } from "../tutorial/guideModel";
@@ -28,16 +33,18 @@ const DebugSaveSlotSelect = ({
       >
         {SAVE_SLOT_IDS.map((slotId) => {
           const record = saveSlots[slotId];
+          const emptyLabel = translator.text(
+            record ? "ui.save.debug.slotUnavailable" : "ui.save.debug.slotAvailable",
+            { number: slotNumber(slotId).padStart(2, "0") }
+          );
           return (
             <option key={slotId} value={slotId}>
-              {record
+              {record && isReadySaveSlot(record)
                 ? translator.text("ui.save.debug.slotOccupied", {
                     number: slotNumber(slotId).padStart(2, "0"),
                     level: record.game.campaign.levelIndex + 1,
                   })
-                : translator.text("ui.save.debug.slotAvailable", {
-                    number: slotNumber(slotId).padStart(2, "0"),
-                  })}
+                : emptyLabel}
             </option>
           );
         })}

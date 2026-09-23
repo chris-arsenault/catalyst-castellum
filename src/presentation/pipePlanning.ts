@@ -14,11 +14,11 @@ const previewOption = (
   toRoomId: RoomId
 ): PipePreviewOption | null => {
   const connectionId = processLineId(kind, fromRoomId, toRoomId);
-  const existing = game.map.connections[connectionId];
+  const existing = game.encounter.map.connections[connectionId];
   const line =
     existing && isProcessLine(existing)
       ? existing
-      : plannedLineConnection(PACK, game.map, kind, fromRoomId, toRoomId);
+      : plannedLineConnection(PACK, game.encounter.map, kind, fromRoomId, toRoomId);
   if (!line) return null;
   const decision = evaluateCommand(game, {
     type: "build_connection",

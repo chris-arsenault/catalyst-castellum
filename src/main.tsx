@@ -1,6 +1,5 @@
-import { StrictMode } from "react";
+import { lazy, StrictMode, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import App from "./App";
 import { GamePresentationProvider } from "./application/GamePresentationProvider";
 import { DEFAULT_GAME_PRESENTATION } from "./presentation/services";
 import "./styles/base.css";
@@ -19,6 +18,13 @@ import "./styles/manual.css";
 import "./styles/tutorial.css";
 import "./styles/responsive.css";
 import "./styles/towers.css";
+import "./styles/exercise.css";
+
+const App = lazy(() =>
+  new URLSearchParams(window.location.search).get("fixture") === "harker-catalyst"
+    ? import("./components/ExerciseApp")
+    : import("./App")
+);
 
 const root = document.getElementById("root");
 
@@ -27,7 +33,9 @@ if (!root) throw new Error("Missing application root.");
 createRoot(root).render(
   <StrictMode>
     <GamePresentationProvider presentation={DEFAULT_GAME_PRESENTATION}>
-      <App />
+      <Suspense fallback={null}>
+        <App />
+      </Suspense>
     </GamePresentationProvider>
   </StrictMode>
 );

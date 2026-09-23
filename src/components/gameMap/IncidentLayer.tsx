@@ -73,7 +73,7 @@ const IncidentMarker = ({ incident }: { incident: IncidentAggregate }) => {
 
 export const IncidentLayer = ({ game }: { game: GameState }) => (
   <>
-    {incidentMapAggregates(game, game.map).map((incident) => (
+    {incidentMapAggregates(game.encounter, game.encounter.map).map((incident) => (
       <IncidentMarker key={incident.roomId} incident={incident} />
     ))}
   </>

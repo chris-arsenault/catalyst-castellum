@@ -16,10 +16,10 @@ export const EquipmentTooltip = ({
 }) => {
   const { equipmentGradeEffect, translator } = useGamePresentation();
   if (!equipment) return null;
-  const instance = roomState(game, equipment.roomId).equipment[equipment.socketId];
+  const instance = roomState(game.encounter, equipment.roomId).equipment[equipment.socketId];
   if (!instance) return null;
   const definition = EQUIPMENT_DEFINITIONS[instance.equipmentId];
-  const room = roomDefinition(game, equipment.roomId);
+  const room = roomDefinition(game.encounter, equipment.roomId);
   return (
     <aside className="room-map-tooltip equipment-map-tooltip" data-testid="equipment-map-tooltip">
       <header>

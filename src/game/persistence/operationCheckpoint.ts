@@ -1,6 +1,6 @@
 import type { GameDefinition } from "../definitionTypes";
 import type { GameState } from "../types";
-import { cloneGame } from "../engine/roomState";
+import { cloneGame } from "../engine/gameState";
 import { decodeGame, encodeGame } from "./saveCodec";
 
 const CHECKPOINT_TIMESTAMP = "operation-checkpoint";

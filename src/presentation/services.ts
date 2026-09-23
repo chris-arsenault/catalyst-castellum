@@ -18,13 +18,21 @@ import { createSupplyPresentation } from "./supplyCopy";
 import { createRoomEffectPresentation } from "./roomEffect";
 import { createReactionEnginePresentation } from "./reactionEngine";
 import { createTowerPlanning } from "./towerPlanning";
+import { createTowerPresentation } from "./towers";
 
 export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundle) => {
   const translator = createTranslator(locale);
   const formatters = createLocaleFormatters(locale.locale);
   return Object.freeze({
+    runtime,
+    locale,
     translator,
     formatters,
+    records: {
+      events: runtime.queries.eventsFor,
+      incidents: runtime.queries.incidentsFor,
+      report: runtime.queries.reportFor,
+    },
     selectors: createPresentationSelectors(runtime, translator),
     commandCopy: createCommandCopy(translator),
     eventCopy: createEventCopy({ definition: runtime.definition, formatters, translator }),
@@ -41,6 +49,7 @@ export const createGamePresentation = (runtime: GameRuntime, locale: LocaleBundl
     reactionEngine: createReactionEnginePresentation(runtime, translator, formatters),
     supplies: createSupplyPresentation(runtime.definition, runtime.queries, translator, formatters),
     towerPlanning: createTowerPlanning(runtime),
+    towers: createTowerPresentation(runtime),
   });
 };
 

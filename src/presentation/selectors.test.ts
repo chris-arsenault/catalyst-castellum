@@ -5,7 +5,7 @@ import { roomState } from "../game/world/instances";
 
 describe("snapshot selectors", () => {
   it("reuses room analysis for one immutable room snapshot", () => {
-    const room = roomState(createInitialGame(), "furnace");
+    const room = roomState(createInitialGame().encounter, "furnace");
     expect(roomAnalysis(room)).toBe(roomAnalysis(room));
   });
 

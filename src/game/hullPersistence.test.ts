@@ -24,7 +24,7 @@ const dockedAtSite2 = (prepareSite1: (state: GameState) => void): GameState => {
 describe("only the owned hull travels between sites", () => {
   it("leaves a machine in site 1 and initializes site 2's reactor as a fresh room", () => {
     const site2 = dockedAtSite2((state) => {
-      state.rooms.furnace!.equipment.socket_a = {
+      state.encounter.process.rooms.furnace!.equipment.socket_a = {
         equipmentId: "gas_agitator",
         level: 1,
         enabled: true,
@@ -33,14 +33,14 @@ describe("only the owned hull travels between sites", () => {
       };
     });
     expect(site2.campaign.levelId).toBe("harkers_brace");
-    expect(site2.map.rooms.furnace?.code).toBe("HB-04");
-    expect(site2.map.rooms.furnace?.provenance).toBe("site");
-    expect(roomState(site2, "furnace").equipment.socket_a).toBeNull();
+    expect(site2.encounter.map.rooms.furnace?.code).toBe("HB-04");
+    expect(site2.encounter.map.rooms.furnace?.provenance).toBe("site");
+    expect(roomState(site2.encounter, "furnace").equipment.socket_a).toBeNull();
   });
 
   it("carries a machine placed in an owned hull room (washlock) to the next site", () => {
     const site2 = dockedAtSite2((state) => {
-      state.rooms.washlock!.equipment.socket_a = {
+      state.encounter.process.rooms.washlock!.equipment.socket_a = {
         equipmentId: "gas_agitator",
         level: 2,
         enabled: true,
@@ -48,9 +48,9 @@ describe("only the owned hull travels between sites", () => {
         medium: null,
       };
     });
-    expect(site2.map.rooms.washlock?.provenance).toBe("hull");
-    expect(site2.map.rooms.core?.provenance).toBe("hull");
-    expect(roomState(site2, "washlock").equipment.socket_a).toEqual({
+    expect(site2.encounter.map.rooms.washlock?.provenance).toBe("hull");
+    expect(site2.encounter.map.rooms.core?.provenance).toBe("hull");
+    expect(roomState(site2.encounter, "washlock").equipment.socket_a).toEqual({
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
@@ -61,11 +61,11 @@ describe("only the owned hull travels between sites", () => {
 
   it("carries stationary media with the hull and leaves site deposits behind", () => {
     const site2 = dockedAtSite2((state) => {
-      state.rooms.washlock!.stationary.surface_nickel = 3.5;
-      state.rooms.furnace!.stationary.solid_carbon = 8;
+      state.encounter.process.rooms.washlock!.stationary.surface_nickel = 3.5;
+      state.encounter.process.rooms.furnace!.stationary.solid_carbon = 8;
     });
 
-    expect(roomState(site2, "washlock").stationary.surface_nickel).toBe(3.5);
-    expect(roomState(site2, "furnace").stationary.solid_carbon).toBe(0);
+    expect(roomState(site2.encounter, "washlock").stationary.surface_nickel).toBe(3.5);
+    expect(roomState(site2.encounter, "furnace").stationary.solid_carbon).toBe(0);
   });
 });

@@ -22,7 +22,7 @@ describe("game runtime", () => {
     const briefing = runtime.createScenario("claim_8_delta");
 
     expect(runtime.definition.id).toBe("runtime-test");
-    expect(roomState(briefing, "furnace").temperature).toBe(44);
+    expect(roomState(briefing.encounter, "furnace").temperature).toBe(44);
     expect(runtime.validate(briefing)).toEqual([]);
     expect(runtime.level(briefing).id).toBe("claim_8_delta");
     expect(runtime.round(briefing).id).toBe("first_coverage");
@@ -50,7 +50,7 @@ describe("game runtime", () => {
     const primaryState = primary.createInitial();
     const alternateState = alternate.createInitial();
 
-    expect(primaryState.matter).not.toBe(alternateState.matter);
+    expect(primaryState.encounter.matter).not.toBe(alternateState.encounter.matter);
     expect(primary.queries.levelDefinitionFor(primaryState).startingMatter).not.toBe(
       alternate.queries.levelDefinitionFor(alternateState).startingMatter
     );

@@ -4,7 +4,9 @@ import { levelDefinitionFor, roundDefinitionFor } from "./engine/campaign";
 import { evaluateCommand } from "./engine/commandPolicy";
 import { executeCommand } from "./engine/commands";
 import { createInitialGame, createScenarioGame } from "./engine/scenarioState";
-import { stepGame } from "./engine/step";
+import { stepGame, advanceGameTicks } from "./engine/step";
+import { campaignEncounterContext } from "./engine/campaignEncounter";
+import { processDefinitionForMap } from "./encounter/processDefinition";
 import { validateGameState, type StateValidationIssue } from "./engine/stateValidation";
 import type { CommandDecision, CommandResult, GameCommand, GameState, LevelId } from "./types";
 import { createGameQueries, type GameQueries } from "./queries";
@@ -31,6 +33,7 @@ export interface GameRuntime {
   evaluate: (state: GameState, command: GameCommand) => CommandDecision;
   execute: (state: GameState, command: GameCommand) => CommandResult;
   step: (state: GameState, dt: number) => GameState;
+  advanceTicks: (state: GameState, count: number) => GameState;
   validate: (state: GameState) => StateValidationIssue[];
   level: (state: GameState) => LevelDefinition;
   round: (state: GameState) => RoundDefinition;
@@ -65,6 +68,7 @@ export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
       evaluateCommand(state, command, definition),
     execute: (state: GameState, command: GameCommand) => executeCommand(state, command, definition),
     step: (state: GameState, dt: number) => stepGame(state, dt, definition),
+    advanceTicks: (state: GameState, count: number) => advanceGameTicks(state, count, definition),
     validate: (state: GameState) => validateGameState(state, definition),
     level: (state: GameState) => levelDefinitionFor(state, definition),
     round: (state: GameState) => roundDefinitionFor(state, definition),
@@ -73,7 +77,16 @@ export const createGameRuntime = (definition: GameDefinition): GameRuntime =>
         state: GameState,
         connectionId: Parameters<typeof conduitRoomEffect>[1],
         enabled: boolean
-      ) => conduitRoomEffect(state, connectionId, enabled, definition),
+      ) =>
+        conduitRoomEffect(
+          state.encounter,
+          connectionId,
+          enabled,
+          processDefinitionForMap(
+            campaignEncounterContext(state, definition).definition.process,
+            state.encounter.map
+          )
+        ),
     }),
     reactionEngine: Object.freeze({
       sample: (state: GameState) => reactionEngineSample(state, definition),

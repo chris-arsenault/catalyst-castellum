@@ -1,18 +1,7 @@
 import type { GameDefinition } from "../definitionTypes";
-import type {
-  CommandDecision,
-  CommandResult,
-  EquipmentLoadout,
-  GameCommand,
-  GameState,
-  GasSourceId,
-  LiquidSourceId,
-} from "../types";
-import { addEvent } from "./events";
+import type { CommandResult, GameCommand, GameState } from "../types";
 import { dismantleModuleCommand, graftModuleCommand } from "./graftCommands";
-import { supplyDefinitionFor } from "./campaign";
-import { cloneGame } from "./roomState";
-import { beginAssault } from "./phases";
+import { cloneGame } from "./gameState";
 import { evaluateCommand } from "./commandPolicy";
 import { acceptCommand, rejectCommand } from "./commandResult";
 import {
@@ -23,265 +12,29 @@ import {
   startNextLevelCommand,
 } from "./campaignCommands";
 import {
-  buildConnectionCommand,
-  dismantleConnectionCommand,
-  setConduitCommand,
-} from "./transportCommands";
-import { roomState } from "../world/instances";
-import { definitionForMap } from "../world/activeDefinition";
-import { createEquipmentInstance } from "./equipment";
-import {
   configureHullPortalCommand,
   connectHullRoomsCommand,
   editHullCellCommand,
   editHullCellsCommand,
   removeHullConnectionCommand,
-  setPortalCommand,
 } from "./hullCommands";
-import {
-  dismantleTowerCommand,
-  moveTowerCommand,
-  placeTowerCommand,
-  rotateTowerCommand,
-  setTowerTargetingCommand,
-  upgradeTowerCommand,
-} from "./towerCommands";
 import { captureOperationCheckpoint } from "../persistence/operationCheckpoint";
+import { createEncounterRuntime } from "../encounter/runtime";
+import { campaignEncounterContext } from "./campaignEncounter";
+import { transitionPhase } from "./phaseModel";
 
-const startAssault = (source: GameState, definition: GameDefinition): CommandResult => {
-  const state = cloneGame(source);
-  captureOperationCheckpoint(state, definition);
-  beginAssault(state);
-  return acceptCommand(state);
-};
-
-const installEquipment = (
-  source: GameState,
-  command: GameCommand & { type: "install_equipment" },
-  decision: CommandDecision,
-  definition: GameDefinition
-): CommandResult => {
-  const loadout: EquipmentLoadout = {
-    equipmentId: command.equipmentId,
-    level: 1,
-    enabled: true,
-  };
-  const state = cloneGame(source);
-  state.matter -= decision.cost;
-  roomState(state, command.roomId).equipment[command.socketId] = createEquipmentInstance(
-    loadout,
-    definitionForMap(definition, state.map)
-  );
-  addEvent(
-    state,
-    "info",
-    "equipment_installed",
-    { equipmentId: command.equipmentId, cost: decision.cost },
-    command.roomId
-  );
-  return acceptCommand(state);
-};
-
-const loadVesselMedium = (
-  source: GameState,
-  command: GameCommand & { type: "load_vessel_medium" }
-): CommandResult => {
-  const state = cloneGame(source);
-  const instance = roomState(state, command.roomId).equipment[command.socketId];
-  if (instance) {
-    instance.medium = command.medium;
-    if (command.medium !== null)
-      addEvent(
-        state,
-        "info",
-        "vessel_medium_loaded",
-        { equipmentId: instance.equipmentId, medium: command.medium },
-        command.roomId
-      );
-  }
-  return acceptCommand(state);
-};
-
-const toggleEquipment = (
-  source: GameState,
-  command: GameCommand & { type: "toggle_equipment" }
-): CommandResult => {
-  const state = cloneGame(source);
-  const target = roomState(state, command.roomId).equipment[command.socketId];
-  if (target) target.enabled = command.enabled;
-  return acceptCommand(state);
-};
-
-const upgradeEquipment = (
-  source: GameState,
-  command: GameCommand & { type: "upgrade_equipment" },
-  decision: CommandDecision
-): CommandResult => {
-  const instance = roomState(source, command.roomId).equipment[command.socketId];
-  if (!instance) throw new Error("Upgrade was applied without an installed equipment instance.");
-  const state = cloneGame(source);
-  const target = roomState(state, command.roomId).equipment[command.socketId];
-  if (!target) throw new Error("Cloned equipment state lost the upgraded instance.");
-  target.level = (target.level + 1) as 2 | 3;
-  state.matter -= decision.cost;
-  addEvent(
-    state,
-    "info",
-    "equipment_upgraded",
-    { equipmentId: instance.equipmentId, level: target.level },
-    command.roomId
-  );
-  return acceptCommand(state);
-};
-
-const dismantleEquipment = (
-  source: GameState,
-  command: GameCommand & { type: "dismantle_equipment" },
-  decision: CommandDecision
-): CommandResult => {
-  const state = cloneGame(source);
-  const room = roomState(state, command.roomId);
-  room.equipment[command.socketId] = null;
-  state.matter += decision.refund;
-  return acceptCommand(state);
-};
-
-const gasCharge = (
-  source: GameState,
-  sourceId: GasSourceId,
-  decision: CommandDecision,
-  gameDefinition: GameDefinition
-): CommandResult => {
-  const definition = supplyDefinitionFor(source, sourceId, gameDefinition);
-  if (definition?.phase !== "gas" || definition.replenishment.kind !== "matter")
-    throw new Error(`Gas supply ${sourceId} has no Matter replenishment.`);
-  const ratedAmount = Object.values(definition.replenishment.contents).reduce(
-    (total, amount) => total + (amount ?? 0),
-    0
-  );
-  const state = cloneGame(source);
-  const target = state.gasSources[sourceId];
-  if (!target) throw new Error(`Gas supply ${sourceId} has no state.`);
-  state.matter -= decision.cost;
-  for (const [species, rated] of Object.entries(definition.replenishment.contents)) {
-    target.gas[species as keyof typeof target.gas] +=
-      (rated ?? 0) * (decision.amount / ratedAmount);
-  }
-  addEvent(state, "info", "gas_source_charged", {
-    sourceId,
-    cost: decision.cost,
-    amount: decision.amount,
-  });
-  return acceptCommand(state);
-};
-
-const liquidCharge = (
-  source: GameState,
-  sourceId: LiquidSourceId,
-  decision: CommandDecision,
-  gameDefinition: GameDefinition
-): CommandResult => {
-  const definition = supplyDefinitionFor(source, sourceId, gameDefinition);
-  if (definition?.phase !== "liquid" || definition.replenishment.kind !== "matter")
-    throw new Error(`Liquid supply ${sourceId} has no Matter replenishment.`);
-  const ratedAmount = Object.values(definition.replenishment.contents).reduce(
-    (total, amount) => total + (amount ?? 0),
-    0
-  );
-  const state = cloneGame(source);
-  const target = state.liquidSources[sourceId];
-  if (!target) throw new Error(`Liquid supply ${sourceId} has no state.`);
-  state.matter -= decision.cost;
-  for (const [species, rated] of Object.entries(definition.replenishment.contents)) {
-    target.liquid[species as keyof typeof target.liquid] +=
-      (rated ?? 0) * (decision.amount / ratedAmount);
-  }
-  addEvent(state, "info", "liquid_source_charged", {
-    sourceId,
-    cost: decision.cost,
-    amount: decision.amount,
-  });
-  return acceptCommand(state);
-};
-
-const togglePause = (source: GameState): CommandResult => {
-  const state = cloneGame(source);
-  state.paused = !state.paused;
-  return acceptCommand(state);
-};
-
-const setPause = (source: GameState, paused: boolean): CommandResult => {
-  if (source.paused === paused) return acceptCommand(source);
-  const state = cloneGame(source);
-  state.paused = paused;
-  return acceptCommand(state);
-};
-
-const setSpeed = (source: GameState, speed: 1 | 2): CommandResult => {
-  const state = cloneGame(source);
-  state.speed = speed;
-  return acceptCommand(state);
-};
-
-const executeTowerAction = (
-  source: GameState,
-  command: GameCommand,
-  decision: CommandDecision,
-  definition: GameDefinition
-): CommandResult | null => {
-  switch (command.type) {
-    case "place_tower":
-      return placeTowerCommand(source, command, decision, definition);
-    case "move_tower":
-      return moveTowerCommand(source, command, definition);
-    case "rotate_tower":
-      return rotateTowerCommand(source, command, definition);
-    case "set_tower_targeting":
-      return setTowerTargetingCommand(source, command);
-    case "upgrade_tower":
-      return upgradeTowerCommand(source, command, decision);
-    case "dismantle_tower":
-      return dismantleTowerCommand(source, command, decision);
-    default:
-      return null;
-  }
-};
-
-/* eslint-disable complexity -- Exhaustive dispatch over the public command union is intentional. */
+/* eslint-disable complexity -- Exhaustive dispatch delegates each command to its owning subsystem. */
 export const executeCommand = (
   source: GameState,
   command: GameCommand,
   definition: GameDefinition
 ): CommandResult => {
-  const activeDefinition = definitionForMap(definition, source.map);
-  // Construction may reuse a compatible pack-authored route template that is absent
-  // from live topology. Other commands bind to the active map's derived definition.
-  const commandDefinition = command.type === "build_connection" ? definition : activeDefinition;
-  const decision = evaluateCommand(source, command, commandDefinition);
-  if (!decision.allowed) {
+  const decision = evaluateCommand(source, command, definition);
+  if (!decision.allowed)
     return rejectCommand(source, decision.code ?? "invalid_phase", decision.parameters);
-  }
-  const towerResult = executeTowerAction(source, command, decision, activeDefinition);
-  if (towerResult) return towerResult;
   switch (command.type) {
-    case "set_conduit":
-      return setConduitCommand(source, command);
-    case "install_equipment":
-      return installEquipment(source, command, decision, commandDefinition);
-    case "toggle_equipment":
-      return toggleEquipment(source, command);
-    case "upgrade_equipment":
-      return upgradeEquipment(source, command, decision);
-    case "dismantle_equipment":
-      return dismantleEquipment(source, command, decision);
-    case "load_vessel_medium":
-      return loadVesselMedium(source, command);
-    case "build_connection":
-      return buildConnectionCommand(source, command, decision, definition);
-    case "dismantle_connection":
-      return dismantleConnectionCommand(source, command, decision);
     case "graft_module":
-      return graftModuleCommand(source, command, decision, activeDefinition);
+      return graftModuleCommand(source, command, decision, definition);
     case "dismantle_module":
       return dismantleModuleCommand(source, command, decision);
     case "edit_hull_cell":
@@ -294,18 +47,10 @@ export const executeCommand = (
       return removeHullConnectionCommand(source, command);
     case "configure_hull_portal":
       return configureHullPortalCommand(source, command);
-    case "set_portal":
-      return setPortalCommand(source, command, activeDefinition);
-    case "charge_gas_source":
-      return gasCharge(source, command.sourceId, decision, activeDefinition);
-    case "charge_liquid_source":
-      return liquidCharge(source, command.sourceId, decision, activeDefinition);
-    case "start_assault":
-      return startAssault(source, activeDefinition);
     case "begin_level":
       return beginLevelCommand(source);
     case "continue_round":
-      return continueRoundCommand(source, activeDefinition);
+      return continueRoundCommand(source, definition);
     case "start_next_level":
       return startNextLevelCommand(source, definition);
     case "dock_at_site":
@@ -313,12 +58,28 @@ export const executeCommand = (
     case "retry_level":
       return retryLevelCommand(source, definition);
     case "toggle_pause":
-      return togglePause(source);
     case "set_pause":
-      return setPause(source, command.paused);
     case "set_speed":
-      return setSpeed(source, command.speed);
+      return rejectCommand(source, "invalid_phase", {});
+    default: {
+      const state = cloneGame(source);
+      if (command.type === "start_assault") captureOperationCheckpoint(state, definition);
+      const encounter = state.encounter;
+      const result = createEncounterRuntime(campaignEncounterContext(state, definition)).execute(
+        encounter,
+        {
+          tick: encounter.tick,
+          sequence:
+            encounter.commandCursor.tick === encounter.tick
+              ? encounter.commandCursor.sequence + 1
+              : 0,
+          command,
+        }
+      );
+      if (!result.state.process) throw new Error("Campaign encounter lost its process state");
+      state.encounter = { ...result.state, process: result.state.process };
+      if (command.type === "start_assault") transitionPhase(state, "assault");
+      return acceptCommand(state);
+    }
   }
-  return rejectCommand(source, "invalid_phase", {});
 };
-/* eslint-enable complexity */

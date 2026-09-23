@@ -1,8 +1,8 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState, GasZone, LimitingFactor, RoomState } from "../types";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
+import type { GasZone, LimitingFactor, RoomState } from "../types";
 import type { HazardBurst } from "./damage";
 import { roomEquipmentIsActive, roomGasReactionMultiplier } from "./equipment";
-import { addEvent } from "./events";
+import { addEncounterEvent } from "../encounter/events";
 import { clamp } from "./math";
 import { gasPercent } from "./physics";
 import { applyReactionExtent, type MutableReactionInventory } from "./reactionExecutor";
@@ -27,7 +27,7 @@ export interface FlashIgnitionStatus {
 export const hydrogenOxygenFlashStatus = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): FlashIgnitionStatus => {
   const behavior = definition.reactions.hydrogen_oxygen_combustion.behavior;
   if (behavior.kind !== "flash") throw new Error("Hydrogen flash reaction is misconfigured");
@@ -109,11 +109,11 @@ const makeBurst = (
 });
 
 export const simulateHydrogenOxygenFlash = (
-  state: GameState,
+  state: ProcessEncounterState,
   room: RoomState,
   zone: GasZone,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): HazardBurst | null => {
   const reaction = definition.reactions.hydrogen_oxygen_combustion;
   const behavior = reaction.behavior;
@@ -152,7 +152,7 @@ export const simulateHydrogenOxygenFlash = (
   setFlashTelemetry(room, reacted, dt, limitingFactor);
 
   if (room.combustionCount === 1) {
-    addEvent(state, "danger", "flash_cycle_started", { zone }, room.id);
+    addEncounterEvent(state, "danger", "flash_cycle_started", { zone }, room.id);
   }
   return makeBurst(room, zone, reacted, pressureImpulse, heatDelta);
 };

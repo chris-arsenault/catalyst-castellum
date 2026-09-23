@@ -1,4 +1,7 @@
 export const DAMAGE_MESSAGES = {
+  "damage.source.tower_discharge.label": "discharge catalyst",
+  "damage.source.tower_discharge.detail":
+    "A catalyst converts carried charge into damage along a connected chain.",
   "damage.channel.atmosphere.label": "AIR",
   "damage.channel.atmosphere.detail":
     "A weapon payload disrupts the target’s atmosphere and respiration.",

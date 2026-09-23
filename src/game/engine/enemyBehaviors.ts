@@ -1,11 +1,10 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { EnemyBehaviorState, EnemyDefinition, EnemyState, GameState } from "../types";
-import { enemyGasZone, enemyRoomId } from "./enemyPosition";
+import type { EncounterContext, EncounterState } from "../encounter/types";
+import { enemyDefinition } from "../encounter/catalogs";
+import { configuredProcess } from "../encounter/processContext";
+import type { EnemyBehaviorState, EnemyDefinition, EnemyState } from "../types";
+import { enemyRoomId } from "./enemyPosition";
 import { enemyBehaviorDurabilityScale } from "./enemyLevel";
-import { roomGasHeadroom } from "./roomState";
-import { roomState } from "../world/instances";
-import { addEvent } from "./events";
-import { upsertEnvironmentalField } from "./environmentalFields";
+import { addEncounterEvent as addEvent } from "../encounter/events";
 
 export const initialEnemyBehaviorState = (
   definition: EnemyDefinition,
@@ -57,42 +56,7 @@ const rechargeSharedField = (enemy: EnemyState, definition: EnemyDefinition, dt:
     enemy.behavior.charge >= enemy.behavior.maximumCharge * definition.behavior.activationFraction;
 };
 
-const emitEnemyGas = (
-  state: GameState,
-  enemy: EnemyState,
-  definition: EnemyDefinition,
-  dt: number,
-  gameDefinition: GameDefinition
-): void => {
-  if (enemy.behavior.kind !== "gas_emitter" || definition.behavior.kind !== "gas_emitter") return;
-  const roomId = enemyRoomId(enemy, state.map);
-  if (!roomId) return;
-  const room = roomState(state, roomId);
-  const emitted = Math.min(
-    enemy.behavior.reservoir,
-    definition.behavior.emissionRate * dt,
-    roomGasHeadroom(room, gameDefinition)
-  );
-  if (emitted <= 0) return;
-  const zone = enemyGasZone(enemy, state.map);
-  room.gas[zone][definition.behavior.species] += emitted;
-  enemy.behavior.reservoir -= emitted;
-  state.stats.reagentEmitted += emitted;
-  upsertEnvironmentalField(state, {
-    id: `enemy:${enemy.id}:emission`,
-    sourceId: `enemy:${enemy.id}`,
-    effect: "visibility",
-    roomId,
-    zone,
-    intensity: Math.min(0.3, 0.12 + definition.behavior.emissionRate * 0.2),
-    duration: 1.4,
-    decayPerSecond: 0.05,
-    stacking: "strongest",
-    species: definition.behavior.species,
-  });
-};
-
-const recordProtectedPresence = (state: GameState, enemy: EnemyState, dt: number): void => {
+const recordProtectedPresence = (state: EncounterState, enemy: EnemyState, dt: number): void => {
   if (enemy.behavior.kind !== "shared_field" || !enemy.behavior.active) return;
   const roomId = enemyRoomId(enemy, state.map);
   if (!roomId) return;
@@ -104,20 +68,21 @@ const recordProtectedPresence = (state: GameState, enemy: EnemyState, dt: number
 
 /** Advances enemy-owned resources before chemistry so emitted gas can react in the same frame. */
 export const simulateEnemyBehaviors = (
-  state: GameState,
+  state: EncounterState,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: EncounterContext
 ): void => {
   for (const enemy of state.enemies) {
-    const definition = gameDefinition.enemies[enemy.type];
+    const definition = enemyDefinition(gameDefinition.combat, enemy.type);
     rechargeSharedField(enemy, definition, dt);
     recordProtectedPresence(state, enemy, dt);
-    emitEnemyGas(state, enemy, definition, dt, gameDefinition);
+    const process = configuredProcess(state, gameDefinition);
+    process?.bridge.emitEnemy(process.state, enemy, dt, process.context);
   }
 };
 
 export const transitionArmoredMolt = (
-  state: GameState,
+  state: EncounterState,
   enemy: EnemyState,
   roomId: string | null,
   killed: boolean

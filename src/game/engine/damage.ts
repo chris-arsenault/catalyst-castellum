@@ -1,13 +1,13 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { CombatDefinition, EncounterState } from "../encounter/types";
+import type { AppliedDamagePacket, DamageApplication, DamagePacket } from "../damageTypes";
+export type { AppliedDamagePacket, DamageApplication, DamagePacket } from "../damageTypes";
+import { enemyDefinition } from "../encounter/catalogs";
 import {
   DAMAGE_SOURCE_IDS,
   type DamageLedger,
   type DamageSourceId,
   type EnemyState,
-  type GameState,
-  type GasZone,
   type HazardChannels,
-  type RoomId,
 } from "../types";
 
 export const HAZARD_CHANNELS = [
@@ -20,37 +20,7 @@ export const HAZARD_CHANNELS = [
 
 export type HazardChannel = (typeof HAZARD_CHANNELS)[number];
 
-export interface DamagePacket {
-  key: string;
-  sourceId: DamageSourceId;
-  channels: HazardChannels;
-}
-
-export interface HazardBurst {
-  roomId: RoomId;
-  zone: GasZone | null;
-  sourceId: "hydrogen_oxygen_combustion";
-  reactionExtent: number;
-  pressureImpulse: number;
-  heatDelta: number;
-}
-
-export interface AppliedDamagePacket {
-  key: string;
-  sourceId: DamageSourceId;
-  channels: HazardChannels;
-  amount: number;
-}
-
-export interface DamageApplication {
-  healthBefore: number;
-  healthAfter: number;
-  amount: number;
-  killed: boolean;
-  dominantSource: DamageSourceId | null;
-  dominantChannel: HazardChannel | null;
-  packets: AppliedDamagePacket[];
-}
+export type { HazardBurst } from "../encounter/processTypes";
 
 export const emptyHazardChannels = (): HazardChannels => ({
   atmosphere: 0,
@@ -83,9 +53,9 @@ const scaledChannels = (channels: HazardChannels, scale: number): HazardChannels
 const resistedChannels = (
   enemy: EnemyState,
   channels: HazardChannels,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): HazardChannels => {
-  const multipliers = definition.enemies[enemy.type].hazardMultipliers;
+  const multipliers = enemyDefinition(definition, enemy.type).hazardMultipliers;
   const armorBreak = enemy.effects
     .filter((effect) => effect.kind === "armor_break")
     .reduce((total, effect) => total + effect.magnitude, 0);
@@ -102,7 +72,7 @@ const resistedChannels = (
 export const requestedDamageForPackets = (
   enemy: EnemyState,
   packets: DamagePacket[],
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): number =>
   packets.reduce(
     (total, packet) => total + channelTotal(resistedChannels(enemy, packet.channels, definition)),
@@ -112,7 +82,7 @@ export const requestedDamageForPackets = (
 export const requestedDamageBySourceForPackets = (
   enemy: EnemyState,
   packets: DamagePacket[],
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): Record<DamageSourceId, number> =>
   Object.fromEntries(
     DAMAGE_SOURCE_IDS.map((sourceId) => [
@@ -166,11 +136,11 @@ export const dominantLedgerSource = (ledger: DamageLedger): DamageSourceId | nul
  * jointly deliver lethal damage in the same simulation tick.
  */
 export const applyDamagePacketsWithScale = (
-  state: GameState,
+  state: Pick<EncounterState, "stats" | "elapsed">,
   enemy: EnemyState,
   packets: DamagePacket[],
   incomingScale: number,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): DamageApplication => {
   const healthBefore = enemy.health;
   const resisted = packets.map((packet) => ({
@@ -230,8 +200,8 @@ export const applyDamagePacketsWithScale = (
 };
 
 export const applyDamagePackets = (
-  state: GameState,
+  state: Pick<EncounterState, "stats" | "elapsed">,
   enemy: EnemyState,
   packets: DamagePacket[],
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): DamageApplication => applyDamagePacketsWithScale(state, enemy, packets, 1, definition);

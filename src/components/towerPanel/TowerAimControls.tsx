@@ -1,14 +1,12 @@
 import { RotateCw } from "lucide-react";
-import { useGamePresentation } from "../../application/presentationContext";
-import { useGameStore } from "../../application/store";
-import { DEFAULT_GAME_RUNTIME } from "../../game/runtime";
-import type { TowerInstance } from "../../game/types";
+import { useEncounterControls } from "../../application/encounterSurface";
+import type { EncounterTower } from "../../game/encounter/types";
 import { orientationKey } from "../../presentation/towerCopy";
 
-export const TowerAimControls = ({ tower }: { tower: TowerInstance }) => {
-  const { translator } = useGamePresentation();
-  const dispatch = useGameStore((state) => state.dispatch);
-  const definition = DEFAULT_GAME_RUNTIME.definition.towers[tower.chassisId];
+export const TowerAimControls = ({ tower }: { tower: EncounterTower }) => {
+  const { towers, translator } = useEncounterControls().presentation;
+  const dispatch = useEncounterControls().dispatch;
+  const definition = towers.definition(tower.chassisId);
   return (
     <>
       <h4>

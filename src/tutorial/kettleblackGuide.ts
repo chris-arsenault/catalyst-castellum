@@ -3,7 +3,7 @@ import { TUTORIAL_ANCHORS } from "./anchors";
 import type { GuideDefinition, TutorialCopyKey } from "./guideModel";
 
 const hullTowers = (game: GameState) =>
-  Object.values(game.towers).filter((tower) => tower.provenance === "hull");
+  Object.values(game.encounter.towers).filter((tower) => tower.provenance === "hull");
 
 const hullTowerPlaced = (game: GameState): boolean => hullTowers(game).length > 0;
 const hullTowerUpgraded = (game: GameState): boolean =>

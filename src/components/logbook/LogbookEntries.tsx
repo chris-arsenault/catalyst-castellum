@@ -84,11 +84,12 @@ const BriefingEntry = ({ game, site }: { game: GameState; site: NarrativeSiteDef
 
 /** A cleared site: the after-action channel, the record, and the next filing. */
 const SecuredEntry = ({ game, site }: { game: GameState; site: NarrativeSiteDefinition }) => {
-  const { formatters, narrativeCopy, roundReportCopy, translator } = useGamePresentation();
+  const { formatters, narrativeCopy, records, roundReportCopy, translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
   const setGraftMode = useGameStore((state) => state.setGraftMode);
   const level = levelDefinitionFor(game);
-  const report = game.lastReport ? roundReportCopy(game.lastReport) : null;
+  const roundReport = records.report(game);
+  const report = roundReport ? roundReportCopy(roundReport) : null;
   const nextId = nextLevelId(level.id);
   const nextSite = nextId ? narrativeSiteForLevel(nextId) : null;
   const depart = useCallback(() => {

@@ -1,5 +1,5 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState, TowerInstance } from "../types";
+import type { CombatDefinition, EncounterState, EncounterTower } from "../encounter/types";
+import { towerDefinition } from "../encounter/catalogs";
 import {
   environmentalTowerCadenceMultiplier,
   environmentalTowerRangeMultiplier,
@@ -15,11 +15,11 @@ export interface EffectiveTowerStats {
 }
 
 export const effectiveTowerStats = (
-  tower: TowerInstance,
-  definition: GameDefinition,
-  state?: GameState
+  tower: EncounterTower,
+  definition: Pick<CombatDefinition, "towers">,
+  state?: Pick<EncounterState, "map" | "environmentalFields">
 ): EffectiveTowerStats => {
-  const chassis = definition.towers[tower.chassisId];
+  const chassis = towerDefinition(definition, tower.chassisId);
   const upgrades = tower.upgrades.flatMap((upgradeId) => {
     const upgrade = chassis.upgrades.find((candidate) => candidate.id === upgradeId);
     return upgrade ? [upgrade] : [];

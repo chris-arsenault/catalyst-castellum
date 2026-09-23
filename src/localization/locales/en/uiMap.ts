@@ -201,6 +201,8 @@ export const UI_MAP_MESSAGES = {
   "ui.waveForecast.composition": "Composition",
   "ui.waveForecast.formationTraits": "Formation traits",
   "ui.waveForecast.route": "{entry} → {core}",
+  "ui.waveForecast.approaches": "{count} active approaches",
+  "ui.waveForecast.arrivalWindow": "Arrivals {first}–{last} s after assault starts",
   "ui.waveForecast.level": "Level {level}",
   "ui.waveForecast.levelRange": "Levels {minimum}–{maximum}",
   "ui.waveForecast.enemyCount": "{count} × {enemy}",

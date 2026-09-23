@@ -1,16 +1,12 @@
 import { emptyGas, emptyLiquid } from "../materials";
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessEncounterState, ProcessSimulationDefinition } from "../encounter/processTypes";
 import type {
   CommandDecision,
-  CommandResult,
   GameCommand,
-  GameState,
   GasConduitState,
   GridCell,
   LiquidConduitState,
 } from "../types";
-import { acceptCommand } from "./commandResult";
-import { cloneGame } from "./roomState";
 import { conduitState } from "../world/instances";
 import { isProcessLine, processLineId, type ProcessLineConnection } from "../world/map";
 import { withConnection } from "../world/mapEdits";
@@ -18,12 +14,10 @@ import { plannedLineConnection, withoutConnection } from "../world/processLineEd
 import { worldCatalogsForMap } from "../world/catalogs";
 
 export const setConduitCommand = (
-  source: GameState,
+  state: ProcessEncounterState,
   command: GameCommand & { type: "set_conduit" }
-): CommandResult => {
-  const state = cloneGame(source);
+): void => {
   conduitState(state, command.connectionId).enabled = command.enabled;
-  return acceptCommand(state);
 };
 
 const newGasConduit = (route: readonly GridCell[]): GasConduitState => ({
@@ -48,21 +42,20 @@ const newLiquidConduit = (route: readonly GridCell[]): LiquidConduitState => ({
 });
 
 /** A minting build is a map edit: new frozen map, bumped revision, grown catalogs. */
-const appendLine = (state: GameState, line: ProcessLineConnection): void => {
+const appendLine = (state: ProcessEncounterState, line: ProcessLineConnection): void => {
   state.map = withConnection(state.map, line);
   state.mapRevision += 1;
   state.world = worldCatalogsForMap(state.map);
-  if (line.kind === "gas_line") state.gasConduits[line.id] = newGasConduit(line.route);
-  else state.liquidConduits[line.id] = newLiquidConduit(line.route);
+  if (line.kind === "gas_line") state.process.gasConduits[line.id] = newGasConduit(line.route);
+  else state.process.liquidConduits[line.id] = newLiquidConduit(line.route);
 };
 
 export const buildConnectionCommand = (
-  source: GameState,
+  state: ProcessEncounterState,
   command: GameCommand & { type: "build_connection" },
   decision: CommandDecision,
-  definition: GameDefinition
-): CommandResult => {
-  const state = cloneGame(source);
+  definition: ProcessSimulationDefinition
+): void => {
   const connectionId = processLineId(command.kind, command.fromRoomId, command.toRoomId);
   if (connectionId in state.map.connections)
     throw new Error(`Build attempted for existing connection ${connectionId}.`);
@@ -76,23 +69,20 @@ export const buildConnectionCommand = (
   if (!line) throw new Error(`No legal route for ${connectionId}.`);
   appendLine(state, line);
   state.matter -= decision.cost;
-  return acceptCommand(state);
 };
 
 export const dismantleConnectionCommand = (
-  source: GameState,
+  state: ProcessEncounterState,
   command: GameCommand & { type: "dismantle_connection" },
   decision: CommandDecision
-): CommandResult => {
-  const state = cloneGame(source);
+): void => {
   const line = state.map.connections[command.connectionId];
   if (!line || !isProcessLine(line))
     throw new Error(`Dismantle attempted for unknown connection ${command.connectionId}.`);
   state.map = withoutConnection(state.map, command.connectionId);
   state.mapRevision += 1;
   state.world = worldCatalogsForMap(state.map);
-  if (line.kind === "gas_line") delete state.gasConduits[command.connectionId];
-  else delete state.liquidConduits[command.connectionId];
+  if (line.kind === "gas_line") delete state.process.gasConduits[command.connectionId];
+  else delete state.process.liquidConduits[command.connectionId];
   state.matter += decision.refund;
-  return acceptCommand(state);
 };

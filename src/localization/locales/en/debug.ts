@@ -3,6 +3,7 @@ export const DEBUG_MESSAGES = {
   "ui.save.debug.detail": "Each checkpoint uses its authored briefing, loadout, and guide.",
   "ui.save.debug.slot": "Save slot",
   "ui.save.debug.slotAvailable": "SLOT {number} · AVAILABLE",
+  "ui.save.debug.slotUnavailable": "SLOT {number} · STORED RECORD",
   "ui.save.debug.slotOccupied": "SLOT {number} · LEVEL {level}",
   "ui.save.debug.site": "Starting site",
   "ui.save.debug.siteOption": "LEVEL {level} · {name} · {kind}",

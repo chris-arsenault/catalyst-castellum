@@ -1,5 +1,5 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState, GasZone, RoomState } from "../types";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
+import type { GasZone, RoomState } from "../types";
 import { clamp } from "./math";
 import { gasAmountTotal, gasZoneTotal, kelvin, mixedTemperature, roomZoneDensity } from "./physics";
 import { addGas, takeGas } from "./roomState";
@@ -68,14 +68,18 @@ const swapPackets = (room: RoomState, amount: number): void => {
   );
 };
 
-const diffuseZones = (room: RoomState, dt: number, definition: GameDefinition): void => {
+const diffuseZones = (room: RoomState, dt: number, definition: ProcessPhysicsDefinition): void => {
   const amount =
     Math.min(gasZoneTotal(room, "lower"), gasZoneTotal(room, "upper")) *
     clamp((MOLECULAR_DIFFUSION_RATE + roomGasMixingRate(room, definition)) * dt, 0, 0.2);
   swapPackets(room, amount);
 };
 
-const overturnUnstableGas = (room: RoomState, dt: number, definition: GameDefinition): void => {
+const overturnUnstableGas = (
+  room: RoomState,
+  dt: number,
+  definition: ProcessPhysicsDefinition
+): void => {
   const instability =
     roomZoneDensity(room, "upper", definition) - roomZoneDensity(room, "lower", definition);
   if (instability <= 0.0002) return;
@@ -97,7 +101,7 @@ const exchangeWallHeat = (room: RoomState, dt: number): void => {
 export const simulateRoomStratification = (
   room: RoomState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   equalizeZonePressure(room, dt);
   overturnUnstableGas(room, dt, definition);
@@ -106,9 +110,9 @@ export const simulateRoomStratification = (
 };
 
 export const simulateStratification = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   for (const roomId of state.world.rooms)
     simulateRoomStratification(roomState(state, roomId), dt, definition);

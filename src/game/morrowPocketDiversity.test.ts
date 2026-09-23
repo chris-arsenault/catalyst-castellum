@@ -9,14 +9,17 @@ import { processLineIds } from "./world/instances";
 describe("Morrow Pocket open-defense authoring", () => {
   it("starts with two routes, a clear floor plan, and the complete tower roster", () => {
     const game = createScenarioGame("morrow_pocket");
-    const installedEquipment = Object.values(game.rooms).flatMap((room) =>
+    const installedEquipment = Object.values(game.encounter.process.rooms).flatMap((room) =>
       Object.values(room.equipment).filter((equipment) => equipment !== null)
     );
 
     expect(installedEquipment).toEqual([]);
-    expect(processLineIds(game, "gas_line")).toEqual([]);
-    expect(processLineIds(game, "liquid_line")).toEqual([]);
-    expect(Object.keys(game.map.routeGraph.routes).sort()).toEqual(["upper_cut", "west_claim"]);
+    expect(processLineIds(game.encounter, "gas_line")).toEqual([]);
+    expect(processLineIds(game.encounter, "liquid_line")).toEqual([]);
+    expect(Object.keys(game.encounter.map.routeGraph.routes).sort()).toEqual([
+      "upper_cut",
+      "west_claim",
+    ]);
     expect(LEVEL_DEFINITIONS.morrow_pocket.rounds[0]?.availability.towers).toEqual(
       TOWER_CHASSIS_IDS
     );

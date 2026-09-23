@@ -3,17 +3,8 @@ import { useMemo, useState } from "react";
 import { useGamePresentation } from "../../application/presentationContext";
 import { useGameStore } from "../../application/store";
 import { TOWER_CHASSIS_IDS } from "../../game/identifiers";
-import { DEFAULT_GAME_RUNTIME } from "../../game/runtime";
 import type { TowerChassisId, TowerDefinition } from "../../game/types";
-import {
-  chassisKey,
-  defaultPlacement,
-  mountKey,
-  packetDamage,
-  roleKey,
-  towerColorClass,
-  upgradeKey,
-} from "../../presentation/towerCopy";
+import { chassisKey, mountKey, roleKey, upgradeKey } from "../../presentation/towerCopy";
 
 const TowerList = ({
   onSelect,
@@ -22,13 +13,13 @@ const TowerList = ({
   onSelect: (id: TowerChassisId) => void;
   selectedId: TowerChassisId;
 }) => {
-  const { translator } = useGamePresentation();
+  const { towers, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   return (
     <div className="manual-build-list" aria-label={translator.text("ui.manual.towers.catalog")}>
       {TOWER_CHASSIS_IDS.map((id) => {
-        const tower = DEFAULT_GAME_RUNTIME.definition.towers[id];
-        const available = game.availability.towers.includes(id);
+        const tower = towers.definition(id);
+        const available = game.encounter.availability.towers.includes(id);
         return (
           <button
             key={id}
@@ -38,9 +29,14 @@ const TowerList = ({
             onClick={() => onSelect(id)}
             data-testid={`manual-tower-choice-${id}`}
           >
-            <span className={`manual-tower-swatch ${towerColorClass(id)}`}>
-              <Crosshair size={22} />
-            </span>
+            <svg
+              className="manual-tower-swatch"
+              viewBox="0 0 74 54"
+              color={tower.color}
+              aria-hidden="true"
+            >
+              <Crosshair size={22} x={26} y={16} />
+            </svg>
             <span>
               <strong>{translator.text(chassisKey(id))}</strong>
               <small>{translator.text(roleKey(tower.role))}</small>
@@ -57,12 +53,12 @@ const TowerList = ({
 };
 
 const TowerSpecifications = ({ tower }: { tower: TowerDefinition }) => {
-  const { translator } = useGamePresentation();
+  const { towers, translator } = useGamePresentation();
   return (
     <dl className="manual-build-specs">
       <div>
         <dt>{translator.text("ui.manual.towers.damage")}</dt>
-        <dd>{packetDamage(tower.id)}</dd>
+        <dd>{towers.packetDamage(tower.id)}</dd>
       </div>
       <div>
         <dt>{translator.text("ui.manual.towers.service")}</dt>
@@ -106,22 +102,27 @@ const TowerUpgradeList = ({ tower }: { tower: TowerDefinition }) => {
 };
 
 const TowerDetail = ({ id }: { id: TowerChassisId }) => {
-  const { translator } = useGamePresentation();
+  const { towers, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const setSelection = useGameStore((state) => state.setTowerBuildSelection);
   const closeManual = useGameStore((state) => state.closeManual);
-  const tower = DEFAULT_GAME_RUNTIME.definition.towers[id];
-  const available = game.phase === "build" && game.availability.towers.includes(id);
+  const tower = towers.definition(id);
+  const available = game.phase === "build" && game.encounter.availability.towers.includes(id);
   const choosePlacement = () => {
     if (!available) return;
-    setSelection(defaultPlacement(id));
+    setSelection(towers.defaultPlacement(id));
     closeManual();
   };
   return (
     <article className="manual-build-detail manual-tower-detail">
-      <div className={`manual-tower-mark ${towerColorClass(id)}`}>
-        <Crosshair size={34} />
-      </div>
+      <svg
+        className="manual-tower-mark"
+        viewBox="0 0 240 240"
+        color={tower.color}
+        aria-hidden="true"
+      >
+        <Crosshair size={34} x={103} y={103} />
+      </svg>
       <div className="manual-build-copy">
         <span className="manual-entry-code">{translator.text(roleKey(tower.role))}</span>
         <h2>{translator.text(chassisKey(id))}</h2>
@@ -157,8 +158,8 @@ const TowerDetail = ({ id }: { id: TowerChassisId }) => {
 export const TowerBuildCatalog = () => {
   const game = useGameStore((state) => state.game);
   const initial = useMemo(
-    () => game.availability.towers[0] ?? TOWER_CHASSIS_IDS[0],
-    [game.availability.towers]
+    () => game.encounter.availability.towers[0] ?? TOWER_CHASSIS_IDS[0],
+    [game.encounter.availability.towers]
   );
   const [selectedId, setSelectedId] = useState<TowerChassisId>(initial);
   const { translator } = useGamePresentation();

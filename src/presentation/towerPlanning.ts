@@ -1,6 +1,9 @@
+import type { CombatDefinition, EncounterCommand, EncounterState } from "../game/tactical";
+import type { CommandDecision } from "../game/types";
 import type { GameRuntime } from "../game/runtime";
 import { worldPointToGridCell } from "../game/spatial";
 import type {
+  CommandRejectionCode,
   GridCell,
   GameState,
   TowerChassisId,
@@ -10,6 +13,18 @@ import type {
   WorldPoint,
 } from "../game/types";
 import { preferredOrientationForMount } from "./towerCopy";
+
+interface SurfacePlanningRuntime<State> {
+  definition: Pick<CombatDefinition, "towers">;
+  evaluate: (state: State, command: EncounterCommand) => CommandDecision;
+  encounterOf: (state: State) => EncounterState;
+  resolvePlacement: (
+    id: TowerChassisId,
+    anchor: GridCell,
+    face: TowerMountFace,
+    orientation: TowerOrientation
+  ) => TowerPlacement;
+}
 
 const SURFACE_SNAP_DISTANCE = 2.5;
 
@@ -24,7 +39,7 @@ export const towerMountWorldPoint = (
 };
 
 const roomSurfaceAnchors = (
-  room: GameState["map"]["rooms"][string],
+  room: GameState["encounter"]["map"]["rooms"][string],
   mountFace: TowerMountFace
 ): GridCell[] => {
   if (mountFace === "left_wall" || mountFace === "right_wall") {
@@ -68,35 +83,30 @@ const orientationForSurface = (
   chassisId: TowerChassisId,
   mountFace: TowerMountFace,
   orientation: TowerOrientation,
-  runtime: GameRuntime
+  runtime: Pick<SurfacePlanningRuntime<unknown>, "definition">
 ): TowerOrientation =>
   pointsIntoMount(mountFace, orientation)
-    ? preferredOrientationForMount(runtime.definition.towers[chassisId].orientations, mountFace)
+    ? preferredOrientationForMount(runtime.definition.towers[chassisId]!.orientations, mountFace)
     : orientation;
 
-const snapToMountSurface = (
-  game: GameState,
+const snapToMountSurface = <State>(
+  game: State,
   worldPoint: WorldPoint,
   chassisId: TowerChassisId,
-  runtime: GameRuntime
+  runtime: SurfacePlanningRuntime<State>
 ): Pick<SurfaceCandidate, "anchor" | "mountFace"> | null => {
-  const candidate = runtime.definition.towers[chassisId].mountFaces
-    .flatMap((mountFace) =>
-      Object.values(game.map.rooms).flatMap((room) =>
-        roomSurfaceAnchors(room, mountFace).map((anchor): SurfaceCandidate => {
-          const surface = towerMountWorldPoint({ anchor, mountFace });
-          return {
-            anchor,
-            mountFace,
-            distance: Math.hypot(
-              surface.x - worldPoint.x,
-              surface.elevation - worldPoint.elevation
-            ),
-          };
-        })
-      )
+  const candidate = runtime.definition.towers[chassisId]!.mountFaces.flatMap((mountFace) =>
+    Object.values(runtime.encounterOf(game).map.rooms).flatMap((room) =>
+      roomSurfaceAnchors(room, mountFace).map((anchor): SurfaceCandidate => {
+        const surface = towerMountWorldPoint({ anchor, mountFace });
+        return {
+          anchor,
+          mountFace,
+          distance: Math.hypot(surface.x - worldPoint.x, surface.elevation - worldPoint.elevation),
+        };
+      })
     )
-    .sort((left, right) => left.distance - right.distance)[0];
+  ).sort((left, right) => left.distance - right.distance)[0];
   if (candidate && candidate.distance <= SURFACE_SNAP_DISTANCE)
     return { anchor: candidate.anchor, mountFace: candidate.mountFace };
   return null;
@@ -109,15 +119,15 @@ export interface TowerPlacementPreview {
   anchor: ReturnType<typeof worldPointToGridCell>;
   placement: ReturnType<GameRuntime["queries"]["resolveTowerPlacement"]>;
   allowed: boolean;
-  reason: string | null;
+  reason: CommandRejectionCode | null;
   cost: number;
   movingTowerId: string | null;
 }
 
-export const createTowerPlanning = (runtime: GameRuntime) =>
+export const createSurfaceTowerPlanning = <State>(runtime: SurfacePlanningRuntime<State>) =>
   Object.freeze({
     planPlacement: (
-      game: GameState,
+      game: State,
       worldPoint: WorldPoint,
       chassisId: TowerChassisId,
       orientation: TowerOrientation,
@@ -152,12 +162,11 @@ export const createTowerPlanning = (runtime: GameRuntime) =>
         mountFace: snapped.mountFace,
         orientation: resolvedOrientation,
         anchor: snapped.anchor,
-        placement: runtime.queries.resolveTowerPlacement(
+        placement: runtime.resolvePlacement(
           chassisId,
           snapped.anchor,
           snapped.mountFace,
-          resolvedOrientation,
-          game
+          resolvedOrientation
         ),
         allowed: decision.allowed,
         reason: decision.code,
@@ -165,4 +174,12 @@ export const createTowerPlanning = (runtime: GameRuntime) =>
         movingTowerId,
       };
     },
+  });
+
+export const createTowerPlanning = (runtime: GameRuntime) =>
+  createSurfaceTowerPlanning({
+    definition: runtime.definition,
+    evaluate: (game: GameState, command: EncounterCommand) => runtime.evaluate(game, command),
+    encounterOf: (game: GameState) => game.encounter,
+    resolvePlacement: runtime.queries.resolveTowerPlacement,
   });

@@ -36,9 +36,9 @@ describe("bound game presentation", () => {
     const game = runtime.createScenario("cordon_41");
 
     expect(presentation.levelCopy.level(runtime.level(game)).name).toBe("⟦Cordon 41⟧");
-    expect(roomState(game, "furnace").temperature).toBe(51);
+    expect(roomState(game.encounter, "furnace").temperature).toBe(51);
     expect(
-      presentation.selectors.roomAnalysis(roomState(game, "furnace")).hazardLabel
+      presentation.selectors.roomAnalysis(roomState(game.encounter, "furnace")).hazardLabel
     ).toBeDefined();
     expect(presentation.waveForecast(game).composition[0]?.name).toBe("⟦Deckmouth⟧");
     expect(presentation.supplies(game)[0]?.name).toBe("⟦Gas reservoir⟧");

@@ -7,6 +7,7 @@ import { cancelScheduledGameSave, flushScheduledGameSave, scheduleGameSave } fro
 const session = (dismissedGuideIds: string[], guidanceEnabled = true) => ({
   dismissedGuideIds,
   guidanceEnabled,
+  guideEvidence: {},
 });
 
 beforeEach(() => {
@@ -49,13 +50,15 @@ describe("browser save-slot persistence", () => {
 
   it("rejects a malformed slot without affecting valid neighboring slots", () => {
     saveGameSlot("slot-2", DEFAULT_GAME_RUNTIME.createScenario("twelve_cask"), session([]));
-    window.localStorage.setItem("catalyst-castellum:save:slot-1:v2", "not-json");
+    window.localStorage.setItem("catalyst-castellum:save:slot-1:v3", "not-json");
 
     const catalog = loadSaveSlots();
-    expect(catalog["slot-1"]).toBeNull();
-    expect(catalog["slot-2"]?.game.campaign.levelId).toBe("twelve_cask");
+    expect(catalog["slot-1"]).toEqual({ id: "slot-1", status: "damaged" });
+    expect(loadSaveSlot("slot-2")?.game.campaign.levelId).toBe("twelve_cask");
   });
+});
 
+describe("browser save snapshots", () => {
   it("debounces repeated snapshots and persists the latest one to its named slot", () => {
     vi.useFakeTimers();
     const first = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
@@ -67,6 +70,24 @@ describe("browser save-slot persistence", () => {
     vi.advanceTimersByTime(1);
     expect(loadSaveSlot("slot-3")?.game.campaign.levelId).toBe("morrow_pocket");
     expect(loadSaveSlot("slot-3")?.dismissedGuideIds).toEqual(["complete"]);
+  });
+
+  it("persists guide evidence and rejects malformed or older envelopes", () => {
+    const game = DEFAULT_GAME_RUNTIME.createScenario("claim_8_delta");
+    const guideEvidence = {
+      "claim_8_delta:first_coverage:v1": { steps: ["inspect-coverage"], tasks: ["mount-defense"] },
+    };
+    saveGameSlot("slot-1", game, { ...session([]), guideEvidence });
+    expect(loadSaveSlot("slot-1")?.guideEvidence).toEqual(guideEvidence);
+    const key = "catalyst-castellum:save:slot-1:v3";
+    const raw = JSON.parse(window.localStorage.getItem(key)!);
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ ...raw, guideEvidence: { invalid: { steps: [42], tasks: [] } } })
+    );
+    expect(loadSaveSlot("slot-1")).toBeNull();
+    window.localStorage.setItem(key, JSON.stringify({ ...raw, version: 2 }));
+    expect(loadSaveSlot("slot-1")).toBeNull();
   });
 
   it("cancels stale pending state before a slot reset", () => {

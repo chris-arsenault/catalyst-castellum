@@ -217,6 +217,7 @@ const HARKER_VERTICAL_FIELDS: readonly PlaytestRoundPlan[] = [
 ];
 
 const TWELVE_CASK_REACTION: readonly PlaytestRoundPlan[] = [
+  // Base Acid damage leaves coated targets alive for neutralization; retain the upgrade budget.
   round([
     {
       type: "place_tower",
@@ -245,11 +246,6 @@ const TWELVE_CASK_REACTION: readonly PlaytestRoundPlan[] = [
       anchor: { column: 10, elevation: 11 },
       mountFace: "ceiling",
       orientation: "down",
-    },
-    {
-      type: "upgrade_tower",
-      towerId: "tower:twelve_cask:3",
-      upgradeId: "acid_charge",
     },
     {
       type: "place_tower",
@@ -290,11 +286,6 @@ const TWELVE_CASK_REACTION: readonly PlaytestRoundPlan[] = [
     },
   ]),
   round([
-    {
-      type: "upgrade_tower",
-      towerId: "tower:twelve_cask:7",
-      upgradeId: "acid_charge",
-    },
     {
       type: "place_tower",
       chassisId: "caustic_jet",

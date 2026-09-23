@@ -49,7 +49,7 @@ const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
 const intermissionState = (): GameState => {
   const state = createScenarioGame("claim_8_delta", [], definition);
   state.phase = "level_complete";
-  state.matter = 200;
+  state.encounter.matter = 200;
   return state;
 };
 
@@ -67,22 +67,22 @@ describe("grafting modules onto hull graft slots", () => {
     expect(result.accepted).toBe(true);
     const next = result.state;
     const roomId = graftedRoomId("furnace", "west_wall");
-    expect(next.map.rooms[roomId]?.provenance).toBe("hull");
-    expect(next.map.rooms[roomId]?.code).toBe("POD-1");
-    expect(next.map.connections[`joint:furnace:west_wall`]).toBeDefined();
-    expect(next.world.rooms).toContain(roomId);
-    expect(roomState(next, roomId).id).toBe(roomId);
-    expect(next.gasJunctions[roomId]).toBeDefined();
-    expect(next.portalStates["joint:furnace:west_wall"]?.open).toBe(true);
-    expect(next.matter).toBe(200 - definition.modules.utility_pod!.graftCost);
-    expect(next.mapRevision).toBe(state.mapRevision + 1);
+    expect(next.encounter.map.rooms[roomId]?.provenance).toBe("hull");
+    expect(next.encounter.map.rooms[roomId]?.code).toBe("POD-1");
+    expect(next.encounter.map.connections[`joint:furnace:west_wall`]).toBeDefined();
+    expect(next.encounter.world.rooms).toContain(roomId);
+    expect(roomState(next.encounter, roomId).id).toBe(roomId);
+    expect(next.encounter.process.gasJunctions[roomId]).toBeDefined();
+    expect(next.encounter.portalStates["joint:furnace:west_wall"]?.open).toBe(true);
+    expect(next.encounter.matter).toBe(200 - definition.modules.utility_pod!.graftCost);
+    expect(next.encounter.mapRevision).toBe(state.encounter.mapRevision + 1);
   });
 
   it("is deterministic and rejects a second graft on the occupied graft slot", () => {
     const first = graft(intermissionState()).state;
     const second = graft(intermissionState()).state;
-    expect(second.map.rooms[graftedRoomId("furnace", "west_wall")]).toEqual(
-      first.map.rooms[graftedRoomId("furnace", "west_wall")]
+    expect(second.encounter.map.rooms[graftedRoomId("furnace", "west_wall")]).toEqual(
+      first.encounter.map.rooms[graftedRoomId("furnace", "west_wall")]
     );
     const duplicate = graft(first);
     expect(duplicate.accepted).toBe(false);
@@ -120,13 +120,13 @@ describe("dismantling and carrying grafted modules", () => {
   it("dismantles a clear grafted module for a refund and removes its records", () => {
     const grafted = graft(intermissionState()).state;
     const roomId = graftedRoomId("furnace", "west_wall");
-    const matterBefore = grafted.matter;
+    const matterBefore = grafted.encounter.matter;
     const result = executeCommand(grafted, { type: "dismantle_module", roomId }, definition);
     expect(result.accepted).toBe(true);
-    expect(result.state.map.rooms[roomId]).toBeUndefined();
-    expect(result.state.rooms[roomId]).toBeUndefined();
-    expect(result.state.world.rooms).not.toContain(roomId);
-    expect(result.state.matter).toBe(
+    expect(result.state.encounter.map.rooms[roomId]).toBeUndefined();
+    expect(result.state.encounter.process.rooms[roomId]).toBeUndefined();
+    expect(result.state.encounter.world.rooms).not.toContain(roomId);
+    expect(result.state.encounter.matter).toBe(
       matterBefore + Math.floor(definition.modules.utility_pod!.graftCost * 0.75)
     );
   });
@@ -134,7 +134,7 @@ describe("dismantling and carrying grafted modules", () => {
   it("refuses to dismantle a grafted room holding equipment", () => {
     const grafted = graft(intermissionState(), "process_chamber").state;
     const roomId = graftedRoomId("furnace", "west_wall");
-    roomState(grafted, roomId).equipment.socket_a = {
+    roomState(grafted.encounter, roomId).equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 1,
       enabled: false,
@@ -149,7 +149,7 @@ describe("dismantling and carrying grafted modules", () => {
     const { extractHullFragment } = await import("./world/hullFragment");
     const grafted = graft(intermissionState(), "process_chamber").state;
     const roomId = graftedRoomId("furnace", "west_wall");
-    roomState(grafted, roomId).gas.lower.hydrogen = 3;
+    roomState(grafted.encounter, roomId).gas.lower.hydrogen = 3;
     const fragment = extractHullFragment(grafted);
     expect(Object.keys(fragment.rooms).sort()).toEqual(
       [roomId, "core", "furnace", "washlock"].sort()
@@ -160,8 +160,11 @@ describe("dismantling and carrying grafted modules", () => {
 });
 
 const routeVisitsRoom = (state: GameState, roomId: string): boolean => {
-  const room = state.map.rooms[roomId]!;
-  const path = findEnemyPath({ flying: false, portalStates: state.portalStates }, state.map);
+  const room = state.encounter.map.rooms[roomId]!;
+  const path = findEnemyPath(
+    { flying: false, portalStates: state.encounter.portalStates },
+    state.encounter.map
+  );
   return path.some(
     ({ cell }) =>
       cell.column >= room.bounds.column &&
@@ -181,7 +184,7 @@ describe("the persistent hull route", () => {
   it("carries a useful graft, its machine, and its internal pipe through generated and authored sites", () => {
     const source = createScenarioGame("claim_8_delta", [], DEFAULT_GAME_DEFINITION);
     source.phase = "level_complete";
-    source.matter = 200;
+    source.encounter.matter = 200;
     const grafted = executeCommand(
       source,
       {
@@ -197,15 +200,15 @@ describe("the persistent hull route", () => {
     expect(routeVisitsRoom(grafted.state, roomId)).toBe(true);
 
     grafted.state.phase = "build";
-    roomState(grafted.state, roomId).equipment.socket_a = {
+    roomState(grafted.state.encounter, roomId).equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
       operation: null,
       medium: null,
     };
-    roomState(grafted.state, roomId).residue = 8;
-    roomState(grafted.state, roomId).pressurePulse = 12;
+    roomState(grafted.state.encounter, roomId).residue = 8;
+    roomState(grafted.state.encounter, roomId).pressurePulse = 12;
     const piped = executeCommand(
       grafted.state,
       { type: "build_connection", kind: "gas_line", fromRoomId: "core", toRoomId: roomId },
@@ -214,11 +217,11 @@ describe("the persistent hull route", () => {
     expect(piped.accepted).toBe(true);
     const generated = dockAtNextSite(piped.state);
     const lineId = processLineId("gas_line", "core", roomId);
-    expect(generated.map.connections[lineId]).toBeDefined();
-    expect(generated.gasConduits[lineId]).toBeDefined();
-    expect(roomState(generated, roomId).equipment.socket_a?.level).toBe(2);
-    expect(roomState(generated, roomId).residue).toBe(0);
-    expect(roomState(generated, roomId).pressurePulse).toBe(0);
+    expect(generated.encounter.map.connections[lineId]).toBeDefined();
+    expect(generated.encounter.process.gasConduits[lineId]).toBeDefined();
+    expect(roomState(generated.encounter, roomId).equipment.socket_a?.level).toBe(2);
+    expect(roomState(generated.encounter, roomId).residue).toBe(0);
+    expect(roomState(generated.encounter, roomId).pressurePulse).toBe(0);
 
     const authored = dockAtNextSite(generated);
     expect(routeVisitsRoom(authored, roomId)).toBe(true);

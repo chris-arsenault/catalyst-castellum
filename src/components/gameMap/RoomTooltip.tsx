@@ -186,9 +186,9 @@ const RoomCombatRow = ({ game, roomId }: { game: GameState; roomId: RoomId }) =>
 export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId | null }) => {
   const { selectors, translator } = useGamePresentation();
   if (!roomId) return null;
-  const definition = roomDefinition(game, roomId);
-  const room = roomState(game, roomId);
-  const analysis = selectors.roomAnalysis(room, game);
+  const definition = roomDefinition(game.encounter, roomId);
+  const room = roomState(game.encounter, roomId);
+  const analysis = selectors.roomAnalysis(room, game.encounter);
   const gasInflow = roomGasInflow(game, roomId);
   const openGasPortals = activeRoomGasPortals(game, roomId);
   const passageLabel = translator.text(
@@ -216,7 +216,7 @@ export const RoomTooltip = ({ game, roomId }: { game: GameState; roomId: RoomId 
         analysis={analysis}
         gasInflow={gasInflow}
         room={room}
-        volume={facilityModelForMap(game.map).roomVolume(roomId)}
+        volume={facilityModelForMap(game.encounter.map).roomVolume(roomId)}
       />
       <div className="room-pressure-explanation">{pressureExplanation}</div>
       <div className="room-exposure-detail">

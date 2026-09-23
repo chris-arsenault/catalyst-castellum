@@ -109,7 +109,9 @@ const RoomPalette = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
-  const rooms = Object.values(game.map.rooms).filter((room) => room.id.startsWith("graft:"));
+  const rooms = Object.values(game.encounter.map.rooms).filter((room) =>
+    room.id.startsWith("graft:")
+  );
   if (rooms.length === 0) return null;
   return (
     <section className="graft-room-palette">
@@ -168,19 +170,19 @@ export const GraftBoard = () => {
   const [tool, setTool] = useState<HullBuildTool>("select");
   const [connectionStartRoomId, setConnectionStartRoomId] = useState<RoomId | null>(null);
   const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
-  const planningMap = useMemo(() => hullPlanningMap(game.map), [game.map]);
+  const planningMap = useMemo(() => hullPlanningMap(game.encounter.map), [game.encounter.map]);
   const previewPlan = useMemo(
     () =>
       graftPreview && selectedModuleId
         ? plannedGraft(
             PACK,
-            game.map,
+            game.encounter.map,
             graftPreview.hostRoomId,
             graftPreview.graftSlotId,
             selectedModuleId
           )
         : null,
-    [game.map, graftPreview, selectedModuleId]
+    [game.encounter.map, graftPreview, selectedModuleId]
   );
   const displayMap = tool === "select" && previewPlan ? previewPlan.map : planningMap;
   const connectionTargetRoomIds = useMemo(
@@ -258,7 +260,7 @@ export const GraftBoard = () => {
   return (
     <main className="graft-stage" data-testid="graft-board">
       <section className="graft-screen">
-        <GraftHeader matter={game.matter} onClose={close} />
+        <GraftHeader matter={game.encounter.matter} onClose={close} />
         <div className="graft-builder-workspace">
           <section className="graft-blueprint">
             <HullBuilderCanvas

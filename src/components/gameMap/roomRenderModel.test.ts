@@ -39,7 +39,7 @@ describe("canonical room rendering projection", () => {
 
   it("excludes authored platform solids from atmosphere and liquid rendering cells", () => {
     const game = createScenarioGame("claim_8_delta");
-    roomState(game, "furnace").liquid.water = 140;
+    roomState(game.encounter, "furnace").liquid.water = 140;
     const model = roomRenderModel(game, "furnace", false, 0);
 
     expect(model.cells.some(({ cell }) => cell.column === 9 && cell.elevation === 23)).toBe(false);
@@ -50,7 +50,7 @@ describe("canonical room rendering projection", () => {
 
   it("renders empty atmosphere as empty instead of a decorative tint", () => {
     const game = createScenarioGame("claim_8_delta");
-    const gallery = roomState(game, "gallery");
+    const gallery = roomState(game.encounter, "gallery");
     for (const gas of Object.keys(gallery.gas.upper)) {
       gallery.gas.upper[gas as keyof typeof gallery.gas.upper] = 0;
       gallery.gas.lower[gas as keyof typeof gallery.gas.lower] = 0;
@@ -63,9 +63,9 @@ describe("canonical room rendering projection", () => {
   it("exposes delivered conduit flow to the room animation instead of relying on gas labels", () => {
     const initial = createScenarioGame("cordon_41");
     initial.phase = "build";
-    initial.matter = 999;
+    initial.encounter.matter = 999;
     const round = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1)!;
-    initial.availability.gasLines = [...round.availability.gasLines];
+    initial.encounter.availability.gasLines = [...round.availability.gasLines];
     const built = executeCommand(initial, {
       type: "build_connection",
       kind: "gas_line",
@@ -74,10 +74,10 @@ describe("canonical room rendering projection", () => {
     });
     expect(built.accepted, built.code ?? undefined).toBe(true);
     const game = built.state;
-    gasConduitState(game, "gas:core__furnace").lastFlow = 1.4;
-    gasConduitState(game, "gas:core__furnace").flowCause = "fan";
-    gasConduitState(game, "gas:core__furnace").lastSpeciesFlow.hydrogen = 0.9;
-    gasConduitState(game, "gas:core__furnace").lastSpeciesFlow.oxygen = 0.5;
+    gasConduitState(game.encounter, "gas:core__furnace").lastFlow = 1.4;
+    gasConduitState(game.encounter, "gas:core__furnace").flowCause = "fan";
+    gasConduitState(game.encounter, "gas:core__furnace").lastSpeciesFlow.hydrogen = 0.9;
+    gasConduitState(game.encounter, "gas:core__furnace").lastSpeciesFlow.oxygen = 0.5;
 
     const model = roomRenderModel(game, "furnace", false, 0);
 
@@ -89,7 +89,7 @@ describe("canonical room rendering projection", () => {
 
   it("projects the Core's authored supply reservoirs into its cutaway", () => {
     const game = createScenarioGame("cordon_41");
-    game.liquidSources.liquid_reservoir_a!.liquid.water = 90;
+    game.encounter.process.liquidSources.liquid_reservoir_a!.liquid.water = 90;
     const model = roomRenderModel(game, "core", false, 0, DEFAULT_GAME_PRESENTATION.supplies(game));
 
     expect(model.coreReservoirs.map(({ id }) => id)).toEqual(["gas_header", "water", "brine"]);

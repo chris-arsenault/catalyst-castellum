@@ -137,11 +137,11 @@ const EnemyBehavior = ({ enemy }: { enemy: EnemyState }) => {
 export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: GameState }) => {
   const { formatters, translator } = useGamePresentation();
   if (enemyId === null) return null;
-  const enemy = game.enemies.find((candidate) => candidate.id === enemyId);
+  const enemy = game.encounter.enemies.find((candidate) => candidate.id === enemyId);
   if (!enemy) return null;
   const definition = ENEMY_DEFINITIONS[enemy.type];
-  const roomId = enemyRoomId(enemy, game);
-  const zone = enemyGasZone(enemy, game);
+  const roomId = enemyRoomId(enemy, game.encounter);
+  const zone = enemyGasZone(enemy, game.encounter);
   return (
     <aside className="room-map-tooltip enemy-map-tooltip" data-testid="enemy-map-tooltip">
       <header>
@@ -169,7 +169,7 @@ export const EnemyTooltip = ({ enemyId, game }: { enemyId: number | null; game: 
         </div>
         <div>
           <dt>{translator.text("ui.map.enemy.position")}</dt>
-          <dd>{enemyPositionCopy(game.map, roomId, zone, translator)}</dd>
+          <dd>{enemyPositionCopy(game.encounter.map, roomId, zone, translator)}</dd>
         </div>
         <div>
           <dt>{translator.text("ui.map.enemy.movement")}</dt>

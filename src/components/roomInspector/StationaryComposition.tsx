@@ -9,7 +9,7 @@ export const StationaryComposition = () => {
   const { formatters, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const room = roomState(game, roomId);
+  const room = roomState(game.encounter, roomId);
   const present = STATIONARY_TYPES.filter((species) => room.stationary[species] > 0.001);
   const total = present.reduce((sum, species) => sum + room.stationary[species], 0);
   if (present.length === 0) return null;

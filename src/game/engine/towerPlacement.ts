@@ -1,7 +1,7 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { CombatDefinition, EncounterState } from "../encounter/types";
+import { towerDefinition } from "../encounter/catalogs";
 import { gridCellToWorldPoint } from "../spatial";
 import type {
-  GameState,
   GridCell,
   TowerChassisId,
   TowerMountFace,
@@ -34,7 +34,7 @@ const supportCells = (occupied: readonly GridCell[], mountFace: TowerMountFace):
     return { column: cell.column + 1, elevation: cell.elevation };
   });
 
-export const roomForTowerCell = (state: GameState, cell: GridCell) =>
+export const roomForTowerCell = (state: Pick<EncounterState, "map">, cell: GridCell) =>
   Object.values(state.map.rooms).find(
     ({ bounds }) =>
       cell.column >= bounds.column &&
@@ -43,7 +43,11 @@ export const roomForTowerCell = (state: GameState, cell: GridCell) =>
       cell.elevation < bounds.elevation + bounds.height
   ) ?? null;
 
-const onCompatibleBoundary = (state: GameState, cell: GridCell, face: TowerMountFace): boolean => {
+const onCompatibleBoundary = (
+  state: Pick<EncounterState, "map">,
+  cell: GridCell,
+  face: TowerMountFace
+): boolean => {
   const room = roomForTowerCell(state, cell);
   if (!room) return false;
   if (face === "floor")
@@ -74,9 +78,9 @@ export const resolveTowerPlacement = (
   anchor: GridCell,
   mountFace: TowerMountFace,
   orientation: TowerOrientation,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): TowerPlacement => {
-  const tower = definition.towers[chassisId];
+  const tower = towerDefinition(definition, chassisId);
   const occupiedCells = footprintCells(
     anchor,
     mountFace,
@@ -103,21 +107,24 @@ export type TowerPlacementIssue =
   | "clearance"
   | "route_obstruction";
 
-const routeCells = (state: GameState): Set<string> =>
+const routeCells = (state: Pick<EncounterState, "map">): Set<string> =>
   new Set(
     Object.values(state.map.routeGraph.edges).flatMap((edge) =>
       edge.cells.map((cell) => cellKey(cell))
     )
   );
 
-const occupiedTowerCells = (state: GameState, ignoredTowerId: string | null): Set<string> =>
+const occupiedTowerCells = (
+  state: Pick<EncounterState, "map" | "towers">,
+  ignoredTowerId: string | null
+): Set<string> =>
   new Set(
     Object.values(state.towers)
       .filter((candidate) => candidate.id !== ignoredTowerId)
       .flatMap((candidate) => candidate.placement.occupiedCells.map((cell) => cellKey(cell)))
   );
 
-const placementClearanceCells = (state: GameState): Set<string> =>
+const placementClearanceCells = (state: Pick<EncounterState, "map">): Set<string> =>
   new Set([
     ...Object.values(state.map.rooms).flatMap((room) => [
       ...Object.values(room.socketCells).flatMap((cell) => (cell ? [cellKey(cell)] : [])),
@@ -131,17 +138,20 @@ const placementClearanceCells = (state: GameState): Set<string> =>
     ]),
   ]);
 
-const placementBlocksRoute = (state: GameState, placement: TowerPlacement): boolean => {
+const placementBlocksRoute = (
+  state: Pick<EncounterState, "map">,
+  placement: TowerPlacement
+): boolean => {
   if (placement.mountFace !== "floor") return false;
   const routes = routeCells(state);
   return placement.occupiedCells.some((cell) => routes.has(cellKey(cell)));
 };
 
 export const towerPlacementIssue = (
-  state: GameState,
+  state: Pick<EncounterState, "map" | "towers">,
   chassisId: TowerChassisId,
   placement: TowerPlacement,
-  definition: GameDefinition,
+  definition: Pick<CombatDefinition, "towers">,
   ignoredTowerId: string | null = null
 ): TowerPlacementIssue | null => {
   const tower = definition.towers[chassisId];
@@ -163,11 +173,11 @@ export const towerPlacementIssue = (
 };
 
 export const towerPlacementProvenance = (
-  state: GameState,
+  state: Pick<EncounterState, "map">,
   placement: TowerPlacement
 ): "site" | "hull" => roomForTowerCell(state, placement.anchor)?.provenance ?? "site";
 
 export const towerRoomId = (
-  state: GameState,
+  state: Pick<EncounterState, "map">,
   tower: { placement: TowerPlacement }
 ): string | null => roomForTowerCell(state, tower.placement.anchor)?.id ?? null;

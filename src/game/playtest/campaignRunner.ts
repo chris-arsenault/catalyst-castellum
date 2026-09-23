@@ -66,8 +66,8 @@ const beginSite = (state: GameState): ActiveSite => {
   return {
     levelId: state.campaign.levelId,
     buildName: build.name,
-    startingMatter: state.matter,
-    startingCoreIntegrity: state.coreIntegrity,
+    startingMatter: state.encounter.matter,
+    startingCoreIntegrity: state.encounter.coreIntegrity,
     reports: [],
   };
 };
@@ -79,8 +79,8 @@ const recordReport = (site: ActiveSite, report: RoundReport | null): void => {
 
 const finishSite = (site: ActiveSite, state: GameState): CampaignSiteResult => ({
   ...site,
-  endingMatter: state.matter,
-  endingCoreIntegrity: state.coreIntegrity,
+  endingMatter: state.encounter.matter,
+  endingCoreIntegrity: state.encounter.coreIntegrity,
   reports: [...site.reports].sort((left, right) => left.round - right.round),
 });
 
@@ -104,8 +104,8 @@ const result = (
   rejectedActions,
   reusedTowerPlacements,
   minimumMatter,
-  finalMatter: state.matter,
-  finalCoreIntegrity: state.coreIntegrity,
+  finalMatter: state.encounter.matter,
+  finalCoreIntegrity: state.encounter.coreIntegrity,
   retryCount: state.campaign.retryCount,
   failure,
   sites,
@@ -134,7 +134,7 @@ const translatedTowerCommand = (
 ): GameCommand | null => {
   if (command.type !== "set_tower_targeting" && command.type !== "upgrade_tower") return command;
   const towerId = context.towerAliases.get(command.towerId) ?? command.towerId;
-  const tower = context.state.towers[towerId];
+  const tower = context.state.encounter.towers[towerId];
   if (!context.reusedPlanTowers.has(command.towerId) || !tower) return { ...command, towerId };
   const chassis = context.runtime.definition.towers[tower.chassisId];
   if (command.type === "set_tower_targeting") {
@@ -168,7 +168,7 @@ const reuseCarriedTower = (
   code: string | null
 ): boolean => {
   if (command.type !== "place_tower" || code !== "placement" || !expectedTowerId) return false;
-  const carried = Object.values(context.state.towers).find(
+  const carried = Object.values(context.state.encounter.towers).find(
     (tower) =>
       tower.provenance === "hull" &&
       tower.placement.anchor.column === command.anchor.column &&
@@ -190,7 +190,7 @@ const executeBuildCommand = (
   const expectedTowerId = nextExpectedTowerId(context, authoredCommand);
   const command = translatedTowerCommand(context, authoredCommand);
   if (!command) return null;
-  const towerIdsBefore = new Set(Object.keys(context.state.towers));
+  const towerIdsBefore = new Set(Object.keys(context.state.encounter.towers));
   const commandResult = context.runtime.execute(context.state, command);
   if (!commandResult.accepted) {
     if (alreadyAppliedToReusedTower(context, authoredCommand, commandResult.code)) return null;
@@ -201,11 +201,13 @@ const executeBuildCommand = (
   context.acceptedActions += 1;
   context.state = commandResult.state;
   if (expectedTowerId) {
-    const createdTowerId = Object.keys(context.state.towers).find((id) => !towerIdsBefore.has(id));
+    const createdTowerId = Object.keys(context.state.encounter.towers).find(
+      (id) => !towerIdsBefore.has(id)
+    );
     if (!createdTowerId) throw new Error(`Placement did not create ${expectedTowerId}.`);
     context.towerAliases.set(expectedTowerId, createdTowerId);
   }
-  context.minimumMatter = Math.min(context.minimumMatter, context.state.matter);
+  context.minimumMatter = Math.min(context.minimumMatter, context.state.encounter.matter);
   return null;
 };
 
@@ -227,7 +229,7 @@ const runBuildPhase = (context: CampaignRunContext): string | null => {
 };
 
 const continueAfterRound = (context: CampaignRunContext): void => {
-  recordReport(context.activeSite, context.state.lastReport);
+  recordReport(context.activeSite, context.runtime.queries.reportFor(context.state));
   const continued = context.runtime.execute(context.state, { type: "continue_round" });
   if (!continued.accepted) throw new Error(continued.code ?? "Could not continue the campaign.");
   context.acceptedActions += 1;
@@ -235,7 +237,7 @@ const continueAfterRound = (context: CampaignRunContext): void => {
 };
 
 const beginNextSite = (context: CampaignRunContext): void => {
-  recordReport(context.activeSite, context.state.lastReport);
+  recordReport(context.activeSite, context.runtime.queries.reportFor(context.state));
   context.sites.push(finishSite(context.activeSite, context.state));
   const traveling = context.runtime.execute(context.state, { type: "start_next_level" });
   if (!traveling.accepted) throw new Error(traveling.code ?? "Could not leave the cleared site.");
@@ -255,7 +257,7 @@ const terminalResult = (
   context: CampaignRunContext,
   failure: string | null
 ): CampaignPlaytestResult => {
-  recordReport(context.activeSite, context.state.lastReport);
+  recordReport(context.activeSite, context.runtime.queries.reportFor(context.state));
   context.sites.push(finishSite(context.activeSite, context.state));
   return contextResult(context, true, failure);
 };
@@ -297,14 +299,14 @@ export const runReferenceCampaign = (
     acceptedActions: 1,
     rejectedActions: 0,
     reusedTowerPlacements: 0,
-    minimumMatter: initialState.matter,
+    minimumMatter: initialState.encounter.matter,
     planTowerSequence: 1,
     towerAliases: new Map<string, string>(),
     reusedPlanTowers: new Set<string>(),
   };
 
   while (context.simulatedSeconds < MAX_CAMPAIGN_SECONDS) {
-    context.minimumMatter = Math.min(context.minimumMatter, context.state.matter);
+    context.minimumMatter = Math.min(context.minimumMatter, context.state.encounter.matter);
     const terminal = runCampaignPhase(context);
     if (terminal) return terminal;
   }

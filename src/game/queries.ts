@@ -4,6 +4,7 @@ import type { EnemyState, RoomId } from "./types";
 import type { MapCarrier } from "./world/instances";
 import { definitionForMap } from "./world/activeDefinition";
 import * as campaign from "./engine/campaign";
+import * as records from "./engine/campaignRecords";
 import * as enemyLevel from "./engine/enemyLevel";
 import * as enemyPosition from "./engine/enemyPosition";
 import * as equipment from "./engine/equipment";
@@ -82,9 +83,16 @@ const createTowerQueries = (definition: GameDefinition) => ({
     ),
 });
 
+const createRecordQueries = (definition: GameDefinition) => ({
+  eventsFor: bindDefinition(records.eventsFor, definition),
+  incidentsFor: bindDefinition(records.incidentsFor, definition),
+  reportFor: bindDefinition(records.reportFor, definition),
+});
+
 /** Definition-bound, read-only engine queries for application and presentation code. */
 export const createGameQueries = (definition: GameDefinition) =>
   Object.freeze({
+    ...createRecordQueries(definition),
     enemyGasZone: (enemy: EnemyState, carrier: MapCarrier = definition) =>
       enemyPosition.enemyGasZone(enemy, carrier.map),
     resolveEnemyLevel: enemyLevel.resolveEnemyLevel,

@@ -1,38 +1,23 @@
-/* eslint-disable max-lines-per-function -- Pixi scene order stays explicit for stable z-order. */
-import { Application, extend } from "@pixi/react";
-import { AnimatedSprite, Container, Graphics, Sprite, Text } from "pixi.js";
 import type { GameState, RoomId, SpeciesId, ConnectionId, TowerInstanceId } from "../../game/types";
 import type { PipePreview, RoomEffectPreview } from "../../application/storeTypes";
-import { GhostRouteLayer } from "./MapLayers";
-import { EnemyNode } from "./EnemyNode";
-import { DamageNumberLayer } from "./DamageNumberLayer";
-import { EquipmentLayer, type EquipmentHover } from "./EquipmentLayer";
-import { CellOutletLayer } from "./CellOutletLayer";
+import type { TowerPlacementPreview } from "../../presentation/towerPlanning";
+import type { CameraTransform } from "./mapGeometry";
+import type { EquipmentHover } from "./EquipmentLayer";
 import type { CellOutletId } from "./cellOutletRenderModel";
+import { CampaignEncounterSurface } from "../../application/CampaignEncounterSurface";
+import { EncounterScene } from "./EncounterScene";
 import {
-  MapBackdrop,
-  FacilityCorridors,
-  FacilityDoors,
+  GhostRouteLayer,
   IncidentLayer,
   ProcessNodes,
   PipeHitLayer,
   TransportNetwork,
 } from "./MapLayers";
-import {
-  mapRenderResolution,
-  VIEWPORT_HEIGHT,
-  VIEWPORT_WIDTH,
-  type CameraTransform,
-} from "./mapGeometry";
+import { EquipmentLayer } from "./EquipmentLayer";
+import { CellOutletLayer } from "./CellOutletLayer";
 import { MapLabelLayer } from "./MapLabelLayer";
 import { RoomNode } from "./RoomNode";
-import { enemyRoomId } from "../../game/queries";
-import { RoomBackgroundLayer } from "./RoomSectionLayer";
-import { TowerLayer } from "./TowerLayer";
-import type { TowerPlacementPreview } from "../../presentation/towerPlanning";
-
-extend({ AnimatedSprite, Container, Graphics, Sprite, Text });
-
+import { DamageNumberLayer } from "./DamageNumberLayer";
 export interface MapSceneProps {
   camera: CameraTransform;
   game: GameState;
@@ -56,116 +41,53 @@ export interface MapSceneProps {
   onSelectTower: (towerId: TowerInstanceId) => void;
 }
 
-const enemyHasFieldProtection = (game: GameState, enemy: GameState["enemies"][number]): boolean => {
-  const roomId = enemyRoomId(enemy, game);
-  if (!roomId) return false;
-  return game.enemies.some(
-    (candidate) =>
-      candidate.id !== enemy.id &&
-      candidate.behavior.kind === "shared_field" &&
-      candidate.behavior.active &&
-      candidate.behavior.charge > 0 &&
-      enemyRoomId(candidate, game) === roomId
-  );
-};
-
-const EnemyLayer = ({
-  game,
-  onHoverEnemy,
-}: {
-  game: GameState;
-  onHoverEnemy: (enemyId: number | null) => void;
-}) =>
-  game.enemies.map((enemy) => (
-    <EnemyNode
-      key={enemy.id}
-      enemy={enemy}
-      map={game.map}
-      fieldProtected={enemyHasFieldProtection(game, enemy)}
-      onHover={onHoverEnemy}
-    />
-  ));
-
-export const MapScene = ({
-  camera,
-  game,
-  hoveredRunId,
-  onHoverCellOutlet,
-  onHoverEquipment,
-  onHoverEnemy,
-  onHoverRoom,
-  onHoverRun,
-  onPipeDragEnd,
-  onPipeDragStart,
-  onSelectRoom,
-  pipeDragSourceRoomId,
-  pipeMode,
-  pipePreview,
-  selectedRoomId,
-  selectedSpecies,
-  roomEffectPreview,
-  placementPreview,
-  selectedTowerId,
-  onSelectTower,
-}: MapSceneProps) => (
-  <Application
-    width={VIEWPORT_WIDTH}
-    height={VIEWPORT_HEIGHT}
-    backgroundAlpha={0}
-    antialias
-    autoDensity
-    resolution={mapRenderResolution(globalThis.devicePixelRatio)}
-    preference="webgl"
-  >
-    <pixiContainer x={camera.x} y={camera.y} scale={camera.zoom}>
-      <pixiContainer alpha={pipeMode ? 0.32 : 1}>
-        <MapBackdrop game={game} />
-        <RoomBackgroundLayer map={game.map} />
-      </pixiContainer>
-      <PipeHitLayer game={game} onHover={onHoverRun} />
-      <pixiContainer alpha={pipeMode ? 0.55 : 1}>
-        {game.world.rooms.map((roomId) => (
-          <RoomNode
-            key={roomId}
-            game={game}
-            roomId={roomId}
-            selected={pipeMode ? pipeDragSourceRoomId === roomId : selectedRoomId === roomId}
-            onHover={onHoverRoom}
-            onSelect={onSelectRoom}
-            onPipeDragStart={onPipeDragStart}
-            onPipeDragEnd={onPipeDragEnd}
-            pipeMode={pipeMode}
-            roomEffectTone={roomEffectPreview?.rooms[roomId] ?? null}
-          />
-        ))}
-      </pixiContainer>
-      <pixiContainer alpha={pipeMode ? 0.3 : 1}>
-        <FacilityCorridors game={game} />
-        <FacilityDoors game={game} />
-      </pixiContainer>
-      {pipePreview && <GhostRouteLayer game={game} preview={pipePreview} />}
-      <TransportNetwork
-        game={game}
-        hoveredRunId={hoveredRunId}
-        pipeDragSourceRoomId={pipeDragSourceRoomId}
-        pipeMode={pipeMode}
-        selectedSpecies={selectedSpecies}
-      />
-      <pixiContainer alpha={pipeMode ? 0.25 : 1} eventMode={pipeMode ? "none" : "passive"}>
-        <ProcessNodes game={game} />
-        <CellOutletLayer game={game} onHover={onHoverCellOutlet} onSelectRoom={onSelectRoom} />
-        <EquipmentLayer game={game} onHover={onHoverEquipment} onSelectRoom={onSelectRoom} />
-        <MapLabelLayer game={game} selectedRoomId={selectedRoomId} />
-        <IncidentLayer game={game} />
-        <TowerLayer
-          game={game}
-          placementPreview={placementPreview}
-          selectedTowerId={selectedTowerId}
-          onSelectTower={onSelectTower}
+/** Campaign-only process overlays compose into the common tactical scene. */
+export const MapScene = (props: MapSceneProps) => (
+  <CampaignEncounterSurface>
+    <EncounterScene
+      camera={props.camera}
+      placementPreview={props.placementPreview}
+      onHoverEnemy={props.onHoverEnemy}
+    >
+      <PipeHitLayer game={props.game} onHover={props.onHoverRun} />
+      {props.game.encounter.world.rooms.map((roomId) => (
+        <RoomNode
+          key={roomId}
+          game={props.game}
+          roomId={roomId}
+          selected={
+            props.pipeMode ? props.pipeDragSourceRoomId === roomId : props.selectedRoomId === roomId
+          }
+          onHover={props.onHoverRoom}
+          onSelect={props.onSelectRoom}
+          onPipeDragStart={props.onPipeDragStart}
+          onPipeDragEnd={props.onPipeDragEnd}
+          pipeMode={props.pipeMode}
+          roomEffectTone={props.roomEffectPreview?.rooms[roomId] ?? null}
         />
-        <EnemyLayer game={game} onHoverEnemy={onHoverEnemy} />
-        <DamageNumberLayer game={game} />
-      </pixiContainer>
-    </pixiContainer>
-  </Application>
+      ))}
+      {props.pipePreview && <GhostRouteLayer game={props.game} preview={props.pipePreview} />}
+      <TransportNetwork
+        game={props.game}
+        hoveredRunId={props.hoveredRunId}
+        pipeDragSourceRoomId={props.pipeDragSourceRoomId}
+        pipeMode={props.pipeMode}
+        selectedSpecies={props.selectedSpecies}
+      />
+      <ProcessNodes game={props.game} />
+      <CellOutletLayer
+        game={props.game}
+        onHover={props.onHoverCellOutlet}
+        onSelectRoom={props.onSelectRoom}
+      />
+      <EquipmentLayer
+        game={props.game}
+        onHover={props.onHoverEquipment}
+        onSelectRoom={props.onSelectRoom}
+      />
+      <MapLabelLayer game={props.game} selectedRoomId={props.selectedRoomId} />
+      <IncidentLayer game={props.game} />
+      <DamageNumberLayer game={props.game} />
+    </EncounterScene>
+  </CampaignEncounterSurface>
 );

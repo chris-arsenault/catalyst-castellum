@@ -61,12 +61,12 @@ export const MapLabelLayer = ({
   selectedRoomId: RoomId;
 }) => {
   const labels = useMemo(
-    () => layoutMapLabels(game.map, selectedRoomId, game),
+    () => layoutMapLabels(game.encounter.map, selectedRoomId, game),
     [game, selectedRoomId]
   );
   const draw = useCallback(
-    (graphics: Graphics) => drawLabels(graphics, game.map, labels),
-    [game.map, labels]
+    (graphics: Graphics) => drawLabels(graphics, game.encounter.map, labels),
+    [game.encounter.map, labels]
   );
   return (
     <pixiContainer eventMode="none">
@@ -83,7 +83,7 @@ export const MapLabelLayer = ({
             fontFamily: "IBM Plex Sans, ui-sans-serif, sans-serif",
             fontSize: label.fontSize,
             fontWeight: label.selected ? "600" : "500",
-            fill: labelTextColor(game.map, label.roomId, label.selected),
+            fill: labelTextColor(game.encounter.map, label.roomId, label.selected),
             letterSpacing: 0.1,
           }}
         />

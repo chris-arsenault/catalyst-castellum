@@ -1,13 +1,7 @@
-import type { GameDefinition } from "../definitionTypes";
-import type {
-  GameState,
-  GasType,
-  LiquidType,
-  SpeciesId,
-  TowerDefinition,
-  TowerInstance,
-  TowerSupplyStatus,
-} from "../types";
+import type { ProcessEncounterState, ProcessPhysicsDefinition } from "../encounter/processTypes";
+import type { CombatDefinition, EncounterTower } from "../encounter/types";
+type TowerSupplyDefinition = ProcessPhysicsDefinition & Pick<CombatDefinition, "towers">;
+import type { GasType, LiquidType, SpeciesId, TowerDefinition, TowerSupplyStatus } from "../types";
 import {
   gasConduitState,
   gasLineDefinition,
@@ -23,43 +17,44 @@ const SUPPLIED_DAMAGE_MULTIPLIER = 1.35;
 const REDUCED_CADENCE_MULTIPLIER = 0.55;
 
 const localAmount = (
-  tower: TowerInstance,
+  state: ProcessEncounterState,
+  tower: EncounterTower,
   speciesId: SpeciesId,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): number => {
   const phase = definition.species[speciesId].phase;
-  if (phase === "gas") return tower.localResources.gas[speciesId as GasType] ?? 0;
-  if (phase === "liquid") return tower.localResources.liquid[speciesId as LiquidType] ?? 0;
+  const resources = state.process.towerResources[tower.id];
+  if (phase === "gas") return resources?.gas[speciesId as GasType] ?? 0;
+  if (phase === "liquid") return resources?.liquid[speciesId as LiquidType] ?? 0;
   return 0;
 };
 
 const changeLocalAmount = (
-  tower: TowerInstance,
+  state: ProcessEncounterState,
+  tower: EncounterTower,
   speciesId: SpeciesId,
   delta: number,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): void => {
   const phase = definition.species[speciesId].phase;
+  const resources = (state.process.towerResources[tower.id] ??= { gas: {}, liquid: {} });
   if (phase === "gas") {
     const typed = speciesId as GasType;
-    tower.localResources.gas[typed] = Math.max(0, (tower.localResources.gas[typed] ?? 0) + delta);
+    resources.gas[typed] = Math.max(0, (resources.gas[typed] ?? 0) + delta);
   } else if (phase === "liquid") {
     const typed = speciesId as LiquidType;
-    tower.localResources.liquid[typed] = Math.max(
-      0,
-      (tower.localResources.liquid[typed] ?? 0) + delta
-    );
+    resources.liquid[typed] = Math.max(0, (resources.liquid[typed] ?? 0) + delta);
   }
 };
 
-const incomingGasLines = (state: GameState, roomId: string) =>
+const incomingGasLines = (state: ProcessEncounterState, roomId: string) =>
   processLineIds(state, "gas_line").flatMap((connectionId) => {
     const line = gasLineDefinition(state, connectionId);
     const conduit = gasConduitState(state, connectionId);
     return line?.direction[1] === roomId && conduit.enabled ? [{ connectionId, conduit }] : [];
   });
 
-const incomingLiquidLines = (state: GameState, roomId: string) =>
+const incomingLiquidLines = (state: ProcessEncounterState, roomId: string) =>
   processLineIds(state, "liquid_line").flatMap((connectionId) => {
     const line = liquidLineDefinition(state, connectionId);
     const conduit = liquidConduitState(state, connectionId);
@@ -67,7 +62,7 @@ const incomingLiquidLines = (state: GameState, roomId: string) =>
   });
 
 const deliveredRates = (
-  state: GameState,
+  state: ProcessEncounterState,
   roomId: string,
   towerDefinition: TowerDefinition
 ): { connectionIds: string[]; rates: Map<SpeciesId, number> } => {
@@ -87,9 +82,9 @@ const deliveredRates = (
 };
 
 const shotDemand = (
-  tower: TowerInstance,
+  tower: EncounterTower,
   towerDefinition: TowerDefinition,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): number => {
   const cadence = effectiveTowerStats(tower, definition).cadence;
   return towerDefinition.supply ? towerDefinition.supply.rate / Math.max(0.001, cadence) : 0;
@@ -113,18 +108,19 @@ const supplyModifier = (mode: TowerSupplyStatus["mode"]): number => {
 };
 
 export const towerSupplyQuery = (
-  state: GameState,
-  tower: TowerInstance,
-  definition: GameDefinition
+  state: ProcessEncounterState,
+  tower: EncounterTower,
+  definition: TowerSupplyDefinition
 ): TowerSupplyStatus | null => {
   const towerDefinition = definition.towers[tower.chassisId];
+  if (!towerDefinition) throw new Error(`Unknown tower chassis: ${tower.chassisId}`);
   const requirement = towerDefinition.supply;
   const destinationRoomId = towerRoomId(state, tower);
   if (!requirement || !destinationRoomId) return null;
   const delivered = deliveredRates(state, destinationRoomId, towerDefinition);
   const availableRate = [...delivered.rates.values()].reduce((total, rate) => total + rate, 0);
   const storedAmount = requirement.acceptedSpecies.reduce(
-    (total, speciesId) => total + localAmount(tower, speciesId, definition),
+    (total, speciesId) => total + localAmount(state, tower, speciesId, definition),
     0
   );
   const demand = shotDemand(tower, towerDefinition, definition);
@@ -154,10 +150,10 @@ export const towerSupplyQuery = (
 };
 
 const roomSpeciesAmount = (
-  state: GameState,
+  state: ProcessEncounterState,
   roomId: string,
   speciesId: SpeciesId,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): number => {
   const room = roomState(state, roomId);
   const phase = definition.species[speciesId].phase;
@@ -169,11 +165,11 @@ const roomSpeciesAmount = (
 };
 
 const takeRoomSpecies = (
-  state: GameState,
+  state: ProcessEncounterState,
   roomId: string,
   speciesId: SpeciesId,
   requested: number,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): number => {
   const room = roomState(state, roomId);
   const available = roomSpeciesAmount(state, roomId, speciesId, definition);
@@ -193,18 +189,19 @@ const takeRoomSpecies = (
 };
 
 export const serviceTowerSupplies = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): void => {
   const towers = Object.values(state.towers).sort((left, right) => left.id.localeCompare(right.id));
   const remainingDelivered = new Map<string, number>();
   for (const tower of towers) {
     const towerDefinition = definition.towers[tower.chassisId];
+    if (!towerDefinition) throw new Error(`Unknown tower chassis: ${tower.chassisId}`);
     const requirement = towerDefinition.supply;
     const before = towerSupplyQuery(state, tower, definition);
     if (!requirement || !before) {
-      delete state.towerSupply[tower.id];
+      delete state.process.towerSupply[tower.id];
       continue;
     }
     let remaining = Math.min(
@@ -224,12 +221,12 @@ export const serviceTowerSupplies = (
         Math.min(remaining, available),
         definition
       );
-      changeLocalAmount(tower, speciesId, moved, definition);
+      changeLocalAmount(state, tower, speciesId, moved, definition);
       remaining -= moved;
       remainingDelivered.set(allocationKey, Math.max(0, available - moved));
     }
     const after = towerSupplyQuery(state, tower, definition);
-    if (after) state.towerSupply[tower.id] = after;
+    if (after) state.process.towerSupply[tower.id] = after;
   }
 };
 
@@ -241,17 +238,18 @@ export interface TowerSupplyUse {
 }
 
 export const consumeTowerSupplyForShot = (
-  state: GameState,
-  tower: TowerInstance,
-  definition: GameDefinition
+  state: ProcessEncounterState,
+  tower: EncounterTower,
+  definition: TowerSupplyDefinition
 ): TowerSupplyUse => {
   const towerDefinition = definition.towers[tower.chassisId];
+  if (!towerDefinition) throw new Error(`Unknown tower chassis: ${tower.chassisId}`);
   const requirement = towerDefinition.supply;
   const status = towerSupplyQuery(state, tower, definition);
   if (!requirement || !status)
     return { mode: "direct", damageMultiplier: 1, cadenceMultiplier: 1, consumed: {} };
   if (status.mode !== "assisted") {
-    state.towerSupply[tower.id] = status;
+    state.process.towerSupply[tower.id] = status;
     return {
       mode: status.mode,
       damageMultiplier: 1,
@@ -262,14 +260,14 @@ export const consumeTowerSupplyForShot = (
   let remaining = shotDemand(tower, towerDefinition, definition);
   const consumed: Partial<Record<SpeciesId, number>> = {};
   for (const speciesId of requirement.acceptedSpecies) {
-    const moved = Math.min(remaining, localAmount(tower, speciesId, definition));
+    const moved = Math.min(remaining, localAmount(state, tower, speciesId, definition));
     if (moved <= 0) continue;
-    changeLocalAmount(tower, speciesId, -moved, definition);
+    changeLocalAmount(state, tower, speciesId, -moved, definition);
     consumed[speciesId] = moved;
     remaining -= moved;
   }
   const after = towerSupplyQuery(state, tower, definition);
-  if (after) state.towerSupply[tower.id] = after;
+  if (after) state.process.towerSupply[tower.id] = after;
   return {
     mode: "assisted",
     damageMultiplier: SUPPLIED_DAMAGE_MULTIPLIER,
@@ -279,10 +277,10 @@ export const consumeTowerSupplyForShot = (
 };
 
 export const releaseTowerByproducts = (
-  state: GameState,
-  tower: TowerInstance,
+  state: ProcessEncounterState,
+  tower: EncounterTower,
   consumed: Partial<Record<SpeciesId, number>>,
-  definition: GameDefinition
+  definition: TowerSupplyDefinition
 ): number => {
   const roomId = towerRoomId(state, tower);
   if (!roomId) return 0;

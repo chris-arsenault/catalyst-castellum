@@ -11,9 +11,9 @@ const FIXTURE_URL = new URL("./__fixtures__/intended-run-snapshot.json", import.
 type Snapshot = Record<string, { terminalPhase: string; reports: RoundReport[] }>;
 
 /**
- * Behavior lock for the world-identity refactor (plan M1): every level's primary reference
- * build must reproduce this exact per-round report series. Regenerate the fixture only
- * for deliberate balance or content changes (`pnpm determinism:snapshot`).
+ * Content-version 21 behavior lock after firing/targeting repairs and exact tick advancement.
+ * Every level's primary reference build reproduces this per-round report series.
+ * Regenerate only for deliberate mechanics or content changes (`pnpm determinism:snapshot`).
  */
 describe("primary-reference determinism snapshot", () => {
   it("reproduces the committed per-round reports for every level", () => {

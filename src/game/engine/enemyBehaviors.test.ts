@@ -1,3 +1,4 @@
+import { campaignEncounterContext } from "./campaignEncounter";
 import { describe, expect, it } from "vitest";
 import { roomAtWorldPoint } from "../content/facilityGeometry";
 import { DEFAULT_GAME_DEFINITION } from "../definition";
@@ -24,7 +25,7 @@ const positionedEnemy = (type: EnemyType, id: number, health?: number): EnemySta
   const definition = DEFAULT_GAME_DEFINITION.enemies[type];
   const path = findEnemyPath({
     flying: definition.flying,
-    portalStates: createScenarioGame("claim_8_delta").portalStates,
+    portalStates: createScenarioGame("claim_8_delta").encounter.portalStates,
   });
   const pathIndex = path.findIndex(
     (step) =>
@@ -56,7 +57,7 @@ const positionedEnemy = (type: EnemyType, id: number, health?: number): EnemySta
 const stateFor = (enemies: EnemyState[]): GameState => {
   const state = createScenarioGame("claim_8_delta");
   state.phase = "assault";
-  state.enemies = enemies;
+  state.encounter.enemies = enemies;
   return state;
 };
 
@@ -74,17 +75,39 @@ describe("enemy behavior mechanics", () => {
     const state = stateFor([anchor, first, second]);
 
     const packet = towerPacket(100);
-    applyDamagePackets(state, anchor, [packet], DEFAULT_GAME_DEFINITION);
-    const firstScale = towerFieldDamageScale(state, first, [packet], DEFAULT_GAME_DEFINITION);
-    applyDamagePacketsWithScale(state, first, [packet], firstScale, DEFAULT_GAME_DEFINITION);
-    const secondScale = towerFieldDamageScale(state, second, [packet], DEFAULT_GAME_DEFINITION);
-    applyDamagePacketsWithScale(state, second, [packet], secondScale, DEFAULT_GAME_DEFINITION);
+    applyDamagePackets(state.encounter, anchor, [packet], DEFAULT_GAME_DEFINITION);
+    const firstScale = towerFieldDamageScale(
+      state.encounter,
+      first,
+      [packet],
+      DEFAULT_GAME_DEFINITION
+    );
+    applyDamagePacketsWithScale(
+      state.encounter,
+      first,
+      [packet],
+      firstScale,
+      DEFAULT_GAME_DEFINITION
+    );
+    const secondScale = towerFieldDamageScale(
+      state.encounter,
+      second,
+      [packet],
+      DEFAULT_GAME_DEFINITION
+    );
+    applyDamagePacketsWithScale(
+      state.encounter,
+      second,
+      [packet],
+      secondScale,
+      DEFAULT_GAME_DEFINITION
+    );
 
     expect(anchor.damageTaken).toBeCloseTo(100, 8);
     expect(first.damageTaken).toBe(0);
     expect(second.damageTaken).toBeGreaterThan(0);
-    expect(state.stats.fieldDamageAbsorbed).toBeCloseTo(170, 8);
-    expect(state.stats.fieldDamageAbsorbedBySource.tower_acid).toBeCloseTo(170, 8);
+    expect(state.encounter.stats.fieldDamageAbsorbed).toBeCloseTo(170, 8);
+    expect(state.encounter.stats.fieldDamageAbsorbedBySource.tower_acid).toBeCloseTo(170, 8);
     expect(anchor.behavior).toMatchObject({ kind: "shared_field", charge: 0, active: false });
   });
 
@@ -93,34 +116,40 @@ describe("enemy behavior mechanics", () => {
     const state = stateFor([splitback]);
 
     const application = applyDamagePackets(
-      state,
+      state.encounter,
       splitback,
       [towerPacket(100)],
       DEFAULT_GAME_DEFINITION
     );
-    transitionArmoredMolt(state, splitback, "furnace", application.killed);
+    transitionArmoredMolt(state.encounter, splitback, "furnace", application.killed);
 
     expect(splitback.health).toBeCloseTo(60, 8);
     expect(splitback.behavior).toMatchObject({ kind: "armored_molt", phase: "exposed" });
-    expect(state.stats.armorTransitions).toBe(1);
-    expect(state.events.filter((event) => event.code === "enemy_molted")).toHaveLength(1);
+    expect(state.encounter.stats.armorTransitions).toBe(1);
+    expect(state.encounter.events.filter((event) => event.code === "enemy_molted")).toHaveLength(1);
     splitback.mode = "walking";
     expect(
       enemyBehaviorSpeedMultiplier(splitback, DEFAULT_GAME_DEFINITION.enemies.splitback)
     ).toBeCloseTo(2.2, 8);
   });
+});
 
+describe("enemy finite resources and locomotion", () => {
   it("emits finite hydrogen into the occupied gas layer and debits its reservoir", () => {
     const glowbag = positionedEnemy("glowbag", 70);
     const state = stateFor([glowbag]);
-    const zone = enemyGasZone(glowbag, state.map);
-    const before = roomState(state, "furnace").gas[zone].hydrogen;
+    const zone = enemyGasZone(glowbag, state.encounter.map);
+    const before = roomState(state.encounter, "furnace").gas[zone].hydrogen;
 
-    simulateEnemyBehaviors(state, 1, DEFAULT_GAME_DEFINITION);
+    simulateEnemyBehaviors(
+      state.encounter,
+      1,
+      campaignEncounterContext(state, DEFAULT_GAME_DEFINITION)
+    );
 
-    expect(roomState(state, "furnace").gas[zone].hydrogen - before).toBeCloseTo(0.6, 8);
+    expect(roomState(state.encounter, "furnace").gas[zone].hydrogen - before).toBeCloseTo(0.6, 8);
     expect(glowbag.behavior).toMatchObject({ kind: "gas_emitter", reservoir: 5.4 });
-    expect(state.stats.reagentEmitted).toBeCloseTo(0.6, 8);
+    expect(state.encounter.stats.reagentEmitted).toBeCloseTo(0.6, 8);
   });
 
   it("recharges a collapsed field to its authored activation threshold", () => {
@@ -130,11 +159,19 @@ describe("enemy behavior mechanics", () => {
     anchor.behavior.active = false;
     const state = stateFor([anchor]);
 
-    simulateEnemyBehaviors(state, 1, DEFAULT_GAME_DEFINITION);
+    simulateEnemyBehaviors(
+      state.encounter,
+      1,
+      campaignEncounterContext(state, DEFAULT_GAME_DEFINITION)
+    );
     expect(anchor.behavior.charge).toBeCloseTo(15.3, 8);
     expect(anchor.behavior.active).toBe(false);
 
-    simulateEnemyBehaviors(state, 2, DEFAULT_GAME_DEFINITION);
+    simulateEnemyBehaviors(
+      state.encounter,
+      2,
+      campaignEncounterContext(state, DEFAULT_GAME_DEFINITION)
+    );
     expect(anchor.behavior.charge).toBeCloseTo(45.9, 8);
     expect(anchor.behavior.active).toBe(true);
   });

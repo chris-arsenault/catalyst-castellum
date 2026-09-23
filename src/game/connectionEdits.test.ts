@@ -1,3 +1,4 @@
+import { campaignEncounterContext } from "./engine/campaignEncounter";
 import { describe, expect, it } from "vitest";
 import { DEFAULT_GAME_DEFINITION } from "./config";
 import { createScenarioGame, executeCommand } from "./simulation";
@@ -14,14 +15,18 @@ const buildableState = (): GameState => {
   const exam = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.at(-1);
   if (!exam) throw new Error("cordon_41 has no rounds");
   state.phase = "build";
-  state.matter = 200;
+  state.encounter.matter = 200;
   state.campaign.roundIndex = DEFAULT_GAME_DEFINITION.levels.cordon_41.rounds.length - 1;
-  state.availability = {
+  state.encounter.availability = {
     towers: [...exam.availability.towers],
     equipment: [...exam.availability.equipment],
     gasLines: [...exam.availability.gasLines],
     liquidLines: [...exam.availability.liquidLines],
   };
+  state.encounter.definition.id = campaignEncounterContext(
+    state,
+    DEFAULT_GAME_DEFINITION
+  ).definition.id;
   return state;
 };
 
@@ -36,10 +41,10 @@ const build = (state: GameState) =>
 describe("player-built connections are map edits", () => {
   it("keeps construction blueprints out of live topology", () => {
     const state = createScenarioGame("cordon_41");
-    const liveLines = Object.values(state.map.connections).filter(isProcessLine);
+    const liveLines = Object.values(state.encounter.map.connections).filter(isProcessLine);
     expect(liveLines.map(({ id }) => id)).toEqual([]);
-    expect(state.gasConduits).not.toHaveProperty("gas:core__furnace");
-    expect(state.gasConduits).not.toHaveProperty("gas:core__washlock");
+    expect(state.encounter.process.gasConduits).not.toHaveProperty("gas:core__furnace");
+    expect(state.encounter.process.gasConduits).not.toHaveProperty("gas:core__washlock");
   });
 
   it("authors a new Core-to-R-06 feed in the direction the player draws it", () => {
@@ -51,10 +56,44 @@ describe("player-built connections are map edits", () => {
       toRoomId: "washlock",
     });
     expect(result.accepted, result.code ?? undefined).toBe(true);
-    expect(result.state.map.connections["gas:core__washlock"]).toMatchObject({
+    expect(result.state.encounter.map.connections["gas:core__washlock"]).toMatchObject({
       direction: ["core", "washlock"],
       destinationKind: "room",
     });
+  });
+});
+
+describe("definition-bound line planning", () => {
+  it("binds cached construction costs to the injected line definition", () => {
+    const state = buildableState();
+    const original = { lineBlueprints: {}, lineSpecs: DEFAULT_GAME_DEFINITION.lineSpecs };
+    const changed = {
+      ...original,
+      lineSpecs: {
+        ...original.lineSpecs,
+        gas_line: {
+          ...original.lineSpecs.gas_line,
+          baseCost: original.lineSpecs.gas_line.baseCost + 100,
+        },
+      },
+    };
+    const first = plannedLineConnection(
+      original,
+      state.encounter.map,
+      "gas_line",
+      "gallery",
+      "switchyard"
+    );
+    const second = plannedLineConnection(
+      changed,
+      state.encounter.map,
+      "gas_line",
+      "gallery",
+      "switchyard"
+    );
+    expect(first).not.toBeNull();
+    expect(second?.route).toEqual(first?.route);
+    expect(second?.buildCost).toBe((first?.buildCost ?? 0) + 100);
   });
 });
 
@@ -63,7 +102,7 @@ describe("process connection lifecycle", () => {
     const state = buildableState();
     const planned = plannedLineConnection(
       DEFAULT_GAME_DEFINITION,
-      state.map,
+      state.encounter.map,
       "gas_line",
       "gallery",
       "switchyard"
@@ -72,20 +111,22 @@ describe("process connection lifecycle", () => {
     const result = build(state);
     expect(result.accepted).toBe(true);
     const next = result.state;
-    expect(next.map).not.toBe(state.map);
-    expect(next.mapRevision).toBe(state.mapRevision + 1);
-    expect(next.map.connections[PAIR_ID]).toBeDefined();
-    expect(next.world.connections).toContain(PAIR_ID);
-    expect(next.gasConduits[PAIR_ID]).toBeDefined();
-    expect(gasConduitState(next, PAIR_ID).enabled).toBe(false);
-    expect(gasConduitState(next, PAIR_ID).route).toEqual(planned?.route);
-    expect(next.matter).toBe(state.matter - (planned?.buildCost ?? 0));
+    expect(next.encounter.map).not.toBe(state.encounter.map);
+    expect(next.encounter.mapRevision).toBe(state.encounter.mapRevision + 1);
+    expect(next.encounter.map.connections[PAIR_ID]).toBeDefined();
+    expect(next.encounter.world.connections).toContain(PAIR_ID);
+    expect(next.encounter.process.gasConduits[PAIR_ID]).toBeDefined();
+    expect(gasConduitState(next.encounter, PAIR_ID).enabled).toBe(false);
+    expect(gasConduitState(next.encounter, PAIR_ID).route).toEqual(planned?.route);
+    expect(next.encounter.matter).toBe(state.encounter.matter - (planned?.buildCost ?? 0));
   });
 
   it("is deterministic: the same build on the same state yields identical maps", () => {
     const first = build(buildableState()).state;
     const second = build(buildableState()).state;
-    expect(second.map.connections[PAIR_ID]).toEqual(first.map.connections[PAIR_ID]);
+    expect(second.encounter.map.connections[PAIR_ID]).toEqual(
+      first.encounter.map.connections[PAIR_ID]
+    );
   });
 
   it("rejects an unavailable pair and a duplicate build", () => {
@@ -106,18 +147,18 @@ describe("process connection lifecycle", () => {
 
   it("removes a dismantled line and deterministically routes a fresh rebuild", () => {
     const built = build(buildableState()).state;
-    const builtRoute = gasConduitState(built, PAIR_ID).route;
+    const builtRoute = gasConduitState(built.encounter, PAIR_ID).route;
     const dismantled = executeCommand(built, {
       type: "dismantle_connection",
       connectionId: PAIR_ID,
     });
     expect(dismantled.accepted).toBe(true);
-    expect(dismantled.state.map.connections[PAIR_ID]).toBeUndefined();
-    expect(dismantled.state.gasConduits[PAIR_ID]).toBeUndefined();
+    expect(dismantled.state.encounter.map.connections[PAIR_ID]).toBeUndefined();
+    expect(dismantled.state.encounter.process.gasConduits[PAIR_ID]).toBeUndefined();
     const rebuilt = build(dismantled.state);
     expect(rebuilt.accepted).toBe(true);
-    expect(gasConduitState(rebuilt.state, PAIR_ID).route).toEqual(builtRoute);
-    expect(rebuilt.state.mapRevision).toBe(dismantled.state.mapRevision + 1);
+    expect(gasConduitState(rebuilt.state.encounter, PAIR_ID).route).toEqual(builtRoute);
+    expect(rebuilt.state.encounter.mapRevision).toBe(dismantled.state.encounter.mapRevision + 1);
   });
 
   it("round-trips a player-built line through the current save", () => {
@@ -125,8 +166,10 @@ describe("process connection lifecycle", () => {
     const decoded = decodeGame(encodeGame(built, DEFAULT_GAME_DEFINITION), DEFAULT_GAME_DEFINITION);
     expect(decoded).not.toBeNull();
     if (!decoded) return;
-    expect(decoded.map.connections[PAIR_ID]).toEqual(built.map.connections[PAIR_ID]);
-    expect(decoded.mapRevision).toBe(built.mapRevision);
-    expect(decoded.gasConduits[PAIR_ID]).toBeDefined();
+    expect(decoded.encounter.map.connections[PAIR_ID]).toEqual(
+      built.encounter.map.connections[PAIR_ID]
+    );
+    expect(decoded.encounter.mapRevision).toBe(built.encounter.mapRevision);
+    expect(decoded.encounter.process.gasConduits[PAIR_ID]).toBeDefined();
   });
 });

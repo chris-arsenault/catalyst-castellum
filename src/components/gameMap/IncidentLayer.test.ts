@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { WORLD_MAP } from "../../game/content/worldMap";
-import type { CombatIncident, HazardChannels, RoomId } from "../../game/types";
+import type { HazardChannels, RoomId } from "../../game/types";
+import type { EncounterIncident } from "../../game/encounter/types";
 import { INCIDENT_VISIBLE_SECONDS, incidentMapAggregates } from "./incidentModel";
 
 const channels = (pressure: number): HazardChannels => ({
@@ -17,11 +18,10 @@ const incident = (
   pressure: number,
   killed: boolean,
   roomId: RoomId = "furnace"
-): CombatIncident => ({
+): EncounterIncident => ({
   id,
   elapsed,
-  levelId: "claim_8_delta",
-  round: 1,
+  encounterId: "claim_8_delta:1",
   phase: "assault",
   roomId,
   zone: "lower",
@@ -49,7 +49,12 @@ describe("incident map aggregation", () => {
       {
         elapsed: 14,
         phase: "assault",
-        campaign: { levelId: "claim_8_delta", roundIndex: 0 },
+        definition: {
+          id: "claim_8_delta:1",
+          contentVersion: 1,
+          combatId: "test",
+          combatVersion: 1,
+        },
         incidents: [
           incident(1, 12, 17, true),
           incident(2, 10, 9, false),
@@ -74,8 +79,13 @@ describe("incident map aggregation", () => {
     const aggregates = incidentMapAggregates(
       {
         elapsed: 14,
-        phase: "round_result",
-        campaign: { levelId: "claim_8_delta", roundIndex: 0 },
+        phase: "complete",
+        definition: {
+          id: "claim_8_delta:1",
+          contentVersion: 1,
+          combatId: "test",
+          combatVersion: 1,
+        },
         incidents: [incident(1, 13.5, 17, true)],
       },
       WORLD_MAP
@@ -89,7 +99,12 @@ describe("incident map aggregation", () => {
       {
         elapsed: 14,
         phase: "assault",
-        campaign: { levelId: "claim_8_delta", roundIndex: 1 },
+        definition: {
+          id: "claim_8_delta:2",
+          contentVersion: 1,
+          combatId: "test",
+          combatVersion: 1,
+        },
         incidents: [incident(1, 13.5, 17, true)],
       },
       WORLD_MAP

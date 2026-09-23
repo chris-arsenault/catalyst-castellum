@@ -29,7 +29,7 @@ const ReactionCondition = ({
 
 export const HydrogenChlorineGate = ({ roomId }: { roomId: RoomId }) => {
   const { formatters, translator } = useGamePresentation();
-  const room = useGameStore((state) => roomState(state.game, roomId));
+  const room = useGameStore((state) => roomState(state.game.encounter, roomId));
   const statuses = (["upper", "lower"] as const).map((zone) =>
     hydrogenChlorineReactionStatus(room, zone)
   );

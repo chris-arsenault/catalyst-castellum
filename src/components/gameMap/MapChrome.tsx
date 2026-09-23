@@ -224,7 +224,7 @@ export const MapChrome = ({
         </p>
       )}
       <CameraControls
-        fitZoom={mapViewFor(game.map).fitZoom}
+        fitZoom={mapViewFor(game.encounter.map).fitZoom}
         zoom={zoom}
         onReset={onResetCamera}
         onZoom={onZoom}

@@ -23,7 +23,7 @@ const integrityValue = (
   formatters: LocaleFormatters
 ): string =>
   translator.text("ui.phaseHud.result.value", {
-    integrity: formatters.percent(game.coreIntegrity / 100, 0),
+    integrity: formatters.percent(game.encounter.coreIntegrity / 100, 0),
   });
 
 const phaseHudModel = (
@@ -50,16 +50,16 @@ const phaseHudModel = (
     };
   }
   if (game.phase === "assault") {
-    const inbound = Math.max(0, round.wave.length - game.spawnCursor);
+    const inbound = Math.max(0, round.wave.length - game.encounter.spawnCursor);
     return {
       label: translator.text("ui.phaseHud.assault.label"),
       value: translator.text("ui.phaseHud.assault.value", {
-        inside: game.enemies.length,
+        inside: game.encounter.enemies.length,
         inbound,
       }),
       detail: translator.text("ui.phaseHud.assault.detail", {
-        killed: game.stats.killed,
-        breached: game.stats.breached,
+        killed: game.encounter.stats.killed,
+        breached: game.encounter.stats.breached,
       }),
       tone: "assault",
     };

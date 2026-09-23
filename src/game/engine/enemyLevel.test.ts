@@ -38,11 +38,11 @@ describe("enemy level curve", () => {
   it("resolves each spawn from the site level and wave offset", () => {
     const game = createScenarioGame("harkers_brace");
     game.phase = "assault";
-    game.phaseTime = 10.5;
+    game.encounter.phaseTime = 10.5;
 
     spawnEnemies(game);
 
-    const spawned = game.enemies[0];
+    const spawned = game.encounter.enemies[0];
     expect(spawned?.level).toBe(14);
     expect(spawned?.maxHealth).toBeCloseTo(
       enemyStatsAtLevel(DEFAULT_GAME_DEFINITION.enemies.deckmouth, 14).health,

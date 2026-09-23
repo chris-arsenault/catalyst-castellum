@@ -21,18 +21,18 @@ describe("Act II mechanical sites", () => {
 
   it("produces four distinct open sites with empty authored construction layers", () => {
     const games = ACT_TWO_LEVEL_IDS.map((levelId) => createScenarioGame(levelId));
-    expect(new Set(games.map(({ map }) => JSON.stringify(map.rooms))).size).toBe(4);
+    expect(new Set(games.map(({ encounter }) => JSON.stringify(encounter.map.rooms))).size).toBe(4);
     for (const game of games) {
-      const siteCodes = Object.values(game.map.rooms)
+      const siteCodes = Object.values(game.encounter.map.rooms)
         .filter(({ provenance }) => provenance === "site")
         .map(({ code }) => code);
-      const equipment = Object.values(game.rooms).flatMap((room) =>
+      const equipment = Object.values(game.encounter.process.rooms).flatMap((room) =>
         Object.values(room.equipment).filter((instance) => instance !== null)
       );
       expect(new Set(siteCodes).size).toBe(siteCodes.length);
       expect(equipment).toEqual([]);
-      expect(processLineIds(game, "gas_line")).toEqual([]);
-      expect(processLineIds(game, "liquid_line")).toEqual([]);
+      expect(processLineIds(game.encounter, "gas_line")).toEqual([]);
+      expect(processLineIds(game.encounter, "liquid_line")).toEqual([]);
     }
   });
 
@@ -44,10 +44,14 @@ describe("Act II mechanical sites", () => {
     }
     expect(LEVEL_DEFINITIONS.pell_cut.rounds[0]?.availability.equipment).toContain("fluorine_cell");
     const pellCut = createScenarioGame("pell_cut");
-    expect(pellCut.gasSources.gas_reservoir?.gas.hydrogen_fluoride).toBe(0);
-    expect(pellCut.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride).toBeGreaterThan(0);
-    expect(pellCut.map.rooms.reservoir?.taps.gas.sourceIds).toEqual(["specialty_gas_reservoir"]);
-    expect(pellCut.map.rooms.furnace?.taps.gas.sourceIds).toEqual([]);
+    expect(pellCut.encounter.process.gasSources.gas_reservoir?.gas.hydrogen_fluoride).toBe(0);
+    expect(
+      pellCut.encounter.process.gasSources.specialty_gas_reservoir?.gas.hydrogen_fluoride
+    ).toBeGreaterThan(0);
+    expect(pellCut.encounter.map.rooms.reservoir?.taps.gas.sourceIds).toEqual([
+      "specialty_gas_reservoir",
+    ]);
+    expect(pellCut.encounter.map.rooms.furnace?.taps.gas.sourceIds).toEqual([]);
   });
 });
 

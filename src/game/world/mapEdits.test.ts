@@ -26,7 +26,7 @@ describe("in-play map edits", () => {
   it("refuses to mint a pair the edited map already carries", () => {
     const line = mintLineConnection(
       DEFAULT_GAME_DEFINITION,
-      createScenarioGame("claim_8_delta").map,
+      createScenarioGame("claim_8_delta").encounter.map,
       "gas_line",
       "core",
       "furnace"
@@ -35,7 +35,7 @@ describe("in-play map edits", () => {
     expect(
       mintLineConnection(
         DEFAULT_GAME_DEFINITION,
-        withConnection(createScenarioGame("claim_8_delta").map, line),
+        withConnection(createScenarioGame("claim_8_delta").encounter.map, line),
         "gas_line",
         "core",
         "furnace"

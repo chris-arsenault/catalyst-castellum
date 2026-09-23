@@ -48,8 +48,8 @@ describe("enemy map detail", () => {
   it("shows the last direct tower hit at fractional precision", () => {
     const game = createScenarioGame("claim_8_delta");
     const enemy = furnaceDeckmouth();
-    game.elapsed = 8;
-    game.enemies = [enemy];
+    game.encounter.elapsed = 8;
+    game.encounter.enemies = [enemy];
 
     render(<EnemyTooltip game={game} enemyId={enemy.id} />);
 
@@ -69,7 +69,7 @@ describe("enemy map detail", () => {
       maxHealth: 75,
       behavior: { kind: "shared_field", charge: 85, maximumCharge: 170, active: true },
     };
-    game.enemies = [enemy];
+    game.encounter.enemies = [enemy];
 
     render(<EnemyTooltip game={game} enemyId={enemy.id} />);
 

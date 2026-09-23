@@ -9,8 +9,9 @@ export const PipeBoard = () => {
   const game = useGameStore((state) => state.game);
   const setPipeMode = useGameStore((state) => state.setPipeMode);
   const close = useCallback(() => setPipeMode(false), [setPipeMode]);
-  const runs = game.world.connections.filter(
-    (runId) => runId in game.gasConduits || runId in game.liquidConduits
+  const runs = game.encounter.world.connections.filter(
+    (runId) =>
+      runId in game.encounter.process.gasConduits || runId in game.encounter.process.liquidConduits
   );
   return (
     <aside className="room-inspector pipe-board" data-testid="pipe-board">

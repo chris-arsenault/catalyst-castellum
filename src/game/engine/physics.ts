@@ -1,5 +1,5 @@
 import { facilityModelForMap } from "../world/derivedModel";
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition } from "../encounter/processTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
@@ -29,10 +29,10 @@ export const AMBIENT_MOLAR_MASS = 28.97;
 const MINIMUM_GAS_VOLUME_RATIO = 1 - MAX_LIQUID_FILL_RATIO;
 const ABSOLUTE_ZERO_OFFSET = 273.15;
 
-const minimumGasVolume = (room: RoomState, definition: GameDefinition): number =>
+const minimumGasVolume = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   facilityModelForMap(definition.map).roomVolume(room.id) * MINIMUM_GAS_VOLUME_RATIO;
 
-const maximumLiquidFill = (room: RoomState, definition: GameDefinition): number =>
+const maximumLiquidFill = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   facilityModelForMap(definition.map).roomVolume(room.id) * MAX_LIQUID_FILL_RATIO;
 
 export const kelvin = (temperature: number): number => temperature + ABSOLUTE_ZERO_OFFSET;
@@ -74,37 +74,40 @@ export const mixedTemperature = (
   return (existingTemperature * existingAmount + incomingTemperature * incomingAmount) / total;
 };
 
-export const roomUsableVolume = (room: RoomState, definition: GameDefinition): number =>
+export const roomUsableVolume = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   Math.max(
     minimumGasVolume(room, definition),
     facilityModelForMap(definition.map).roomVolume(room.id) - roomEquipmentVolume(room, definition)
   );
 
-export const gasCapacity = (room: RoomState, definition: GameDefinition): number =>
+export const gasCapacity = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   Math.max(
     minimumGasVolume(room, definition),
     roomUsableVolume(room, definition) - liquidTotal(room)
   );
 
-export const gasZoneCapacity = (room: RoomState, definition: GameDefinition): number =>
+export const gasZoneCapacity = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   gasCapacity(room, definition) / 2;
 
-export const roomStaticPressure = (room: RoomState, definition: GameDefinition): number =>
+export const roomStaticPressure = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   (gasTotal(room) / gasCapacity(room, definition)) *
   STANDARD_PRESSURE *
   temperatureRatio(roomGasTemperature(room));
 
-export const roomPressure = (room: RoomState, definition: GameDefinition): number =>
+export const roomPressure = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   roomStaticPressure(room, definition) + room.pressurePulse;
 
-export const roomGasHeadroom = (room: RoomState, definition: GameDefinition): number => {
+export const roomGasHeadroom = (room: RoomState, definition: ProcessPhysicsDefinition): number => {
   const maximumGas =
     (gasCapacity(room, definition) * MAX_ROOM_STATIC_PRESSURE) /
     (STANDARD_PRESSURE * temperatureRatio(roomGasTemperature(room)));
   return Math.max(0, maximumGas - gasTotal(room));
 };
 
-export const roomLiquidHeadroom = (room: RoomState, definition: GameDefinition): number => {
+export const roomLiquidHeadroom = (
+  room: RoomState,
+  definition: ProcessPhysicsDefinition
+): number => {
   const gasVolumeAtPressureLimit =
     (gasTotal(room) * STANDARD_PRESSURE * temperatureRatio(roomGasTemperature(room))) /
     MAX_ROOM_STATIC_PRESSURE;
@@ -116,10 +119,13 @@ export const roomLiquidHeadroom = (room: RoomState, definition: GameDefinition):
   return Math.max(0, maximumLiquid - liquidTotal(room));
 };
 
-export const liquidFillRatio = (room: RoomState, definition: GameDefinition): number =>
+export const liquidFillRatio = (room: RoomState, definition: ProcessPhysicsDefinition): number =>
   liquidTotal(room) / roomUsableVolume(room, definition);
 
-export const liquidSurfaceElevation = (room: RoomState, definition: GameDefinition): number => {
+export const liquidSurfaceElevation = (
+  room: RoomState,
+  definition: ProcessPhysicsDefinition
+): number => {
   const effectiveVolume =
     liquidFillRatio(room, definition) * facilityModelForMap(definition.map).roomVolume(room.id);
   return facilityModelForMap(definition.map).roomLiquidSurfaceElevation(room.id, effectiveVolume);
@@ -128,7 +134,10 @@ export const liquidSurfaceElevation = (room: RoomState, definition: GameDefiniti
 export const gasZoneForPort = (portHeight: number): GasZone =>
   portHeight < 0.5 ? "lower" : "upper";
 
-export const pressureMovementMultiplier = (room: RoomState, definition: GameDefinition): number => {
+export const pressureMovementMultiplier = (
+  room: RoomState,
+  definition: ProcessPhysicsDefinition
+): number => {
   const pressureRatio = roomStaticPressure(room, definition) / STANDARD_PRESSURE;
   const slowdown = clamp((pressureRatio - PRESSURE_SLOW_START) / 1.2, 0, 0.55);
   return 1 - slowdown;
@@ -137,7 +146,7 @@ export const pressureMovementMultiplier = (room: RoomState, definition: GameDefi
 export const liquidMovementMultiplier = (
   room: RoomState,
   flying: boolean,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   if (flying) return 1;
   const maximumFillRatio =
@@ -157,7 +166,7 @@ export const liquidMovementMultiplier = (
 export const roomMovementMultiplier = (
   room: RoomState,
   flying: boolean,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number =>
   Math.max(
     0.2,
@@ -182,7 +191,10 @@ export const liquidPercent = (room: RoomState, liquid: LiquidType): number => {
 export const liquidStrength = (room: RoomState, liquid: LiquidType): number =>
   room.liquid[liquid] * liquidPercent(room, liquid);
 
-export const gasMixtureMolarMass = (gas: GasAmounts, definition: GameDefinition): number => {
+export const gasMixtureMolarMass = (
+  gas: GasAmounts,
+  definition: ProcessPhysicsDefinition
+): number => {
   const total = gasAmountTotal(gas);
   if (total <= 0) return AMBIENT_MOLAR_MASS;
   return (
@@ -196,19 +208,19 @@ export const gasMixtureMolarMass = (gas: GasAmounts, definition: GameDefinition)
 export const gasRelativeDensity = (
   gas: GasAmounts,
   temperature: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number =>
   gasMixtureMolarMass(gas, definition) / AMBIENT_MOLAR_MASS / temperatureRatio(temperature);
 
 export const roomZoneDensity = (
   room: RoomState,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => gasRelativeDensity(room.gas[zone], room.gasTemperature[zone], definition);
 
 export const liquidRelativeDensity = (
   liquid: LiquidAmounts,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const total = liquidAmountTotal(liquid);
   if (total <= 0) return 1;
@@ -225,7 +237,7 @@ export const gasPartialRatio = (
   room: RoomState,
   gas: GasType,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number =>
   (roomStaticPressure(room, definition) / STANDARD_PRESSURE) * gasPercent(room, gas, zone);
 
@@ -251,7 +263,7 @@ const speciesHazardBasis = (
   speciesId: SpeciesId,
   rule: SpeciesHazardRule,
   zone: GasZone,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   if (rule.basis === "gas_partial_ratio")
     return gasPartialRatio(room, speciesId as GasType, zone, definition);
@@ -272,7 +284,7 @@ export const roomHazards = (
   floorContact = true,
   needsOxygen = true,
   zone: GasZone = floorContact ? "lower" : "upper",
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): HazardChannels => {
   const hazards = emptyHazardChannels();
   for (const species of Object.values(definition.species)) {
@@ -299,7 +311,7 @@ export const roomHazards = (
 const totalHazard = (hazards: HazardChannels): number =>
   hazards.atmosphere + hazards.corrosion + hazards.heat + hazards.pressure + hazards.radiation;
 
-export const roomHazardScore = (room: RoomState, definition: GameDefinition): number => {
+export const roomHazardScore = (room: RoomState, definition: ProcessPhysicsDefinition): number => {
   const lower = totalHazard(roomHazards(room, true, true, "lower", definition));
   const upper = totalHazard(roomHazards(room, false, true, "upper", definition));
   return clamp(Math.max(lower, upper) * 3.5, 0, 100);

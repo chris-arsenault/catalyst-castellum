@@ -27,6 +27,7 @@ type EventCopyHandler = (event: GameEvent, context: EventCopyContext) => EventCo
 
 const DAMAGE_SOURCE_KEYS: Record<DamageSourceId, LocaleKey> = {
   tower_flash: "events.damage.tower_flash",
+  tower_discharge: "damage.source.tower_discharge.label",
   tower_caustic: "events.damage.tower_caustic",
   tower_burner: "events.damage.tower_burner",
   tower_acid: "events.damage.tower_acid",

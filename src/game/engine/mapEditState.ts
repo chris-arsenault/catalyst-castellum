@@ -13,13 +13,31 @@ const keepRecords = <Value>(
 
 /** Replace map geometry and discard runtime records owned by the departed site. */
 export const replaceStateMap = (state: GameState, map: WorldMap): void => {
-  state.map = map;
-  state.mapRevision += 1;
-  state.world = worldCatalogsForMap(map);
-  state.rooms = keepRecords(state.rooms, state.world.rooms);
-  state.gasJunctions = keepRecords(state.gasJunctions, state.world.rooms);
-  state.liquidJunctions = keepRecords(state.liquidJunctions, state.world.rooms);
-  state.gasConduits = keepRecords(state.gasConduits, state.world.connections);
-  state.liquidConduits = keepRecords(state.liquidConduits, state.world.connections);
-  state.portalStates = keepRecords(state.portalStates, state.world.connections);
+  state.encounter.map = map;
+  state.encounter.mapRevision += 1;
+  state.encounter.world = worldCatalogsForMap(map);
+  state.encounter.process.rooms = keepRecords(
+    state.encounter.process.rooms,
+    state.encounter.world.rooms
+  );
+  state.encounter.process.gasJunctions = keepRecords(
+    state.encounter.process.gasJunctions,
+    state.encounter.world.rooms
+  );
+  state.encounter.process.liquidJunctions = keepRecords(
+    state.encounter.process.liquidJunctions,
+    state.encounter.world.rooms
+  );
+  state.encounter.process.gasConduits = keepRecords(
+    state.encounter.process.gasConduits,
+    state.encounter.world.connections
+  );
+  state.encounter.process.liquidConduits = keepRecords(
+    state.encounter.process.liquidConduits,
+    state.encounter.world.connections
+  );
+  state.encounter.portalStates = keepRecords(
+    state.encounter.portalStates,
+    state.encounter.world.connections
+  );
 };

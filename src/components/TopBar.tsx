@@ -2,6 +2,7 @@ import { Coins, FastForward, Pause, Play, RotateCcw, Shield } from "lucide-react
 import { useCallback, useState } from "react";
 import { levelDefinitionFor } from "../game/queries";
 import { useGameStore } from "../application/store";
+import { simulationControlDecision } from "../application/simulationClock";
 import { useGamePresentation } from "../application/presentationContext";
 import type { GamePhase, GameState } from "../game/types";
 import type { Translator } from "../localization/translator";
@@ -53,12 +54,12 @@ const StatusMeters = ({ game }: { game: GameState }) => {
           <span>
             <Shield size={13} /> {translator.text("ui.topbar.core")}
           </span>
-          <strong>{formatters.percent(game.coreIntegrity / 100, 0)}</strong>
+          <strong>{formatters.percent(game.encounter.coreIntegrity / 100, 0)}</strong>
         </div>
         <div className="meter-track">
           <span
-            className={game.coreIntegrity <= 30 ? "critical" : ""}
-            style={{ "--meter-width": `${game.coreIntegrity}%` }}
+            className={game.encounter.coreIntegrity <= 30 ? "critical" : ""}
+            style={{ "--meter-width": `${game.encounter.coreIntegrity}%` }}
           />
         </div>
       </div>
@@ -67,9 +68,11 @@ const StatusMeters = ({ game }: { game: GameState }) => {
           <span>
             <Coins size={13} /> {translator.text("ui.topbar.matter")}
           </span>
-          <strong>{formatters.number(Math.floor(game.matter), 0)}</strong>
+          <strong>{formatters.number(Math.floor(game.encounter.matter), 0)}</strong>
         </div>
-        <small>{translator.text("ui.topbar.pendingMatter", { matter: game.pendingMatter })}</small>
+        <small>
+          {translator.text("ui.topbar.pendingMatter", { matter: game.encounter.pendingMatter })}
+        </small>
       </div>
     </div>
   );
@@ -111,18 +114,19 @@ const RestartSaveConfirmation = ({
   );
 };
 
-const simulationPauseLabel = (game: GameState, translator: Translator): string =>
-  translator.text(game.paused ? "ui.topbar.resume" : "ui.topbar.pause");
+const simulationPauseLabel = (paused: boolean, translator: Translator): string =>
+  translator.text(paused ? "ui.topbar.resume" : "ui.topbar.pause");
 
 const GlobalControls = ({ game }: { game: GameState }) => {
-  const { selectors, translator } = useGamePresentation();
+  const { translator } = useGamePresentation();
   const dispatch = useGameStore((state) => state.dispatch);
+  const paused = useGameStore((state) => state.paused);
+  const speed = useGameStore((state) => state.speed);
   const reset = useGameStore((state) => state.reset);
   const [confirmingRestart, setConfirmingRestart] = useState(false);
   const pauseCommand = { type: "toggle_pause" } as const;
-  const speedCommand = { type: "set_speed", speed: game.speed === 1 ? 2 : 1 } as const;
-  const pauseDecision = selectors.commandDecision(game, pauseCommand);
-  const speedDecision = selectors.commandDecision(game, speedCommand);
+  const speedCommand = { type: "set_speed", speed: speed === 1 ? 2 : 1 } as const;
+  const decision = simulationControlDecision(game);
   const restart = useCallback(() => {
     setConfirmingRestart(false);
     reset();
@@ -133,24 +137,24 @@ const GlobalControls = ({ game }: { game: GameState }) => {
       <button
         className="icon-button"
         type="button"
-        aria-label={simulationPauseLabel(game, translator)}
-        title={simulationPauseLabel(game, translator)}
-        disabled={!pauseDecision.allowed}
+        aria-label={simulationPauseLabel(paused, translator)}
+        title={simulationPauseLabel(paused, translator)}
+        disabled={!decision.allowed}
         onClick={() => dispatch(pauseCommand)}
       >
-        {game.paused ? <Play size={17} /> : <Pause size={17} />}
+        {paused ? <Play size={17} /> : <Pause size={17} />}
       </button>
       <button
-        className={`speed-button ${game.speed === 2 ? "active" : ""}`}
+        className={`speed-button ${speed === 2 ? "active" : ""}`}
         type="button"
         data-testid="simulation-speed"
         data-tutorial-anchor={TUTORIAL_ANCHORS.simulationSpeed}
-        aria-label={translator.text("ui.topbar.speed", { speed: game.speed })}
+        aria-label={translator.text("ui.topbar.speed", { speed })}
         title={translator.text("ui.topbar.toggleSpeed")}
-        disabled={!speedDecision.allowed}
+        disabled={!decision.allowed}
         onClick={() => dispatch(speedCommand)}
       >
-        <FastForward size={15} /> {game.speed}×
+        <FastForward size={15} /> {speed}×
       </button>
       <span className="control-divider" />
       <AudioControls />

@@ -1,4 +1,6 @@
-import type { EnvironmentalField, GameState, GasZone, TowerInstance } from "../types";
+import type { EnvironmentalField, EnemyState, GasZone } from "../types";
+import type { EncounterState, EncounterTower } from "../encounter/types";
+type FieldState = Pick<EncounterState, "map" | "environmentalFields">;
 import { enemyGasZone, enemyRoomId } from "./enemyPosition";
 import { clamp } from "./math";
 import { towerRoomId } from "./towerPlacement";
@@ -8,7 +10,7 @@ type FieldDefinition = Omit<EnvironmentalField, "remaining" | "intensity"> & {
   duration: number;
 };
 
-export const upsertEnvironmentalField = (state: GameState, incoming: FieldDefinition): void => {
+export const upsertEnvironmentalField = (state: FieldState, incoming: FieldDefinition): void => {
   const field: EnvironmentalField = {
     id: incoming.id,
     sourceId: incoming.sourceId,
@@ -27,7 +29,7 @@ export const upsertEnvironmentalField = (state: GameState, incoming: FieldDefini
   state.environmentalFields.sort((left, right) => left.id.localeCompare(right.id));
 };
 
-export const tickEnvironmentalFields = (state: GameState, dt: number): void => {
+export const tickEnvironmentalFields = (state: FieldState, dt: number): void => {
   state.environmentalFields = state.environmentalFields
     .map((field) => ({
       ...field,
@@ -41,7 +43,7 @@ const zoneMatches = (field: EnvironmentalField, zone: GasZone): boolean =>
   field.zone === "both" || field.zone === zone;
 
 export const environmentalFieldIntensity = (
-  state: GameState,
+  state: FieldState,
   roomId: string,
   zone: GasZone,
   effect: EnvironmentalField["effect"]
@@ -58,7 +60,7 @@ export const environmentalFieldIntensity = (
   return clamp(strongest + additive, 0, 0.9);
 };
 
-const towerZone = (state: GameState, tower: TowerInstance): GasZone => {
+const towerZone = (state: FieldState, tower: EncounterTower): GasZone => {
   const roomId = towerRoomId(state, tower);
   const room = roomId ? state.map.rooms[roomId] : null;
   if (!room) return "lower";
@@ -67,8 +69,8 @@ const towerZone = (state: GameState, tower: TowerInstance): GasZone => {
 };
 
 export const environmentalTowerRangeMultiplier = (
-  state: GameState,
-  tower: TowerInstance
+  state: FieldState,
+  tower: EncounterTower
 ): number => {
   const roomId = towerRoomId(state, tower);
   if (!roomId) return 1;
@@ -79,8 +81,8 @@ export const environmentalTowerRangeMultiplier = (
 };
 
 export const environmentalTowerCadenceMultiplier = (
-  state: GameState,
-  tower: TowerInstance
+  state: FieldState,
+  tower: EncounterTower
 ): number => {
   const roomId = towerRoomId(state, tower);
   return roomId
@@ -89,8 +91,8 @@ export const environmentalTowerCadenceMultiplier = (
 };
 
 export const environmentalEnemyMovementMultiplier = (
-  state: GameState,
-  enemy: GameState["enemies"][number]
+  state: FieldState,
+  enemy: EnemyState
 ): number => {
   const roomId = enemyRoomId(enemy, state.map);
   if (!roomId) return 1;

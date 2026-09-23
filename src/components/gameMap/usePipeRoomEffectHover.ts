@@ -13,7 +13,8 @@ export const pipeRoomEffectPreview = (
   runId: ConnectionId,
   presentation: GamePresentation
 ): RoomEffectPreview | null => {
-  const conduit = game.gasConduits[runId] ?? game.liquidConduits[runId];
+  const conduit =
+    game.encounter.process.gasConduits[runId] ?? game.encounter.process.liquidConduits[runId];
   if (!conduit) return null;
 
   const enabled = !conduit.enabled;
@@ -36,7 +37,8 @@ export const usePipeRoomEffectHover = (
   const setRoomEffectPreview = useGameStore((state) => state.setRoomEffectPreview);
   const [hoveredRunId, setHoveredRunId] = useState<ConnectionId | null>(null);
   const conduit = hoveredRunId
-    ? (game.gasConduits[hoveredRunId] ?? game.liquidConduits[hoveredRunId])
+    ? (game.encounter.process.gasConduits[hoveredRunId] ??
+      game.encounter.process.liquidConduits[hoveredRunId])
     : null;
   const refreshPreview = useEffectEvent((runId: ConnectionId | null) => {
     setRoomEffectPreview(runId ? pipeRoomEffectPreview(game, runId, presentation) : null);
@@ -45,7 +47,7 @@ export const usePipeRoomEffectHover = (
   useEffect(() => () => setRoomEffectPreview(null), [setRoomEffectPreview]);
   useEffect(() => {
     refreshPreview(hoveredRunId);
-  }, [conduit?.blocked, conduit?.enabled, game.mapRevision, game.phase, hoveredRunId]);
+  }, [conduit?.blocked, conduit?.enabled, game.encounter.mapRevision, game.phase, hoveredRunId]);
 
   return useCallback(
     (runId: ConnectionId | null) => {

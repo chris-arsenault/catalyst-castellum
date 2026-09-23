@@ -1,16 +1,14 @@
 import { guideDefinitionFor } from "../tutorial/guideModel";
 import type { GameStoreDependencies, StoreGet, StoreSet, UiSlice } from "./storeTypes";
-
-const sessionOf = (state: { dismissedGuideIds: string[]; guidanceEnabled: boolean }) => ({
-  dismissedGuideIds: state.dismissedGuideIds,
-  guidanceEnabled: state.guidanceEnabled,
-});
+import { tutorialSessionOf } from "./guidanceSession";
 
 const graftModeUi = (graftMode: boolean) => ({
   graftMode,
   graftPreview: null,
-  pipeMode: false,
   roomEffectPreview: null,
+  ...(graftMode
+    ? { pipeMode: false, pipePreview: null, towerBuildSelection: null, movingTowerId: null }
+    : {}),
 });
 
 const createTowerActions = (
@@ -29,14 +27,15 @@ const createTowerActions = (
       movingTowerId:
         towerBuildSelection &&
         state.movingTowerId &&
-        state.game.towers[state.movingTowerId]?.chassisId === towerBuildSelection.chassisId
+        state.game.encounter.towers[state.movingTowerId]?.chassisId ===
+          towerBuildSelection.chassisId
           ? state.movingTowerId
           : null,
     })),
   selectTower: (selectedTowerId) =>
     set({ selectedTowerId, towerBuildSelection: null, movingTowerId: null, notice: null }),
   setMovingTower: (movingTowerId) => {
-    const tower = movingTowerId ? get().game.towers[movingTowerId] : null;
+    const tower = movingTowerId ? get().game.encounter.towers[movingTowerId] : null;
     set({
       movingTowerId: tower?.id ?? null,
       selectedTowerId: tower?.id ?? null,
@@ -67,7 +66,7 @@ const createGuidanceActions = (
     if (!guide || !state.activeSlotId) return;
     const dismissedGuideIds = [...new Set([...state.dismissedGuideIds, guide.dismissalId])];
     dependencies.scheduleSave(state.activeSlotId, state.game, {
-      ...sessionOf(state),
+      ...tutorialSessionOf(state),
       dismissedGuideIds,
     });
     set({ dismissedGuideIds });
@@ -77,13 +76,21 @@ const createGuidanceActions = (
     const guide = guideDefinitionFor(state.game);
     if (!guide || !state.activeSlotId) return;
     const dismissedGuideIds = state.dismissedGuideIds.filter((id) => id !== guide.dismissalId);
+    // Replay forgets observations for this guide; installed defenses remain live evidence.
+    const guideEvidence = Object.fromEntries(
+      Object.entries(state.guideEvidence).filter(([id]) => id !== guide.id)
+    );
     dependencies.scheduleSave(state.activeSlotId, state.game, {
-      ...sessionOf(state),
+      ...tutorialSessionOf({ ...state, guideEvidence }),
       dismissedGuideIds,
     });
     set({
       dismissedGuideIds,
+      guideEvidence,
       tutorialSessionRevision: state.tutorialSessionRevision + 1,
+      selectedTowerId: null,
+      towerBuildSelection: null,
+      movingTowerId: null,
       selectedRoomId: dependencies.runtime.level(state.game).focusRoomId,
       showHelp: false,
       equipmentBuildTarget: null,
@@ -124,7 +131,14 @@ export const createUiActions = (
 > => ({
   selectRoom: (selectedRoomId) => set({ selectedRoomId, notice: null }),
   setPipeMode: (pipeMode) =>
-    set({ pipeMode, pipePreview: null, graftMode: false, roomEffectPreview: null }),
+    set({
+      pipeMode,
+      pipePreview: null,
+      roomEffectPreview: null,
+      ...(pipeMode
+        ? { graftMode: false, graftPreview: null, towerBuildSelection: null, movingTowerId: null }
+        : {}),
+    }),
   setPipePreview: (pipePreview) => set({ pipePreview }),
   setGraftMode: (graftMode) => set(graftModeUi(graftMode)),
   setGraftPreview: (graftPreview) => set({ graftPreview }),

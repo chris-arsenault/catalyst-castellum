@@ -68,15 +68,15 @@ const definition = deriveGame(DEFAULT_GAME_DEFINITION, {
 describe("the hull fragment carries across consecutive authored maps", () => {
   it("extracts hull rooms, internal connections, and live contents from an ending state", () => {
     const ending = createScenarioGame("claim_8_delta", [], definition);
-    roomState(ending, "furnace").equipment.socket_a = {
+    roomState(ending.encounter, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
       operation: null,
       medium: null,
     };
-    roomState(ending, "furnace").gas.lower.hydrogen = 9;
-    roomState(ending, "switchyard").liquid.water = 4;
+    roomState(ending.encounter, "furnace").gas.lower.hydrogen = 9;
+    roomState(ending.encounter, "switchyard").liquid.water = 4;
 
     const fragment = extractHullFragment(ending);
     expect(Object.keys(fragment.rooms).sort()).toEqual([...HULL_ROOMS].sort());
@@ -88,15 +88,15 @@ describe("the hull fragment carries across consecutive authored maps", () => {
 
   it("plays two sites in sequence with hull installations intact and fresh interiors", () => {
     const ending = createScenarioGame("claim_8_delta", [], definition);
-    roomState(ending, "furnace").equipment.socket_a = {
+    roomState(ending.encounter, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 2,
       enabled: true,
       operation: null,
       medium: null,
     };
-    roomState(ending, "furnace").gas.lower.hydrogen = 9;
-    roomState(ending, "switchyard").liquid.water = 4;
+    roomState(ending.encounter, "furnace").gas.lower.hydrogen = 9;
+    roomState(ending.encounter, "switchyard").liquid.water = 4;
 
     const fragment = extractHullFragment(ending);
     const site = materializeAuthoredSite(
@@ -109,12 +109,14 @@ describe("the hull fragment carries across consecutive authored maps", () => {
     );
     const next = createScenarioGame("harkers_brace", ["claim_8_delta"], definition, site);
 
-    expect(Object.keys(next.map.rooms).sort()).toEqual(Object.keys(mapA.rooms).sort());
-    expect(next.map.rooms.furnace?.provenance).toBe("hull");
-    expect(next.map.connections.switchyard_to_furnace_shaft).toBeDefined();
-    expect(roomState(next, "furnace").equipment.socket_a?.equipmentId).toBe("gas_agitator");
-    expect(roomState(next, "furnace").gas.lower.hydrogen).toBe(0);
-    expect(roomState(next, "switchyard").liquid.water).toBe(0);
+    expect(Object.keys(next.encounter.map.rooms).sort()).toEqual(Object.keys(mapA.rooms).sort());
+    expect(next.encounter.map.rooms.furnace?.provenance).toBe("hull");
+    expect(next.encounter.map.connections.switchyard_to_furnace_shaft).toBeDefined();
+    expect(roomState(next.encounter, "furnace").equipment.socket_a?.equipmentId).toBe(
+      "gas_agitator"
+    );
+    expect(roomState(next.encounter, "furnace").gas.lower.hydrogen).toBe(0);
+    expect(roomState(next.encounter, "switchyard").liquid.water).toBe(0);
     expect(next.campaign.levelIndex).toBe(definition.levelOrder.indexOf("harkers_brace"));
   });
 });
@@ -122,7 +124,7 @@ describe("the hull fragment carries across consecutive authored maps", () => {
 describe("the carried hull persists and translates", () => {
   it("round-trips the carried hull through the current save on the second site", () => {
     const ending = createScenarioGame("claim_8_delta", [], definition);
-    roomState(ending, "furnace").gas.lower.hydrogen = 9;
+    roomState(ending.encounter, "furnace").gas.lower.hydrogen = 9;
     const fragment = extractHullFragment(ending);
     const site = materializeAuthoredSite(
       {
@@ -136,8 +138,8 @@ describe("the carried hull persists and translates", () => {
     const decoded = decodeGame(encodeGame(next, definition), definition);
     expect(decoded).not.toBeNull();
     if (!decoded) return;
-    expect(decoded.map.rooms.furnace?.provenance).toBe("hull");
-    expect(roomState(decoded, "furnace").gas.lower.hydrogen).toBe(0);
+    expect(decoded.encounter.map.rooms.furnace?.provenance).toBe("hull");
+    expect(roomState(decoded.encounter, "furnace").gas.lower.hydrogen).toBe(0);
     expect(decoded.campaign).toEqual(next.campaign);
   });
 

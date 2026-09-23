@@ -14,10 +14,10 @@ export interface RoomGasInflow {
 export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow => {
   const species = emptyGasRates();
   let rate = 0;
-  for (const runId of game.world.connections) {
-    const definition = lineDefinition(game, runId, "gas");
+  for (const runId of game.encounter.world.connections) {
+    const definition = lineDefinition(game.encounter, runId, "gas");
     if (!definition || definition.direction[1] !== roomId) continue;
-    const conduit = gasConduitState(game, runId);
+    const conduit = gasConduitState(game.encounter, runId);
     if (conduit.flowCause !== "fan") continue;
     rate += Math.abs(conduit.lastFlow);
     for (const gas of GAS_TYPES) species[gas] += Math.abs(conduit.lastSpeciesFlow[gas]);
@@ -26,16 +26,16 @@ export const roomGasInflow = (game: GameState, roomId: RoomId): RoomGasInflow =>
 };
 
 export const roomLiquidInflowRate = (game: GameState, roomId: RoomId): number =>
-  game.world.connections.reduce((total: number, runId: string) => {
-    const definition = lineDefinition(game, runId, "liquid");
+  game.encounter.world.connections.reduce((total: number, runId: string) => {
+    const definition = lineDefinition(game.encounter, runId, "liquid");
     if (!definition || definition.direction[1] !== roomId) return total;
-    const conduit = liquidConduitState(game, runId);
+    const conduit = liquidConduitState(game.encounter, runId);
     return conduit.flowCause === "pump" ? total + Math.abs(conduit.lastFlow) : total;
   }, 0);
 
 export const activeRoomGasPortals = (game: GameState, roomId: RoomId) =>
-  architecturalConnections(game.map).filter((portal) => {
-    const state = game.portalStates[portal.id];
+  architecturalConnections(game.encounter.map).filter((portal) => {
+    const state = game.encounter.portalStates[portal.id];
     return (
       portal.rooms.includes(roomId) &&
       portal.gasConductance > 0 &&

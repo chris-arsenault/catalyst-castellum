@@ -13,7 +13,12 @@ import { useGameStore } from "../application/store";
 import { useGamePresentation } from "../application/presentationContext";
 import type { Translator } from "../localization/translator";
 import type { GameState } from "../game/types";
-import type { GuideDefinition, GuideStepDefinition } from "./guideModel";
+import {
+  guideTaskCompleted,
+  type GuideDefinition,
+  type GuideStepDefinition,
+  type GuideEvidence,
+} from "./guideModel";
 import { tutorialText } from "./tutorialCopy";
 
 interface TutorialTaskCardProps {
@@ -114,15 +119,17 @@ const MissionTaskList = ({
   game,
   guide,
   translator,
+  evidence,
 }: {
   activeIndex: number;
   game: GameState;
   guide: GuideDefinition;
   translator: Translator;
+  evidence: GuideEvidence;
 }) => (
   <ol className="tutorial-task-list" aria-label={translator.text("tutorial.common.missionTasks")}>
     {guide.mission.tasks.map((task, index) => {
-      const done = task.completed(game);
+      const done = guideTaskCompleted(task, guide, game, evidence);
       const active = index === activeIndex;
       return (
         <li key={task.id} className={taskClassName(done, active)} aria-current={active}>
@@ -166,8 +173,13 @@ export const TutorialTaskCard = ({ activeStep, game, guide }: TutorialTaskCardPr
   const { translator } = useGamePresentation();
   const [expanded, setExpanded] = useState(true);
   const dismiss = useGameStore((state) => state.dismissTutorialGuide);
-  const completed = guide.mission.tasks.filter((task) => task.completed(game)).length;
-  const activeIndex = guide.mission.tasks.findIndex((task) => !task.completed(game));
+  const evidence = useGameStore((state) => state.guideEvidence);
+  const completed = guide.mission.tasks.filter((task) =>
+    guideTaskCompleted(task, guide, game, evidence)
+  ).length;
+  const activeIndex = guide.mission.tasks.findIndex(
+    (task) => !guideTaskCompleted(task, guide, game, evidence)
+  );
   const collapse = useCallback(() => setExpanded(false), []);
   const expand = useCallback(() => setExpanded(true), []);
 
@@ -191,6 +203,7 @@ export const TutorialTaskCard = ({ activeStep, game, guide }: TutorialTaskCardPr
             game={game}
             guide={guide}
             translator={translator}
+            evidence={evidence}
           />
           <CurrentAction activeStep={activeStep} guide={guide} translator={translator} />
         </>

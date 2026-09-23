@@ -26,7 +26,7 @@ describe("definition extension contracts", () => {
       },
     });
     const state = createScenarioGameForDefinition("claim_8_delta", [], definition);
-    roomState(state, "furnace").equipment.socket_a = {
+    roomState(state.encounter, "furnace").equipment.socket_a = {
       equipmentId: "gas_agitator",
       level: 1,
       enabled: true,
@@ -34,15 +34,15 @@ describe("definition extension contracts", () => {
       medium: null,
     };
 
-    expect(roomGasMixingRate(roomState(state, "furnace"), definition)).toBe(9);
+    expect(roomGasMixingRate(roomState(state.encounter, "furnace"), definition)).toBe(9);
     expect(equipmentGradeEffect(grade)).toBe("9 layer exchange · 4× gas kinetics");
   });
 
   it("adds or removes species hazard policy without a physics branch", () => {
     const state = createScenarioGame("claim_8_delta");
-    roomState(state, "furnace").gas.lower.chlorine = 20;
+    roomState(state.encounter, "furnace").gas.lower.chlorine = 20;
     const hazardous = roomHazards(
-      roomState(state, "furnace"),
+      roomState(state.encounter, "furnace"),
       true,
       true,
       "lower",
@@ -55,27 +55,35 @@ describe("definition extension contracts", () => {
         chlorine: { ...DEFAULT_GAME_DEFINITION.species.chlorine, hazards: [] },
       },
     });
-    const inert = roomHazards(roomState(state, "furnace"), true, true, "lower", definition);
+    const inert = roomHazards(
+      roomState(state.encounter, "furnace"),
+      true,
+      true,
+      "lower",
+      definition
+    );
 
     expect(hazardous.atmosphere + hazardous.corrosion).toBeGreaterThan(0);
     expect(inert.atmosphere + inert.corrosion).toBe(0);
   });
+});
 
+describe("bounded species hazard contracts", () => {
   it("saturates species damage at its authored effective-excess bound", () => {
     const moderate = createScenarioGame("claim_8_delta");
-    roomState(moderate, "furnace").gas.lower.chlorine = 20;
+    roomState(moderate.encounter, "furnace").gas.lower.chlorine = 20;
     const concentrated = createScenarioGame("claim_8_delta");
-    roomState(concentrated, "furnace").gas.lower.chlorine = 60;
+    roomState(concentrated.encounter, "furnace").gas.lower.chlorine = 60;
 
     const moderateHazard = roomHazards(
-      roomState(moderate, "furnace"),
+      roomState(moderate.encounter, "furnace"),
       true,
       true,
       "lower",
       DEFAULT_GAME_DEFINITION
     );
     const concentratedHazard = roomHazards(
-      roomState(concentrated, "furnace"),
+      roomState(concentrated.encounter, "furnace"),
       true,
       true,
       "lower",
@@ -113,15 +121,15 @@ describe("powered equipment extension contracts", () => {
       },
     });
     const state = createScenarioGameForDefinition("morrow_pocket", [], definition);
-    roomState(state, "lower_intake").equipment.socket_a = createEquipmentInstance(
+    roomState(state.encounter, "lower_intake").equipment.socket_a = createEquipmentInstance(
       { equipmentId: "membrane_cell", level: 1, enabled: true },
       definition
     );
-    roomState(state, "lower_intake").liquid.water = 10;
-    roomState(state, "lower_intake").liquid.sodium_chloride = 10;
-    simulateEquipmentOperations(state, 0.5, definition);
+    roomState(state.encounter, "lower_intake").liquid.water = 10;
+    roomState(state.encounter, "lower_intake").liquid.sodium_chloride = 10;
+    simulateEquipmentOperations(state.encounter, 0.5, definition);
 
-    const instance = roomState(state, "lower_intake").equipment.socket_a;
+    const instance = roomState(state.encounter, "lower_intake").equipment.socket_a;
     const cathode = instance?.operation?.outputs.cathode_header;
     const anode = instance?.operation?.outputs.anode_header;
     expect(cathode?.phase === "gas" ? cathode.gas.chlorine : 0).toBeGreaterThan(0);

@@ -116,6 +116,5 @@ export const transitionPhase = (state: GameState, next: GamePhase): void => {
     throw new Error(`Illegal phase transition: ${state.phase} -> ${next}`);
   }
   state.phase = next;
-  state.phaseTime = 0;
-  state.paused = false;
+  state.encounter.phaseTime = 0;
 };

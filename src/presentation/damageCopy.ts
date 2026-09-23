@@ -60,6 +60,7 @@ export const damageSourceDetail = DEFAULT_DAMAGE_COPY.sourceDetail;
 
 export const damageSourceDisplay: Record<DamageSourceId, "continuous" | "impact"> = {
   tower_flash: "impact",
+  tower_discharge: "impact",
   tower_caustic: "impact",
   tower_burner: "impact",
   tower_acid: "impact",

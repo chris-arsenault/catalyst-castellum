@@ -15,12 +15,12 @@ export const DamageNumberLayer = ({ game }: { game: GameState }) => {
   if (!transientCombatIndicatorsVisible(game)) return null;
   return (
     <>
-      {game.incidents.flatMap((incident) => {
-        const age = game.elapsed - incident.elapsed;
+      {game.encounter.incidents.flatMap((incident) => {
+        const age = game.encounter.elapsed - incident.elapsed;
         if (incident.sourceId === "hydrogen_oxygen_combustion") return [];
         const sourceId = incident.sourceId;
         if (
-          !transientIncidentVisible(game, incident, VISIBLE_SECONDS) ||
+          !transientIncidentVisible(game.encounter, incident, VISIBLE_SECONDS) ||
           damageSourceDisplay[sourceId] === "continuous"
         )
           return [];
@@ -33,7 +33,7 @@ export const DamageNumberLayer = ({ game }: { game: GameState }) => {
           if (amount < 0.05) return [];
           const channel = dominantDamageChannel(target.damageByChannel);
           const style = damageChannelStyle[channel];
-          const position = mapViewFor(game.map).worldToMapPoint(target.worldPosition);
+          const position = mapViewFor(game.encounter.map).worldToMapPoint(target.worldPosition);
           return [
             <pixiContainer
               key={`${incident.id}-${target.enemyId}`}

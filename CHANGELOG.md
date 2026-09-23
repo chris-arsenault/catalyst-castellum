@@ -6,6 +6,14 @@ All notable user-visible changes are recorded here.
 
 ### Tower defense
 
+- Added an isolated five-wave catalyst exercise with capped charge, attraction/repulsion fields,
+  charge-consuming chains, physical projectile impacts, source attribution after dismantling,
+  separate saves, wave retry, and a shared campaign/exercise map and tower controls.
+- Corrected cone and splash target eligibility, primary-target retention, wall occlusion, and
+  fractional firing cadence. Dismantling a firing tower now clears its completed visual attacks so
+  the resulting save remains loadable.
+- Reject invalid tower costs, recovery ratios, ranges, rates, damage, supply species, and cyclic
+  upgrades during content compilation.
 - Rebuilt ordinary combat around seven direct tower chassis with free grid-snapped floor, wall,
   and ceiling placement. Towers expose mount-specific arcs, range, cadence, target capacity,
   targeting policy, upgrades, attack state, damage contribution, and recovery value.
@@ -26,6 +34,7 @@ All notable user-visible changes are recorded here.
 
 ### Chemistry and environment
 
+- Dismantling returns stored tower gases and liquids to the installation's room.
 - Recast the seven tower chassis as Flash Chamber, Caustic Jet, Carbon Burner, Acid Pot, Quench
   Coil, Wash Head, and Carbonyl Marker, each with chemical damage, apparatus rendering, attack
   effects, and process-specific upgrades.
@@ -40,6 +49,24 @@ All notable user-visible changes are recorded here.
 
 ### Guidance and verification
 
+- Construction tools now clear conflicting modes, map controls retain their own click handling,
+  and placement feedback displays rejection reasons. Pipe completion callbacks run outside React
+  state updaters.
+- Wave forecasts show composition and arrival windows per ingress. Completed guide observations
+  persist across selection changes, retries, and reloads; replay resets the active guide's evidence.
+- Advanced authored content to version 22, simulation schema to 30, and standalone snapshots to 2.
+  The browser save-slot envelope remains version 3. Durable state includes catalyst accounting,
+  frozen attacks, ordered command cursors, and campaign settlement receipts.
+- Added a standalone encounter runtime with exact integer ticks, validated snapshots, command
+  rejection records, and explicit completion, defeat, and timeout results. Campaign combat uses
+  the same runtime. Browser pause, speed, and fractional time accumulation live in the application.
+- Save slots identify incompatible and damaged records, with explicit replacement through the
+  existing overwrite flow. Tower presentation follows the active runtime's definitions.
+- Separated fast tests from campaign integration and corrected the performance fixture to advance
+  and verify 80 actual ticks before timing.
+- Added local encounter and exercise command-stream runners with bounded traces, validated
+  snapshots, per-wave reports, and exact continuation. Exercise retry/restart records discarded
+  charge in bounded diagnostic reports.
 - Re-authored the opening guidance around Flash Chamber pressure fire, Carbon Burner wall and
   ceiling geometry, and a non-gating Twelve-Cask coating-reaction demonstration.
 - Added tower placement, route coverage, wall and ceiling geometry, targeting, upgrades, and graft

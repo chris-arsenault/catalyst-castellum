@@ -1,12 +1,11 @@
 import {
   LIQUID_TYPES,
   type FlowCause,
-  type GameState,
   type LiquidAmounts,
   type LiquidConduitState,
   type ConnectionId,
 } from "../types";
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import { clamp } from "./math";
 import { addLiquid, liquidAmountTotal, takeLiquid } from "./roomState";
 import { liquidRelativeDensity, roomLiquidHeadroom } from "./physics";
@@ -37,9 +36,9 @@ const FULL_CONDUIT_EPSILON = 1e-6;
 type LiquidPlan = TransportPlan;
 
 const destinationHeadroom = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const definition = liquidLineDefinition(state, runId);
   if (!definition || definition.destinationKind === "liquid_recovery") {
@@ -49,10 +48,10 @@ const destinationHeadroom = (
 };
 
 const desiredThroughput = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): number => {
   const definition = liquidLineDefinition(state, runId);
   if (!definition) return 0;
@@ -76,10 +75,10 @@ const desiredThroughput = (
 };
 
 const initialPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   dt: number,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessPhysicsDefinition
 ): LiquidPlan | null => {
   const definition = liquidLineDefinition(state, runId);
   const conduit = liquidConduitState(state, runId);
@@ -106,21 +105,21 @@ const initialPlan = (
 };
 
 const deliverLiquid = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   packet: LiquidAmounts,
-  _gameDefinition: GameDefinition
+  _gameDefinition: ProcessPhysicsDefinition
 ): void => {
   const definition = liquidLineDefinition(state, runId);
   if (!definition) return;
   if (definition.destinationKind === "liquid_recovery") {
-    addLiquid(state.liquidDrain, packet);
+    addLiquid(state.process.liquidDrain, packet);
     return;
   }
   addLiquid(roomState(state, definition.direction[1]).liquid, packet);
 };
 
-const clearReadout = (state: GameState, runId: ConnectionId): void => {
+const clearReadout = (state: ProcessEncounterState, runId: ConnectionId): void => {
   const conduit = liquidConduitState(state, runId);
   conduit.lastFlow = 0;
   conduit.blocked = false;
@@ -158,11 +157,11 @@ const updateReadout = (
 };
 
 const isBlockedAfterPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   plan: LiquidPlan,
   incomingAmount: number,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): boolean =>
   transportPlanIsBlocked(
     liquidConduitState(state, plan.runId).enabled,
@@ -172,10 +171,10 @@ const isBlockedAfterPlan = (
   );
 
 const applyPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   plan: LiquidPlan,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const conduit = liquidConduitState(state, plan.runId);
   const outgoing = takeLiquid(conduit.liquid, plan.outgoingAmount);
@@ -189,9 +188,9 @@ const applyPlan = (
 };
 
 export const simulateLiquidConduits = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const lineIds = processLineIds(state, "liquid_line");
   for (const runId of lineIds) clearReadout(state, runId);
@@ -218,13 +217,15 @@ export const simulateLiquidConduits = (
 };
 
 export const liquidConduitFillRatio = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const capacity = conduitCapacity(state, runId, "liquid", definition);
   return capacity > 0 ? liquidAmountTotal(liquidConduitState(state, runId).liquid) / capacity : 0;
 };
 
-export const liquidConduitCrestElevation = (state: GameState, runId: ConnectionId): number =>
-  conduitCrestElevation(state, runId, "liquid");
+export const liquidConduitCrestElevation = (
+  state: ProcessEncounterState,
+  runId: ConnectionId
+): number => conduitCrestElevation(state, runId, "liquid");

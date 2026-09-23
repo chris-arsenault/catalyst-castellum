@@ -124,13 +124,13 @@ const buildProfileFor = (
   state: GameState,
   damageBySource: Record<DamageSourceId, number>
 ): BuildProfile => ({
-  towers: Object.values(state.towers)
+  towers: Object.values(state.encounter.towers)
     .map(
       (tower) =>
         `${tower.chassisId}:${tower.placement.mountFace}:${tower.placement.anchor.column}:${tower.placement.anchor.elevation}:${tower.placement.orientation}:${tower.targetPolicy}:${tower.upgrades.join(",")}`
     )
     .sort(),
-  equipment: Object.values(state.rooms)
+  equipment: Object.values(state.encounter.process.rooms)
     .flatMap((room) =>
       Object.entries(room.equipment).flatMap(([socketId, instance]) =>
         instance
@@ -141,10 +141,10 @@ const buildProfileFor = (
       )
     )
     .sort(),
-  enabledGasLines: Object.entries(state.gasConduits)
+  enabledGasLines: Object.entries(state.encounter.process.gasConduits)
     .flatMap(([id, conduit]) => (conduit.enabled ? [id] : []))
     .sort(),
-  enabledLiquidLines: Object.entries(state.liquidConduits)
+  enabledLiquidLines: Object.entries(state.encounter.process.liquidConduits)
     .flatMap(([id, conduit]) => (conduit.enabled ? [id] : []))
     .sort(),
   activeDamageSources: DAMAGE_SOURCE_IDS.filter((sourceId) => damageBySource[sourceId] > 0.01),
@@ -169,7 +169,7 @@ const finishResult = (
   stable: boolean,
   runtime: GameRuntime
 ): PlaytestResult => {
-  recordReport(state.lastReport, counters);
+  recordReport(runtime.queries.reportFor(state), counters);
   const success = state.phase === "level_complete" || state.phase === "victory";
   const damageBySource = sourceTotals(counters.reports, "damageBySource");
   const killsBySource = sourceTotals(counters.reports, "killsBySource");
@@ -187,7 +187,7 @@ const finishResult = (
     archetype: plan.archetype,
     success,
     terminalPhase: state.phase,
-    coreIntegrity: state.coreIntegrity,
+    coreIntegrity: state.encounter.coreIntegrity,
     roundsCleared: success
       ? runtime.definition.levels[state.campaign.levelId].rounds.length
       : counters.reports.length,
@@ -202,7 +202,7 @@ const finishResult = (
     damageBySource,
     killsBySource,
     damageByChannel,
-    matterSpent: startingMatter + matterHarvested - state.matter,
+    matterSpent: startingMatter + matterHarvested - state.encounter.matter,
     buildProfile,
     buildSignature,
     plannedActions: plan.rounds.reduce((total, round) => total + round.commands.length, 0),
@@ -239,7 +239,7 @@ const plannedTransition = (
     return runtime.execute(configured, { type: "start_assault" }).state;
   }
   if (state.phase === "round_result") {
-    recordReport(state.lastReport, counters);
+    recordReport(runtime.queries.reportFor(state), counters);
     return runtime.execute(state, { type: "continue_round" }).state;
   }
   return null;

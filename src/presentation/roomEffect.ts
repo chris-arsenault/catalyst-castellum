@@ -37,10 +37,13 @@ const boundedCache = <Value>() => {
 };
 
 const configurationKey = (game: GameState): string => {
-  const conduits = [...Object.entries(game.gasConduits), ...Object.entries(game.liquidConduits)]
+  const conduits = [
+    ...Object.entries(game.encounter.process.gasConduits),
+    ...Object.entries(game.encounter.process.liquidConduits),
+  ]
     .map(([id, conduit]) => `${id}:${Number(conduit.enabled)}:${Number(conduit.blocked)}`)
     .join("|");
-  const equipment = Object.entries(game.rooms)
+  const equipment = Object.entries(game.encounter.process.rooms)
     .flatMap(([roomId, room]) =>
       Object.entries(room.equipment).flatMap(([socketId, item]) =>
         item
@@ -52,9 +55,9 @@ const configurationKey = (game: GameState): string => {
   return [
     game.campaign.levelId,
     game.campaign.roundIndex,
-    game.mapRevision,
+    game.encounter.mapRevision,
     game.phase,
-    Math.floor(game.elapsed),
+    Math.floor(game.encounter.elapsed),
     conduits,
     equipment,
   ].join(";");
@@ -71,7 +74,8 @@ const localizeImpact = (
     {
       roomId: impact.roomId,
       tone: impact.tone,
-      name: roomCopy(instance(game.map.rooms, impact.roomId, "room effect"), translator).name,
+      name: roomCopy(instance(game.encounter.map.rooms, impact.roomId, "room effect"), translator)
+        .name,
       label: translator.text(`ui.roomEffect.${impact.tone}`),
     },
   ],

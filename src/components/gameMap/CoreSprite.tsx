@@ -1,10 +1,20 @@
-import { useEffect, useState } from "react";
-import type { Texture } from "pixi.js";
+import { useCallback, useEffect, useState } from "react";
+import type { AnimatedSprite, Texture } from "pixi.js";
+import { useOptionalEncounterSurface } from "../../application/encounterSurface";
 import { coreDamageProfile, type CoreDamageState } from "./coreDamageModel";
 import { CORE_SPRITE_DISPLAY_SIZE, loadCoreSpriteTextures } from "./coreSprites";
 
 export const CoreSprite = ({ integrity }: { integrity: number }) => {
   const state = coreDamageProfile(integrity).state;
+  const reducedMotion = useOptionalEncounterSurface()?.reducedMotion ?? false;
+  const animate = useCallback(
+    (sprite: AnimatedSprite | null) => {
+      if (!sprite) return;
+      if (reducedMotion) sprite.stop();
+      else sprite.play();
+    },
+    [reducedMotion]
+  );
   const [loaded, setLoaded] = useState<{ frames: Texture[]; state: CoreDamageState } | null>(null);
   useEffect(() => {
     let mounted = true;
@@ -20,7 +30,8 @@ export const CoreSprite = ({ integrity }: { integrity: number }) => {
   return (
     <pixiAnimatedSprite
       textures={frames}
-      autoPlay
+      ref={animate}
+      autoPlay={!reducedMotion}
       loop
       animationSpeed={0.055}
       anchor={0.5}

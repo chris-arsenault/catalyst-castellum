@@ -1,12 +1,10 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessEncounterState, ProcessSimulationDefinition } from "../encounter/processTypes";
 import type {
   CommandDecision,
   CommandRejectionCode,
   GameCommand,
-  GameState,
   SiteSupplyDefinition,
 } from "../types";
-import { supplyAvailable, supplyDefinitionFor } from "./campaign";
 
 type ChargeCommand = Extract<GameCommand, { type: "charge_gas_source" | "charge_liquid_source" }>;
 
@@ -38,37 +36,36 @@ const phaseFor = (command: ChargeCommand): SiteSupplyDefinition["phase"] =>
   command.type === "charge_gas_source" ? "gas" : "liquid";
 
 const inventoryFor = (
-  state: GameState,
+  state: ProcessEncounterState,
   sourceId: string,
   phase: SiteSupplyDefinition["phase"]
 ): object | null =>
   phase === "gas"
-    ? (state.gasSources[sourceId]?.gas ?? null)
-    : (state.liquidSources[sourceId]?.liquid ?? null);
+    ? (state.process.gasSources[sourceId]?.gas ?? null)
+    : (state.process.liquidSources[sourceId]?.liquid ?? null);
 
 const matterSupplyFor = (
-  state: GameState,
   sourceId: string,
   phase: SiteSupplyDefinition["phase"],
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessSimulationDefinition
 ): MatterSupply | null => {
-  const supply = supplyDefinitionFor(state, sourceId, gameDefinition);
+  const supply = gameDefinition.supplies.find((candidate) => candidate.id === sourceId);
   if (supply?.phase !== phase) return null;
   if (supply.replenishment.kind !== "matter") return null;
   return supply as MatterSupply;
 };
 
 export const evaluateSupplyCharge = (
-  state: GameState,
+  state: ProcessEncounterState,
   command: ChargeCommand,
-  gameDefinition: GameDefinition
+  gameDefinition: ProcessSimulationDefinition
 ): CommandDecision => {
   if (state.phase !== "build") return reject("invalid_phase");
-  if (!supplyAvailable(state, command.sourceId, gameDefinition)) {
+  if (!gameDefinition.availableSupplyIds.includes(command.sourceId)) {
     return reject("unavailable");
   }
   const phase = phaseFor(command);
-  const supply = matterSupplyFor(state, command.sourceId, phase, gameDefinition);
+  const supply = matterSupplyFor(command.sourceId, phase, gameDefinition);
   if (!supply) return reject("unavailable");
   const inventory = inventoryFor(state, command.sourceId, phase);
   if (!inventory) return reject("unavailable");

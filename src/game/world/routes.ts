@@ -1,4 +1,6 @@
-import type { GameDefinition, RouteIngressDefinition } from "../definitionTypes";
+import type { RouteIngressDefinition } from "../definitionTypes";
+import type { CombatDefinition } from "../encounter/types";
+import { enemyDefinition } from "../encounter/catalogs";
 import type { EnemyState, FacilityPortalState, GridCell } from "../types";
 import { findEnemyPathBetween } from "../engine/navigation";
 import type { EnemyRouteGraph, WorldMap } from "./map";
@@ -86,14 +88,14 @@ export const routePathForEnemy = (
   enemy: Pick<EnemyState, "routeId" | "type">,
   map: WorldMap,
   portalStates: Readonly<Record<string, FacilityPortalState>>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ) => {
   const route = map.routeGraph.routes[enemy.routeId];
   const ingress = route ? map.routeGraph.nodes[route.ingressNodeId] : null;
   if (!route || !ingress) return [];
   return findEnemyPathBetween(
     {
-      flying: definition.enemies[enemy.type].flying,
+      flying: enemyDefinition(definition, enemy.type).flying,
       portalStates,
       start: ingress.cell,
       goal: map.coreBreachCell,

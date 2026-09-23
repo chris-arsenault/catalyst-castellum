@@ -19,4 +19,5 @@ export const facilityModelForMap = (map: WorldMap): FacilityModel => {
   return model;
 };
 
-export const facilityModelFor = (state: GameState): FacilityModel => facilityModelForMap(state.map);
+export const facilityModelFor = (state: GameState): FacilityModel =>
+  facilityModelForMap(state.encounter.map);

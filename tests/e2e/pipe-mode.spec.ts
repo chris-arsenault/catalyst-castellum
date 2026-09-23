@@ -5,7 +5,7 @@ import { mapViewFor, type CameraTransform } from "../../src/components/gameMap/m
 import type { RoomId } from "../../src/game/types";
 import { installEquipment } from "./tutorialAssertions";
 
-const siteMap = createScenarioGame("junction_l6").map;
+const siteMap = createScenarioGame("junction_l6").encounter.map;
 
 const mapCamera = async (page: Page): Promise<CameraTransform> => {
   const map = page.getByTestId("game-map");

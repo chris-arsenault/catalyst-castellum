@@ -5,10 +5,11 @@ import type {
   LiquidConduitState,
   RoomId,
   RoomState,
-  TowerInstance,
   TowerInstanceId,
   ConnectionId,
 } from "../types";
+import type { EncounterTower } from "../encounter/types";
+import type { ProcessState } from "../encounter/processTypes";
 import type { MapConnection, MapRoom, MapUtilityNode, WorldMap } from "./map";
 import { architecturalConnections, isProcessLine } from "./map";
 import { validateWorldMap } from "./mapValidation";
@@ -26,7 +27,8 @@ export interface HullFragment {
   roomStates: Record<RoomId, RoomState>;
   gasConduits: Record<ConnectionId, GasConduitState>;
   liquidConduits: Record<ConnectionId, LiquidConduitState>;
-  towers: Record<TowerInstanceId, TowerInstance>;
+  towers: Record<TowerInstanceId, EncounterTower>;
+  towerResources: ProcessState["towerResources"];
 }
 
 const deepCopy = <Value>(value: Value): Value => structuredClone(value);
@@ -113,9 +115,9 @@ export const hullPlanningMap = (map: WorldMap): WorldMap => {
 const extractHullMapData = (
   state: GameState
 ): Pick<HullFragment, "rooms" | "connections" | "utilityNodes"> => {
-  const rooms = hullRoomRecords(state.map);
-  const connections = hullConnectionRecords(state.map, rooms);
-  const utilityNodes = hullUtilityNodeRecords(state.map, rooms);
+  const rooms = hullRoomRecords(state.encounter.map);
+  const connections = hullConnectionRecords(state.encounter.map, rooms);
+  const utilityNodes = hullUtilityNodeRecords(state.encounter.map, rooms);
   return { rooms, connections, utilityNodes };
 };
 
@@ -135,6 +137,7 @@ export const hullLayoutFromMap = (map: WorldMap): HullFragment => {
     gasConduits: {},
     liquidConduits: {},
     towers: {},
+    towerResources: {},
   };
 };
 
@@ -146,9 +149,9 @@ const extractConduitStates = (
   const liquidConduits: HullFragment["liquidConduits"] = {};
   for (const [id, connection] of Object.entries(connections)) {
     if (!isProcessLine(connection)) continue;
-    const gas = state.gasConduits[id];
+    const gas = state.encounter.process.gasConduits[id];
     if (gas) gasConduits[id] = deepCopy(gas);
-    const liquid = state.liquidConduits[id];
+    const liquid = state.encounter.process.liquidConduits[id];
     if (liquid) liquidConduits[id] = deepCopy(liquid);
   }
   return { gasConduits, liquidConduits };
@@ -158,7 +161,7 @@ export const extractHullFragment = (state: GameState): HullFragment => {
   const { rooms, connections, utilityNodes } = extractHullMapData(state);
   const roomStates: HullFragment["roomStates"] = {};
   for (const roomId of Object.keys(rooms)) {
-    const roomState = state.rooms[roomId];
+    const roomState = state.encounter.process.rooms[roomId];
     if (roomState) roomStates[roomId] = deepCopy(roomState);
   }
   return {
@@ -166,8 +169,13 @@ export const extractHullFragment = (state: GameState): HullFragment => {
     connections,
     utilityNodes,
     roomStates,
+    towerResources: Object.fromEntries(
+      Object.entries(state.encounter.process.towerResources)
+        .filter(([id]) => state.encounter.towers[id]?.provenance === "hull")
+        .map(([id, resources]) => [id, deepCopy(resources)])
+    ),
     towers: Object.fromEntries(
-      Object.entries(state.towers)
+      Object.entries(state.encounter.towers)
         .filter(([, tower]) => tower.provenance === "hull")
         .map(([towerId, tower]) => [towerId, deepCopy(tower)])
     ),

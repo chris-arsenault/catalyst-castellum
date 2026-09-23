@@ -1,11 +1,10 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import { architecturalConnections } from "../world/map";
-import type { GameDefinition } from "../definitionTypes";
+import type { ProcessPhysicsDefinition, ProcessEncounterState } from "../encounter/processTypes";
 import {
   GAS_TYPES,
   LIQUID_TYPES,
   type FacilityPortalDefinition,
-  type GameState,
   type GasAmounts,
   type GasZone,
   type LiquidAmounts,
@@ -28,7 +27,7 @@ import { instance, roomState } from "../world/instances";
 const GAS_DIFFUSION_FRACTION = 0.012;
 const GAS_DRIVE_SCALE = 4;
 
-const portalActive = (state: GameState, portal: FacilityPortalDefinition): boolean => {
+const portalActive = (state: ProcessEncounterState, portal: FacilityPortalDefinition): boolean => {
   const portalState = state.portalStates[portal.id];
   return Boolean(portalState?.open && !portalState.sealed);
 };
@@ -55,7 +54,7 @@ interface GasFlowPlan {
 const gasZoneForEndpoint = (
   portal: FacilityPortalDefinition,
   endpointIndex: 0 | 1,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): GasZone => {
   const roomId = portal.rooms[endpointIndex] as string;
   return gasZoneForPort(
@@ -67,9 +66,9 @@ const gasZoneForEndpoint = (
 };
 
 const gasDrive = (
-  state: GameState,
+  state: ProcessEncounterState,
   portal: FacilityPortalDefinition,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): number => {
   const [leftId, rightId] = portal.rooms;
   const leftZone = gasZoneForEndpoint(portal, 0, definition);
@@ -87,10 +86,10 @@ const gasDrive = (
 };
 
 const directedGasPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   portal: FacilityPortalDefinition,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): GasFlowPlan | null => {
   const drive = gasDrive(state, portal, definition);
   if (Math.abs(drive) < 1e-7) return null;
@@ -117,10 +116,10 @@ const directedGasPlan = (
 };
 
 const diffusionPlans = (
-  state: GameState,
+  state: ProcessEncounterState,
   portal: FacilityPortalDefinition,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): GasFlowPlan[] => {
   const [leftId, rightId] = portal.rooms;
   const leftZone = gasZoneForEndpoint(portal, 0, definition);
@@ -164,9 +163,9 @@ const diffusionPlans = (
 };
 
 const allocateGasPlans = (
-  state: GameState,
+  state: ProcessEncounterState,
   plans: GasFlowPlan[],
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   const sourceKeys = [...new Set(plans.map((plan) => `${plan.sourceRoomId}:${plan.sourceZone}`))];
   for (const key of sourceKeys) {
@@ -190,9 +189,9 @@ const allocateGasPlans = (
 };
 
 export const simulateArchitecturalGas = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastGasFlow = 0;
   const portals = architecturalConnections(definition.map).filter(
@@ -246,10 +245,10 @@ export const verticalPortalOrder = (portal: FacilityPortalDefinition): readonly 
 };
 
 const liquidPlan = (
-  state: GameState,
+  state: ProcessEncounterState,
   portal: FacilityPortalDefinition,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): LiquidFlowPlan | null => {
   if (portal.liquidMode === "blocked") return null;
   let sourceIndex: 0 | 1;
@@ -297,9 +296,9 @@ const liquidPlan = (
 };
 
 const allocateLiquidPlans = (
-  state: GameState,
+  state: ProcessEncounterState,
   plans: LiquidFlowPlan[],
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   for (const roomId of [...new Set(plans.map((plan) => plan.sourceRoomId))]) {
     const matching = plans.filter((plan) => plan.sourceRoomId === roomId);
@@ -320,9 +319,9 @@ const allocateLiquidPlans = (
 };
 
 export const simulateArchitecturalLiquid = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   for (const portalState of Object.values(state.portalStates)) portalState.lastLiquidFlow = 0;
   const plans = architecturalConnections(definition.map).flatMap((portal) => {
@@ -342,9 +341,9 @@ export const simulateArchitecturalLiquid = (
 };
 
 export const simulateArchitecturalFlow = (
-  state: GameState,
+  state: ProcessEncounterState,
   dt: number,
-  definition: GameDefinition
+  definition: ProcessPhysicsDefinition
 ): void => {
   simulateArchitecturalGas(state, dt, definition);
   simulateArchitecturalLiquid(state, dt, definition);

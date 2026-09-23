@@ -54,7 +54,7 @@ const BuildContext = ({ target }: { target: EquipmentBuildTarget | null }) => {
         <strong>
           {target
             ? translator.text("ui.manual.build.target", {
-                room: roomDefinition(game, target.roomId).code,
+                room: roomDefinition(game.encounter, target.roomId).code,
                 socket: socketName,
               })
             : translator.text("ui.manual.build.preview")}

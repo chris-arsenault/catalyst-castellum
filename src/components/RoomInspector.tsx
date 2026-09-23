@@ -29,8 +29,8 @@ const GasLayerComposition = ({ zone }: { zone: GasZone }) => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const room = roomState(game, roomId);
-  const analysis = selectors.roomAnalysis(room, game);
+  const room = roomState(game.encounter, roomId);
+  const analysis = selectors.roomAnalysis(room, game.encounter);
   const isLower = zone === "lower";
   const total = isLower ? analysis.lowerGasTotal : analysis.upperGasTotal;
   const density = isLower ? analysis.lowerGasDensity : analysis.upperGasDensity;
@@ -88,7 +88,7 @@ const GasComposition = () => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = selectors.roomAnalysis(roomState(game, roomId), game);
+  const analysis = selectors.roomAnalysis(roomState(game.encounter, roomId), game.encounter);
   return (
     <div className="composition-group gas-layers">
       <div className="atmosphere-summary">
@@ -114,9 +114,12 @@ const LiquidComposition = () => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const room = roomState(game, roomId);
-  const analysis = selectors.roomAnalysis(room, game);
-  const fill = Math.min(1, analysis.liquidTotal / facilityModelForMap(game.map).roomVolume(roomId));
+  const room = roomState(game.encounter, roomId);
+  const analysis = selectors.roomAnalysis(room, game.encounter);
+  const fill = Math.min(
+    1,
+    analysis.liquidTotal / facilityModelForMap(game.encounter.map).roomVolume(roomId)
+  );
   const presentLiquids = LIQUID_TYPES.filter((liquid) => room.liquid[liquid] > 0.05);
   return (
     <div className="composition-group liquid-group">
@@ -182,9 +185,12 @@ const RoomMetrics = () => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const room = roomState(game, roomId);
-  const analysis = selectors.roomAnalysis(room, game);
-  const fill = Math.min(1, analysis.liquidTotal / facilityModelForMap(game.map).roomVolume(roomId));
+  const room = roomState(game.encounter, roomId);
+  const analysis = selectors.roomAnalysis(room, game.encounter);
+  const fill = Math.min(
+    1,
+    analysis.liquidTotal / facilityModelForMap(game.encounter.map).roomVolume(roomId)
+  );
 
   return (
     <section className="metric-grid" aria-label={translator.text("ui.room.metrics")}>
@@ -228,7 +234,7 @@ const EffectsPanel = () => {
   const { selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const analysis = selectors.roomAnalysis(roomState(game, roomId), game);
+  const analysis = selectors.roomAnalysis(roomState(game.encounter, roomId), game.encounter);
 
   return (
     <section className="effects-panel">
@@ -258,7 +264,7 @@ const ReactionPanel = () => {
   const { formatters, limitingFactorCopy: factorCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const room = roomState(game, roomId);
+  const room = roomState(game.encounter, roomId);
   const telemetry = room.reactions;
   const active = Object.entries(telemetry) as [
     RoomReactionId,
@@ -323,7 +329,7 @@ const RoomDetailsModal = ({ onClose }: { onClose: () => void }) => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const definition = roomDefinition(game, roomId);
+  const definition = roomDefinition(game.encounter, roomId);
   return (
     <div className="modal-backdrop room-details-backdrop">
       <section
@@ -367,8 +373,8 @@ export const RoomInspector = () => {
   const { formatters, selectors, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const definition = roomDefinition(game, roomId);
-  const analysis = selectors.roomAnalysis(roomState(game, roomId), game);
+  const definition = roomDefinition(game.encounter, roomId);
+  const analysis = selectors.roomAnalysis(roomState(game.encounter, roomId), game.encounter);
   const [showDetails, setShowDetails] = useState(false);
   const closeDetails = useCallback(() => setShowDetails(false), [setShowDetails]);
 

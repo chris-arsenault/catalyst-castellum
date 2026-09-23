@@ -50,11 +50,13 @@ const phaseConduit = (
   runId: ConnectionId,
   phase: TransportPhase
 ): GasConduitState | LiquidConduitState =>
-  phase === "gas" ? gasConduitState(game, runId) : liquidConduitState(game, runId);
+  phase === "gas"
+    ? gasConduitState(game.encounter, runId)
+    : liquidConduitState(game.encounter, runId);
 
 const phaseAmount = (game: GameState, runId: ConnectionId, phase: TransportPhase): number => {
-  if (phase === "gas") return gasAmountTotal(gasConduitState(game, runId).gas);
-  return liquidAmountTotal(liquidConduitState(game, runId).liquid);
+  if (phase === "gas") return gasAmountTotal(gasConduitState(game.encounter, runId).gas);
+  return liquidAmountTotal(liquidConduitState(game.encounter, runId).liquid);
 };
 
 const phaseName = (phase: TransportPhase, translator: Translator): string =>
@@ -106,7 +108,7 @@ const conduitMixtureSummary = (
   formatters: LocaleFormatters
 ): string => {
   if (phase === "gas") {
-    const gas = gasConduitState(game, runId).gas;
+    const gas = gasConduitState(game.encounter, runId).gas;
     const entries = GAS_TYPES.filter((species) => gas[species] >= FLOW_EPSILON);
     return entries.length > 0
       ? entries
@@ -118,7 +120,7 @@ const conduitMixtureSummary = (
           .join(" · ")
       : translator.text("ui.map.transport.empty");
   }
-  const liquid = liquidConduitState(game, runId).liquid;
+  const liquid = liquidConduitState(game.encounter, runId).liquid;
   const entries = LIQUID_TYPES.filter((species) => liquid[species] >= FLOW_EPSILON);
   return entries.length > 0
     ? entries
@@ -149,11 +151,11 @@ const PhaseSection = ({
   runId: ConnectionId;
 }) => {
   const { formatters, translator } = useGamePresentation();
-  const definition = lineDefinition(game, runId, phase);
+  const definition = lineDefinition(game.encounter, runId, phase);
   if (!definition || !transportPhaseAvailable(game, runId, phase)) return null;
   const conduit = phaseConduit(game, runId, phase);
   const amount = phaseAmount(game, runId, phase);
-  const capacity = conduitCapacity(game, runId, phase);
+  const capacity = conduitCapacity(game.encounter, runId, phase);
   const fill = capacity > 0 ? amount / capacity : 0;
   const state = conduitState(conduit, translator);
   return (
@@ -168,10 +170,10 @@ const PhaseSection = ({
       </header>
       <div className={`transport-channel ${conduit.blocked ? "blocked" : ""}`}>
         <div>
-          <strong>{transportCopy(game, runId, translator).name}</strong>
+          <strong>{transportCopy(game.encounter, runId, translator).name}</strong>
           <small>
-            {roomDefinition(game, definition.direction[0]).code} →{" "}
-            {roomDefinition(game, definition.direction[1]).code} ·{" "}
+            {roomDefinition(game.encounter, definition.direction[0]).code} →{" "}
+            {roomDefinition(game.encounter, definition.direction[1]).code} ·{" "}
             {translator.text(
               (
                 {
@@ -217,15 +219,16 @@ interface TransportTooltipProps {
 export const TransportTooltip = ({ game, runId, selectedSpecies }: TransportTooltipProps) => {
   const { translator } = useGamePresentation();
   if (!runId) return null;
-  const channels = transportRunChannels(game, runId);
-  const [fromRoom, toRoom] = connectionRoomPair(game, runId);
+  const channels = transportRunChannels(game.encounter, runId);
+  const [fromRoom, toRoom] = connectionRoomPair(game.encounter, runId);
   return (
     <aside className="transport-tooltip" data-testid="transport-tooltip">
       <header>
         <div>
           <span>{translator.text("ui.map.transport.title")}</span>
           <strong>
-            {roomDefinition(game, fromRoom).code} ⇄ {roomDefinition(game, toRoom).code}
+            {roomDefinition(game.encounter, fromRoom).code} ⇄{" "}
+            {roomDefinition(game.encounter, toRoom).code}
           </strong>
         </div>
         {selectedSpecies && (

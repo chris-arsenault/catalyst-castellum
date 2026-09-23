@@ -1,4 +1,5 @@
 import { UI_MAP_MESSAGES } from "./uiMap";
+import { UI_SAVE_MESSAGES } from "./uiSave";
 
 export const UI_MESSAGES = {
   "ui.common.systemEvent": "System event",
@@ -198,49 +199,6 @@ export const UI_MESSAGES = {
   "ui.outcome.newCampaign": "Begin new campaign",
   "ui.outcome.retry": "Retry the site",
   "ui.notice.dismiss": "{notice}. Dismiss",
-  "ui.save.phase.briefing": "Briefing",
-  "ui.save.phase.planning": "Planning",
-  "ui.save.phase.assault": "Assault",
-  "ui.save.phase.roundComplete": "Round complete",
-  "ui.save.phase.checkpointComplete": "Site secured",
-  "ui.save.phase.travel": "Underway",
-  "ui.save.phase.campaignComplete": "Campaign complete",
-  "ui.save.phase.coreLost": "Core lost",
-  "ui.save.confirm.group": "Confirm {action} save slot {number}",
-  "ui.save.confirm.overwrite.title": "Start over in this slot?",
-  "ui.save.confirm.overwrite.detail":
-    "A new game replaces this slot’s plant, campaign, and tutorial progress.",
-  "ui.save.confirm.delete.title": "Delete this save?",
-  "ui.save.confirm.delete.detail":
-    "Deletion clears this local record and frees the slot for a new game.",
-  "ui.save.cancel": "Cancel",
-  "ui.save.confirm.overwrite.action": "Start new game",
-  "ui.save.confirm.delete.action": "Delete save",
-  "ui.save.slot": "SAVE SLOT {number}",
-  "ui.save.available": "AVAILABLE",
-  "ui.save.newCampaign": "New campaign",
-  "ui.save.newDetail": "This slot starts a clean plant, campaign, and guided tutorial record.",
-  "ui.save.start": "Start new game",
-  "ui.save.level": "LEVEL {number}",
-  "ui.save.round": "Round",
-  "ui.save.plantState": "Plant state",
-  "ui.save.core": "Core",
-  "ui.save.lastSaved": "Last saved {date}",
-  "ui.save.ready": "READY",
-  "ui.save.load": "Load save",
-  "ui.save.newGame": "New game",
-  "ui.save.deleteSlot": "Delete save slot {number}",
-  "ui.save.delete": "Delete",
-  "ui.save.guidance.title": "Field guidance",
-  "ui.save.guidance.detail":
-    "Runs the campaign with coaching, the task rail, and step-by-step locks. Clear it to play every site with the controls open.",
-  "ui.save.archive": "LOCAL OPERATIONS ARCHIVE",
-  "ui.save.control": "CAMPAIGN CONTROL",
-  "ui.save.select": "Select a save slot",
-  "ui.save.description":
-    "Each slot owns its plant state and tutorial progress. Select a slot to start or resume a campaign.",
-  "ui.save.records": "THREE ISOLATED LOCAL RECORDS",
-  "ui.save.resetWarning": "A NEW GAME RESETS THIS SLOT’S PLANT, CAMPAIGN, AND TUTORIAL PROGRESS",
   "ui.room.lowerSample": "↓ Lower · ground sample",
   "ui.room.upperSample": "↑ Upper · flying sample",
   "ui.room.gasComposition": "{zone} gas composition",
@@ -395,4 +353,5 @@ export const UI_MESSAGES = {
   "ui.manual.threats.behavior.emitter":
     "The reservoir carries {reservoir} mol-eq and feeds {rate} mol-eq into its gas layer each second.",
   ...UI_MAP_MESSAGES,
+  ...UI_SAVE_MESSAGES,
 } as const;

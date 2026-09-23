@@ -1,6 +1,13 @@
 import type { GameDefinition } from "../game/definitionTypes";
 import type { GameQueries } from "../game/queries";
-import type { EnemyDefinition, EnemyType, GameState, GridCell, RoomId } from "../game/types";
+import type {
+  EnemyDefinition,
+  EnemyType,
+  GameState,
+  GridCell,
+  RoomId,
+  WaveEntry,
+} from "../game/types";
 import { instance } from "../game/world/instances";
 import type { Translator } from "../localization/translator";
 import { enemyCopy, roomCopy } from "./entityCopy";
@@ -17,7 +24,7 @@ export interface WaveEnemyForecast {
   traits: readonly WaveTrait[];
 }
 
-export interface WaveForecastModel {
+export interface WaveFormationModel {
   total: number;
   composition: readonly WaveEnemyForecast[];
   cadence: WaveCadence;
@@ -29,6 +36,15 @@ export interface WaveForecastModel {
   coreRoomId: RoomId;
 }
 
+export interface WaveRouteForecast extends WaveFormationModel {
+  routeId: string;
+  ingressCell: GridCell;
+}
+
+export interface WaveForecastModel extends WaveFormationModel {
+  routes: readonly WaveRouteForecast[];
+}
+
 export interface WaveEnemyForecastCopy extends WaveEnemyForecast {
   name: string;
   description: string;
@@ -37,7 +53,7 @@ export interface WaveEnemyForecastCopy extends WaveEnemyForecast {
   traitLabels: readonly string[];
 }
 
-export interface WaveForecastCopy extends WaveForecastModel {
+export interface WaveFormationCopy extends WaveFormationModel {
   totalLabel: string;
   cadenceLabel: string;
   arrivalLabel: string;
@@ -45,6 +61,16 @@ export interface WaveForecastCopy extends WaveForecastModel {
   approachLabel: string;
   composition: readonly WaveEnemyForecastCopy[];
   traitLabels: readonly string[];
+  arrivalWindowLabel: string;
+}
+
+export interface WaveRouteForecastCopy extends WaveFormationCopy {
+  routeId: string;
+  ingressCell: GridCell;
+}
+
+export interface WaveForecastCopy extends WaveFormationCopy {
+  routes: readonly WaveRouteForecastCopy[];
 }
 
 const TRAIT_ORDER: readonly WaveTrait[] = [
@@ -102,24 +128,23 @@ const contains = (
   cell.elevation >= bounds.elevation &&
   cell.elevation < bounds.elevation + bounds.height;
 
-const routeRooms = (game: GameState): readonly [RoomId, RoomId] => {
-  const rooms = Object.values(game.map.rooms);
-  const entry = rooms.find((room) => contains(game.map.entryCell, room.bounds));
+const routeRooms = (game: GameState, ingressCell: GridCell): readonly [RoomId, RoomId] => {
+  const rooms = Object.values(game.encounter.map.rooms);
+  const entry = rooms.find((room) => contains(ingressCell, room.bounds));
   const core = rooms.find((room) => room.structure === "core");
   if (!entry || !core) throw new Error("Wave forecast requires entry and core rooms.");
   return [entry.id, core.id];
 };
 
-/** Mechanical forecast derived entirely from the current round's authored wave. */
-export const waveForecastModel = (
+const formationModel = (
   game: GameState,
   definition: GameDefinition,
-  queries: GameQueries
-): WaveForecastModel => {
+  queries: GameQueries,
+  wave: readonly WaveEntry[],
+  ingressCell: GridCell
+): WaveFormationModel => {
   const level = queries.levelDefinitionFor(game);
-  const sortedWave = [...queries.roundDefinitionFor(game).wave].sort(
-    (left, right) => left.at - right.at
-  );
+  const sortedWave = [...wave].sort((left, right) => left.at - right.at);
   const grouped = new Map<EnemyType, WaveEnemyForecast>();
 
   for (const entry of sortedWave) {
@@ -148,7 +173,7 @@ export const waveForecastModel = (
   const traits = TRAIT_ORDER.filter((trait) =>
     composition.some((enemy) => enemy.traits.includes(trait))
   );
-  const [entryRoomId, coreRoomId] = routeRooms(game);
+  const [entryRoomId, coreRoomId] = routeRooms(game, ingressCell);
   const firstArrivalSeconds = sortedWave[0]?.at ?? 0;
   const lastArrivalSeconds = sortedWave.at(-1)?.at ?? firstArrivalSeconds;
 
@@ -166,6 +191,45 @@ export const waveForecastModel = (
   };
 };
 
+/** Each active ingress retains its own composition and arrival clock. */
+export const waveForecastModel = (
+  game: GameState,
+  definition: GameDefinition,
+  queries: GameQueries
+): WaveForecastModel => {
+  const wave = queries.roundDefinitionFor(game).wave;
+  const routeIds = [...new Set(wave.map((entry) => entry.routeId))];
+  const routes = routeIds.map((routeId): WaveRouteForecast => {
+    const route = instance(game.encounter.map.routeGraph.routes, routeId, "forecast route");
+    const ingressCell = instance(
+      game.encounter.map.routeGraph.nodes,
+      route.ingressNodeId,
+      "route ingress"
+    ).cell;
+    return {
+      ...formationModel(
+        game,
+        definition,
+        queries,
+        wave.filter((entry) => entry.routeId === routeId),
+        ingressCell
+      ),
+      routeId,
+      ingressCell,
+    };
+  });
+  return {
+    ...formationModel(
+      game,
+      definition,
+      queries,
+      wave,
+      routes[0]?.ingressCell ?? game.encounter.map.entryCell
+    ),
+    routes,
+  };
+};
+
 const levelLabel = (enemy: WaveEnemyForecast, translator: Translator): string =>
   enemy.minimumLevel === enemy.maximumLevel
     ? translator.text("ui.waveForecast.level", { level: enemy.minimumLevel })
@@ -174,7 +238,7 @@ const levelLabel = (enemy: WaveEnemyForecast, translator: Translator): string =>
         maximum: enemy.maximumLevel,
       });
 
-const arrivalLabel = (model: WaveForecastModel, translator: Translator): string => {
+const arrivalLabel = (model: WaveFormationModel, translator: Translator): string => {
   if (model.firstArrivalSeconds <= 2) {
     return translator.text("ui.waveForecast.arrival.immediate");
   }
@@ -182,7 +246,7 @@ const arrivalLabel = (model: WaveForecastModel, translator: Translator): string 
   return translator.text("ui.waveForecast.arrival.delayed");
 };
 
-const timingLabel = (model: WaveForecastModel, translator: Translator): string => {
+const timingLabel = (model: WaveFormationModel, translator: Translator): string => {
   if (model.total === 1) return translator.text("ui.waveForecast.timing.single");
   if (model.durationSeconds === 0) {
     return translator.text("ui.waveForecast.timing.simultaneous", {
@@ -196,45 +260,70 @@ const timingLabel = (model: WaveForecastModel, translator: Translator): string =
       });
 };
 
+const formationCopy = (
+  model: WaveFormationModel,
+  game: GameState,
+  definition: GameDefinition,
+  translator: Translator
+): WaveFormationCopy => {
+  const traitLabel = (trait: WaveTrait): string =>
+    translator.text(`ui.waveForecast.trait.${trait}`);
+  const entryName = roomCopy(
+    instance(game.encounter.map.rooms, model.entryRoomId, "entry room definition"),
+    translator
+  ).name;
+  const coreName = roomCopy(
+    instance(game.encounter.map.rooms, model.coreRoomId, "core room definition"),
+    translator
+  ).name;
+
+  return {
+    ...model,
+    totalLabel: translator.text("ui.waveForecast.hostiles", { count: model.total }),
+    cadenceLabel: translator.text(`ui.waveForecast.cadence.${model.cadence}`),
+    arrivalLabel: arrivalLabel(model, translator),
+    timingLabel: timingLabel(model, translator),
+    arrivalWindowLabel: translator.text("ui.waveForecast.arrivalWindow", {
+      first: model.firstArrivalSeconds,
+      last: model.firstArrivalSeconds + model.durationSeconds,
+    }),
+    approachLabel: translator.text("ui.waveForecast.route", {
+      entry: entryName,
+      core: coreName,
+    }),
+    composition: model.composition.map((enemy) => {
+      const copy = enemyCopy(definition.enemies[enemy.type], translator);
+      return {
+        ...enemy,
+        name: copy.name,
+        description: copy.description,
+        countLabel: translator.text("ui.waveForecast.enemyCount", {
+          count: enemy.count,
+          enemy: copy.name,
+        }),
+        levelLabel: levelLabel(enemy, translator),
+        traitLabels: enemy.traits.map(traitLabel),
+      };
+    }),
+    traitLabels: model.traits.map(traitLabel),
+  };
+};
+
 export const createWaveForecastPresentation =
   (definition: GameDefinition, queries: GameQueries, translator: Translator) =>
   (game: GameState): WaveForecastCopy => {
     const model = waveForecastModel(game, definition, queries);
-    const traitLabel = (trait: WaveTrait): string =>
-      translator.text(`ui.waveForecast.trait.${trait}`);
-    const entryName = roomCopy(
-      instance(game.map.rooms, model.entryRoomId, "entry room definition"),
-      translator
-    ).name;
-    const coreName = roomCopy(
-      instance(game.map.rooms, model.coreRoomId, "core room definition"),
-      translator
-    ).name;
-
+    const summary = formationCopy(model, game, definition, translator);
     return {
-      ...model,
-      totalLabel: translator.text("ui.waveForecast.hostiles", { count: model.total }),
-      cadenceLabel: translator.text(`ui.waveForecast.cadence.${model.cadence}`),
-      arrivalLabel: arrivalLabel(model, translator),
-      timingLabel: timingLabel(model, translator),
-      approachLabel: translator.text("ui.waveForecast.route", {
-        entry: entryName,
-        core: coreName,
-      }),
-      composition: model.composition.map((enemy) => {
-        const copy = enemyCopy(definition.enemies[enemy.type], translator);
-        return {
-          ...enemy,
-          name: copy.name,
-          description: copy.description,
-          countLabel: translator.text("ui.waveForecast.enemyCount", {
-            count: enemy.count,
-            enemy: copy.name,
-          }),
-          levelLabel: levelLabel(enemy, translator),
-          traitLabels: enemy.traits.map(traitLabel),
-        };
-      }),
-      traitLabels: model.traits.map(traitLabel),
+      ...summary,
+      approachLabel:
+        model.routes.length > 1
+          ? translator.text("ui.waveForecast.approaches", { count: model.routes.length })
+          : summary.approachLabel,
+      routes: model.routes.map((route) => ({
+        ...formationCopy(route, game, definition, translator),
+        routeId: route.routeId,
+        ingressCell: route.ingressCell,
+      })),
     };
   };

@@ -4,6 +4,8 @@
 | ----------------------------------- | ------------------------------------------------------------------------------ |
 | Tower-defense implementation record | [../TOWER-DEFENSE-REWORK-PLAN.md](../TOWER-DEFENSE-REWORK-PLAN.md)             |
 | Architecture                        | [architecture.md](architecture.md)                                             |
+| Standalone encounter tooling        | [encounter-tooling.md](encounter-tooling.md)                                   |
+| Catalyst exercise tooling           | [exercise-tooling.md](exercise-tooling.md)                                     |
 | Architecture decisions              | [adr/README.md](adr/README.md)                                                 |
 | Campaign defense design             | [campaign-defense-design.md](campaign-defense-design.md)                       |
 | Tutorial campaign                   | [tutorial-campaign.md](tutorial-campaign.md)                                   |

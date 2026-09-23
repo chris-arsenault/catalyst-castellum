@@ -32,7 +32,7 @@ const equipmentIsActive = (
   game: GameState,
   condition: Extract<GuideCondition, { kind: "equipment_active" }>
 ): boolean =>
-  Object.values(roomState(game, condition.roomId).equipment).some(
+  Object.values(roomState(game.encounter, condition.roomId).equipment).some(
     (instance) => instance?.equipmentId === condition.equipmentId && instance.enabled
   );
 
@@ -41,14 +41,14 @@ const transportIsEnabled = (
   condition: Extract<GuideCondition, { kind: "transport_enabled" }>
 ): boolean =>
   (condition.phase === "gas"
-    ? game.gasConduits[condition.runId]?.enabled
-    : game.liquidConduits[condition.runId]?.enabled) ?? false;
+    ? game.encounter.process.gasConduits[condition.runId]?.enabled
+    : game.encounter.process.liquidConduits[condition.runId]?.enabled) ?? false;
 
 const equipmentTotalReached = (
   game: GameState,
   condition: Extract<GuideCondition, { kind: "equipment_total" }>
 ): boolean => {
-  const instance = Object.values(roomState(game, condition.roomId).equipment).find(
+  const instance = Object.values(roomState(game.encounter, condition.roomId).equipment).find(
     (candidate) => candidate?.equipmentId === condition.equipmentId
   );
   return (instance?.operation?.totalProcessed ?? 0) >= condition.minimum;

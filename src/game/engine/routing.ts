@@ -1,9 +1,9 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState, TransportPhase, ConnectionId } from "../types";
+import type { ProcessDefinition, ProcessEncounterState } from "../encounter/processTypes";
+import type { TransportPhase, ConnectionId } from "../types";
 import { gasConduitState, liquidConduitState } from "../world/instances";
 
 export const transportPhaseEnabled = (
-  state: GameState,
+  state: ProcessEncounterState,
   runId: ConnectionId,
   phase: TransportPhase
 ): boolean =>
@@ -14,7 +14,7 @@ export const transportPhaseEnabled = (
 export const transportPhaseExists = (
   runId: ConnectionId,
   phase: TransportPhase,
-  definition: GameDefinition
+  definition: Pick<ProcessDefinition, "lineBlueprints">
 ): boolean => {
   const blueprint = definition.lineBlueprints[runId];
   return blueprint?.kind === (phase === "gas" ? "gas_line" : "liquid_line");

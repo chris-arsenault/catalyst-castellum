@@ -78,10 +78,11 @@ const TowerIncident = ({ incident }: { incident: CombatIncident }) => {
 };
 
 export const RecentIncidents = () => {
-  const { translator } = useGamePresentation();
+  const { records, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const roomId = useGameStore((state) => state.selectedRoomId);
-  const incidents = game.incidents
+  const incidents = records
+    .incidents(game)
     .filter((incident) => incident.roomId === roomId)
     .sort((left, right) => right.elapsed - left.elapsed || right.id - left.id)
     .slice(0, 4);

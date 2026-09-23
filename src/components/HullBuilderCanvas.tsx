@@ -71,7 +71,7 @@ export const HullBuilderCanvas = ({
 }: HullBuilderCanvasProps) => {
   const { translator } = useGamePresentation();
   const [stroke, setStroke] = useState<HullStroke | null>(null);
-  const committedHull = useMemo(() => hullPlanningMap(game.map), [game.map]);
+  const committedHull = useMemo(() => hullPlanningMap(game.encounter.map), [game.encounter.map]);
   const rooms = Object.values(map.rooms);
   const extents = useMemo(() => {
     const minColumn = Math.min(...rooms.map((room) => room.bounds.column)) - 3;
@@ -91,7 +91,7 @@ export const HullBuilderCanvas = ({
       Object.fromEntries(
         architecturalConnections(map).map((portal) => [
           portal.id,
-          game.portalStates[portal.id] ?? {
+          game.encounter.portalStates[portal.id] ?? {
             open: portal.defaultOpen,
             sealed: portal.defaultSealed,
             lastGasFlow: 0,
@@ -99,7 +99,7 @@ export const HullBuilderCanvas = ({
           },
         ])
       ),
-    [game.portalStates, map]
+    [game.encounter.portalStates, map]
   );
   const route = useMemo(() => hullEnemyRoute(map, portalStates), [map, portalStates]);
   const platformKeys = new Set(rooms.flatMap((room) => room.platformCells.map(cellKey)));
@@ -191,8 +191,8 @@ export const HullBuilderCanvas = ({
           if (!isProcessLine(connection)) return [];
           const state =
             connection.kind === "gas_line"
-              ? game.gasConduits[connection.id]
-              : game.liquidConduits[connection.id];
+              ? game.encounter.process.gasConduits[connection.id]
+              : game.encounter.process.liquidConduits[connection.id];
           if (!state) return [];
           return [
             <polyline
@@ -208,8 +208,8 @@ export const HullBuilderCanvas = ({
         {rooms.flatMap((room) =>
           Object.entries(room.socketCells).flatMap(([socketId, target]) => {
             const equipment =
-              game.rooms[room.id]?.equipment[
-                socketId as keyof GameState["rooms"][RoomId]["equipment"]
+              game.encounter.process.rooms[room.id]?.equipment[
+                socketId as keyof GameState["encounter"]["process"]["rooms"][RoomId]["equipment"]
               ];
             if (!target || !equipment) return [];
             return [
@@ -239,7 +239,8 @@ export const HullBuilderCanvas = ({
 
         {rooms.flatMap((room) =>
           Object.entries(room.socketCells).flatMap(([socketId, target]) =>
-            target && !game.rooms[room.id]?.equipment[socketId as "socket_a" | "socket_b"]
+            target &&
+            !game.encounter.process.rooms[room.id]?.equipment[socketId as "socket_a" | "socket_b"]
               ? [
                   <g
                     key={`socket:${room.id}:${socketId}`}
@@ -254,7 +255,7 @@ export const HullBuilderCanvas = ({
           )
         )}
 
-        {Object.values(game.towers).map((tower) => (
+        {Object.values(game.encounter.towers).map((tower) => (
           <g
             key={`tower:${tower.id}`}
             className="hull-persistent-tower"

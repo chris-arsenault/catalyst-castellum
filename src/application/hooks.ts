@@ -22,25 +22,23 @@ export const useSimulationClock = (): void => {
   const tick = useGameStore((state) => state.tick);
   const initialized = useGameStore((state) => state.initialized);
   const activeSlotId = useGameStore((state) => state.activeSlotId);
+  const paused = useGameStore((state) => state.paused);
+  const speed = useGameStore((state) => state.speed);
+  const phase = useGameStore((state) => state.game.phase);
 
   useEffect(() => {
-    if (!initialized || !activeSlotId) return;
+    if (!initialized || !activeSlotId || paused || phase !== "assault") return;
     let previous = performance.now();
-    let accumulator = 0;
 
     const timer = window.setInterval(() => {
       const now = performance.now();
-      accumulator += Math.min((now - previous) / 1000, 0.5);
+      const elapsed = (now - previous) / 1000;
       previous = now;
-
-      while (accumulator >= 0.1) {
-        tick(0.1);
-        accumulator -= 0.1;
-      }
+      tick(elapsed);
     }, 50);
 
     return () => window.clearInterval(timer);
-  }, [activeSlotId, initialized, tick]);
+  }, [activeSlotId, initialized, paused, phase, speed, tick]);
 };
 
 export interface ExpandSet<Id extends string> {

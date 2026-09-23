@@ -7,7 +7,7 @@ import type {
   GameCommand,
   GameState,
 } from "../types";
-import { architecturalConnections, isArchitectural, type WorldMap } from "../world/map";
+import { architecturalConnections, type WorldMap } from "../world/map";
 import {
   plannedHullConnection,
   withHullCellEdit,
@@ -36,7 +36,7 @@ export const portalStatesForMap = (
 ): Record<string, FacilityPortalState> =>
   Object.fromEntries(
     architecturalConnections(map).map((connection) => {
-      const persisted = state.portalStates[connection.id];
+      const persisted = state.encounter.portalStates[connection.id];
       const overridden = override?.connectionId === connection.id;
       return [
         connection.id,
@@ -59,7 +59,7 @@ export const topologyHasRoutes = (
   definition: GameDefinition
 ): boolean => {
   if (findEnemyPath({ flying: false, portalStates }, map).length === 0) return false;
-  return state.enemies.every((enemy) => {
+  return state.encounter.enemies.every((enemy) => {
     const current = enemy.path[Math.min(enemy.pathIndex, enemy.path.length - 1)];
     if (!current) return true;
     return (
@@ -84,7 +84,7 @@ export const evaluateHullCellEdit = (
   if (state.phase !== "level_complete") return reject("invalid_phase");
   try {
     const map = withHullCellEdit(
-      state.map,
+      state.encounter.map,
       command.roomId,
       command.cell,
       command.terrain,
@@ -105,7 +105,12 @@ export const evaluateHullCellEdits = (
 ): CommandDecision => {
   if (state.phase !== "level_complete") return reject("invalid_phase");
   try {
-    const map = withHullCellEdits(state.map, command.roomId, command.cells, command.terrain);
+    const map = withHullCellEdits(
+      state.encounter.map,
+      command.roomId,
+      command.cells,
+      command.terrain
+    );
     return topologyHasRoutes(state, map, portalStatesForMap(state, map), definition)
       ? allow()
       : reject("route_unavailable");
@@ -120,7 +125,7 @@ export const evaluateConnectHullRooms = (
   definition: GameDefinition
 ): CommandDecision => {
   if (state.phase !== "level_complete") return reject("invalid_phase");
-  const plan = plannedHullConnection(state.map, command.fromRoomId, command.toRoomId);
+  const plan = plannedHullConnection(state.encounter.map, command.fromRoomId, command.toRoomId);
   if (!plan) return reject("placement");
   return topologyHasRoutes(state, plan.map, portalStatesForMap(state, plan.map), definition)
     ? allow()
@@ -134,7 +139,7 @@ export const evaluateRemoveHullConnection = (
 ): CommandDecision => {
   if (state.phase !== "level_complete") return reject("invalid_phase");
   try {
-    const map = withoutHullConnection(state.map, command.connectionId);
+    const map = withoutHullConnection(state.encounter.map, command.connectionId);
     return topologyHasRoutes(state, map, portalStatesForMap(state, map), definition)
       ? allow()
       : reject("route_unavailable");
@@ -151,7 +156,7 @@ export const evaluateHullPortalConfiguration = (
   if (state.phase !== "level_complete") return reject("invalid_phase");
   try {
     const map = withHullPortalConfiguration(
-      state.map,
+      state.encounter.map,
       command.connectionId,
       command.kind,
       command.open
@@ -164,28 +169,4 @@ export const evaluateHullPortalConfiguration = (
   } catch {
     return reject("placement");
   }
-};
-
-export const evaluateSetPortal = (
-  state: GameState,
-  command: Extract<GameCommand, { type: "set_portal" }>,
-  definition: GameDefinition
-): CommandDecision => {
-  const connection = state.map.connections[command.connectionId];
-  const portal = state.portalStates[command.connectionId];
-  if (
-    !connection ||
-    !isArchitectural(connection) ||
-    (connection.kind !== "door" && connection.kind !== "trapdoor") ||
-    !portal ||
-    portal.sealed
-  )
-    return reject("placement");
-  const states = portalStatesForMap(state, state.map, {
-    connectionId: command.connectionId,
-    open: command.open,
-  });
-  return topologyHasRoutes(state, state.map, states, definition)
-    ? allow()
-    : reject("route_unavailable");
 };

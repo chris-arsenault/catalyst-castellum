@@ -13,7 +13,7 @@ const graftedId = graftedRoomId("washlock", "forward");
 const buildWithGraft = (): GameState => {
   const state = createScenarioGame("claim_8_delta", [], definition);
   state.phase = "level_complete";
-  state.matter = 200;
+  state.encounter.matter = 200;
   const grafted = executeCommand(
     state,
     {
@@ -31,7 +31,7 @@ const buildWithGraft = (): GameState => {
 describe("the run loop carries a graft across a dock", () => {
   it("travels and docks, embedding the grafted room on the next site", () => {
     const site = buildWithGraft();
-    roomState(site, graftedId).gas.lower.hydrogen = 5;
+    roomState(site.encounter, graftedId).gas.lower.hydrogen = 5;
     const traveling = executeCommand(site, { type: "start_next_level" }, definition);
     expect(traveling.accepted).toBe(true);
     expect(traveling.state.phase).toBe("travel");
@@ -41,11 +41,11 @@ describe("the run loop carries a graft across a dock", () => {
     const next = docked.state;
 
     expect(next.campaign.levelId).toBe("harkers_brace");
-    expect(next.map.rooms[graftedId]?.provenance).toBe("hull");
-    expect(next.map.connections["joint:washlock:forward"]).toBeDefined();
-    expect(next.world.rooms).toContain(graftedId);
-    expect(roomState(next, graftedId).gas.lower.hydrogen).toBe(0);
-    expect(next.map.rooms.washlock?.provenance).toBe("hull");
+    expect(next.encounter.map.rooms[graftedId]?.provenance).toBe("hull");
+    expect(next.encounter.map.connections["joint:washlock:forward"]).toBeDefined();
+    expect(next.encounter.world.rooms).toContain(graftedId);
+    expect(roomState(next.encounter, graftedId).gas.lower.hydrogen).toBe(0);
+    expect(next.encounter.map.rooms.washlock?.provenance).toBe("hull");
   });
 
   it("refuses graft edits outside the level intermission", () => {

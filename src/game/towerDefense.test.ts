@@ -14,7 +14,7 @@ const enterBuild = (): GameState => {
     type: "begin_level",
   });
   expect(entered.accepted).toBe(true);
-  entered.state.matter = 500;
+  entered.state.encounter.matter = 500;
   return entered.state;
 };
 
@@ -93,6 +93,7 @@ const neutralizationRuntime = () => {
       firingArc: 360,
       lineOfSight: "lobbed" as const,
       cadence: 10,
+      upgrades: [],
       attack: {
         ...chassis.attack,
         packets: chassis.attack.packets.map((packet) => ({
@@ -149,10 +150,10 @@ describe("tower construction commands", () => {
         orientation: candidate.orientation,
       });
     }
-    expect(Object.values(state.towers).map((tower) => tower.placement.mountFace)).toEqual(
+    expect(Object.values(state.encounter.towers).map((tower) => tower.placement.mountFace)).toEqual(
       placements.map(({ face }) => face)
     );
-    expect(state.nextTowerSequence).toBe(5);
+    expect(state.encounter.nextTowerSequence).toBe(5);
   });
 
   it("uses one decision for overlap, route obstruction, Matter, and execution", () => {
@@ -169,7 +170,7 @@ describe("tower construction commands", () => {
     state = runtime.execute(state, command).state;
     expect(runtime.evaluate(state, command)).toMatchObject({ allowed: false, code: "placement" });
 
-    state.matter = 0;
+    state.encounter.matter = 0;
     expect(
       runtime.evaluate(state, {
         ...command,
@@ -177,7 +178,7 @@ describe("tower construction commands", () => {
       })
     ).toMatchObject({ allowed: false, code: "insufficient_matter", cost: 18 });
 
-    state.matter = 500;
+    state.encounter.matter = 500;
     expect(
       runtime.evaluate(state, {
         ...command,
@@ -226,7 +227,7 @@ describe("tower construction commands", () => {
       mountFace: "left_wall",
       orientation: "right",
     });
-    const towerId = Object.keys(state.towers)[0]!;
+    const towerId = Object.keys(state.encounter.towers)[0]!;
     state = runtime.execute(state, {
       type: "move_tower",
       towerId,
@@ -245,7 +246,7 @@ describe("tower construction commands", () => {
       towerId,
       upgradeId: "flash_calibration",
     }).state;
-    expect(state.towers[towerId]).toMatchObject({
+    expect(state.encounter.towers[towerId]).toMatchObject({
       targetPolicy: "strongest",
       upgrades: ["flash_calibration"],
       totalMatterSpent: 27,
@@ -253,7 +254,7 @@ describe("tower construction commands", () => {
     const dismantle = runtime.evaluate(state, { type: "dismantle_tower", towerId });
     expect(dismantle).toMatchObject({ allowed: true, refund: 20 });
     state = runtime.execute(state, { type: "dismantle_tower", towerId }).state;
-    expect(state.towers).toEqual({});
+    expect(state.encounter.towers).toEqual({});
   });
 });
 
@@ -261,12 +262,15 @@ describe("authored route graph and targeting", () => {
   it("materializes two authored ingresses and restores them through the save codec", () => {
     const gameRuntime = twoRouteRuntime();
     const state = gameRuntime.createScenario("claim_8_delta");
-    expect(Object.keys(state.map.routeGraph.routes)).toEqual(["entry_to_core", "upper_entry"]);
-    expect(Object.values(state.map.routeGraph.edges).every((edge) => edge.cells.length > 1)).toBe(
-      true
-    );
+    expect(Object.keys(state.encounter.map.routeGraph.routes)).toEqual([
+      "entry_to_core",
+      "upper_entry",
+    ]);
+    expect(
+      Object.values(state.encounter.map.routeGraph.edges).every((edge) => edge.cells.length > 1)
+    ).toBe(true);
     const restored = gameRuntime.save.decode(gameRuntime.save.encode(state));
-    expect(restored?.map.routeGraph).toEqual(state.map.routeGraph);
+    expect(restored?.encounter.map.routeGraph).toEqual(state.encounter.map.routeGraph);
   });
 
   it("orders first and last by remaining route distance across lanes with stable ID ties", () => {
@@ -274,7 +278,7 @@ describe("authored route graph and targeting", () => {
     let state = gameRuntime.execute(gameRuntime.createScenario("claim_8_delta"), {
       type: "begin_level",
     }).state;
-    state.matter = 500;
+    state.encounter.matter = 500;
     state = gameRuntime.execute(state, {
       type: "place_tower",
       chassisId: "flash_chamber",
@@ -282,7 +286,7 @@ describe("authored route graph and targeting", () => {
       mountFace: "ceiling",
       orientation: "down",
     }).state;
-    const tower = Object.values(state.towers)[0]!;
+    const tower = Object.values(state.encounter.towers)[0]!;
     const makeEnemy = (
       id: number,
       type: "deckmouth" | "flintjack",
@@ -290,8 +294,8 @@ describe("authored route graph and targeting", () => {
     ): EnemyState => {
       const path = routePathForEnemy(
         { routeId, type },
-        state.map,
-        state.portalStates,
+        state.encounter.map,
+        state.encounter.portalStates,
         gameRuntime.definition
       );
       const enemyDefinition = gameRuntime.definition.enemies[type];
@@ -315,14 +319,14 @@ describe("authored route graph and targeting", () => {
         effects: [],
       };
     };
-    state.enemies = [
+    state.encounter.enemies = [
       makeEnemy(2, "deckmouth", "entry_to_core"),
       makeEnemy(1, "flintjack", "upper_entry"),
     ];
     tower.targetPolicy = "first";
-    const first = acquireTowerTargets(state, tower, gameRuntime.definition)[0];
+    const first = acquireTowerTargets(state.encounter, tower, gameRuntime.definition)[0];
     tower.targetPolicy = "last";
-    const last = acquireTowerTargets(state, tower, gameRuntime.definition)[0];
+    const last = acquireTowerTargets(state.encounter, tower, gameRuntime.definition)[0];
     expect(first?.id).not.toBe(last?.id);
   });
 });
@@ -354,12 +358,12 @@ describe("deterministic tower combat", () => {
 
   it("applies direct attacks through damage ledgers, rewards, and source attribution", () => {
     const state = advance(configuredAssault(), 400);
-    expect(state.stats.damageBySource.tower_flash).toBeGreaterThan(0);
-    expect(state.stats.damageBySource.tower_caustic).toBeGreaterThan(0);
-    expect(state.stats.killed).toBeGreaterThan(0);
-    expect(state.pendingMatter + state.matter).toBeGreaterThan(500 - 18 - 16);
-    expect(Object.values(state.towers).some((tower) => tower.kills > 0)).toBe(true);
-    expect(state.nextTowerAttackId).toBeGreaterThan(1);
+    expect(state.encounter.stats.damageBySource.tower_flash).toBeGreaterThan(0);
+    expect(state.encounter.stats.damageBySource.tower_caustic).toBeGreaterThan(0);
+    expect(state.encounter.stats.killed).toBeGreaterThan(0);
+    expect(state.encounter.pendingMatter + state.encounter.matter).toBeGreaterThan(500 - 18 - 16);
+    expect(Object.values(state.encounter.towers).some((tower) => tower.kills > 0)).toBe(true);
+    expect(state.encounter.nextTowerAttackId).toBeGreaterThan(1);
   });
 
   it("replays identically across cloning and save/load", () => {
@@ -375,7 +379,7 @@ describe("deterministic tower combat", () => {
     let state = reactionRuntime.execute(reactionRuntime.createScenario("claim_8_delta"), {
       type: "begin_level",
     }).state;
-    state.matter = 500;
+    state.encounter.matter = 500;
     state = reactionRuntime.execute(state, {
       type: "place_tower",
       chassisId: "caustic_jet",
@@ -394,9 +398,9 @@ describe("deterministic tower combat", () => {
     state = reactionRuntime.execute(state, { type: "start_assault" }).state;
     for (let index = 0; index < 30; index += 1) state = reactionRuntime.step(state, 0.1);
 
-    expect(state.stats.damageBySource.tower_neutralization).toBeGreaterThan(0);
+    expect(state.encounter.stats.damageBySource.tower_neutralization).toBeGreaterThan(0);
     expect(
-      state.enemies.every(
+      state.encounter.enemies.every(
         (enemy) =>
           !enemy.effects.some((effect) => effect.kind === "acid") ||
           !enemy.effects.some((effect) => effect.kind === "caustic")

@@ -1,5 +1,4 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { GameState } from "../types";
+import type { ProcessEncounterState, ProcessSimulationDefinition } from "../encounter/processTypes";
 import type { StateValidationIssue } from "./stateValidationTypes";
 
 const sameIdentifiers = (actual: readonly string[], expected: readonly string[]): boolean =>
@@ -14,14 +13,14 @@ const supplyIssue = (path: string, message: string): StateValidationIssue => ({
 });
 
 const validateRecordKeys = (
-  state: GameState,
-  definition: GameDefinition
+  state: ProcessEncounterState,
+  definition: ProcessSimulationDefinition
 ): readonly StateValidationIssue[] => {
-  const supplies = definition.levels[state.campaign.levelId].supplies;
+  const supplies = definition.supplies;
   const expectedGas = supplies.filter(({ phase }) => phase === "gas").map(({ id }) => id);
   const expectedLiquid = supplies.filter(({ phase }) => phase === "liquid").map(({ id }) => id);
   const issues: StateValidationIssue[] = [];
-  if (!sameIdentifiers(Object.keys(state.gasSources), expectedGas)) {
+  if (!sameIdentifiers(Object.keys(state.process.gasSources), expectedGas)) {
     issues.push(
       supplyIssue(
         "gasSources",
@@ -29,7 +28,7 @@ const validateRecordKeys = (
       )
     );
   }
-  if (!sameIdentifiers(Object.keys(state.liquidSources), expectedLiquid)) {
+  if (!sameIdentifiers(Object.keys(state.process.liquidSources), expectedLiquid)) {
     issues.push(
       supplyIssue(
         "liquidSources",
@@ -41,15 +40,15 @@ const validateRecordKeys = (
 };
 
 export const validateSupplyStates = (
-  state: GameState,
-  definition: GameDefinition
+  state: ProcessEncounterState,
+  definition: ProcessSimulationDefinition
 ): readonly StateValidationIssue[] => {
   const issues = [...validateRecordKeys(state, definition)];
-  for (const supply of definition.levels[state.campaign.levelId].supplies) {
+  for (const supply of definition.supplies) {
     const inventory =
       supply.phase === "gas"
-        ? state.gasSources[supply.id]?.gas
-        : state.liquidSources[supply.id]?.liquid;
+        ? state.process.gasSources[supply.id]?.gas
+        : state.process.liquidSources[supply.id]?.liquid;
     if (!inventory) continue;
     const amounts = Object.values(inventory);
     const path = `${supply.phase}Sources.${supply.id}`;

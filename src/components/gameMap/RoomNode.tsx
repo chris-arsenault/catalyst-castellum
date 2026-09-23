@@ -36,15 +36,17 @@ export const RoomNode = ({
   roomEffectTone,
 }: RoomNodeProps) => {
   const { supplies } = useGamePresentation();
-  const geometry = mapViewFor(game.map).roomMapRect(roomId);
-  const occupied = game.enemies.filter((enemy) => enemyRoomId(enemy, game) === roomId).length;
+  const geometry = mapViewFor(game.encounter.map).roomMapRect(roomId);
+  const occupied = game.encounter.enemies.filter(
+    (enemy) => enemyRoomId(enemy, game.encounter) === roomId
+  ).length;
   const supplyCards = useMemo(() => supplies(game), [game, supplies]);
   const model = roomRenderModel(game, roomId, selected, occupied, supplyCards);
   const hitArea = roomHitArea(model);
   const draw = useCallback((graphics: Graphics) => drawRoom(graphics, model), [model]);
   return (
     <pixiContainer x={geometry.center.x} y={geometry.center.y} eventMode="passive">
-      {model.structure === "core" && <CoreSprite integrity={game.coreIntegrity} />}
+      {model.structure === "core" && <CoreSprite integrity={game.encounter.coreIntegrity} />}
       <pixiGraphics
         draw={draw}
         hitArea={hitArea}
@@ -69,7 +71,7 @@ export const RoomNode = ({
       )}
       {model.structure === "core" && (
         <pixiText
-          text={`${Math.round(game.coreIntegrity)}%`}
+          text={`${Math.round(game.encounter.coreIntegrity)}%`}
           eventMode="none"
           anchor={{ x: 0.5, y: 0.5 }}
           x={model.width / 2 - 55}
@@ -78,7 +80,7 @@ export const RoomNode = ({
             fontFamily: "IBM Plex Mono",
             fontSize: 13,
             fontWeight: "700",
-            fill: coreIntegrityColor(game.coreIntegrity),
+            fill: coreIntegrityColor(game.encounter.coreIntegrity),
           }}
         />
       )}

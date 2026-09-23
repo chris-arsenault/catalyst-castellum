@@ -86,7 +86,7 @@ export const EquipmentOperationStatus = ({
 }) => {
   const { formatters, limitingFactorCopy, translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const instance = roomState(game, roomId).equipment[socketId];
+  const instance = roomState(game.encounter, roomId).equipment[socketId];
   if (!instance?.operation) return null;
   const equipment = EQUIPMENT_DEFINITIONS[instance.equipmentId];
   const operation = equipment.operation;

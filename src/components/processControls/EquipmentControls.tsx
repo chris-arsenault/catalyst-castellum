@@ -280,7 +280,7 @@ export const EquipmentSocket = ({
   socketId: EquipmentSocketId;
 }) => {
   const game = useGameStore((state) => state.game);
-  const instance = roomState(game, roomId).equipment[socketId];
+  const instance = roomState(game.encounter, roomId).equipment[socketId];
   if (!instance) return <EmptyEquipmentSocket roomId={roomId} socketId={socketId} />;
   return <InstalledEquipmentSocket instance={instance} roomId={roomId} socketId={socketId} />;
 };

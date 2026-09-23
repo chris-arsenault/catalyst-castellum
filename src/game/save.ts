@@ -3,6 +3,7 @@ import type { GameDefinition } from "./definitionTypes";
 import {
   decodeGame as decodeGameForDefinition,
   encodeGame as encodeGameForDefinition,
+  inspectGameSave as inspectGameSaveForDefinition,
 } from "./persistence/saveCodec";
 
 export const createSaveCodec = (definition: GameDefinition) =>
@@ -10,6 +11,7 @@ export const createSaveCodec = (definition: GameDefinition) =>
     encode: (game: Parameters<typeof encodeGameForDefinition>[0]) =>
       encodeGameForDefinition(game, definition),
     decode: (raw: string) => decodeGameForDefinition(raw, definition),
+    inspect: (raw: string) => inspectGameSaveForDefinition(raw, definition),
   });
 
 export type SaveCodec = ReturnType<typeof createSaveCodec>;
@@ -17,3 +19,4 @@ export type SaveCodec = ReturnType<typeof createSaveCodec>;
 export const DEFAULT_SAVE_CODEC = createSaveCodec(DEFAULT_GAME_DEFINITION);
 export const encodeGame = DEFAULT_SAVE_CODEC.encode;
 export const decodeGame = DEFAULT_SAVE_CODEC.decode;
+export const inspectGameSave = DEFAULT_SAVE_CODEC.inspect;

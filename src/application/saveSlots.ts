@@ -1,4 +1,5 @@
 import type { GameState } from "../game/types";
+import type { GuideEvidence } from "../tutorial/guideModel";
 
 export const SAVE_SLOT_IDS = ["slot-1", "slot-2", "slot-3"] as const;
 
@@ -8,6 +9,7 @@ export type SaveSlotId = (typeof SAVE_SLOT_IDS)[number];
 export interface TutorialSession {
   dismissedGuideIds: string[];
   guidanceEnabled: boolean;
+  guideEvidence: GuideEvidence;
 }
 
 export interface SaveSlotRecord extends TutorialSession {
@@ -16,7 +18,14 @@ export interface SaveSlotRecord extends TutorialSession {
   savedAt: number;
 }
 
-export type SaveSlotCatalog = Record<SaveSlotId, SaveSlotRecord | null>;
+export interface UnavailableSaveSlot {
+  id: SaveSlotId;
+  status: "incompatible" | "damaged";
+}
+
+export type SavedSlot = SaveSlotRecord | UnavailableSaveSlot;
+export const isReadySaveSlot = (slot: SavedSlot): slot is SaveSlotRecord => "game" in slot;
+export type SaveSlotCatalog = Record<SaveSlotId, SavedSlot | null>;
 
 export const emptySaveSlotCatalog = (): SaveSlotCatalog => ({
   "slot-1": null,

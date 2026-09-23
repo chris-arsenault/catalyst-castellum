@@ -1,0 +1,162 @@
+[
+  {
+    "waveIndex": 0,
+    "tick": 0,
+    "sequence": 0,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 7,
+        "elevation": 7
+      },
+      "mountFace": "left_wall",
+      "orientation": "right"
+    }
+  },
+  {
+    "waveIndex": 0,
+    "tick": 0,
+    "sequence": 1,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 20,
+        "elevation": 7
+      },
+      "mountFace": "left_wall",
+      "orientation": "right"
+    }
+  },
+  {
+    "waveIndex": 0,
+    "tick": 0,
+    "sequence": 2,
+    "command": {
+      "type": "start_assault"
+    }
+  },
+  {
+    "waveIndex": 1,
+    "tick": 0,
+    "sequence": 0,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 31,
+        "elevation": 5
+      },
+      "mountFace": "left_wall",
+      "orientation": "right"
+    }
+  },
+  {
+    "waveIndex": 1,
+    "tick": 0,
+    "sequence": 1,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 51,
+        "elevation": 7
+      },
+      "mountFace": "right_wall",
+      "orientation": "left"
+    }
+  },
+  {
+    "waveIndex": 1,
+    "tick": 0,
+    "sequence": 2,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "carbon_burner",
+      "anchor": {
+        "column": 31,
+        "elevation": 6
+      },
+      "mountFace": "left_wall",
+      "orientation": "right"
+    }
+  },
+  {
+    "waveIndex": 1,
+    "tick": 0,
+    "sequence": 3,
+    "command": {
+      "type": "start_assault"
+    }
+  },
+  {
+    "waveIndex": 2,
+    "tick": 0,
+    "sequence": 0,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 51,
+        "elevation": 8
+      },
+      "mountFace": "right_wall",
+      "orientation": "left"
+    }
+  },
+  {
+    "waveIndex": 2,
+    "tick": 0,
+    "sequence": 1,
+    "command": {
+      "type": "start_assault"
+    }
+  },
+  {
+    "waveIndex": 3,
+    "tick": 0,
+    "sequence": 0,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 40,
+        "elevation": 7
+      },
+      "mountFace": "right_wall",
+      "orientation": "left"
+    }
+  },
+  {
+    "waveIndex": 3,
+    "tick": 0,
+    "sequence": 1,
+    "command": {
+      "type": "start_assault"
+    }
+  },
+  {
+    "waveIndex": 4,
+    "tick": 0,
+    "sequence": 0,
+    "command": {
+      "type": "place_tower",
+      "chassisId": "flash_chamber",
+      "anchor": {
+        "column": 31,
+        "elevation": 7
+      },
+      "mountFace": "left_wall",
+      "orientation": "right"
+    }
+  },
+  {
+    "waveIndex": 4,
+    "tick": 0,
+    "sequence": 1,
+    "command": {
+      "type": "start_assault"
+    }
+  }
+]

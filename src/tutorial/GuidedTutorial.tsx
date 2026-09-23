@@ -11,6 +11,7 @@ import {
   guideStepIndexFor,
   type GuideDefinition,
   type GuideUiState,
+  type GuideEvidence,
 } from "./guideModel";
 import { GuideTooltip } from "./GuideTooltip";
 import { tutorialAnchorSelector } from "./anchors";
@@ -63,13 +64,14 @@ const stageIntroShouldShow = (
   game: GameState,
   ui: GuideUiState,
   guideDismissed: boolean,
-  acknowledgedStageIntroIds: string[]
+  acknowledgedStageIntroIds: string[],
+  evidence: GuideEvidence
 ): boolean =>
   guide.showStageIntro &&
   !acknowledgedStageIntroIds.includes(guide.id) &&
   !guideDismissed &&
   game.phase === "build" &&
-  guide.steps[0]?.completed(game, ui) === false;
+  guideStepIndexFor(game, guide, ui, evidence) === 0;
 
 const guideShouldRun = (
   game: GameState,
@@ -143,8 +145,9 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
   const pipeMode = useGameStore((state) => state.pipeMode);
   const towerBuildChassisId = useGameStore((state) => state.towerBuildSelection?.chassisId ?? null);
   const selectedTowerId = useGameStore((state) => state.selectedTowerId);
+  const guideEvidence = useGameStore((state) => state.guideEvidence);
   const ui: GuideUiState = { pipeMode, towerBuildChassisId, selectedTowerId };
-  const stepIndex = guideStepIndexFor(game, guide, ui);
+  const stepIndex = guideStepIndexFor(game, guide, ui, guideEvidence);
   const steps = useMemo(() => stepsFor(guide, translator), [guide, translator]);
   const activeStep = guide.steps[stepIndex] ?? null;
   const dismissed = dismissedGuideIds.includes(guide.dismissalId);
@@ -153,7 +156,8 @@ const ActiveGuidedTutorial = ({ guide }: { guide: GuideDefinition }) => {
     game,
     ui,
     dismissed,
-    acknowledgedStageIntroIds
+    acknowledgedStageIntroIds,
+    guideEvidence
   );
   const enterStage = useCallback(
     () => acknowledgeStageIntro(guide.id),

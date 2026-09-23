@@ -1,6 +1,6 @@
-import type { GameDefinition } from "../definitionTypes";
+import type { CombatDefinition, EncounterState } from "../encounter/types";
 import { DAMAGE_SOURCE_IDS } from "../identifiers";
-import type { EnemyState, GameState } from "../types";
+import type { EnemyState } from "../types";
 import {
   requestedDamageBySourceForPackets,
   requestedDamageForPackets,
@@ -18,10 +18,10 @@ const activeAnchor = (occupants: EnemyState[]): EnemyState | null =>
 
 /** Spends the room's active protection field against one discrete tower transaction. */
 export const towerFieldDamageScale = (
-  state: GameState,
+  state: Pick<EncounterState, "map" | "enemies" | "stats">,
   target: EnemyState,
   packets: readonly DamagePacket[],
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "enemies">
 ): number => {
   const roomId = enemyRoomId(target, state.map);
   if (!roomId) return 1;

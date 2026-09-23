@@ -13,10 +13,10 @@ export const RoomRail = () => {
 
   return (
     <nav className="room-rail" aria-label={translator.text("ui.map.selectRoom")}>
-      {game.world.rooms.map((roomId) => {
-        const definition = roomDefinition(game, roomId);
-        const ring = facilityModelForMap(game.map).ringForRoom(roomId);
-        const analysis = selectors.roomAnalysis(roomState(game, roomId), game);
+      {game.encounter.world.rooms.map((roomId) => {
+        const definition = roomDefinition(game.encounter, roomId);
+        const ring = facilityModelForMap(game.encounter.map).ringForRoom(roomId);
+        const analysis = selectors.roomAnalysis(roomState(game.encounter, roomId), game.encounter);
         return (
           <button
             key={roomId}

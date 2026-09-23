@@ -63,13 +63,13 @@ export interface ReactionEngineDynamics {
 }
 
 const equipmentReactionRate = (game: GameState, roomId: RoomId): number =>
-  Object.values(roomState(game, roomId).equipment).reduce(
+  Object.values(roomState(game.encounter, roomId).equipment).reduce(
     (total, equipment) => total + (equipment?.operation?.lastRate ?? 0),
     0
   );
 
 const roomReactionRate = (game: GameState, roomId: RoomId): number =>
-  Object.values(roomState(game, roomId).reactions).reduce(
+  Object.values(roomState(game.encounter, roomId).reactions).reduce(
     (total, reaction) => total + Math.abs(reaction.lastRate),
     equipmentReactionRate(game, roomId)
   );
@@ -79,14 +79,14 @@ const equipmentOrReactionActive = (
   roomId: RoomId,
   definition: GameDefinition
 ): boolean => {
-  const room = roomState(game, roomId);
+  const room = roomState(game.encounter, roomId);
   const analysis = analyzeRoom(room, definition);
   return (
     Object.values(room.equipment).some((equipment) => equipment?.enabled) ||
     roomReactionRate(game, roomId) >= 0.001 ||
     analysis.hazard >= 0.01 ||
     analysis.liquidTotal >= 0.01 ||
-    Math.abs(room.temperature - definitionRoom(game, roomId).ambientTemperature) >= 0.1
+    Math.abs(room.temperature - definitionRoom(game.encounter, roomId).ambientTemperature) >= 0.1
   );
 };
 
@@ -96,13 +96,13 @@ const addActiveLineRooms = (
   phase: "gas" | "liquid"
 ): void => {
   const kind = phase === "gas" ? "gas_line" : "liquid_line";
-  for (const connectionId of processLineIds(game, kind)) {
+  for (const connectionId of processLineIds(game.encounter, kind)) {
     const conduit =
       phase === "gas"
-        ? gasConduitState(game, connectionId)
-        : liquidConduitState(game, connectionId);
+        ? gasConduitState(game.encounter, connectionId)
+        : liquidConduitState(game.encounter, connectionId);
     if (!conduit.enabled) continue;
-    const line = game.map.connections[connectionId];
+    const line = game.encounter.map.connections[connectionId];
     if (!line || (line.kind !== "gas_line" && line.kind !== "liquid_line")) continue;
     active.add(line.direction[0]);
     if (line.destinationKind === "room") active.add(line.direction[1]);
@@ -111,7 +111,9 @@ const addActiveLineRooms = (
 
 const activeRoomIds = (game: GameState, definition: GameDefinition): Set<RoomId> => {
   const active = new Set(
-    game.world.rooms.filter((roomId) => equipmentOrReactionActive(game, roomId, definition))
+    game.encounter.world.rooms.filter((roomId) =>
+      equipmentOrReactionActive(game, roomId, definition)
+    )
   );
   addActiveLineRooms(active, game, "gas");
   addActiveLineRooms(active, game, "liquid");
@@ -124,7 +126,7 @@ const roomSample = (
   active: ReadonlySet<RoomId>,
   definition: GameDefinition
 ): ReactionEngineRoomSample => {
-  const room = roomState(game, roomId);
+  const room = roomState(game.encounter, roomId);
   const analysis = analyzeRoom(room, definition);
   return {
     roomId,
@@ -140,24 +142,24 @@ const roomSample = (
 };
 
 const lineSamples = (game: GameState, definition: GameDefinition): ReactionEngineLineSample[] => [
-  ...processLineIds(game, "gas_line").map((connectionId) => {
-    const conduit = gasConduitState(game, connectionId);
+  ...processLineIds(game.encounter, "gas_line").map((connectionId) => {
+    const conduit = gasConduitState(game.encounter, connectionId);
     return {
       connectionId,
       enabled: conduit.enabled,
       fillRatio:
         gasAmountTotal(conduit.gas) /
-        Math.max(0.001, conduitCapacity(game, connectionId, "gas", definition)),
+        Math.max(0.001, conduitCapacity(game.encounter, connectionId, "gas", definition)),
     };
   }),
-  ...processLineIds(game, "liquid_line").map((connectionId) => {
-    const conduit = liquidConduitState(game, connectionId);
+  ...processLineIds(game.encounter, "liquid_line").map((connectionId) => {
+    const conduit = liquidConduitState(game.encounter, connectionId);
     return {
       connectionId,
       enabled: conduit.enabled,
       fillRatio:
         liquidAmountTotal(conduit.liquid) /
-        Math.max(0.001, conduitCapacity(game, connectionId, "liquid", definition)),
+        Math.max(0.001, conduitCapacity(game.encounter, connectionId, "liquid", definition)),
     };
   }),
 ];
@@ -167,14 +169,14 @@ export const reactionEngineSample = (
   game: GameState,
   gameDefinition: GameDefinition
 ): ReactionEngineSample => {
-  const definition = definitionForMap(gameDefinition, game.map);
+  const definition = definitionForMap(gameDefinition, game.encounter.map);
   const active = activeRoomIds(game, definition);
   return {
-    elapsed: game.elapsed,
+    elapsed: game.encounter.elapsed,
     levelId: game.campaign.levelId,
     roundIndex: game.campaign.roundIndex,
     phase: game.phase,
-    rooms: game.world.rooms.map((roomId) => roomSample(game, roomId, active, definition)),
+    rooms: game.encounter.world.rooms.map((roomId) => roomSample(game, roomId, active, definition)),
     lines: lineSamples(game, definition),
   };
 };

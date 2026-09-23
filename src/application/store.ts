@@ -7,7 +7,7 @@ import {
   scheduleGameSave,
 } from "./persistence/saveScheduler";
 import { createGameSessionActions } from "./gameSessionSlice";
-import { emptySaveSlotCatalog } from "./saveSlots";
+import { emptySaveSlotCatalog, isReadySaveSlot } from "./saveSlots";
 import type {
   ApplicationLifecycleSlice,
   GameStore,
@@ -17,6 +17,8 @@ import type {
 } from "./storeTypes";
 import { createUiActions } from "./uiSlice";
 import { DEFAULT_GAME_PRESENTATION } from "../presentation/services";
+import { withGuideEvidence } from "./guidanceSession";
+import { INITIAL_SIMULATION_CLOCK } from "./simulationClock";
 
 export type { GameStore, GameStoreDependencies } from "./storeTypes";
 
@@ -31,8 +33,10 @@ const browserDependencies: GameStoreDependencies = {
 };
 
 const CLEAN_TUTORIAL_UI = {
+  ...INITIAL_SIMULATION_CLOCK,
   acknowledgedStageIntroIds: [],
   dismissedGuideIds: [],
+  guideEvidence: {},
   guidanceEnabled: true,
   showHelp: false,
   manualSection: "operations" as const,
@@ -62,7 +66,7 @@ const replaceSlotWithLevel = (
   dependencies.clearSlot(slotId);
   const game = dependencies.runtime.createScenario(levelId, [...completedLevelIds]);
   const savedAt = Date.now();
-  const session = { dismissedGuideIds: [], guidanceEnabled };
+  const session = { dismissedGuideIds: [], guidanceEnabled, guideEvidence: {} };
   dependencies.scheduleSave(slotId, game, session);
   set((state) => ({
     activeSlotId: slotId,
@@ -114,12 +118,14 @@ const createLifecycleActions = (
         get().startNewGame(slotId);
         return;
       }
+      if (!isReadySaveSlot(record)) return;
       set((state) => ({
         activeSlotId: slotId,
         game: record.game,
         selectedRoomId: dependencies.runtime.level(record.game).focusRoomId,
         ...CLEAN_TUTORIAL_UI,
         dismissedGuideIds: record.dismissedGuideIds,
+        guideEvidence: record.guideEvidence,
         guidanceEnabled: record.guidanceEnabled,
         tutorialSessionRevision: state.tutorialSessionRevision + 1,
       }));
@@ -156,18 +162,21 @@ export const createGameStoreState = (
   dependencies: GameStoreDependencies = browserDependencies
 ): StateCreator<GameStore> => {
   const initialGame = dependencies.runtime.createInitial();
-  return (set, get) => ({
-    initialized: false,
-    activeSlotId: null,
-    saveSlots: emptySaveSlotCatalog(),
-    game: initialGame,
-    selectedRoomId: dependencies.runtime.level(initialGame).focusRoomId,
-    ...CLEAN_TUTORIAL_UI,
-    tutorialSessionRevision: 0,
-    ...createLifecycleActions(set, get, dependencies),
-    ...createGameSessionActions(set, get, dependencies),
-    ...createUiActions(set, get, dependencies),
-  });
+  return (set, get) => {
+    const observedSet = withGuideEvidence(set, dependencies);
+    return {
+      initialized: false,
+      activeSlotId: null,
+      saveSlots: emptySaveSlotCatalog(),
+      game: initialGame,
+      selectedRoomId: dependencies.runtime.level(initialGame).focusRoomId,
+      ...CLEAN_TUTORIAL_UI,
+      tutorialSessionRevision: 0,
+      ...createLifecycleActions(observedSet, get, dependencies),
+      ...createGameSessionActions(observedSet, get, dependencies),
+      ...createUiActions(observedSet, get, dependencies),
+    };
+  };
 };
 
 export const useGameStore = create<GameStore>(createGameStoreState());

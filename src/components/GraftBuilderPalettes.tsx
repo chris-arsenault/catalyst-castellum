@@ -133,7 +133,7 @@ const PortalControls = ({
 export const GraftPortalPalette = () => {
   const { translator } = useGamePresentation();
   const game = useGameStore((state) => state.game);
-  const map = useMemo(() => hullPlanningMap(game.map), [game.map]);
+  const map = useMemo(() => hullPlanningMap(game.encounter.map), [game.encounter.map]);
   const portals = architecturalConnections(map).filter(
     (portal) => portal.id.startsWith("joint:") && portal.kind !== "core_door"
   );
@@ -149,7 +149,7 @@ export const GraftPortalPalette = () => {
           <PortalControls
             portal={portal}
             state={
-              game.portalStates[portal.id] ?? {
+              game.encounter.portalStates[portal.id] ?? {
                 open: portal.defaultOpen,
                 sealed: portal.defaultSealed,
                 lastGasFlow: 0,

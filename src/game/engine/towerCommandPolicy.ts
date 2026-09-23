@@ -1,7 +1,7 @@
-import type { GameDefinition } from "../definitionTypes";
-import type { CommandDecision, CommandRejectionCode, GameCommand, GameState } from "../types";
-import { phaseAllowsCommand } from "./phaseModel";
-import { resolveTowerPlacement, towerPlacementIssue } from "./towerPlacement";
+import type { CombatDefinition, EncounterState } from "../encounter/types";
+import { towerDefinition } from "../encounter/catalogs";
+import type { CommandDecision, CommandRejectionCode, GameCommand } from "../types";
+import { resolveTowerPlacement, towerPlacementIssue, towerRoomId } from "./towerPlacement";
 
 const allow = (
   values: Partial<Pick<CommandDecision, "cost" | "refund">> = {}
@@ -19,13 +19,13 @@ const reject = (
   values: Partial<Pick<CommandDecision, "cost" | "refund">> = {}
 ): CommandDecision => ({ ...allow(values), allowed: false, code, parameters: values });
 
-const phaseAllowed = (state: GameState, command: GameCommand): CommandDecision | null =>
-  phaseAllowsCommand(state.phase, command.type) ? null : reject("invalid_phase");
+const phaseAllowed = (state: EncounterState): CommandDecision | null =>
+  state.phase === "build" || state.phase === "assault" ? null : reject("invalid_phase");
 
 const placementDecision = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "place_tower" | "move_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision | null => {
   const chassisId =
     command.type === "place_tower" ? command.chassisId : state.towers[command.towerId]?.chassisId;
@@ -50,11 +50,11 @@ const placementDecision = (
 };
 
 const evaluatePlace = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "place_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   const chassis = definition.towers[command.chassisId];
   if (!chassis || !state.availability.towers.includes(command.chassisId))
@@ -67,22 +67,22 @@ const evaluatePlace = (
 };
 
 const evaluateMove = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "move_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   if (!state.towers[command.towerId]) return reject("not_installed");
   return placementDecision(state, command, definition) ?? allow();
 };
 
 const evaluateRotate = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "rotate_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   const tower = state.towers[command.towerId];
   if (!tower) return reject("not_installed");
@@ -97,30 +97,30 @@ const evaluateRotate = (
 };
 
 const evaluateTargeting = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "set_tower_targeting" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   const tower = state.towers[command.towerId];
   if (!tower) return reject("not_installed");
-  return definition.towers[tower.chassisId].targetPolicies.includes(command.policy)
+  return towerDefinition(definition, tower.chassisId).targetPolicies.includes(command.policy)
     ? allow()
     : reject("unavailable");
 };
 
 const evaluateUpgrade = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "upgrade_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   const tower = state.towers[command.towerId];
   if (!tower) return reject("not_installed");
   if (tower.upgrades.includes(command.upgradeId)) return reject("already_complete");
-  const upgrade = definition.towers[tower.chassisId].upgrades.find(
+  const upgrade = towerDefinition(definition, tower.chassisId).upgrades.find(
     (candidate) => candidate.id === command.upgradeId
   );
   if (!upgrade || !upgrade.requires.every((required) => tower.upgrades.includes(required)))
@@ -130,20 +130,25 @@ const evaluateUpgrade = (
 };
 
 const evaluateDismantle = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<GameCommand, { type: "dismantle_tower" }>,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
-  const phase = phaseAllowed(state, command);
+  const phase = phaseAllowed(state);
   if (phase) return phase;
   const tower = state.towers[command.towerId];
   if (!tower) return reject("not_installed");
-  const ratio = definition.towers[tower.chassisId].recoveryRatio;
+  const ratio = towerDefinition(definition, tower.chassisId).recoveryRatio;
+  if (
+    state.process?.towerResources[tower.id] &&
+    !state.process.rooms[towerRoomId(state, tower) ?? ""]
+  )
+    return reject("unavailable");
   return allow({ refund: Math.floor(tower.totalMatterSpent * ratio) });
 };
 
 export const evaluateTowerCommand = (
-  state: GameState,
+  state: EncounterState,
   command: Extract<
     GameCommand,
     {
@@ -156,7 +161,7 @@ export const evaluateTowerCommand = (
         | "dismantle_tower";
     }
   >,
-  definition: GameDefinition
+  definition: Pick<CombatDefinition, "towers">
 ): CommandDecision => {
   if (command.type === "place_tower") return evaluatePlace(state, command, definition);
   if (command.type === "move_tower") return evaluateMove(state, command, definition);

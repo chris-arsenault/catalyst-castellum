@@ -1,10 +1,10 @@
-import { DEFAULT_GAME_RUNTIME } from "../game/runtime";
 import type {
   TowerChassisId,
   TowerMountFace,
   TowerOrientation,
   TowerTargetPolicy,
   TowerUpgradeId,
+  TowerDefinition,
 } from "../game/types";
 
 export const chassisKey = (id: TowerChassisId) => {
@@ -36,9 +36,7 @@ export const chassisProcessKey = (id: TowerChassisId) =>
     | "tower.chassis.wash_head.process"
     | "tower.chassis.carbonyl_marker.process";
 
-export const roleKey = (
-  role: (typeof DEFAULT_GAME_RUNTIME.definition.towers)[TowerChassisId]["role"]
-) => {
+export const roleKey = (role: TowerDefinition["role"]) => {
   switch (role) {
     case "single_target":
       return "tower.role.single_target" as const;
@@ -133,33 +131,6 @@ export const preferredOrientationForMount = (
   const preferred = PREFERRED_MOUNT_ORIENTATION[mountFace];
   return orientations.includes(preferred) ? preferred : orientations[0]!;
 };
-
-export const defaultOrientationForMount = (
-  chassisId: TowerChassisId,
-  mountFace: TowerMountFace
-): TowerOrientation => {
-  const orientations = DEFAULT_GAME_RUNTIME.definition.towers[chassisId].orientations;
-  return preferredOrientationForMount(orientations, mountFace);
-};
-
-export const defaultPlacement = (chassisId: TowerChassisId) => {
-  const tower = DEFAULT_GAME_RUNTIME.definition.towers[chassisId];
-  const mountFace = tower.mountFaces[0]!;
-  return {
-    chassisId,
-    mountFace,
-    orientation: defaultOrientationForMount(chassisId, mountFace),
-  };
-};
-
-export const towerColorClass = (chassisId: TowerChassisId): string => `tower-color-${chassisId}`;
-
-export const packetDamage = (chassisId: TowerChassisId): number =>
-  DEFAULT_GAME_RUNTIME.definition.towers[chassisId].attack.packets.reduce(
-    (total, packet) =>
-      total + Object.values(packet.channels).reduce((sum, amount) => sum + amount, 0),
-    0
-  );
 
 export const idleKey = (reason: "none" | "no_target" | "cooldown" | "supply") =>
   `tower.panel.idle.${reason}` as

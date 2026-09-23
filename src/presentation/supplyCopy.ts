@@ -32,8 +32,8 @@ export const supplyFormula = (definition: GameDefinition, supply: SiteSupplyDefi
     .join(" + ");
 
 const inventoryFor = (game: GameState, supply: SiteSupplyDefinition): object => {
-  if (supply.phase === "gas") return game.gasSources[supply.id]?.gas ?? {};
-  return game.liquidSources[supply.id]?.liquid ?? {};
+  if (supply.phase === "gas") return game.encounter.process.gasSources[supply.id]?.gas ?? {};
+  return game.encounter.process.liquidSources[supply.id]?.liquid ?? {};
 };
 
 const inventoryLabel = (
@@ -64,7 +64,7 @@ export const createSupplyPresentation =
   (game: GameState): readonly SupplyCardCopy[] =>
     queries.supplyDefinitionsFor(game).map((supply) => {
       const inventory = inventoryFor(game, supply);
-      const utilityNode = game.map.utilityNodes[supply.id];
+      const utilityNode = game.encounter.map.utilityNodes[supply.id];
       if (!utilityNode) throw new Error(`Supply ${supply.id} has no physical utility node.`);
       return {
         id: supply.id,

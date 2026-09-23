@@ -1,4 +1,5 @@
 export type StateValidationCode =
+  | "encounter_state_invalid"
   | "availability_mismatch"
   | "world_catalog_mismatch"
   | "campaign_mismatch"

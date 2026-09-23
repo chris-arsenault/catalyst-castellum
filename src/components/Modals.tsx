@@ -61,12 +61,14 @@ const RoundProgressModal = () => {
   const {
     levelCopy: localizedLevelCopy,
     roundReportCopy: localizedReport,
+    records,
     translator,
   } = useGamePresentation();
   const game = useGameStore((state) => state.game);
   const dispatch = useGameStore((state) => state.dispatch);
   const level = levelDefinitionFor(game);
-  const report = game.lastReport ? localizedReport(game.lastReport) : null;
+  const roundReport = records.report(game);
+  const report = roundReport ? localizedReport(roundReport) : null;
   const nextRound = level.rounds[game.campaign.roundIndex + 1];
   const advance = useCallback(() => dispatch({ type: "continue_round" }), [dispatch]);
   return (
@@ -131,7 +133,7 @@ export const OutcomeModal = () => {
         <p>
           {victory
             ? translator.text("ui.outcome.victory.detail", {
-                integrity: formatters.number(game.coreIntegrity, 0),
+                integrity: formatters.number(game.encounter.coreIntegrity, 0),
               })
             : translator.text("ui.outcome.defeat.detail", {
                 level: localizedLevelCopy.level(levelDefinitionFor(game)).name,
@@ -146,12 +148,15 @@ export const OutcomeModal = () => {
             },
             {
               label: translator.text("ui.outcome.core"),
-              value: formatters.percent(game.coreIntegrity / 100, 0),
+              value: formatters.percent(game.encounter.coreIntegrity / 100, 0),
             },
-            { label: translator.text("ui.outcome.kills"), value: String(game.stats.killed) },
+            {
+              label: translator.text("ui.outcome.kills"),
+              value: String(game.encounter.stats.killed),
+            },
             {
               label: translator.text("ui.outcome.hazard"),
-              value: formatters.number(game.stats.peakHazard, 0),
+              value: formatters.number(game.encounter.stats.peakHazard, 0),
             },
           ]}
         />

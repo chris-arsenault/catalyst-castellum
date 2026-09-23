@@ -1,6 +1,7 @@
 import { facilityModelForMap } from "../world/derivedModel";
 import type { GameDefinition } from "../definitionTypes";
-import type { EnemyDefinition, EnemyPathStep, EnemyState, GameState, GridCell } from "../types";
+import type { EnemyDefinition, EnemyPathStep, EnemyState, GridCell } from "../types";
+import type { EncounterState } from "../encounter/types";
 import { enemyPathTransitionIsLegal } from "./navigation";
 import type { StateValidationIssue } from "./stateValidation";
 
@@ -72,7 +73,7 @@ const validateEnemyPath = (
 };
 
 export const validateEnemyNavigation = (
-  state: GameState,
+  state: EncounterState,
   issues: StateValidationIssue[],
   definition: GameDefinition
 ): void => {

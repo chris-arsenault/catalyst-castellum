@@ -43,15 +43,16 @@ describe("fixed campaign contract", () => {
 
   it("preserves environmental inventories between waves", () => {
     let state = command(createScenarioGame("claim_8_delta"), { type: "begin_level" });
-    roomState(state, "furnace").gas.lower.steam = 9;
+    roomState(state.encounter, "furnace").gas.lower.steam = 9;
     state = command(state, { type: "start_assault" });
-    state.spawnCursor = LEVEL_DEFINITIONS.claim_8_delta.rounds[0]!.wave.length;
-    state.enemies = [];
+    state.encounter.spawnCursor = LEVEL_DEFINITIONS.claim_8_delta.rounds[0]!.wave.length;
+    state.encounter.enemies = [];
     state = stepGame(state, 0.1);
     expect(state.phase).toBe("round_result");
     state = command(state, { type: "continue_round" });
     expect(
-      roomState(state, "furnace").gas.lower.steam + roomState(state, "furnace").gas.upper.steam
+      roomState(state.encounter, "furnace").gas.lower.steam +
+        roomState(state.encounter, "furnace").gas.upper.steam
     ).toBeGreaterThan(8.9);
   });
 

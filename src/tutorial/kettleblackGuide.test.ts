@@ -24,7 +24,7 @@ describe("Kettleblack persistent-hull guidance", () => {
       mountFace: "left_wall",
       orientation: "right",
     });
-    expect(Object.values(game.towers)[0]?.provenance).toBe("hull");
+    expect(Object.values(game.encounter.towers)[0]?.provenance).toBe("hull");
     expect(guidedPhaseActionReason(game, "start_assault", [])).toBe(
       "tutorial.kettleblack.reason.coil"
     );

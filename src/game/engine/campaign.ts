@@ -33,7 +33,7 @@ export const copyAvailability = (source: ScenarioAvailability): ScenarioAvailabi
 });
 
 export const equipmentAvailable = (state: GameState, equipmentId: EquipmentId): boolean =>
-  state.availability.equipment.includes(equipmentId);
+  state.encounter.availability.equipment.includes(equipmentId);
 
 export const transportPhaseAvailable = (
   state: GameState,
@@ -41,14 +41,14 @@ export const transportPhaseAvailable = (
   phase: TransportPhase
 ): boolean =>
   phase === "gas"
-    ? state.availability.gasLines.includes(runId)
-    : state.availability.liquidLines.includes(runId);
+    ? state.encounter.availability.gasLines.includes(runId)
+    : state.encounter.availability.liquidLines.includes(runId);
 
 export const connectionAvailable = (state: GameState, connectionId: ConnectionId): boolean =>
-  state.availability.gasLines.includes(connectionId) ||
-  state.availability.liquidLines.includes(connectionId) ||
-  (state.map.connections[connectionId]?.rooms.every(
-    (roomId) => state.map.rooms[roomId]?.provenance === "hull"
+  state.encounter.availability.gasLines.includes(connectionId) ||
+  state.encounter.availability.liquidLines.includes(connectionId) ||
+  (state.encounter.map.connections[connectionId]?.rooms.every(
+    (roomId) => state.encounter.map.rooms[roomId]?.provenance === "hull"
   ) ??
     false);
 

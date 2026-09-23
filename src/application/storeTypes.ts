@@ -17,6 +17,7 @@ import type {
 import type { SaveSlotCatalog, SaveSlotId, TutorialSession } from "./saveSlots";
 import type { GameRuntime } from "../game/runtime";
 import type { GamePresentation } from "../presentation/services";
+import type { GuideEvidence } from "../tutorial/guideModel";
 
 export interface ApplicationLifecycleSlice {
   initialized: boolean;
@@ -33,6 +34,9 @@ export interface ApplicationLifecycleSlice {
 
 export interface GameSessionSlice {
   game: GameState;
+  paused: boolean;
+  speed: 1 | 2;
+  simulationRemainder: number;
   dispatch: (command: GameCommand) => boolean;
   tick: (dt: number) => void;
 }
@@ -105,6 +109,7 @@ export interface UiSlice {
   dismissedGuideIds: string[];
   guidanceEnabled: boolean;
   tutorialSessionRevision: number;
+  guideEvidence: GuideEvidence;
   pipeMode: boolean;
   pipePreview: PipePreview | null;
   graftMode: boolean;
