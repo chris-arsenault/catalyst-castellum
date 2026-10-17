@@ -29,13 +29,13 @@ test("save slots preserve independent campaign and guidance state", async ({ pag
   await expect(page.getByTestId("tutorial-task-card")).toHaveCount(0);
 });
 
-test("the first tutorial teaches direct tower coverage", async ({ page }) => {
+test("the first tutorial teaches Flash Chamber coverage", async ({ page }) => {
   await startGuidedTutorial(page);
   await expect(page.getByTestId("tutorial-coach")).toHaveAttribute(
     "data-guide-step",
     "inspect-route"
   );
-  await expect(page.getByTestId("tutorial-task-card")).toContainText("Record direct tower damage.");
+  await expect(page.getByTestId("tutorial-task-card")).toContainText("Record pressure damage.");
   await expect(page.getByTestId("start-assault")).toBeDisabled();
   await skipGuidance(page);
   await expect(page.getByTestId("start-assault")).toBeEnabled();

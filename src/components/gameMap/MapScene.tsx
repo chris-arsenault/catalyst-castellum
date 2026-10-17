@@ -75,16 +75,18 @@ export const MapScene = (props: MapSceneProps) => (
         selectedSpecies={props.selectedSpecies}
       />
       <ProcessNodes game={props.game} />
-      <CellOutletLayer
-        game={props.game}
-        onHover={props.onHoverCellOutlet}
-        onSelectRoom={props.onSelectRoom}
-      />
-      <EquipmentLayer
-        game={props.game}
-        onHover={props.onHoverEquipment}
-        onSelectRoom={props.onSelectRoom}
-      />
+      <pixiContainer eventMode={props.pipeMode ? "none" : "passive"}>
+        <CellOutletLayer
+          game={props.game}
+          onHover={props.onHoverCellOutlet}
+          onSelectRoom={props.onSelectRoom}
+        />
+        <EquipmentLayer
+          game={props.game}
+          onHover={props.onHoverEquipment}
+          onSelectRoom={props.onSelectRoom}
+        />
+      </pixiContainer>
       <MapLabelLayer game={props.game} selectedRoomId={props.selectedRoomId} />
       <IncidentLayer game={props.game} />
       <DamageNumberLayer game={props.game} />

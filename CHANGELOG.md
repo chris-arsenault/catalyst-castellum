@@ -6,6 +6,9 @@ All notable user-visible changes are recorded here.
 
 ### Tower defense
 
+- Keep exercise guidance, wave controls, the map and the wave report in separate
+  rows so guidance stays readable and Start assault remains clickable.
+- Route pipe drags through installed equipment and outlet overlays to their rooms.
 - Added an isolated five-wave catalyst exercise with capped charge, attraction/repulsion fields,
   charge-consuming chains, physical projectile impacts, source attribution after dismantling,
   separate saves, wave retry, and a shared campaign/exercise map and tower controls.

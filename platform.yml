@@ -3,3 +3,6 @@ prefix: catalyst
 stack:
   - typescript
   - terraform
+typescript_dir: .
+browser_tests:
+  engines: [chromium]

@@ -18,6 +18,7 @@
     "test:campaign": "vitest run --config vitest.campaign.config.ts",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:browser": "playwright test --project=${BROWSER:-chromium}",
     "test:e2e:smoke": "playwright test --grep \"places, aims, upgrades, and fires\"",
     "architecture:check": "tsx tooling/checkArchitecture.ts",
     "locales:check": "tsx tooling/checkLocales.ts",

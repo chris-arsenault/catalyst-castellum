@@ -1,6 +1,16 @@
 .exercise-shell {
   min-height: 100vh;
 }
+.exercise-shell .defense-board {
+  grid-template-rows: auto auto auto minmax(240px, 1fr) auto;
+  overflow-y: auto;
+}
+.exercise-shell .map-stage-wrap {
+  grid-row: 4;
+}
+.exercise-shell .exercise-report {
+  grid-row: 5;
+}
 .exercise-header {
   flex-wrap: wrap;
   gap: 1rem;

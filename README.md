@@ -25,6 +25,8 @@ make quick-ci
 ```
 
 Use `make ci` for the complete repository gate and `pnpm test:e2e` for the browser suite.
+Shared Ahara CI runs the complete Chromium suite through `test:browser` and requires it
+to pass before deployment.
 
 ## Documentation
 

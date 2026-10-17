@@ -35,7 +35,9 @@ export const startGuidedTutorial = async (page: Page): Promise<void> => {
   await expect(intro).toContainText("Establish route coverage");
   await page.getByTestId("enter-stage-controls").click();
   await expect(page.getByTestId("game-map")).toBeVisible();
-  await expect(page.getByTestId("tutorial-task-card")).toContainText("Mount a defense on a wall.");
+  await expect(page.getByTestId("tutorial-task-card")).toContainText(
+    "Mount a Flash Chamber on a wall."
+  );
 };
 
 export const skipGuidance = async (page: Page): Promise<void> => {
